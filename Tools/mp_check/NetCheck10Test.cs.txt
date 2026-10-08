@@ -1,0 +1,136 @@
+using System.Collections;
+using System.Linq;
+using System.Reflection;
+using UnityEngine;
+
+/// <summary>
+/// 동맹 유닛 공유 실측(2026-10-08 구현담당1, 빌드 사본 전용, 훅 -mpTestCheck10 초, 클라 -mpRejoinAfter 6). 로그 접두 「[C10]」.
+/// 호스트가 자기 슬롯에 A(희귀함_배성령)·친구 슬롯에 B(희귀함_노태현)를 세운다.
+///  t+6  (끔) 클라: A 거울 → 조종 불가·보기 전용 · 이동 요청 → 호스트 거절(위치 그대로) · 보기 전용 선택(한 기) 명령 단추 알림
+///  t+10 호스트가 클라에게 공유 켬 → t+13 클라: A 조종 가능·이동 요청이 먹음(위치 변함)·A를 고르고(AddToSelection) → 판매 요청은 거절(주인만)
+///  t+17 호스트가 공유 끔 → 클라 선택에서 A가 즉시 빠지고 이동 요청 다시 거절
+///  t+24 클라가 호스트에게 공유 켬 → 호스트가 B를 조종 가능(CanControlLocal) → t+30 끔 → 불가
+///  t+36 호스트가 클라에게 다시 켬 → t+42 클라 끊김 → 재접속 뒤 IsShared(호스트→클라) 유지 확인
+/// </summary>
+public class NetCheck10Test : MonoBehaviour
+{
+    public float startAt = 20f;
+    static int runs;
+    static string Shot { get { var a = System.Environment.GetCommandLineArgs(); int i = System.Array.IndexOf(a, "-mpCheck10Shot"); return i >= 0 && i + 1 < a.Length ? a[i + 1] : null; } }
+    UnitIdentity unitA, unitB;
+    static readonly MethodInfo Add = typeof(SelectionManager).GetMethod("AddToSelection", BindingFlags.NonPublic | BindingFlags.Instance);
+
+    UnitData Load(string n) => NetLauncher.Catalog.units.Find(u => u != null && u.name == n);
+
+    NetEntity MirrorOwnedBy(int owner, string name) => FindObjectsByType<NetEntity>(FindObjectsSortMode.None).FirstOrDefault(e => e.Object != null && e.Object.IsValid && e.EntityKind == NetEntityKind.Unit && e.Owner == owner && e.Visual != null && e.Visual.TryGetComponent(out UnitIdentity id) && id.Data != null && id.Data.name == name);
+
+    IEnumerator Start()
+    {
+        int myRun = ++runs;
+        yield return new WaitForSecondsRealtime(myRun == 1 ? startAt : 3f);
+        bool host = GameAuthority.IsServer;
+        string side = host ? "호스트" : "클라";
+        PlayerNotification.Shown += (slot, msg, dur) => { if (msg.Contains("공유") || msg.Contains("다른 플레이어")) Debug.Log($"[C10] {side} 알림 슬롯 {slot}: {msg}"); };
+        float t0 = Time.realtimeSinceStartup;
+        int me = LocalPlayer.LocalPlayerId;
+        if (myRun > 1)
+        {
+            for (int i = 0; i < 15; i++) { yield return new WaitForSecondsRealtime(2f); Debug.Log($"[C10] 클라 재접속 뒤 t+{i * 2}s: 호스트→나 공유 {AllianceShare.IsShared(0, me)} · A 거울 조종 가능 {(MirrorOwnedBy(0, "희귀함_배성령") is NetEntity a && AllianceShare.CanControlLocal(a.Visual.gameObject))}"); }
+            yield break;
+        }
+        if (host)
+        {
+            var sp = FindFirstObjectByType<UnitSpawner>();
+            int friend = PlayerContext.Occupied.First(c => c.PlayerId != me).PlayerId;
+            UnitData da = Load("희귀함_배성령"), db = Load("희귀함_노태현");
+            unitA = sp.Spawn(da, LaneMarker.Get(me).LaneCenter + new Vector3(0f, 0f, 20f), me).GetComponent<UnitIdentity>();
+            unitB = sp.Spawn(db, LaneMarker.Get(friend).LaneCenter + new Vector3(0f, 0f, 20f), friend).GetComponent<UnitIdentity>();
+            Debug.Log($"[C10] 호스트: A(슬롯 {me}) {unitA.transform.position:F0} · B(슬롯 {friend}) {unitB.transform.position:F0}");
+            yield return HostRoutine(t0, friend);
+        }
+        else yield return ClientRoutine(t0);
+    }
+
+    static IEnumerator Until(float t0, float at) { while (Time.realtimeSinceStartup - t0 < at) yield return null; }
+
+    bool lastB;
+    IEnumerator HostRoutine(float t0, int friend)
+    {
+        StartCoroutine(HostWatch(t0, friend));
+        yield return HostSteps(t0, friend);
+    }
+
+    IEnumerator HostWatch(float t0, int friend)
+    {
+        for (int i = 0; i < 70; i++)
+        {
+            yield return new WaitForSecondsRealtime(1f);
+            if (AllianceShare.CanControlLocal(unitB.gameObject) != lastB) { lastB = AllianceShare.CanControlLocal(unitB.gameObject); Debug.Log($"[C10] 호스트: B(클라 슬롯 유닛)를 호스트가 조종 가능 → {lastB}"); }
+            if (i < 4) Debug.Log($"[C10] 호스트 t+{Time.realtimeSinceStartup - t0:F0}s A위치 {unitA.transform.position:F0} A 공유→클라 {AllianceShare.IsShared(0, friend)} · 클라→호스트 {AllianceShare.IsShared(friend, 0)} · B 호스트가 조종 가능 {AllianceShare.CanControlLocal(unitB.gameObject)}");
+        }
+    }
+
+    IEnumerator HostSteps(float t0, int friend)
+    {
+        yield return Until(t0, 10); NetCommands.RequestSetShare(friend, true); Debug.Log("[C10] 호스트: 클라에게 공유 켬");
+        yield return Until(t0, 17); NetCommands.RequestSetShare(friend, false); Debug.Log("[C10] 호스트: 클라에게 공유 끔");
+        yield return Until(t0, 36); NetCommands.RequestSetShare(friend, true); Debug.Log("[C10] 호스트: 클라에게 공유 다시 켬(재접속 시험용)");
+        for (int i = 0; i < 40; i++) { yield return new WaitForSecondsRealtime(2f); if (i % 3 == 0) Debug.Log($"[C10] 호스트 t+{Time.realtimeSinceStartup - t0:F0}s 공유→클라 {AllianceShare.IsShared(0, friend)}"); }
+        }
+
+    IEnumerator ClientRoutine(float t0)
+    {
+        int me = LocalPlayer.LocalPlayerId;
+        var sel = FindFirstObjectByType<SelectionManager>();
+        FieldInfo pickField = typeof(SelectionManager).GetField("viewOnlyPick", BindingFlags.NonPublic | BindingFlags.Instance);
+        NetEntity a = null;
+        for (int w = 0; w < 30 && a == null; w++) { a = MirrorOwnedBy(0, "희귀함_배성령"); if (a == null) yield return new WaitForSecondsRealtime(1f); }
+        if (a == null) { Debug.Log("[C10] ❌ A 거울 없음"); yield break; }
+        Selectable sa = a.Visual.GetComponent<Selectable>();
+        yield return Until(t0, 6);
+        Vector3 p0 = a.Visual.transform.position;
+        Debug.Log($"[C10] ① 끔: A 거울 조종 가능 {AllianceShare.CanControlLocal(a.Visual.gameObject)} · 보기 전용 {AllianceShare.IsViewOnly(a.Visual.gameObject)}");
+        NetCommands.RequestMove(sa, p0 + new Vector3(60f, 0f, 0f));
+        // 보기 전용 선택(TrySelectAtCursor의 보기 전용 갈래와 같은 상태): pick 지정 + 선택
+        sel.ClearSelection(); pickField.SetValue(sel, sa); Add.Invoke(sel, new object[] { sa });
+        yield return new WaitForSecondsRealtime(1f);
+        Debug.Log($"[C10] ① 보기 전용 선택 {sel.Selected.Count}기 · IsViewOnlySelection {sel.IsViewOnlySelection} · 명령 단추 알림 BlockedByViewOnly {sel.BlockedByViewOnly()}");
+        yield return new WaitForSecondsRealtime(1.5f);
+        if (Shot != null) ScreenCapture.CaptureScreenshot(Shot + "_viewonly.png");
+        yield return new WaitForSecondsRealtime(0.5f);
+        Debug.Log($"[C10] ① 이동 요청 뒤 A 거울 위치 {a.Visual.transform.position:F0}(이동 {Vector3.Distance(p0, a.Visual.transform.position):F0} — 0이어야 함)");
+        // 공유가 켜질 때까지(호스트가 t+10에 켠다) — 시계가 아니라 상태로
+        for (int w = 0; w < 60 && !AllianceShare.IsShared(0, me); w++) yield return new WaitForSecondsRealtime(0.5f);
+        yield return new WaitForSecondsRealtime(0.5f);
+        sel.ClearSelection();
+        AlliancePanel.Toggle();
+        yield return new WaitForSecondsRealtime(1f);
+        if (Shot != null) ScreenCapture.CaptureScreenshot(Shot + "_panel.png");
+        yield return new WaitForSecondsRealtime(0.5f);
+        AlliancePanel.Toggle();
+        Debug.Log($"[C10] ② 켬: A 거울 조종 가능 {AllianceShare.CanControlLocal(a.Visual.gameObject)} · 보기 전용 {AllianceShare.IsViewOnly(a.Visual.gameObject)}");
+        Add.Invoke(sel, new object[] { sa });
+        Vector3 p1 = a.Visual.transform.position;
+        NetCommands.RequestMove(sa, p1 + new Vector3(60f, 0f, 0f));
+        NetCommands.RequestHudUnitAction(NetHudAction.Sell, sa, 0);   // 판매는 주인만 — 호스트가 거절해야 한다
+        yield return new WaitForSecondsRealtime(2f);
+        Debug.Log($"[C10] ② 이동 요청 뒤 A 거울 위치 {a.Visual.transform.position:F0}(이동 {Vector3.Distance(p1, a.Visual.transform.position):F0} — 움직였어야 함) · 판매 요청 뒤 A 아직 있나 {(a != null && a.Visual != null)} · 선택 {sel.Selected.Count}기");
+        // 공유 끔(호스트가 t+17에 끈다) → 선택에서 즉시 빠지나
+        for (int w = 0; w < 60 && AllianceShare.IsShared(0, me); w++) yield return new WaitForSecondsRealtime(0.25f);
+        yield return null; yield return null;
+        Debug.Log($"[C10] ③ 끔: A 거울 조종 가능 {AllianceShare.CanControlLocal(a.Visual.gameObject)} · 선택에 남은 수 {sel.Selected.Count(x => x != null)} (0이어야 함)");
+        Vector3 p2 = a.Visual.transform.position;
+        NetCommands.RequestMove(sa, p2 + new Vector3(-60f, 0f, 0f));
+        yield return new WaitForSecondsRealtime(2f);
+        Debug.Log($"[C10] ③ 끈 뒤 이동 요청 → 이동 {Vector3.Distance(p2, a.Visual.transform.position):F0}(0이어야 함)");
+        // 역방향: 클라가 호스트에게 켜고 끈다(호스트가 B를 조종 가능한지는 호스트 로그)
+        NetCommands.RequestSetShare(0, true); Debug.Log("[C10] 클라: 호스트에게 공유 켬");
+        yield return new WaitForSecondsRealtime(6f);
+        NetCommands.RequestSetShare(0, false); Debug.Log("[C10] 클라: 호스트에게 공유 끔");
+        // 재접속: 호스트가 t+36에 다시 켠다 → 확인 뒤 끊김
+        for (int w = 0; w < 120 && !AllianceShare.IsShared(0, me); w++) yield return new WaitForSecondsRealtime(0.5f);
+        yield return new WaitForSecondsRealtime(2f);
+        Debug.Log($"[C10] ④ 끊기 전: 호스트→나 공유 {AllianceShare.IsShared(0, me)}");
+        typeof(NetLauncher).GetField("dropAt", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(NetLauncher.Instance, 0f);
+    }
+}
