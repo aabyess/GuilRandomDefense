@@ -1104,7 +1104,7 @@ public class EnemyDummy : MonoBehaviour
     /// 유닛이 평타로 방어를 통째로 무시하면 안 된다(위 <c>MitigatedDamage</c> 요약 참고).
     /// </param>
     public void TakeDamage(float amount, DamageType type, AttackType attackType,
-                           int killerPlayerId, float armorIgnoreRatio = 0f, bool isAbilityDamage = true, float armorScale = 1f, bool explosive = false)
+                           int killerPlayerId, float armorIgnoreRatio = 0f, bool isAbilityDamage = true, float armorScale = 1f, bool explosive = false, bool fixedDamage = false)
     {
         if (isDead) return;
 
@@ -1124,7 +1124,7 @@ public class EnemyDummy : MonoBehaviour
         if (trueInvulnerable) return;
 
         float hpBefore = hp;
-        float mitigatedDamage = MitigatedDamage(amount, type, attackType, armorIgnoreRatio, isAbilityDamage, armorScale, explosive);
+        float mitigatedDamage = fixedDamage ? amount : MitigatedDamage(amount, type, attackType, armorIgnoreRatio, isAbilityDamage, armorScale, explosive);   // 고정 피해(SkillEffect.fixedDamage)는 체력 그대로
         hp -= mitigatedDamage;
         // 스토리 기여도(원작 Trig_Story_damage): 플레이어별 누적 피해 — 체력을 넘긴 몫(오버킬)은 뺀다(PlayerDamageOver). 마지막으로 때린 플레이어 = 막타.
         if (ContributionDamage != null && killerPlayerId >= 0 && killerPlayerId < ContributionDamage.Length)

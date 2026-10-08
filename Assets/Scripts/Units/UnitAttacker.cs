@@ -3497,6 +3497,18 @@ public class UnitAttacker : MonoBehaviour
         // (2026-09-30부터 효과별 targetCondition — 전역 TakesPercentDamage 게이트는 걷었다)이다.
         // 원작 식에 A11S 인자가 없는 효과는 감수성 계수를 안 곱한다(SkillEffect.skipDamageTakenMultiplier).
         // 🔴 2026-10-08 사장님 정의: 폭뎀증폭(A11S)은 **폭발형 피해(effect.explosive)에만** 곱한다 — 일반 마뎀·물리 스킬 피해엔 안 곱한다(위 옛 주석은 낡음).
+        if (effect.fixedDamage)
+        {
+            // 고정 피해(노태현 반사회적인격 Lv.2): 값 그대로 체력을 깎는다 — 방어·마저항·증감·A11S·패시브 배율을 하나도 안 곱한다.
+            float fixedAmount = ResolveSkillEffectValue(effect, target, recentAttackDamage);
+            if (fixedAmount <= 0f) return;
+            float fixedHpBefore = target.Hp;
+            bool fixedWasNormal = IsNormalEnemy(target);
+            target.TakeDamage(fixedAmount, effect.damageType, effect.attackType, owner != null ? owner.OwnerId : -1, fixedDamage: true);
+            if (target.IsDead && fixedWasNormal) RegisterSkillKill(target);
+            SkillTelemetry.Damage(identity != null ? identity.Data : null, TelemetryChannel(effect), target, fixedHpBefore);
+            return;
+        }
         float amount = ResolveSkillEffectValue(effect, target, recentAttackDamage) * chainDamageScale
             * (effect.explosive ? target.PercentDamageTakenMultiplier : 1f);
         // 원작 realD = 0.03×버프개수(SkillEffect.casterBuffCountFactor 주석 참고). 기존

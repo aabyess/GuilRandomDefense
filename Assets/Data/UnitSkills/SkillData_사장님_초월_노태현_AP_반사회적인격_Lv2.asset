@@ -1,0 +1,97 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
+  m_Name: "SkillData_사장님_초월_노태현_AP_반사회적인격_Lv2"
+  m_EditorClassIdentifier: 
+  skillName: "반사회적인격 Lv.2(최윤서 강화) — 평타마다 범위 고정 피해"
+  description: "사장님 10-08 밤. 「반사회적인격 Lv.2」 = 최윤서 강화로 얻는다. 평타 때마다 공격 대상 주위 범위 300의 적 모두에게 150,000 고정 피해(방어·마법저항·피해 증감 무관, 체력을 그대로 깎음). 값 근거: 신 난이도 보스 DPS +28%(1.11M→1.43M), 불멸 최상위(이승우 10.7M·정준영 4.6M) 아래."
+  triggerType: 0
+  levels:
+  - cooldown: 0
+    triggerChance: 1
+    range: 300
+    hitCountThreshold: 0
+    resetTo: 0
+    gaugeKind: 0
+    requiredBuffId: YOONSEO_ENHANCED
+    forbiddenBuffId: 
+    selfBuffId: 
+    effects:
+    - kind: 0
+      basis: 0
+      target: 2
+      damageType: 1
+      attackType: 6
+      multiplier: 150000
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      bossBerserkDamageScale: 0
+      explosive: 0
+      fixedDamage: 1
+    requiredTargetBuffId: 
+    forbiddenTargetBuffId: 
+    hitCountFloor: 0
+    gaugeSpendAmount: 0
+    aoeCenter: 0
+    targetArmorBreakAbove: 0
+    primaryTargetCondition: 0
+    primaryTargetConditionValue: 0
+    exclusiveGroup: 0
+    enterRange: 0
+    requireNormalEnemyInRange: 0
+    needsTargetClick: 0
+    toggleMode: 0
+    laneCountWindow: 0
+    needsAllyClick: 0
+    ownLaneOnly: 0
+  icon: {fileID: 21300000, guid: 2df3a85281be64db6a4cf38e22b1cfc5, type: 3}
