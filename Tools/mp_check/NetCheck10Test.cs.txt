@@ -45,6 +45,7 @@ public class NetCheck10Test : MonoBehaviour
             UnitData da = Load("희귀함_배성령"), db = Load("희귀함_노태현");
             unitA = sp.Spawn(da, LaneMarker.Get(me).LaneCenter + new Vector3(0f, 0f, 20f), me).GetComponent<UnitIdentity>();
             unitB = sp.Spawn(db, LaneMarker.Get(friend).LaneCenter + new Vector3(0f, 0f, 20f), friend).GetComponent<UnitIdentity>();
+            var inv = PlayerContext.Get(me).ItemInventory; var cat = NetLauncher.Catalog.items; if (inv != null) { inv.Add(cat[0]); inv.Add(cat[1]); Debug.Log($"[C10] 호스트 인벤토리에 {cat[0].itemName}·{cat[1].itemName} 넣음"); }
             Debug.Log($"[C10] 호스트: A(슬롯 {me}) {unitA.transform.position:F0} · B(슬롯 {friend}) {unitB.transform.position:F0}");
             yield return HostRoutine(t0, friend);
         }
@@ -94,6 +95,10 @@ public class NetCheck10Test : MonoBehaviour
         // 보기 전용 선택(TrySelectAtCursor의 보기 전용 갈래와 같은 상태): pick 지정 + 선택
         sel.ClearSelection(); pickField.SetValue(sel, sa); Add.Invoke(sel, new object[] { sa });
         yield return new WaitForSecondsRealtime(1f);
+        var invF = typeof(GameHud).GetField("itemInventoryRowItems", BindingFlags.NonPublic | BindingFlags.Instance); var invV = typeof(GameHud).GetField("inventoryViewOnly", BindingFlags.NonPublic | BindingFlags.Instance); var gh = FindFirstObjectByType<GameHud>();
+        yield return new WaitForSecondsRealtime(0.5f);
+        Debug.Log($"[C10] ① 보기 전용 인벤토리: viewOnly {invV.GetValue(gh)} · 칸 {string.Join(",", ((ItemData[])invF.GetValue(gh)).Where(i => i != null).Select(i => i.itemName))} · 명령 카드 alpha {((GameObject)typeof(GameHud).GetField("commandViewOnlyDim", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(gh)).activeSelf}");
+        { var dim = (GameObject)typeof(GameHud).GetField("commandViewOnlyDim", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(gh); var rt = (RectTransform)dim.transform; var im = dim.GetComponent<UnityEngine.UI.Image>(); var cv = dim.GetComponentInParent<Canvas>(); Debug.Log($"[C10] ① 어둠막: 활성 {dim.activeInHierarchy} 크기 {rt.rect.size} 위치 {rt.position:F0} · 색 {im.color} · 형제 순번 {rt.GetSiblingIndex()}/{rt.parent.childCount} · 부모 크기 {((RectTransform)rt.parent).rect.size} · canvas {cv.name} 슬롯0 위치 {((RectTransform)rt.parent.GetChild(0)).position:F0}"); }
         Debug.Log($"[C10] ① 보기 전용 선택 {sel.Selected.Count}기 · IsViewOnlySelection {sel.IsViewOnlySelection} · 명령 단추 알림 BlockedByViewOnly {sel.BlockedByViewOnly()}");
         yield return new WaitForSecondsRealtime(1.5f);
         if (Shot != null) ScreenCapture.CaptureScreenshot(Shot + "_viewonly.png");
@@ -110,6 +115,10 @@ public class NetCheck10Test : MonoBehaviour
         AlliancePanel.Toggle();
         Debug.Log($"[C10] ② 켬: A 거울 조종 가능 {AllianceShare.CanControlLocal(a.Visual.gameObject)} · 보기 전용 {AllianceShare.IsViewOnly(a.Visual.gameObject)}");
         Add.Invoke(sel, new object[] { sa });
+        yield return new WaitForSecondsRealtime(1f);
+        if (Shot != null) ScreenCapture.CaptureScreenshot(Shot + "_shared.png");
+        yield return new WaitForSecondsRealtime(0.5f);
+        { var gh2 = FindFirstObjectByType<GameHud>(); Debug.Log($"[C10] ② 공유 받은 선택: viewOnly {typeof(GameHud).GetField("inventoryViewOnly", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(gh2)} · 명령 카드 alpha {((GameObject)typeof(GameHud).GetField("commandViewOnlyDim", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(gh2)).activeSelf}"); }
         Vector3 p1 = a.Visual.transform.position;
         NetCommands.RequestMove(sa, p1 + new Vector3(60f, 0f, 0f));
         NetCommands.RequestHudUnitAction(NetHudAction.Sell, sa, 0);   // 판매는 주인만 — 호스트가 거절해야 한다
