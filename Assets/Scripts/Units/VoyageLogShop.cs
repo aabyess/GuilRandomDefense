@@ -114,7 +114,7 @@ public class VoyageLogShop : MonoBehaviour, ILaneShop
                 : "아이템 도박\n횟수 없음";
         }
 
-        return new LaneShopSlotView(cachedLabel, LogColor, CanBuy(), LaneShopTargetKind.None);
+        return new LaneShopSlotView(cachedLabel, LogColor, CanBuy(), LaneShopTargetKind.None, 0f, 'W');   // 탐색이 Q(사장님 10-02)라 겹치지 않게 W — 원작 항해일지 칸엔 단축키 지정이 없다(uhot 빈칸)
     }
 
     public string GetUnavailableReason(int index)
