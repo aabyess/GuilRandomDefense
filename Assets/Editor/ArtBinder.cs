@@ -100,6 +100,11 @@ public static class ArtBinder
         // 흔함_강재규(쵸파) — 사장님 10-04 「좀 큰 것 같다, 반으로」. 흔함 기본 0.85의 절반. 회전 0이라 AutoUpright는 그대로 돈다.
         ("흔함_강재규", Vector3.zero, 0.425f),
 
+        // 사장님 10-08 「많이 키워」(PM 임시값) — 최종 화면 키 = 지금의 1.6배(카이도 1.7배). 전설 이상은 아래 UpperGradeHeightScale(×1.2)이 한 번 더 곱해지므로 개별 값은 그만큼 나눠 둔다.
+        ("히든_석성례", Vector3.zero, 1.6f),                 // 히든은 등급 배율 없음 → 1.0 × 1.6
+        ("전설적인_임장혁", Vector3.zero, 1.6f / 1.2f),       // 전설 ×1.2가 곱해진다 → 최종 1.6
+        ("전설적인_김용태", Vector3.zero, 1.7f / 1.2f),       // 카이도 — 최종 1.7(다른 전설보다 확실히 크게). 사진 보고 사장님이 조정
+
         // (09-13) 안흔함_상붕카 줄을 뺐다 — blender가 fix_unit_fbx.py로 두 바퀴가 바닥에 닿게 다시 지었다
         // (앞바퀴 −Y, 길이 1.8m). 옛 파일은 끝으로 선 채 들어와 여기서 (−90, 90, 0)으로 눕혔는데, 그대로 두면 두 번 눕는다.
         // 이제 FourLeggedModels(몸길이 기준)에서 크기만 맞춘다.
@@ -188,7 +193,7 @@ public static class ArtBinder
         ("불멸_신지우", 1.28f),
         ("영원_김영원", 1.58f),
         // 히든_이동엽(라분, 고래 — 2026-09-22): 몸길이(3.26)가 두께(1.8)보다 긴 게 정상. 몸길이를 26(리카와 같은 1.3)에.
-        ("히든_이동엽", 1.3f),
+        ("히든_이동엽", 2.08f),   // 사장님 10-08 「많이 키워」: 1.3 → 2.08(= ×1.6, 히든은 등급 배율 없음)
         // 히든_뻬꼼(포치타 — 2026-09-23): 네 발 짐승이라 길이(2.59)가 높이(1.8)보다 긴 게 정상. 라분과 같은 1.3.
         ("히든_뻬꼼", 1.3f),
         // 소품형 유닛 3종(2026-09-23) — 건물·배라 앞뒤(깊이)가 높이보다 긴 게 정상인데,
@@ -430,7 +435,24 @@ public static class ArtBinder
     // MapGenerator가 자리 폭에 맞춰 따로 재우므로(step*0.9) 여기 영향을 안 받는다.
     const float CommonHeightScale = 0.85f;
 
-    static float HeightScaleFor(string modelName)
+    // 사장님 10-08 「전설부터 다 좀 더 키워야 할 듯, 좀 작다」(PM 임시값 1.2): 전설적인 이상 — UnitGrade.Tier() 5 이상과 랜덤·다른세계 —에 곱한다. 개별 표 값 위에도 곱한다.
+    //   대상 접두사: 전설적인·변화됨(Tier 5, 전설과 같은 급)·제한·초월·불멸·영원·랜덤(RandomUnit)·다른세계. 히든·특수함은 Tier 4라 전설보다 아래 → 제외. 흔함~희귀함도 제외.
+    const float UpperGradeHeightScale = 1.2f;
+    static readonly string[] UpperGradePrefixes = { "전설적인_", "변화됨_", "제한_", "초월_", "불멸_", "영원_", "랜덤_", "다른세계_" };
+
+    static float GradeScaleFor(string modelName)
+    {
+        string unit = Nfc(modelName);
+        foreach ((string model, string target) in ModelOverrides)
+            if (Nfc(model) == unit) { unit = Nfc(target); break; }
+        foreach (string prefix in UpperGradePrefixes)
+            if (unit.StartsWith(Nfc(prefix))) return UpperGradeHeightScale;
+        return 1f;
+    }
+
+    static float HeightScaleFor(string modelName) => HeightScaleBase(modelName) * GradeScaleFor(modelName);
+
+    static float HeightScaleBase(string modelName)
     {
         // 모델별 개별 지정이 먼저다 — 상붕카(자전거)처럼 등급 규칙으로 못 맞추는 게 있다.
         foreach ((string name, Vector3 _, float scale) in ModelAdjustments)
@@ -919,7 +941,7 @@ public static class ArtBinder
         ("박진웅", "Enemy_R01_박진웅", 1.5300f, true),                 // 원작 설정 키 153cm(크리링). 찾아서 확인함
         ("김갑식", "Enemy_R02_김갑식", 1.8700f, true),                 // 원작 설정 키 187cm(천진반). 찾아서 확인함
         ("반항아_이승우", "Enemy_R03_반항아_이승우", 1.7500f, true),   // 결정: 보통 성인 — **이 묶음의 앵커**
-        ("배병욱", "Enemy_R04_배병욱", 4.6375f, true),                 // 🔵 측정: 류마 × 2.65 (샬롯 오븐)
+        ("배병욱", "Enemy_R04_배병욱", 3.0f, true),                    // 사장님 10-08 「너무 크다」 → 3.0(다른 거인 라인몹 규칙 — 카타쿠리·킹·카이도 라인몹이 3.0에서 자른 것과 같은 이유). 옛 🔵 측정: 류마 × 2.65 = 4.6375 (샬롯 오븐)
         ("왕승환", "Enemy_R05_왕승환", 1.7500f, true),                 // 결정: 보통 성인(바운티러시 일반 몹)
         ("이재윤", "Enemy_R06_이재윤", 1.6900f, true),                 // 🔵 측정: 류마 × 0.967 (이조)
         ("인홍진", "Enemy_R07_인홍진", 1.5300f, true),                 // 🔵 측정: 류마 × 0.877 (페이지원)
