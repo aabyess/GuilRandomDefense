@@ -89,9 +89,9 @@ public class NetShotHelper : MonoBehaviour
         }
         Debug.Log($"[MP] 상점 소리 테스트 500엔 합계: 당첨 {wins}번 중 소리 {winSounds} · 실패 {fails}번 중 소리 {failSounds}(0이어야 함)");
 
-        // 2. 특성 포인트 구매(칸 2).
+        // 2. 특성 포인트 구매(칸 1 = W).
         int before = GameSound.PlayCount;
-        bool bought = shop.TryUse(2, default, out string traitReason);
+        bool bought = shop.TryUse(1, default, out string traitReason);
         Debug.Log($"[MP] 상점 소리 테스트 특성 포인트: {(bought ? "구매" : "안 됨 " + traitReason)} · 소리 {(GameSound.PlayCount > before ? "남" : "없음")}");
         yield return new WaitForSecondsRealtime(0.4f);
 

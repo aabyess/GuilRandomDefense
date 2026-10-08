@@ -30,7 +30,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
     // GamblingOptionData로 안 만든 이유: 그 데이터는 "확률로 얼마를 돌려받는가"를 표현하는
     // 모델이라, "100% 확정으로 골드가 아닌 걸 준다, 딱 1회"인 이 구매와 모양이 안 맞는다.
     [SerializeField] int traitPointPurchaseCost = 15000;
-    const int TraitPointSlotIndex = 2;
+    const int TraitPointSlotIndex = 1;   // 원작 졸업 뒤 도박소(h08C)의 W 칸(특성 포인트 구매 ubpx=1). 졸업 전 W는 원작 「물품 지원」 자리라 우린 특성 포인트가 쓴다
 
     static readonly Color MoneyColor = new Color(1f, 0.82f, 0.25f); // 금색 — MapGenerator 코인 아이콘과 같은 색
 
@@ -44,8 +44,8 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
     readonly SlotCache[] slotCache = new SlotCache[SlotCountValue];
     bool slotCacheBuilt;
 
-    const int SlotCountValue = 9;
-    const int PageSlot = 8;              // 「해적단 ▶」 / 「◀ 뒤로」 칸(원래 항상 빈 칸)
+    const int SlotCountValue = 12;       // 명령 카드 4×3(Q W E R / A S D F / Z X C V)
+    const int PageSlot = 11;             // 「해적단 ▶」 / 「◀ 뒤로」 칸(V, 원작에도 빈 칸)
     const int PirateNetBase = 100;       // TryUse(절대 번호) — 100 + 퀘스트 번호
     public const int TokenSlot = 7;      // 해적단 쪽 마지막 칸 = 「행운의 토큰 사용」(원작 A0BC) — 퀘스트는 0~6
     const int PirateVisibleSlots = 8;    // 해적단 쪽에서 퀘스트가 쓸 수 있는 칸 0~7(8은 뒤로)
@@ -259,28 +259,33 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
         return visibleMoney;
     }
 
+    // 칸 배치 = 원작 도박소(h062 → 졸업 뒤 h08C)의 판매 단추 위치(w3u ubpx/ubpy, 사장님 10-08 밤 「원작 따라가」):
+    //   졸업 전  Q 돈도박 초급(10) · W (원작 물품 지원 — 우린 특성 포인트) · E 돈도박 고급(500)
+    //   졸업 뒤  Q 고급 유닛 생성 · W 특성 포인트 구매 · R 목재 구입
+    //   유닛 줄  A 하급 · S 중급 · D 고급 · F 다른세계(랜덤유닛) 도박 · Z 좆돼지(원작 압살롬 자리)
     GamblingOptionData OptionAt(int index)
     {
-        if (index >= 0 && index <= 1)
-        {
-            List<GamblingOptionData> money = VisibleMoney();
-            return index < money.Count ? money[index] : null;
-        }
+        List<GamblingOptionData> money = VisibleMoney();
+        bool graduated = visibleGraduated;
 
-        if (index >= 3 && index <= 5)
+        if (index == 0) return money.Count > 0 ? money[0] : null;
+        if (index == 2 && !graduated) return money.Count > 1 ? money[1] : null;   // 500엔 도박 = 원작 E
+        if (index == 3 && graduated) return money.Count > 1 ? money[1] : null;    // 목재 구입 = 원작 R
+
+        if (index >= 4 && index <= 6)
         {
-            int i = index - 3;
+            int i = index - 4;
             return i < unitOptions.Count ? unitOptions[i] : null;
         }
 
-        if (index == 6)
+        if (index == 7)
             return unitOptions.Count > 3 ? unitOptions[3] : null;
 
-        // 조도연 좆돼지 도박(구 압살롬 도박 h069 — 사장님 10-07: 좆돼지로 통합, 8라운드 시작에 열림) — 다른세계 도박 옆 칸. unitOptions[5]는 행운의 토큰 사용(해적단 쪽 7번 칸).
-        if (index == 7)
+        // 조도연 좆돼지 도박(구 압살롬 도박 h069 — 사장님 10-07: 좆돼지로 통합, 8라운드 시작에 열림) — 원작 압살롬 도박 자리 Z. unitOptions[5]는 행운의 토큰 사용(해적단 쪽 7번 칸).
+        if (index == 8)
             return unitOptions.Count > 4 ? unitOptions[4] : null;
 
-        return null; // 8은 줄을 맞추기 위한 항상 빈 칸.
+        return null; // 나머지(E 졸업 뒤 · R 졸업 전 · X C V 앞)는 원작처럼 빈 칸.
     }
 
     // 「남은 개수/최대 · 다음 충전까지 초」 — 워크3 상점의 재고 숫자·충전 원과 같은 정보(친구 베타 「왜 안 눌리지」 방지, PM 09-26).

@@ -394,14 +394,14 @@ public static class GambleStockProbe
         return State();
     }
 
-    // 500엔 칸(졸업 전 칸1)을 실제로 누른다.
+    // 500엔 칸(졸업 전 칸2 = E)을 실제로 누른다.
     public static string Roll500()
     {
         GamblingShop shop = Shop();
         var ctx = PlayerContext.Get(0);
         int before = ctx.GoldWallet.Gold;
-        bool ok = shop.TryUse(1, default, out string reason);
-        return $"칸1 누름 → {(ok ? "굴림" : "실패 " + reason)} · 골드 {before} → {ctx.GoldWallet.Gold} · 졸업 {ctx.GamblingProgress.Graduated}";
+        bool ok = shop.TryUse(2, default, out string reason);
+        return $"칸2 누름 → {(ok ? "굴림" : "실패 " + reason)} · 골드 {before} → {ctx.GoldWallet.Gold} · 졸업 {ctx.GamblingProgress.Graduated}";
     }
 }
 
