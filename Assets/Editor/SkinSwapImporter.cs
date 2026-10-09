@@ -56,7 +56,8 @@ public static class SkinSwapImporter
 
     public static string Swap(string roster, string packDir)
     {
-        string modelDir = Path.Combine(packDir, "model");
+        string modelDir = Path.Combine(packDir, "model_fixed");   // blender3 재수출(바인드=Stand 첫 프레임) 우선
+        if (!Directory.Exists(modelDir) || Directory.GetFiles(modelDir, "*.fbx").Length == 0) modelDir = Path.Combine(packDir, "model");
         string srcFbx = Directory.GetFiles(modelDir, "*.fbx").FirstOrDefault();
         string clipMapPath = Path.Combine(packDir, "clip_map.json");
         if (srcFbx == null || !File.Exists(clipMapPath)) return $"❌ {roster}: model/*.fbx 또는 clip_map.json 없음({packDir})";
