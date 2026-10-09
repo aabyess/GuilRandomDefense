@@ -74,8 +74,9 @@ def main():
             out = os.path.join(work, "_tex", path.replace("\\", "_").replace("/", "_") + ".png")
             blp = arc.read(path) or arc.read(os.path.basename(path.replace("\\", "/")))
             if blp is not None:
-                im = Image.open(io.BytesIO(blp)).convert("RGBA")
-                if im.getchannel("A").getextrema()[1] == 0:           # 알파 비트 0인 BLP는 PIL이 알파를 전부 0으로 읽는다 → 불투명으로 고친다(10-09: 스킨 20·이펙트 수십 개 텍스처가 투명이었다)
+                from blp_decode import decode                          # PIL은 4채널 JPEG BLP의 알파를 K로 곱해 투명 자리를 검게 만든다(10-09 캐럿) → 직접 풀기
+                im = decode(blp)
+                if False:           # 알파 비트 0인 BLP는 PIL이 알파를 전부 0으로 읽는다 → 불투명으로 고친다(10-09: 스킨 20·이펙트 수십 개 텍스처가 투명이었다)
                     im.putalpha(255)
                 im.save(out)
             else:
