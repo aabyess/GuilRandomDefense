@@ -151,9 +151,9 @@ public class CombineSystem : MonoBehaviour
 
         // 「이름 조합」: 에셋 이름에서 등급 접두를 뺀 나머지 전부(다른세계_고죠_사토루 → 「고죠 사토루 조합」). 첫 토막만 쓰면 「고죠 조합」이 돼 이름이 잘렸다.
         int cut = recipe.name.IndexOf('_');
-        // 10-07 이름이 바뀐 유닛(personOverride)은 옛 에셋 이름 입력말(「여은서조합」)을 더 안 받는다(PM 확정) — 새 이름으로만.
-        bool renamed = recipe.result != null && !string.IsNullOrEmpty(recipe.result.PersonName);
-        if (!renamed && cut > 0 && cut < recipe.name.Length - 1) yield return NormalizePhrase(recipe.name.Substring(cut + 1) + "조합");
+        // 🔴 10-09 사장님(「최윤서 조합은 안 되고 페로나조합이라야 된다」): 우리 이름은 이름이 바뀐 유닛도 **옛 이름·새 이름 둘 다** 받는다(10-07의 「옛 입력말 안 받음」을 되돌림) —
+        //    원작 캐릭터 이름(commandId 「페로나조합」)은 그대로 받는다. 세 가지가 전부 같은 식을 부른다.
+        if (cut > 0 && cut < recipe.name.Length - 1) yield return NormalizePhrase(recipe.name.Substring(cut + 1) + "조합");
 
         if (!string.IsNullOrEmpty(recipe.chatPhrase)) yield return NormalizePhrase(recipe.chatPhrase);
 
@@ -163,6 +163,24 @@ public class CombineSystem : MonoBehaviour
             if (!string.IsNullOrEmpty(recipe.result.PersonName)) yield return NormalizePhrase(recipe.result.PersonName + "조합");
             yield return NormalizePhrase(recipe.result.DisplayName + "조합");
         }
+    }
+
+    /// <summary>조합식 화면에 보일 코드 문구 — 우리 이름 먼저(새 이름 → 에셋 이름), 그 뒤 원작 코드(「페로나조합 / perona」). 사장님 10-09.</summary>
+    public static string DisplayCodes(CombineRecipe recipe)
+    {
+        if (recipe == null) return "";
+        var shown = new List<string>(); var seen = new HashSet<string>();
+        void Add(string text) { string key = NormalizePhrase(text); if (key.Length > 0 && seen.Add(key)) shown.Add(text.Trim()); }
+        if (recipe.result != null)
+        {
+            if (!string.IsNullOrEmpty(recipe.result.PersonName)) Add(recipe.result.PersonName + "조합");
+            Add(recipe.result.DisplayName + "조합");
+        }
+        int cut = recipe.name.IndexOf('_');
+        if (cut > 0 && cut < recipe.name.Length - 1) Add(recipe.name.Substring(cut + 1).Replace("_", " ") + "조합");
+        if (!string.IsNullOrEmpty(recipe.chatPhrase)) Add(recipe.chatPhrase);
+        if (!string.IsNullOrEmpty(recipe.commandId)) foreach (string part in recipe.commandId.Split('/')) Add(part);
+        return string.Join(" / ", shown);
     }
 
     /// <summary>채팅 한 줄이 히든·불멸·초월 조합 코드면 그 플레이어 기준으로 조합한다. 코드가 아니면 null(다음 판정기로 넘김),

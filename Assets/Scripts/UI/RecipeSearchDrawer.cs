@@ -800,7 +800,7 @@ public class RecipeSearchDrawer : MonoBehaviour
                 if (cost != null && cost.amount > 0)
                     sb.Append(cost.type == ResourceType.Wood ? "목재" : cost.type.ToString()).Append(' ').Append(cost.amount).Append("  ");
         if (recipe.minRound > 0 || recipe.maxRound > 0) sb.Append("라운드 ").Append(recipe.minRound > 0 ? recipe.minRound.ToString() : "").Append('~').Append(recipe.maxRound > 0 ? recipe.maxRound.ToString() : "").Append("  ");
-        if (!string.IsNullOrEmpty(recipe.commandId)) sb.Append("코드 ").Append(recipe.commandId);
+        if (!string.IsNullOrEmpty(recipe.commandId)) sb.Append("코드 ").Append(CombineSystem.IsChatOnly(recipe) ? CombineSystem.DisplayCodes(recipe) : recipe.commandId);   // 채팅 조합 식은 우리 이름 먼저(10-09)
         return sb.ToString().TrimEnd();
     }
 
