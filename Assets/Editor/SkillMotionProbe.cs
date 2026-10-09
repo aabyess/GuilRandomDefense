@@ -49,6 +49,7 @@ static class SkillMotionProbe
             Vector3 c = lane.LaneCenter;   // 한 유닛씩 차례로(끝나면 치운다) — 레인 밖은 NavMesh가 없어 유닛이 안 선다
             GameObject go = spawner.Spawn(data, c, 0);
             var atk = go.GetComponent<UnitAttacker>();
+            foreach (var other in Object.FindObjectsByType<UnitAttacker>(FindObjectsSortMode.None)) if (other != atk) other.gameObject.SetActive(false);   // 시작 유닛 등이 겹쳐 찍히지 않게
             float baseRange = Mathf.Max(3f, data.attackRange * k);
             var enemies = new List<EnemyDummy>();
             var offsets = new[] { new Vector3(1, 0, 0.3f), new Vector3(0.9f, 0, -0.5f), new Vector3(1.4f, 0, 0.1f), new Vector3(0.4f, 0, 1f) };
@@ -67,8 +68,9 @@ static class SkillMotionProbe
             string clips = anim != null && anim.runtimeAnimatorController != null ? string.Join(",", anim.runtimeAnimatorController.animationClips.Select(x => x.name).Distinct()) : "-";
             log.AppendLine($"[{name}] 컨트롤러 {ctrl} · 파라미터 [{pars}] · 클립 [{clips}] · 스킬 {data.skills.Count}개 [{string.Join(" | ", data.skills.Select(s => s.skillName.Split(' ')[0] + "/" + s.triggerType))}]");
             for (int w = 0; w < 120; w++) yield return null;   // 획득 컷인·알림이 지나가길 기다린 뒤 찍는다
-            rts.FlyTo(c, 150f);
+            rts.FlyTo(c, 110f);
             for (int w = 0; w < 40; w++) yield return null;   // 카메라 도착
+            rts.enabled = false;   // 사람 마우스가 화면 가장자리에 있으면 카메라가 흘러간다 — 도착하면 얼린다
             MethodInfo cast = typeof(UnitAttacker).GetMethod("CastSkillLevel", NP);
             int frames = Mathf.RoundToInt(Fps * Seconds), castNo = 0;
             for (int f = 0; f < frames; f++)
@@ -82,6 +84,7 @@ static class SkillMotionProbe
                 ScreenCapture.CaptureScreenshot($"{dir}/f{f:D4}.png");
                 yield return null;
             }
+            rts.enabled = true;
             log.AppendLine($"   촬영 {frames}장 · 시전 {castNo}회");
             foreach (var e in enemies) if (e != null) Object.Destroy(e.gameObject);
             if (go != null) Object.Destroy(go);
