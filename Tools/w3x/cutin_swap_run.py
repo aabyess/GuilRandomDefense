@@ -7,7 +7,9 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.pat
 H = os.path.expanduser("~"); HOME = H + "/GRD_cutin_swap"; os.makedirs(HOME + "/render", exist_ok=True)
 if not os.path.exists(HOME + "/layers"): shutil.copytree(H + "/GRD_cutin/layers", HOME + "/layers")
 if not os.path.exists(HOME + "/fonts"): os.symlink(H + "/GRD_cutin/fonts", HOME + "/fonts")
-json.dump({"_설명": "교체 스킨 컷인은 사람이 고른 옛 포즈를 쓰지 않는다"}, open(HOME + "/_no_picks.json", "w"))
+EXTRA_HIDE = {"초월_이태훈_AP": ["rokugu_tr4_g5", "rokugu_tr4_g6"]}      # 덩굴 메시(몸이 작아 보이던 원인, 10-09 PM)
+PICKS = {"불멸_신지우": {"pick": "c1", "zoom": 1.45}, "불멸_정윤식": {"pick": "c1", "zoom": 1.4}}   # 작게 보이는 둘은 확대 자르기
+json.dump(dict({"_설명": "교체 스킨 컷인: 옛 포즈 목록 대신 필요한 유닛만 확대(zoom)"}, **PICKS), open(HOME + "/_no_picks.json", "w"), ensure_ascii=False)
 env = dict(os.environ, CUTIN_HOME=HOME, CUTIN_PICKS=HOME + "/_no_picks.json", ONLY="C")
 rows = list(csv.DictReader(open(H + "/GRD_skin_swap/교체목록.csv", encoding="utf-8-sig")))
 want = set(sys.argv[1:]); units = []
@@ -18,7 +20,7 @@ for r in rows:
     fb = glob.glob(d + "/model/*.fbx")
     if not fb: print("폴더 없음", ro, nm); continue
     cm = json.load(open(d + "/clip_map.json")); atk = next((c for c in cm["clips"] if c["ourClip"] == "Attack"), None)
-    units.append((ro, fb[0], ",".join(atk["hiddenMeshes"]) if atk else ""))
+    units.append((ro, fb[0], ",".join((atk["hiddenMeshes"] if atk else []) + EXTRA_HIDE.get(ro, []))))
 for ro, fb, hid in units:
     e = dict(env, HIDE_MESHES=hid)
     r = subprocess.run(["blender", "-b", "--factory-startup", "--python", ROOT + "/Tools/blender/gen_cutin_char.py", "--", fb, HOME + "/render", ro], env=e, capture_output=True, text=True)
