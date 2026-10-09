@@ -11,13 +11,13 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.abspath(os.pat
 sys.path.insert(0, HERE)
 import jass_sim, w3u, w3a, yaml                                     # noqa: E402
 from mpqread import Archive                                          # noqa: E402
-H = os.path.expanduser("~"); T = H + "/GRD_orig_vfx_trial"; OUT = H + "/GRD_scenes/auto"; os.makedirs(OUT, exist_ok=True)
+H = os.path.expanduser("~"); T = H + "/GRD_orig_vfx_trial"; OUT = os.environ.get("SCENE_OUT", H + "/GRD_scenes/auto"); os.makedirs(OUT, exist_ok=True)
 MODE = sys.argv[1] if len(sys.argv) > 1 else "compile"
 U = {u["id"]: u["mods"] for u in w3u.parse(HERE + "/원본/풀린것/war3map.w3u")}
 ARC = Archive(H + "/GRD_motion_trial/_work/ord.mpq")
 tag = lambda m: os.path.splitext(re.split(r"[\\/]", m)[-1])[0]
 clean = lambda s: re.sub(r"\|c[0-9a-fA-F]{8}|\|r", "", s or "")
-table = json.load(open(H + "/GRD_scenes/scene_table.json"))
+table = json.load(open(os.environ.get("SCENE_TABLE", H + "/GRD_scenes/scene_table.json")))
 SIMS = {}
 def sim_of(tr):
     if tr not in SIMS: SIMS[tr] = jass_sim.simulate(tr)
@@ -105,7 +105,7 @@ if MODE == "compile":
     index = []; best_by_roster = {}
     for row in table: best_by_roster[row["roster"]] = max(best_by_roster.get(row["roster"], row), row, key=lambda r: r["score"])
     for row in table:
-        if row["roster"] in EXCL or (row["roster"], row["trigger"]) not in VALID: continue                            # 지원형(피해 스킬 없음) — 이번 확대에서 제외(PM)
+        if not os.environ.get("SCENE_ALL") and (row["roster"] in EXCL or (row["roster"], row["trigger"]) not in VALID): continue                            # 지원형(피해 스킬 없음) — 이번 확대에서 제외(PM)
         sid = f"{row['roster']}__{row['trigger']}".replace(" ", "_")
         s = sim_of(row["trigger"]); ev = [dict(e) for e in s["events"]]
         spawns = {e["id"]: e for e in ev if e["op"] == "spawn"}
@@ -161,7 +161,7 @@ if MODE == "compile":
                     else: e["lifeSec"] = 1.5
                 else: e["lifeSec"] = 3.0; e["lifeNote"] = "수명 미상(체력 재생이 음수가 아님) — 기본 3초"
         n_sp = sum(1 for e in keep if e["op"] == "spawn")
-        sk = REVIEW.get((row["roster"], row["trigger"]))
+        sk = row.get("ourSkillOverride") or REVIEW.get((row["roster"], row["trigger"]))
         sk = ("SkillData_" + sk) if sk else ""
         skn = sk[10:] if sk else ""
         sc = dict(schemaVersion=1, id=sid, title=f"{clean(row['name'])[:30]} — {row['trigger']}", ourUnit=row["roster"], origUnit=f"{row['uid']} {clean(row['name'])[:30]}", ourSkill=sk or None, ourSkillName=skn or None,
@@ -177,6 +177,6 @@ if MODE == "compile":
         sc["models"] = models
         json.dump(sc, open(f"{OUT}/{sid}.json", "w"), ensure_ascii=False, indent=1)
         index.append([sid, row["roster"], clean(row["name"])[:20], row["trigger"], row["jline"], row["score"], "대표" if sc["primary"] else "2차", n_sp, sc["durationSec"], s["unresolved"], sc["quality"], "; ".join(subs[:4]), sk, skn])
-    with open(H + "/GRD_scenes/auto_index.csv", "w", encoding="utf-8-sig", newline="") as f:
+    with open(os.environ.get("SCENE_INDEX", H + "/GRD_scenes/auto_index.csv"), "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f); w.writerow(["id", "우리 유닛", "원작", "트리거", "j 줄", "점수", "구분", "더미·이펙트 수", "길이(초)", "미해결 조건", "품질", "대체 모델", "ourSkill 에셋", "ourSkill 이름"]); w.writerows(index)
     print(len(index), "대본")

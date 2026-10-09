@@ -4,7 +4,7 @@ import json, os, subprocess, sys
 from concurrent.futures import ThreadPoolExecutor
 from PIL import Image, ImageDraw, ImageFont
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE))
-H = os.path.expanduser("~"); S = H + "/GRD_scenes/auto"; R = H + "/GRD_scenes/auto_render"; os.makedirs(R, exist_ok=True)
+H = os.path.expanduser("~"); S = os.environ.get("SCENE_OUT", H + "/GRD_scenes/auto"); R = os.environ.get("SCENE_RENDER", H + "/GRD_scenes/auto_render"); os.makedirs(R, exist_ok=True)
 F = lambda n: ImageFont.truetype("/System/Library/Fonts/AppleSDGothicNeo.ttc", n, index=0)
 def times_of(sc):
     ts = sorted({e["t"] for e in sc["timeline"] if e["op"] == "spawn"}); D = sc["durationSec"]
