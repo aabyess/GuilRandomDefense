@@ -27,6 +27,7 @@ public class UnitSpawner : MonoBehaviour
         if (!instance.TryGetComponent(out UnitIdentity identity))
             identity = instance.AddComponent<UnitIdentity>();
         identity.SetData(data);
+        if (UnitWings.WingNameFor(data.grade) != null) instance.AddComponent<WingAttacher>().data = data;   // 등급 날개(초월·불멸·영원) — 10-09
         identity.IsSummon = summoned;   // 소환수는 인벤토리·획득 보상·자리 예약에 안 들어간다(아래)
         // 원딜(GAP 6) — 패왕의길 플레이어가 제한됨·초월·불멸·영원을 처음 얻으면 그 네 등급 조합을 잠근다. 조합·도박·보상이 전부 여기를 지난다.
         if (!summoned && PlayerContext.Get(ownerId)?.NavigationState?.RegisterAcquired(data) == true)

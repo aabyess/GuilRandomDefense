@@ -1,0 +1,179 @@
+{
+ "name": "Dashboard_YH6",
+ "source": "S2 대시보드 날개 모델(원작 저작물 — Assets 반입은 PM·사장님 판단)",
+ "unitScale": "FBX 1 = 1m = 원작 100단위(WC3 1단위=0.01m)",
+ "clip": {
+  "name": "s0_Stand",
+  "frameStart": 1,
+  "frameEnd": 81,
+  "fps": 30,
+  "loop": true,
+  "note": "날갯짓(Stand 반복). FBX 액션 이름이 길면 Blender가 63자에서 자르므로 모델당 클립 하나뿐"
+ },
+ "bboxMeters": {
+  "min": [
+   -0.86,
+   -1.522,
+   -1.198
+  ],
+  "max": [
+   1.187,
+   1.643,
+   -0.168
+  ],
+  "size": [
+   2.047,
+   3.165,
+   1.03
+  ]
+ },
+ "attach": {
+  "original": "chest",
+  "note": "원작은 유닛의 chest 부착점에 이 모델의 원점(0,0,0)을 맞춘다. 휴식 자세 범위(m): 좌우 -1.711~1.735, 앞뒤(+등쪽) 0.159~0.823, 위아래 -0.86~1.187 — 원점 기준 위쪽·등 쪽으로 펼쳐진다. 부착 오프셋은 chest 그대로(추가 오프셋 0)가 원작 기준.",
+  "sizeRef": "모델 크기 그대로(스케일 1.0)가 원작 기준: 폭 3.45m·높이 2.05m. 원작 영웅 키가 대략 1.2~1.9m(120~190단위)이므로 날개 폭은 키의 약 2~3배다. 우리 유닛에는 유닛 키 비율로 맞추되 날개 폭 ≈ 유닛 키×2.2 에서 시작해 눈으로 조정할 것."
+ },
+ "materials": [
+  {
+   "mesh": "Dashboard_YH6_g0_L0_blend",
+   "filter": "blend",
+   "suffix": "blend",
+   "texture": "YH6.blp",
+   "textureFile": "YH6.blp.png",
+   "staticAlpha": 1.0,
+   "geosetAlphaKeys": [
+    [
+     667,
+     [
+      1.0
+     ]
+    ],
+    [
+     2000,
+     [
+      0.6294959783554077
+     ]
+    ],
+    [
+     3333,
+     [
+      1.0
+     ]
+    ]
+   ],
+   "layerAlphaKeys": [],
+   "uvAnim": null,
+   "uvOffsetClip0": null,
+   "approxTexture": false
+  },
+  {
+   "mesh": "Dashboard_YH6_g1_L0_cut",
+   "filter": "transparent",
+   "suffix": "cut",
+   "texture": "YH6.blp",
+   "textureFile": "YH6.blp.png",
+   "staticAlpha": 1.0,
+   "geosetAlphaKeys": [],
+   "layerAlphaKeys": [],
+   "uvAnim": null,
+   "uvOffsetClip0": null,
+   "approxTexture": false
+  },
+  {
+   "mesh": "Dashboard_YH6_g2_L0_cut",
+   "filter": "transparent",
+   "suffix": "cut",
+   "texture": "YH6.blp",
+   "textureFile": "YH6.blp.png",
+   "staticAlpha": 1.0,
+   "geosetAlphaKeys": [],
+   "layerAlphaKeys": [],
+   "uvAnim": null,
+   "uvOffsetClip0": null,
+   "approxTexture": false
+  },
+  {
+   "mesh": "Dashboard_YH6_g3_L0_cut",
+   "filter": "transparent",
+   "suffix": "cut",
+   "texture": "YH6.blp",
+   "textureFile": "YH6.blp.png",
+   "staticAlpha": 1.0,
+   "geosetAlphaKeys": [],
+   "layerAlphaKeys": [],
+   "uvAnim": null,
+   "uvOffsetClip0": null,
+   "approxTexture": false
+  },
+  {
+   "mesh": "Dashboard_YH6_g4_L0_cut",
+   "filter": "transparent",
+   "suffix": "cut",
+   "texture": "YH6.blp",
+   "textureFile": "YH6.blp.png",
+   "staticAlpha": 1.0,
+   "geosetAlphaKeys": [],
+   "layerAlphaKeys": [],
+   "uvAnim": null,
+   "uvOffsetClip0": null,
+   "approxTexture": false
+  }
+ ],
+ "filterGuide": {
+  "additive": "Unity: 가산(Additive) 파티클/URP Unlit Blend One One",
+  "addalpha": "알파×가산(Premultiplied/Additive, 알파 곱)",
+  "blend": "알파 혼합(Transparent)",
+  "transparent": "알파 컷(Cutout, clip 0.75)",
+  "none": "불투명"
+ },
+ "emitters": "없음 — 이 6개 MDX에는 PRE2/PREM/RIBB(파티클·리본) 청크가 하나도 없다(청크 목록: GEOS·BONE·HELP·PIVT·TXAN·SEQS…). 흰/검/왜곡 날개도 지오셋(판)과 뼈 애니메이션이다",
+ "sequences": [
+  {
+   "name": "s0_Stand",
+   "action": "Dashboard_YH6|s0_Stand",
+   "frames": 81,
+   "fps": 30,
+   "seconds": 2.666,
+   "looping": true
+  }
+ ],
+ "nodes": [
+  {
+   "name": "n4_bone_new0",
+   "parent": null
+  },
+  {
+   "name": "n2_Box01",
+   "parent": "n4_bone_new0"
+  },
+  {
+   "name": "n0_Plane01",
+   "parent": "n2_Box01"
+  },
+  {
+   "name": "n3_Box02",
+   "parent": "n4_bone_new0"
+  },
+  {
+   "name": "n1_Plane02",
+   "parent": "n3_Box02"
+  }
+ ],
+ "bboxRestMeters": {
+  "min": [
+   -1.711,
+   0.159,
+   -0.86
+  ],
+  "max": [
+   1.735,
+   0.823,
+   1.187
+  ],
+  "size": [
+   3.446,
+   0.664,
+   2.047
+  ],
+  "axes": "모델 좌표(Blender 가져오기 기준): X=좌우, Y=앞뒤 두께(+Y가 등 쪽), Z=위. Unity에서는 FBX 축 변환 후 Y가 위"
+ }
+}

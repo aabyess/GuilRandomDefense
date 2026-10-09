@@ -1,0 +1,257 @@
+{
+ "name": "Dashboard_Wings_enthusiasm2",
+ "source": "S2 대시보드 날개 모델(원작 저작물 — Assets 반입은 PM·사장님 판단)",
+ "unitScale": "FBX 1 = 1m = 원작 100단위(WC3 1단위=0.01m)",
+ "clip": {
+  "name": "Dashboard_Wings_enthusiasm2_4348728",
+  "frameStart": 1,
+  "frameEnd": 61,
+  "fps": 30,
+  "loop": true,
+  "note": "날갯짓(Stand 반복). FBX 액션 이름이 길면 Blender가 63자에서 자르므로 모델당 클립 하나뿐"
+ },
+ "bboxMeters": {
+  "min": [
+   -0.42,
+   -1.069,
+   -1.134
+  ],
+  "max": [
+   1.203,
+   1.01,
+   0.114
+  ],
+  "size": [
+   1.623,
+   2.079,
+   1.248
+  ]
+ },
+ "attach": {
+  "original": "chest",
+  "note": "원작은 유닛의 chest 부착점에 이 모델의 원점(0,0,0)을 맞춘다. 휴식 자세 범위(m): 좌우 -1.432~1.448, 앞뒤(+등쪽) -0.069~0.014, 위아래 -0.366~1.149 — 원점 기준 위쪽·등 쪽으로 펼쳐진다. 부착 오프셋은 chest 그대로(추가 오프셋 0)가 원작 기준.",
+  "sizeRef": "모델 크기 그대로(스케일 1.0)가 원작 기준: 폭 2.88m·높이 1.52m. 원작 영웅 키가 대략 1.2~1.9m(120~190단위)이므로 날개 폭은 키의 약 2~3배다. 우리 유닛에는 유닛 키 비율로 맞추되 날개 폭 ≈ 유닛 키×2.2 에서 시작해 눈으로 조정할 것."
+ },
+ "materials": [
+  {
+   "mesh": "Dashboard_Wings_enthusiasm2_g0_L0_cut",
+   "filter": "transparent",
+   "suffix": "cut",
+   "texture": "WingsE_2.blp",
+   "textureFile": "WingsE_2.blp.png",
+   "staticAlpha": 1.0,
+   "geosetAlphaKeys": [
+    [
+     0,
+     [
+      1.0
+     ]
+    ],
+    [
+     9000,
+     [
+      1.0
+     ]
+    ]
+   ],
+   "layerAlphaKeys": [],
+   "uvAnim": null,
+   "uvOffsetClip0": null,
+   "approxTexture": false
+  },
+  {
+   "mesh": "Dashboard_Wings_enthusiasm2_g0_L1_add",
+   "filter": "additive",
+   "suffix": "add",
+   "texture": "Textures\\star4.blp",
+   "textureFile": "Textures_star4.blp.png",
+   "staticAlpha": 1.0,
+   "geosetAlphaKeys": [
+    [
+     0,
+     [
+      1.0
+     ]
+    ],
+    [
+     9000,
+     [
+      1.0
+     ]
+    ]
+   ],
+   "layerAlphaKeys": [],
+   "uvAnim": {
+    "tracks": {
+     "KTAT": {
+      "interp": 1,
+      "gseq": -1,
+      "keys": [
+       [
+        333,
+        [
+         0.0,
+         0.0,
+         0.0
+        ]
+       ],
+       [
+        2333,
+        [
+         1.0,
+         0.0,
+         0.0
+        ]
+       ]
+      ]
+     }
+    }
+   },
+   "uvOffsetClip0": null,
+   "approxTexture": true
+  },
+  {
+   "mesh": "Dashboard_Wings_enthusiasm2_g1_L0_add",
+   "filter": "additive",
+   "suffix": "add",
+   "texture": "WingsE_1.blp",
+   "textureFile": "WingsE_1.blp.png",
+   "staticAlpha": 1.0,
+   "geosetAlphaKeys": [
+    [
+     0,
+     [
+      1.0
+     ]
+    ],
+    [
+     9000,
+     [
+      1.0
+     ]
+    ]
+   ],
+   "layerAlphaKeys": [
+    [
+     333,
+     [
+      1.0
+     ]
+    ],
+    [
+     1667,
+     [
+      0.20000000298023224
+     ]
+    ],
+    [
+     2333,
+     [
+      1.0
+     ]
+    ]
+   ],
+   "uvAnim": null,
+   "uvOffsetClip0": null,
+   "approxTexture": false
+  }
+ ],
+ "filterGuide": {
+  "additive": "Unity: 가산(Additive) 파티클/URP Unlit Blend One One",
+  "addalpha": "알파×가산(Premultiplied/Additive, 알파 곱)",
+  "blend": "알파 혼합(Transparent)",
+  "transparent": "알파 컷(Cutout, clip 0.75)",
+  "none": "불투명"
+ },
+ "emitters": "없음 — 이 6개 MDX에는 PRE2/PREM/RIBB(파티클·리본) 청크가 하나도 없다(청크 목록: GEOS·BONE·HELP·PIVT·TXAN·SEQS…). 흰/검/왜곡 날개도 지오셋(판)과 뼈 애니메이션이다",
+ "sequences": [
+  {
+   "name": "s0_Stand",
+   "action": "Dashboard_Wings_enthusiasm2|s0_Stand",
+   "frames": 61,
+   "fps": 30,
+   "seconds": 2.0,
+   "looping": true
+  }
+ ],
+ "nodes": [
+  {
+   "name": "n0_Mesh01",
+   "parent": null
+  },
+  {
+   "name": "n1_Bone01",
+   "parent": "n0_Mesh01"
+  },
+  {
+   "name": "n2_Bone07",
+   "parent": "n0_Mesh01"
+  },
+  {
+   "name": "n3_Bone02",
+   "parent": "n1_Bone01"
+  },
+  {
+   "name": "n4_Bone03",
+   "parent": "n3_Bone02"
+  },
+  {
+   "name": "n5_Bone04",
+   "parent": "n4_Bone03"
+  },
+  {
+   "name": "n6_Bone05",
+   "parent": "n5_Bone04"
+  },
+  {
+   "name": "n7_Bone06",
+   "parent": "n6_Bone05"
+  },
+  {
+   "name": "n8_Bone08",
+   "parent": "n2_Bone07"
+  },
+  {
+   "name": "n9_Bone09",
+   "parent": "n8_Bone08"
+  },
+  {
+   "name": "n10_Bone10",
+   "parent": "n9_Bone09"
+  },
+  {
+   "name": "n11_Bone11",
+   "parent": "n10_Bone10"
+  },
+  {
+   "name": "n12_Bone12",
+   "parent": "n11_Bone11"
+  },
+  {
+   "name": "n13_bone_new0",
+   "parent": "n10_Bone10"
+  },
+  {
+   "name": "n14_bone_new1",
+   "parent": "n5_Bone04"
+  }
+ ],
+ "bboxRestMeters": {
+  "min": [
+   -1.432,
+   -0.069,
+   -0.366
+  ],
+  "max": [
+   1.448,
+   0.014,
+   1.149
+  ],
+  "size": [
+   2.88,
+   0.083,
+   1.515
+  ],
+  "axes": "모델 좌표(Blender 가져오기 기준): X=좌우, Y=앞뒤 두께(+Y가 등 쪽), Z=위. Unity에서는 FBX 축 변환 후 Y가 위"
+ }
+}

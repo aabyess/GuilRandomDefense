@@ -95,6 +95,7 @@ public static class NetReplicaBuilder
                 if (visual.TryGetComponent(out UnitIdentity identity))
                 {
                     identity.SetData(unitData);
+                    if (UnitWings.WingNameFor(unitData.grade) != null) visual.AddComponent<WingAttacher>().data = unitData;   // 등급 날개 — 호스트와 같은 등급표
                     // 클라의 UnitInventory가 곧 「내 유닛 복제본 목록」이 된다 — 겉모습이 생기고 사라지는 것이 복제다.
                     identity.RegisterTo(PlayerContext.Get(entity.Owner)?.UnitInventory);
                 }
