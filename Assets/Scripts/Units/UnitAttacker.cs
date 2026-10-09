@@ -1456,6 +1456,7 @@ public class UnitAttacker : MonoBehaviour
         UnitData unitData = identity != null ? identity.Data : null;
         UnitUpgrades source = ResolveUpgrades();
         if (unitData != null && source != null) index = source.SkillLevelIndexFor(unitData);
+        if (!string.IsNullOrEmpty(skill.levelUpBuffId) && skill.levels.Count > 1 && HasBuff(skill.levelUpBuffId)) index = Mathf.Max(index, 1);   // 최윤서 강화 등 개체 버프로 승급(10-09)
 
         return skill.levels[Mathf.Clamp(index, 0, skill.levels.Count - 1)];
     }

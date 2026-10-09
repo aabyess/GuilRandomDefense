@@ -4152,7 +4152,7 @@ public class GameHud : MonoBehaviour
     {
         SkillData skill = index >= 0 && index < MaxSkillIcons ? skillIconSkills[index] : null;
         if (skill == null) return;
-        ShowTooltip(SkillTooltipText(skill), (RectTransform)skillIconBorders[index].transform);
+        ShowTooltip(SkillTooltipText(skill, SelectedAttacker()), (RectTransform)skillIconBorders[index].transform);
     }
 
     int LastPassiveSlot()
@@ -4162,7 +4162,13 @@ public class GameHud : MonoBehaviour
         return last;
     }
 
-    static string SkillTooltipText(SkillData skill)
+    UnitAttacker SelectedAttacker()
+    {
+        SelectionManager sel = Selection;
+        return sel != null && sel.Selected.Count > 0 && sel.Selected[0] != null && sel.Selected[0].TryGetComponent(out UnitAttacker a) ? a : null;
+    }
+
+    static string SkillTooltipText(SkillData skill, UnitAttacker caster = null)
     {
         string text = PlayerFacingText.SkillName(skill);   // 10-06 개발 메모는 화면에 안 낸다
         string desc = PlayerFacingText.SkillDescription(skill);
@@ -4211,7 +4217,10 @@ public class GameHud : MonoBehaviour
     }
 
     // 마우스가 카드에 올라간 순간과, 그 뒤로는 TooltipRefreshInterval마다 다시 불린다
+        bool leveledUp = caster != null && !string.IsNullOrEmpty(skill.levelUpBuffId) && caster.HasBuff(skill.levelUpBuffId);
+        if (leveledUp) text += " Lv.2 (최윤서 강화)";   // 승급한 개체는 이름에 Lv.2 표시(10-09)
     // (RefreshHoveredTooltip) — 매 프레임 문자열을 새로 만들지 않는다.
+        if (!string.IsNullOrEmpty(skill.levelUpDescription)) text += "\n" + (leveledUp ? "<color=#FFD700>" + skill.levelUpDescription + "</color>" : "<color=#9AA0A6>" + skill.levelUpDescription.Replace("Lv.2", "Lv.2(아직)") + "</color>");
     void ShowHoveredTooltipNow(int index)
     {
         if (index < 0 || index >= unitCommandSlotRoots.Length || unitCommandSlotRoots[index] == null) return;

@@ -80,56 +80,6 @@ static class NotaeLv2Probe
     static string SetupBoss() => Build(false);
     static string SetupSwarm() => Build(true);
 
-    // Lv.2 고정 피해 값을 메모리에서 바꾼다(SetFixed 후 Mark부터 다시). 에셋 파일은 안 건드린다.
-    static string SetFixed()
-    {
-        var skill = AssetDatabase.LoadAssetAtPath<SkillData>("Assets/Data/UnitSkills/SkillData_사장님_초월_노태현_AP_반사회적인격_Lv2.asset");
-        float v = float.Parse(System.IO.File.ReadAllText("/private/tmp/claude-501/-Users-sang-GitHub-GuilRandomDefense/b7572603-8e06-4558-82cd-42b0cfe68a1a/scratchpad/notae_fixed.txt").Trim());
-        skill.levels[0].effects[0].multiplier = v;
-        return $"Lv.2 고정 피해 = {v:N0}";
-    }
-
-
-    // 결정론 검증: 노태현(+최윤서 강화 버프)이 Lv.2 스킬을 한 번 시전 — 보스 1기·몹 2기(범위 안)·먼 몹 1기의 체력 감소를 그대로 잰다. 고정 피해면 방어와 무관하게 값 그대로(범위 안 셋), 먼 몹은 0.
-    static string Direct()
-    {
-        if (!Application.isPlaying) return "❌ 플레이 중에만";
-        var spawner = Object.FindFirstObjectByType<UnitSpawner>();
-        EnemyData boss = AssetDatabase.LoadAssetAtPath<EnemyData>("Assets/Data/Enemies/Enemy_R60_정윤식.asset");
-        EnemyData mob = AssetDatabase.LoadAssetAtPath<EnemyData>("Assets/Data/Enemies/Enemy_R45_이현빈.asset");
-        var mode = DifficultyManager.Instance.Current;
-        UnitData d = Load("초월_노태현_AP");
-        Vector3 c = LaneMarker.Get(0).LaneCenter;
-        var nt = spawner.Spawn(d, c, 0).GetComponent<UnitAttacker>();
-        EnemyDummy Make(EnemyData ed, Vector3 at, float armor)
-        {
-            GameObject g = Object.Instantiate(ed.prefab, at, Quaternion.identity);
-            if (g.TryGetComponent(out WaypointMover m)) m.enabled = false;
-            var e = g.GetComponent<EnemyDummy>(); e.Initialize(ed, 1f); e.SetLane(0); e.DifficultyArmorBonus = armor;
-            HpField.SetValue(e, Refill); return e;
-        }
-        var b = Make(boss, c + new Vector3(0f, 0f, 15f), DifficultyTable.BossArmorBonus(mode));
-        var m1 = Make(mob, c + new Vector3(8f, 0f, 20f), DifficultyTable.MobArmorBonus(mode, 45));
-        var m2 = Make(mob, c + new Vector3(-8f, 0f, 20f), 5000f);   // 방어 5000 — 고정 피해면 영향 없음
-        var far = Make(mob, c + new Vector3(0f, 0f, 400f), 0f);
-        SkillData skill = d.skills.Find(x => x != null && x.name.Contains("Lv2"));
-        if (skill == null) return "❌ Lv2 스킬이 노태현 목록에 없다";
-        var cast = typeof(UnitAttacker).GetMethod("CastSkillLevel", BindingFlags.NonPublic | BindingFlags.Instance);
-        // 버프 없음 → 게이트가 막는다(0이어야). 버프 있음 → 값 그대로.
-        string noBuff = Cast(cast, nt, skill, b, new[] { b, m1, m2, far });
-        nt.SetYoonseoEnhanced();
-        string withBuff = Cast(cast, nt, skill, b, new[] { b, m1, m2, far });
-        return $"Lv.2 값 {skill.levels[0].effects[0].multiplier:N0} · WorldScale {WorldScale.Value} 범위 {skill.levels[0].WorldRange:F1}\n버프 없음: {noBuff}\n버프 있음: {withBuff}  (순서: 보스 / 몹 / 방어5000 몹 / 먼 몹)";
-    }
-
-    static string Cast(MethodInfo cast, UnitAttacker nt, SkillData skill, EnemyDummy primary, EnemyDummy[] all)
-    {
-        foreach (var e in all) HpField.SetValue(e, Refill);
-        cast.Invoke(nt, new object[] { skill.levels[0], skill.levels[0].WorldRange, primary, nt.AttackDamage });
-        return string.Join(" / ", all.Select(e => $"{Refill - e.Hp:N0}"));
-    }
-
-
     // 다른세계 9기 공속 +25% 확인: 기본 간격 ÷ 실제 간격이 1.25여야(다른 공속 요인이 없는 새 유닛).
     static string OtherWorldCheck()
     {

@@ -914,4 +914,9 @@ public class SkillData : ScriptableObject
 
     // ⚠️ 맨 뒤에 추가(2026-10-06) — 스킬·디버프 툴팁 아이콘 자리. 지금은 비어 있어도 된다(공용 디버프 「외동」은 이름·설명만, 아이콘은 나중에).
     public Sprite icon;
+
+    // ⚠️ 맨 뒤(2026-10-09, 초월 노태현 「반사회적인격 Lv.2」) — 시전자가 이 버프를 가지면 levels[1]을 쓴다(인스턴스 단위 승급: 최윤서 강화 = YOONSEO_ENHANCED). 비어 있으면 안 쓴다.
+    // 특성승급(UnitUpgrades.SkillLevelIndexFor)은 유닛 종류 단위라 못 쓴다 — 최윤서 강화는 개체마다 켜진다. levelUpDescription은 승급했을 때 정보창 툴팁에 붙는 설명.
+    public string levelUpBuffId;
+    [TextArea] public string levelUpDescription;
 }
