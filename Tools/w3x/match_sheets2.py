@@ -6,7 +6,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.pat
 import w3u
 GRADE = sys.argv[1]; NN = {"흔함": "01", "안흔함": "02", "특별함": "03", "희귀함": "04", "전설적인": "05", "히든": "06", "변화됨": "07", "랜덤": "08", "제한": "09", "특수함": "10", "초월": "11", "불멸": "12", "영원": "13"}[GRADE]
 FOLD = {"01": "01_흔함", "02": "02_안흔함", "03": "03_특별함", "04": "04_희귀함", "05": "05_전설", "06": "06_히든", "07": "07_변화됨", "08": "08_랜덤_다른세계", "09": "09_제한됨", "10": "10_특수함", "11": "11_초월", "12": "12_불멸", "13": "13_영원"}[NN]
-H = os.path.expanduser("~"); OUT = f"{H}/Desktop/구랜디스킨모음/매칭_{GRADE}"; os.makedirs(OUT, exist_ok=True)
+H = os.path.expanduser("~"); OUT = H + "/Desktop/구랜디스킨모음/매칭_" + {"전설적인": "전설"}.get(GRADE, GRADE); os.makedirs(OUT, exist_ok=True)
 F = lambda n: ImageFont.truetype("/System/Library/Fonts/AppleSDGothicNeo.ttc", n, index=0)
 cl = lambda x: re.sub(r"\|[cC][0-9a-fA-F]{8}|\|[rR]", "", x or "").strip()
 def dec(s): return re.sub(r"\\u([0-9A-Fa-f]{4})", lambda m: chr(int(m.group(1), 16)), (s or "").strip().strip('"'))
