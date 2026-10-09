@@ -3654,7 +3654,7 @@ public class GameHud : MonoBehaviour
         const float frameInset = 30f;
         // statRows는 왼쪽 반, 띠 아래로
         statRows.anchorMin = new Vector2(0f, 0f); statRows.anchorMax = new Vector2(0.5f, 1f);
-        statRows.offsetMin = new Vector2(frameInset + 6f, frameInset - 6f); statRows.offsetMax = new Vector2(-6f, -(frameInset + 6f + 30f + 4f + 18f + 8f));
+        statRows.offsetMin = new Vector2(frameInset + 6f, frameInset - 6f); statRows.offsetMax = new Vector2(-6f, -(frameInset + 6f + 30f + 4f + 24f + 8f));
         VerticalLayoutGroup column = statRows.GetComponent<VerticalLayoutGroup>();
         column.spacing = 4f;
         column.childAlignment = TextAnchor.UpperLeft;
@@ -3670,7 +3670,7 @@ public class GameHud : MonoBehaviour
         SetStatIcon(unitArmorText.transform.parent, "cmd_hold");
 
         wc3NameText = BuildWc3Strip(statRows, "Wc3TitleStrip", "info_title_strip", frameInset + 6f, 30f, 28f);
-        wc3LevelText = BuildWc3Strip(statRows, "Wc3LevelStrip", "info_level_strip", frameInset + 6f + 30f + 4f, 18f, 18f);
+        wc3LevelText = BuildWc3Strip(statRows, "Wc3LevelStrip", "info_level_strip", frameInset + 6f + 30f + 4f, 24f, 18f);
     }
 
     // 워크3풍 위 띠 켜기/끄기. 켜면 옛 한 줄 이름(unitInfoText)은 끈다(ShowSingleInfo가 다음에 다시 켠다).
@@ -5363,7 +5363,7 @@ public class GameHud : MonoBehaviour
             string person = data.DisplayName.Length > data.unitName.Length ? data.DisplayName.Substring(0, data.DisplayName.Length - data.unitName.Length - 1) : "";
             string firstPart = person.Length > 0 ? person : data.unitName;
             string secondPart = person.Length > 0 ? $" <color=#FFD84A>{data.unitName}</color>" : "";
-            unitInfoText.text = $"<size=115%>{firstPart}{secondPart} – <color=#{gradeColorHex}>{grade}{levelLabel}</color></size>" + (data.OriginalMatchLabel.Length > 0 ? $"  <size=70%><color=#A0A0A0>{data.OriginalMatchLabel.Replace("원작: ", "원작 ")}</color></size>" : "");
+            unitInfoText.text = $"<size=115%>{firstPart}{secondPart} – <color=#{gradeColorHex}>{grade}{levelLabel}</color></size>" + (data.OriginalMatchLabel.Length > 0 ? $"  <size=80%><color=#FFD27A>{data.OriginalMatchLabel}</color></size>" : "");
             string bonus = hasStats && data.attackPower > 0f && damage - data.attackPower >= 0.5f ? $" <color=#46E06A>+{damage - data.attackPower:F0}</color>" : "";
             string baseShown = bonus.Length > 0 ? data.attackPower.ToString("F0") : attackPower;   // 10-08 워크3식: 앞 숫자는 기본값, 뒤 +는 보너스(합계를 앞에 쓰면 보너스가 두 번 붙어 보인다)
             unitDamageText.text = $"<color=#FF9A3A>공격력:</color> {baseShown}{bonus}";   // 사장님 10-03: 사거리·공속은 정보칸에서 뺀다(F1 DebugHud엔 남음)
@@ -5376,7 +5376,7 @@ public class GameHud : MonoBehaviour
                 unitHeroStatText.text = $"<color=#FF9A3A>힘</color> {Mathf.FloorToInt(attacker.CurrentStrength)}  <color=#FF9A3A>민</color> {Mathf.FloorToInt(attacker.CurrentAgility)}  <color=#FF9A3A>지</color> {Mathf.FloorToInt(attacker.CurrentIntelligence)}";
             if (!unitStatRows.activeSelf) unitStatRows.SetActive(true);
             if (wc3NameText != null)
-                SetWc3Strips(true, $"{firstPart}{secondPart}", $"<color=#{gradeColorHex}>{grade}{levelLabel}</color>" + (data.OriginalMatchLabel.Length > 0 ? $"  <size=80%><color=#A0A0A0>{data.OriginalMatchLabel.Replace("원작: ", "원작 ")}</color></size>" : ""));
+                SetWc3Strips(true, $"{firstPart}{secondPart}", $"<color=#{gradeColorHex}>{grade}{levelLabel}</color>" + (data.OriginalMatchLabel.Length > 0 ? $"   <b><color=#FFD27A>{data.OriginalMatchLabel}</color></b>" : ""));   // 10-09 사장님: 이름 줄 바로 아래 가운데에 눈에 띄게(「원작: 초월 징베」)
             if (skillIconRow != null && skillIconRow.activeSelf) skillIconRow.SetActive(false);   // 10-07 스킬 아이콘은 명령 카드로 옮김(ReflowFlexSlots Passive)
             // 10-08 6·7: 막대는 유닛 게이지(현재/문턱)다 — 지갑 마나(도움소)는 여기서 뺐다. 게이지가 없으면 체력은 가득·마나 막대는 숨김.
             int lifeNow = 0, lifeMax = 0, manaNow = 0, manaMax = 0;

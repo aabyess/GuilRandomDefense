@@ -3,12 +3,12 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// 원작 대응 이름 채우기(사장님 10-07 「누구 매칭인지 보이게」) — Docs/research/ORIGINAL_MATCH_NAMES_2026-10-07.tsv(로스터\t원작 유닛\t원작 이름)를 UnitData.originalMatchName에 쓴다.
+/// 원작 대응 이름 채우기(사장님 10-07 「누구 매칭인지 보이게」) — Docs/research/ORIGINAL_MATCH_NAMES_2026-10-09.tsv(로스터\t원작 유닛\t원작 이름)를 UnitData.originalMatchName에 쓴다.
 /// 호출: call OriginalMatchApply.Apply (다시 불러도 안전 — 표에 없는 유닛의 값은 그대로 둔다).
 /// </summary>
 static class OriginalMatchApply
 {
-    const string TablePath = "Docs/research/ORIGINAL_MATCH_NAMES_2026-10-07.tsv";
+    const string TablePath = "Docs/research/ORIGINAL_MATCH_NAMES_2026-10-09.tsv";
 
     static string Apply()
     {
