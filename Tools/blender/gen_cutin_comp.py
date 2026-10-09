@@ -15,7 +15,7 @@ import sys
 import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
-HOME = os.path.expanduser("~/GRD_cutin")
+HOME = os.path.expanduser(os.environ.get("CUTIN_HOME", "~/GRD_cutin"))
 FONTS = os.path.join(HOME, "fonts")
 W, H = 1920, 1080
 GAME = os.path.expanduser("~/GitHub/GuilRandomDefense/Docs/ui_mockups/compare/31_fubao_focus_on.png")

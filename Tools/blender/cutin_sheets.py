@@ -1,7 +1,7 @@
 """컷인 C안 후보 시트(유닛마다 한 줄, ★ = 고른 것) + 41기 연속 영상. run_cutin_c_all.sh 마지막 단계 — 고르기만 바꿨을 때 따로 돌린다."""
 import glob, json, os, subprocess
 from PIL import Image, ImageDraw, ImageFont
-R = os.path.expanduser("~/GRD_cutin/render"); D = os.path.expanduser("~/GRD_cutin/C_all")
+_CH = os.environ.get("CUTIN_HOME", "~/GRD_cutin"); R = os.path.expanduser(_CH + "/render"); D = os.path.expanduser(_CH + "/C_all")
 F = ImageFont.truetype(os.path.expanduser("~/GRD_cutin/fonts/NanumGothic-ExtraBold.ttf"), 18)
 infos = [json.load(open(f)) for f in sorted(glob.glob(os.path.join(R, "C_*_cands.json")))]
 S, cols = 180, 8

@@ -24,6 +24,10 @@ bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.fbx(filepath=FBX)
 arm = next((o for o in bpy.data.objects if o.type == "ARMATURE"), None)
 meshes = [o for o in bpy.data.objects if o.type == "MESH"]
+_HIDE = [x for x in (os.environ.get("HIDE_MESHES") or "").split(",") if x]       # 원작 스킨: 공격 시퀀스 시작에 알파 0인 메시(변신체·소품)는 렌더·측정에서 뺀다
+for o in meshes:
+    if any(o.name.startswith(h) for h in _HIDE): o.hide_render = True; o.hide_viewport = True
+meshes = [o for o in meshes if not o.hide_render]
 
 
 def toon_material(src, outline=False, color=(1, 0.85, 0.1)):

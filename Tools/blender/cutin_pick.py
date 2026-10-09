@@ -15,12 +15,12 @@ import sys
 
 from PIL import Image
 
-HOME = os.path.expanduser("~/GRD_cutin")
+HOME = os.path.expanduser(os.environ.get("CUTIN_HOME", "~/GRD_cutin"))
 R = os.path.join(HOME, "render")
 W, H = 1920, 1080
 HH = 1320                                  # layers_C의 캐릭터 높이
 X0, Y0 = W // 2 - HH // 2 - 560, H - HH + 150   # 미끄러진 뒤(정점) 캐릭터 그림 왼쪽 위
-PICKS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cutin_picks.json")
+PICKS = os.environ.get("CUTIN_PICKS") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "cutin_picks.json")
 BAND = None
 TOP_MARGIN = 18                            # 머리 꼭대기 ~ 화면 위 끝 최소 여백(px)
 
