@@ -1,0 +1,86 @@
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.UI;
+
+/// <summary>상점(강화소) 연타 시 선택이 풀리는지 같이 하기 클라 창에서 확인(빌드 사본 전용, 훅 -mpTestCheck17 초). 로그 「[C17]」.
+/// Assets/Editor/ShopSpamProbe.cs의 런타임 판: 클라가 상점을 고른 채 가상 마우스로 명령 카드 단추를 N번 누르고 매번 「아직 그 상점을 고르고 있나」를 본다.
+/// 호스트는 모든 플레이어 지갑에 골드를 계속 넣어 준다(강화가 실제로 일어나게).</summary>
+public class NetCheck17Test : MonoBehaviour
+{
+    public float startAt = 25f;
+    static string Arg(string k, string def) { var a = System.Environment.GetCommandLineArgs(); int i = System.Array.IndexOf(a, k); return i >= 0 && i + 1 < a.Length ? a[i + 1] : def; }
+
+    IEnumerator Start()
+    {
+        yield return new WaitForSecondsRealtime(startAt);
+        bool host = GameAuthority.IsServer;
+        if (host) { StartCoroutine(Feed()); yield break; }
+        string shopName = Arg("-mpCheck17Shop", "유닛강화소");
+        string mode = Arg("-mpCheck17Mode", "btn");
+        int total = int.Parse(Arg("-mpCheck17N", "100"));
+        SelectionManager.TraceClear = true;
+        var sel = FindFirstObjectByType<SelectionManager>();
+        var hud = FindFirstObjectByType<GameHud>();
+        Selectable shop = Selectable.All.FirstOrDefault(s => s != null && s.name.Contains(shopName));
+        if (shop == null) { Debug.Log("[C17] ❌ 상점 없음 " + shopName + " · Selectable " + Selectable.All.Count); yield break; }
+        Mouse mouse = InputSystem.AddDevice<Mouse>("C17Mouse"); mouse.MakeCurrent();
+        foreach (Mouse m in InputSystem.devices.OfType<Mouse>().Where(m => m != mouse && m.enabled).ToList()) InputSystem.DisableDevice(m);
+        FieldInfo f = typeof(GameHud).GetField("unitCommandSlotButtons", BindingFlags.Instance | BindingFlags.NonPublic);
+        sel.SelectOnly(shop);
+        yield return new WaitForSecondsRealtime(0.5f);
+        var buttons = (Button[])f.GetValue(hud);
+        int clicks = 0, losses = 0;
+        var log = new StringBuilder();
+        for (int n = 0; n < total; n++)
+        {
+            if (sel.Selected.Count != 1 || sel.Selected[0] != shop) { sel.SelectOnly(shop); yield return null; yield return null; }
+            List<Button> visible = buttons.Where(b => b != null && b.gameObject.activeInHierarchy).ToList();
+            if (visible.Count == 0) { log.AppendLine("보이는 단추 없음"); break; }
+            Button target = visible[n % visible.Count];
+            Vector2 pos = RectCenter((RectTransform)target.transform);
+            if (mode == "gap" && n % 5 == 4) pos += new Vector2(0f, -((RectTransform)target.transform).rect.height * 0.7f);
+            Queue(mouse, pos, false); yield return null;
+            Queue(mouse, pos, true); yield return null;
+            Queue(mouse, pos, false); yield return null; yield return null;
+            clicks++;
+            if (sel.Selected.Count != 1 || sel.Selected[0] != shop)
+            {
+                losses++;
+                log.AppendLine($"#{n} 풀림 — {target.name} 위치 {pos} · 직전 호출: {SelectionManager.LastClearTrace}");
+            }
+            yield return new WaitForSecondsRealtime(0.05f);
+        }
+        Debug.Log($"[C17] 클라 클릭 {clicks} · 상점 풀림 {losses}\n{log}");
+    }
+
+    IEnumerator Feed()
+    {
+        while (true)
+        {
+            foreach (var p in PlayerContext.All) if (p != null && p.GoldWallet != null) p.GoldWallet.Add(500000);
+            yield return new WaitForSecondsRealtime(1f);
+        }
+    }
+
+    static Vector2 RectCenter(RectTransform rt)
+    {
+        var corners = new Vector3[4]; rt.GetWorldCorners(corners);
+        Vector3 c = (corners[0] + corners[2]) * 0.5f;
+        Canvas canvas = rt.GetComponentInParent<Canvas>();
+        Camera cam = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
+        return RectTransformUtility.WorldToScreenPoint(cam, c);
+    }
+
+    static void Queue(Mouse mouse, Vector2 pos, bool down)
+    {
+        var state = new MouseState { position = pos };
+        if (down) state = state.WithButton(MouseButton.Left, true);
+        InputSystem.QueueStateEvent(mouse, state);
+    }
+}
