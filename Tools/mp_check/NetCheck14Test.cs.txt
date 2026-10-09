@@ -53,9 +53,11 @@ public class NetCheck14Test : MonoBehaviour
             for (int k = 0; k < ing.count; k++) other.Warehouse.Store(spawner.Spawn(ing.unit, lane.LaneCenter + new Vector3(k * 8f, 0f, 0f), slot));
         Vector3 wh = other.Warehouse.Stored.Count > 0 ? other.Warehouse.Stored[0].transform.position : Vector3.zero;
         Debug.Log($"[C14] 호스트: 재료 {other.Warehouse.Stored.Count}기 창고에 보관(창고 자리 {wh:F0}) · 레인 가운데 {lane.LaneCenter:F0}");
-        yield return new WaitForSecondsRealtime(30f);
+        yield return new WaitForSecondsRealtime(7f);
+        Debug.Log($"[C14] 호스트 판매 요청 창구 뒤: 복사본 {UnitIdentity.Active.Count(u => u != null && u.OwnerId == slot && u.IsCopy)}기 · 위습 {WispCount(slot)}기 · 목재 {other.ResourceWallet.Get(ResourceType.Wood)}");
+        yield return new WaitForSecondsRealtime(23f);
         int copiesAfter = UnitIdentity.Active.Count(u => u != null && u.OwnerId == slot && u.IsCopy);
-        Debug.Log($"[C14] 호스트 결과: 복사본 {copies.Count}→{copiesAfter}기(판매 거절이면 그대로) · 위습 {WispCount(slot)}기 · 목재 {other.ResourceWallet.Get(ResourceType.Wood)}");
+        Debug.Log($"[C14] 호스트 결과: 복사본 {copies.Count}→{copiesAfter}기(10초 수명으로 사라짐 — 판매 거절은 아래 [판매] 로그·위습·목재로 본다) · 위습 {WispCount(slot)}기 · 목재 {other.ResourceWallet.Get(ResourceType.Wood)}");
         var res = UnitIdentity.Active.FirstOrDefault(u => u != null && u.OwnerId == slot && u.Data == recipe.result);
         if (res != null)
         {
@@ -70,7 +72,7 @@ public class NetCheck14Test : MonoBehaviour
     IEnumerator ClientRun(CombineSystem system)
     {
         int me = LocalPlayer.LocalPlayerId;
-        yield return new WaitForSecondsRealtime(8f);
+        yield return new WaitForSecondsRealtime(3f);   // 볼보이는 10초 뒤 사라지므로 일찍 요청
         var mine = UnitIdentity.Active.Where(u => u != null && u.OwnerId == me && u.Data != null && u.Data.unitName.Contains("볼보이")).ToList();
         Debug.Log($"[C14] 클라 내 볼보이 {mine.Count}기 · IsCopy {mine.Count(u => u.IsCopy)}기(복제 확인)");
         if (mine.Count > 0)
@@ -78,7 +80,7 @@ public class NetCheck14Test : MonoBehaviour
             var sel = FindFirstObjectByType<SelectionManager>();
             var s = mine[0].GetComponent<Selectable>();
             sel.SelectOnly(s);
-            yield return new WaitForSecondsRealtime(1.5f);
+            yield return new WaitForSecondsRealtime(0.8f);
             var hud = FindFirstObjectByType<GameHud>();
             var f = typeof(GameHud).GetField("sellSlotEnabled", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             var shown = typeof(GameHud).GetField("sellSlotShown", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -87,7 +89,7 @@ public class NetCheck14Test : MonoBehaviour
             NetCommands.RequestHudUnitAction(NetHudAction.Sell, s, 0);
             Debug.Log("[C14] 클라 판매 요청 보냄(호스트가 거절해야 함)");
             if (Shot != null) ScreenCapture.CaptureScreenshot($"{Shot}_sell_client.png");
-            yield return new WaitForSecondsRealtime(2f);
+            yield return new WaitForSecondsRealtime(1.2f);
             Debug.Log($"[C14] 클라 판매 요청 뒤 내 볼보이 {UnitIdentity.Active.Count(u => u != null && u.OwnerId == me && u.Data != null && u.Data.unitName.Contains("볼보이"))}기");
         }
         yield return new WaitForSecondsRealtime(3f);
