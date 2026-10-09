@@ -40,3 +40,9 @@
 - `pre2[].textureFile` = ~/GRD_orig_vfx_trial/<모델>/Textures/<파일>.png (+ `textureSourcePath` 원작 경로). **입자 텍스처 PNG가 폴더에 빠져 있던 것 1018개를 전부 복사해 채움**(Tools/w3x/fix_pre2_textures.py) — 이전에 반입한 모델은 Textures/를 다시 복사할 것.
 - folder=null 모델은 `substituteNote`(대체 모양·크기 한 줄). spawn의 `substitute`(해적선 프리팹 경로·길이 380)·`originalModel`(샹크스 번개 = roarthunder로 대체) 참고.
 - 대본 개수: 4(샹크스·시키·에넬·드래곤). 더 필요하면 표(Docs/research/REPRESENTATIVE_SCENES_2026-10-09.md)에서 PM이 정함.
+
+## 자동 생성 대본(~/GRD_scenes/auto/ → 20개씩 scripts/로) 좌표
+- `at.world[x,y]` = **시전자 원점 기준 절대 좌표**(워크3 단위): 시전자 (0,0), 대상 (600,0), x축 = 시전자→대상 방향, y = 왼쪽(워크3 각도 +90°), 각도 0° = +x.
+- `at.offset[x,y]` = **anchor(caster|target)에서의 상대**(anchor 위치 + offset = world). 게임에서는 anchor 실제 위치에 두고 offset을 (x=시전자→대상 방향, y=그 왼쪽)으로 돌려 더하면 된다.
+- `moveTo` 목표와 `teleport.to`도 같은 좌표(world/offset/anchor 형식). 자동 대본의 이동은 teleport(SetUnitPositionLoc)만 나오고 moveTo는 손으로 만든 시키 대본에만 있다.
+- 시각 t는 트리거 시작(0) 기준 초. 12초 이후 이벤트는 잘랐다(cut, truncated 표시). `quality`: 양호 / 검토 필요(조건 미해결·반복 폭주) / 자동 해석 실패(이벤트 없음).
