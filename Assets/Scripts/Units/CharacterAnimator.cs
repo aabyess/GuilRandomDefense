@@ -14,6 +14,7 @@ public class CharacterAnimator : MonoBehaviour
     public const string SpeedParam = "Speed";
     public const string AttackParam = "Attack";
     public const string DieParam = "Die";
+    public const string SpellParam = "Spell";   // 원작 스킨 교체(10-09): 스킬 시전 동작
 
     [SerializeField] Animator animator;
     // 이동 속도를 0~1로 접어 넣는 기준. 이보다 빠르면 전력 이동으로 본다.
@@ -37,8 +38,10 @@ public class CharacterAnimator : MonoBehaviour
     static readonly int SpeedHash = Animator.StringToHash(SpeedParam);
     static readonly int AttackHash = Animator.StringToHash(AttackParam);
     static readonly int DieHash = Animator.StringToHash(DieParam);
+    static readonly int SpellHash = Animator.StringToHash(SpellParam);
 
-    bool hasSpeed, hasAttack, hasDie;
+    bool hasSpeed, hasAttack, hasDie, hasSpell;
+    float lastAttackTime = -10f;
 
     void Awake()
     {
@@ -63,6 +66,7 @@ public class CharacterAnimator : MonoBehaviour
             if (parameter.name == SpeedParam) hasSpeed = true;
             else if (parameter.name == AttackParam) hasAttack = true;
             else if (parameter.name == DieParam) hasDie = true;
+            else if (parameter.name == SpellParam) hasSpell = true;
         }
     }
 
@@ -121,7 +125,7 @@ public class CharacterAnimator : MonoBehaviour
     public void RebindBody(Animator newAnimator)
     {
         animator = newAnimator;
-        hasSpeed = hasAttack = hasDie = false;
+        hasSpeed = hasAttack = hasDie = hasSpell = false;
         bodyHeight = MeasureBodyHeight();
         CacheParameters();
     }
@@ -129,6 +133,7 @@ public class CharacterAnimator : MonoBehaviour
     /// <summary>공격이 나갈 때 부른다.</summary>
     public void PlayAttack()
     {
+        lastAttackTime = Time.time;
         if (animator != null && hasAttack) animator.SetTrigger(AttackHash);
         AttackPlayed?.Invoke(); // MP
     }
@@ -136,6 +141,13 @@ public class CharacterAnimator : MonoBehaviour
     // MP: 멀티 호스트의 거울(NetEntity)이 구독해 공격 횟수를 클라로 보낸다 — 클라 겉모습이 PlayAttack을 다시 부른다.
     //     싱글에선 구독자가 없다.
     public event System.Action AttackPlayed;
+
+    /// <summary>스킬을 쏠 때 부른다(UnitAttacker.CastSkillLevel). 컨트롤러에 Spell이 없으면 아무 일도 없다. 평타 직후(0.45초 안)에 터지는 확률·평타 부가 스킬은 평타 동작을 끊지 않게 건너뛴다.</summary>
+    public void PlaySpell()
+    {
+        if (animator == null || !hasSpell || Time.time - lastAttackTime < 0.45f) return;
+        animator.SetTrigger(SpellHash);
+    }
 
     /// <summary>죽을 때 부른다. 오브젝트가 바로 파괴되면 재생될 틈이 없으니, 죽음 처리보다 먼저 부를 것.</summary>
     public void PlayDeath()

@@ -242,6 +242,9 @@ public class UnitModelPostprocessor : AssetPostprocessor
         //    소스의 리터럴은 NFC라서 그냥 StartsWith하면 **조용히 false**다 — 2026-09-08
         //    재규어가 이 목록에 있는데도 Humanoid로 임포트됐던 게 이것이다.
         //    양쪽을 NFC로 맞춰 비교한다. 한글 경로를 리터럴과 견주는 곳은 전부 같은 함정이다.
+        // 원작 스킨 교체(10-09): 폴더에 clip_map.json(SkinSwapImporter가 복사)이 있으면 원작 리그(Generic·자기 클립)다.
+        string dir = System.IO.Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(dir) && System.IO.File.Exists(System.IO.Path.Combine(dir, "clip_map.json"))) return true;
         string nfc = path.Normalize(System.Text.NormalizationForm.FormC);
         foreach (string unit in GenericRigUnits)
             if (nfc.StartsWith((UnitModelRoot + unit + "/").Normalize(System.Text.NormalizationForm.FormC)))

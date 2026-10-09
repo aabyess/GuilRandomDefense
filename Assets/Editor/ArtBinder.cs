@@ -317,7 +317,9 @@ public static class ArtBinder
         "특별함_조세민", "랜덤_손오공", "히든_전유라", "박도진", "서희원", "강민호",
     };
 
-    static bool IsAlreadyUpright(string modelName) => AlreadyUprightModels.Any(n => Nfc(n) == Nfc(modelName));
+    static bool IsAlreadyUpright(string modelName) => AlreadyUprightModels.Any(n => Nfc(n) == Nfc(modelName)) || IsSwapSkin(modelName);
+    /// <summary>원작 스킨 교체 유닛인가(폴더에 clip_map.json) — 원작 리그는 이미 서 있고 자기 클립을 쓴다.</summary>
+    public static bool IsSwapSkin(string modelName) => System.IO.File.Exists($"{UnitFolder}/{modelName}/clip_map.json");
 
     // 방향 벡터를 여섯 축(±X·±Y·±Z) 중 가장 가까운 것으로 맞춘다.
     // exclude를 주면 그 축과 나란한 것(±)은 후보에서 뺀다 — 위와 오른쪽이 겹치면 안 되기 때문이다.
@@ -1134,6 +1136,22 @@ public static class ArtBinder
 
     // ── 아군 ───────────────────────────────────────────────────────────
 
+    /// <summary>한 유닛 프리팹만 다시 짓는다(원작 스킨 교체용 — 「모델 배선」은 프리팹 403개를 전부 다시 짓는다). Assets/Art/Units/&lt;유닛&gt;/&lt;유닛&gt;.fbx → Unit_&lt;유닛&gt;.prefab, UnitData.prefab 연결.</summary>
+    public static string BindOneUnit(string unitName)
+    {
+        GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>($"{UnitFolder}/{unitName}/{unitName}.fbx");
+        GameObject template = AssetDatabase.LoadAssetAtPath<GameObject>(UnitTemplate);
+        if (model == null || template == null) return $"❌ 모델({UnitFolder}/{unitName}/{unitName}.fbx) 또는 템플릿 없음";
+        UnitData unit = LoadAll<UnitData>("Assets/Data/Units/Roster").FirstOrDefault(u => u.name == unitName);
+        if (unit == null) return $"❌ 로스터 {unitName} 없음";
+        EnsureFolder(GeneratedFolder);
+        int made = 0;
+        unit.prefab = GetOrCreate(new Dictionary<GameObject, GameObject>(), template, model, "Unit", ref made);
+        EditorUtility.SetDirty(unit);
+        AssetDatabase.SaveAssets();
+        return $"✅ {unitName}: 프리팹 {made}개 다시 지음 → {AssetDatabase.GetAssetPath(unit.prefab)}";
+    }
+
     static string BindUnits(List<GameObject> models)
     {
         GameObject template = AssetDatabase.LoadAssetAtPath<GameObject>(UnitTemplate);
@@ -1556,6 +1574,9 @@ public static class ArtBinder
         AnimationClip idle = Named("Idle");
         AnimationClip move = Named("Move");
         AnimationClip attack = Named("Attack");
+        AnimationClip spell = Named("Spell");
+        AnimationClip death = Named("Death");
+        float attackSpeed = SwapAttackSpeed(modelPath);
 
         // 안전망 — 이름 규칙을 안 따르는 모델은 옛 동작대로 **가장 긴** 클립을 Idle로 둔다.
         // (안흔함_이호준 옛 파일은 첫 클립이 키 1개짜리 껍데기여서 첫 클립을 쓰면 한 자세로 굳었다, 09-13.)
@@ -1604,6 +1625,7 @@ public static class ArtBinder
 
             AnimatorState attackState = machine.AddState("Attack");
             attackState.motion = attack;
+            attackState.speed = attackSpeed;
 
             AnimatorStateTransition enter = machine.AddAnyStateTransition(attackState);
             enter.hasExitTime = false;
@@ -1618,8 +1640,42 @@ public static class ArtBinder
             exit.duration = 0.1f;
         }
 
+        if (spell != null)
+        {
+            made.AddParameter(CharacterAnimator.SpellParam, AnimatorControllerParameterType.Trigger);
+            AnimatorState spellState = machine.AddState("Spell");
+            spellState.motion = spell;
+            AnimatorStateTransition enterSpell = machine.AddAnyStateTransition(spellState);
+            enterSpell.hasExitTime = false; enterSpell.duration = 0.05f; enterSpell.canTransitionToSelf = false;
+            enterSpell.AddCondition(AnimatorConditionMode.If, 0f, CharacterAnimator.SpellParam);
+            AnimatorStateTransition exitSpell = spellState.AddTransition(idleState);
+            exitSpell.hasExitTime = true; exitSpell.exitTime = 0.9f; exitSpell.duration = 0.1f;
+        }
+
+        if (death != null)
+        {
+            made.AddParameter(CharacterAnimator.DieParam, AnimatorControllerParameterType.Trigger);
+            AnimatorState deathState = machine.AddState("Death");
+            deathState.motion = death;
+            AnimatorStateTransition enterDeath = machine.AddAnyStateTransition(deathState);
+            enterDeath.hasExitTime = false; enterDeath.duration = 0.05f; enterDeath.canTransitionToSelf = false;
+            enterDeath.AddCondition(AnimatorConditionMode.If, 0f, CharacterAnimator.DieParam);
+        }
+
         EditorUtility.SetDirty(made);
         return made;
+    }
+
+    // 원작 스킨 교체(10-09): 우리 평타는 시작하자마자 피해가 들어가므로, 원작 공격 모션의 타격 시점(clip_map.json hit.attackHitSec)이
+    // 시작 0.15초 안에 오도록 공격 클립을 빠르게 돌린다(1.0~2.5배). 사이드카가 없으면 1.
+    static float SwapAttackSpeed(string modelPath)
+    {
+        string json = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(modelPath) ?? "", "clip_map.json");
+        if (!System.IO.File.Exists(json)) return 1f;
+        Match m = Regex.Match(System.IO.File.ReadAllText(json), "\"attackHitSec\"\\s*:\\s*([0-9.]+)");
+        if (!m.Success) return 1f;
+        float hit = float.Parse(m.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture);
+        return Mathf.Clamp(hit / 0.15f, 1f, 2.5f);
     }
 
     // 모델마다 원본 크기가 제각각이라(1미터짜리도, 100미터짜리도 있다) 그대로 붙이면

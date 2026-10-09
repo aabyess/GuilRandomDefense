@@ -2916,6 +2916,7 @@ public class UnitAttacker : MonoBehaviour
 
     void CastSkillLevel(SkillLevel level, float range, EnemyDummy primaryTarget, float recentAttackDamage)
     {
+        Anim?.PlaySpell();   // 원작 스킨 교체(10-09): 시전 동작(컨트롤러에 Spell이 있을 때만)
         if (level.effects == null) return;
 
         // 「스킬발동시레벨업」(SkillEffect.castCountBonus, 영원함 조세민) — 이 레벨이 지금까지 발동한 횟수를 이번 시전의 효과들이 읽는다.

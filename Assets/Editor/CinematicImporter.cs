@@ -28,7 +28,13 @@ public static class CinematicImporter
         return sb.ToString();
     }
 
-    public static string ImportOne() => Import(Path.Combine(ScriptRoot, File.ReadAllText("ClaudeBridge/g2_scene.txt").Trim() + ".json"));
+    public static string ImportOne()
+    {
+        string id = File.ReadAllText("ClaudeBridge/g2_scene.txt").Trim();
+        string file = Path.Combine(ScriptRoot, id + ".json");
+        if (!File.Exists(file)) file = Path.Combine(SkinSwapImporter.SwapScriptRoot, id + ".json");   // 원작 스킨 교체 대본(10-09)
+        return Import(file);
+    }
 
     static float F(Dictionary<string, object> d, string k, float def = 0f) => d != null && d.TryGetValue(k, out object v) && v != null && !(v is string) && !(v is bool) && !(v is List<object>) && !(v is Dictionary<string, object>) ? System.Convert.ToSingle(v) : def;
     static string S(Dictionary<string, object> d, string k) => d != null && d.TryGetValue(k, out object v) && v is string s ? s : "";
@@ -131,6 +137,7 @@ public static class CinematicImporter
             foreach (string id in File.ReadAllText(passedFile).Split(new[] { '\n', '\r', ' ' }, System.StringSplitOptions.RemoveEmptyEntries))
             {
                 string jf = Path.Combine(ScriptRoot, id + ".json");
+                if (!File.Exists(jf)) jf = Path.Combine(SkinSwapImporter.SwapScriptRoot, id + ".json");
                 if (!File.Exists(jf)) continue;
                 var root = (Dictionary<string, object>)MiniJson.Parse(File.ReadAllText(jf));
                 string ours = S(root, "ourSkill");
@@ -138,6 +145,17 @@ public static class CinematicImporter
                 if (names.Count == 0) { sbNote.AppendLine($"   ⚠️ {id}: ourSkill에 SkillData 이름 없음({ours})"); continue; }
                 foreach (string n in names) if (!pairs.Any(p => p.Item1 == n)) pairs.Add((n.EndsWith(".asset") ? n.Substring(0, n.Length - 6) : n, id));
             }
+        // 원작 스킨 교체 짝(Docs/research/CINEMATIC_PAIR_EXTRA.tsv: 「스킬에셋|대본id」) — 통과 목록에 있는 대본만
+        string extra = "Docs/research/CINEMATIC_PAIR_EXTRA.tsv";
+        if (File.Exists(extra) && File.Exists(passedFile))
+        {
+            var passed = new HashSet<string>(File.ReadAllText(passedFile).Split(new[] { '\n', '\r', ' ' }, System.StringSplitOptions.RemoveEmptyEntries));
+            foreach (string line in File.ReadAllLines(extra))
+            {
+                string[] c = line.Split('|');
+                if (c.Length >= 2 && passed.Contains(c[1]) && !pairs.Any(p => p.Item1 == c[0])) pairs.Add((c[0], c[1]));
+            }
+        }
         return LinkPairs(pairs) + sbNote;
     }
 
