@@ -269,6 +269,10 @@ class Run:
         fn, argstr = m.group(1), m.group(2); fn = fn.replace("TV.", "s__TrigVariables_")
         args = split_args(argstr); sim = self.sim; tt = self.t0 + self.cur_t
         A = lambda i: self.ev(args[i], strs) if i < len(args) else Unk("arg")
+        if fn in ("DestroyEffectBJ", "DestroyEffect", "s__TrigVariables_Seteffect", "s__TrigVariables_SeteffectAutoRemove", "s__TrigVariables_SeteffectAutoRemove"):
+            for a in args:                                              # 이펙트를 변수에 담거나 곧바로 파괴하는 호출 안의 AddSpecialEffect*는 실제로 한 번 뜬다(10-09: 「해석 실패」 중 이 꼴이 대부분)
+                if "AddSpecialEffect" in a: self.do_call(a.strip(), strs)
+            return
         mm = re.fullmatch(r"s__TrigVariables_(Set|Setting|SettingEx)(integer|real|unit|location|group|timer|locationAutoRemove|groupAutoRemove|timerAutoRemove)?", fn)
         if fn.startswith("s__TrigVariables_Set") and mm and mm.group(2):
             kd = mm.group(2).replace("AutoRemove", ""); i = A(1); v = A(2)
@@ -286,6 +290,10 @@ class Run:
             return
         if fn == "s__TrigVariables_SleepForStageNext":
             d = A(1); self.pending = (float(d) if not isinstance(d, Unk) else 0.1, self.stage + 1); return
+        if fn == "s__TrigVariables_RegisterUnitEvent" and len(args) >= 5 and "EVENT_UNIT_DAMAGED" in args[2]:
+            st = A(4)                                                   # 피해 이벤트에 걸린 스테이지: 시전자가 때린 직후(0.35초) 맞았다고 보고 그 스테이지를 예약한다(10-09, 「해석 실패」 16건의 원인)
+            if not isinstance(st, Unk): self.extra.append((0.2, int(float(st))))
+            return
         if fn in ("s__TrigVariables_Flush", "s__TrigVariables_DeleteAllTriggers"):
             if fn.endswith("Flush"): self.flushed = True; self.pending = None
             return
@@ -388,13 +396,15 @@ def run_trigger(sim, name, t0):
     while q and n < 400:
         q.sort(key=lambda x: x[0]); ct, st = q.pop(0); n += 1
         if ct > 25 or len(sim.events) > 600: sim.truncated = True; break
-        r.first = (n == 1); r.stage = st; r.cur_t = ct; r.pending = None; sim.end_t = max(sim.end_t, t0 + ct)
+        r.first = (n == 1); r.stage = st; r.cur_t = ct; r.pending = None; r.extra = []; sim.end_t = max(sim.end_t, t0 + ct)
         try: r.exec_block(blk, strs, ct)
         except Done: pass
         except LoopExit: pass
         if r.flushed: break
         if r.pending is not None:
             d, s = r.pending; q.append((r.cur_t + d, s))
+        for d, s in r.extra:
+            if (r.cur_t + d, s) not in q: q.append((r.cur_t + d, s))
     return r
 
 
@@ -403,7 +413,7 @@ def simulate(name, seed=5):
     # udg_Hero_*[짝수]=시전자, [홀수]=대상 기본 가정
     class Heroes(dict):
         pass
-    for pre in re.findall(r"udg_Hero_\w+", J):
+    for pre in re.findall(r"udg_\w*Hero_\w+", J):
         for i in range(8): sim.udg[f"{pre}[{i}]"] = CASTER if i % 2 == 0 else TARGET
     try: run_trigger(sim, name, 0.0)
     except RecursionError: sim.truncated = True
