@@ -10,8 +10,10 @@ for r in rows:
     nm = os.path.basename(pk)
     if only and nm not in only: continue
     prev = f"{H}/GRD_skin_swap/_model_fixed_prev/{nm}"
-    if not os.path.isdir(prev): shutil.copytree(pk + "/model_fixed", prev)
+    new_pack = not os.path.isdir(pk + "/model_fixed") and not os.path.isdir(prev)           # 새 팩: 비교할 이전 판이 없다 → 재수출 뒤 그 판을 이전 판으로 두고 오일러 점프만 본다
+    if not new_pack and not os.path.isdir(prev): shutil.copytree(pk + "/model_fixed", prev)
     o1 = run("swap_refix_b3.py", pk); ok = re.search(r"^OK .*", o1, re.M)
+    if new_pack: shutil.copytree(pk + "/model_fixed", prev)
     new = glob.glob(pk + "/model_fixed/*.fbx")[0]; old = glob.glob(prev + "/*.fbx")[0]
     o2 = run("swap_verify_cont.py", new, old); c = re.search(r"CONT .*", o2)
     o3 = run("swap_verify_b3.py", pk + "/model_fixed"); rest = re.search(r"rest-vs-stand max diff ([\d.]+)", o3)

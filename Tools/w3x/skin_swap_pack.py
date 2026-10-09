@@ -9,7 +9,13 @@ import csv, glob, json, os, re, shutil, subprocess, sys, yaml
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE)); sys.path.insert(0, HERE)
 import mdx_anim, w3u
 H = os.path.expanduser("~"); WHR = H + "/Desktop/구랜디스킨모음/원랜디_구버전_스킨"; WHS = sorted(glob.glob(WHR + "/[0-9][0-9]_*/"))
+WHN = sorted(glob.glob(H + "/Desktop/구랜디스킨모음/원랜디_신작_스킨/[0-9][0-9]_*/"))        # S2 신작 창고(「신작」 줄은 여기만 쓴다 — 같은 ID H09F가 구버전과 S2에서 다른 모델이다, 10-09)
 U = {u["id"]: u["mods"] for u in w3u.parse(HERE + "/원본/풀린것/war3map.w3u")}
+def s2_unit(uid):
+    sys.path.insert(0, HERE); import slk; from mpqread import Archive
+    a = Archive(H + "/GRD_motion_trial/_work/s2.mpq"); w = slk.parse(a.read("units\\unitweapons.slk"))[1].get(uid, {}); ui = slk.parse(a.read("units\\unitui.slk"))[1].get(uid, {})
+    f = lambda k: float(w[k]) if w.get(k) not in (None, "", "-", "_") else None
+    return dict(udp1=f("dmgpt1"), ubs1=f("backSw1"), ua1c=f("cool1"), ucpt=f("castpt"), ua1r=f("rangeN1"), usca=ui.get("modelScale"), unam=f"S2 {uid}")
 J = open(HERE + "/원본/풀린것/war3map.j", encoding="utf8", errors="replace").read().split("\n")
 def jline(tr):
     for i, l in enumerate(J, 1):
@@ -122,16 +128,18 @@ def auto_pairs(roster, uids):
 def run_row(row):
     roster = row["우리 로스터"]; ids = [x for x in row["원작 ID"].split("/") if x]; title = row["원작 이름"]
     nm = roster.split("_")[1] + "_" + title.split()[0]
+    if row["번호"].startswith("신작") or row["원작 모델"].startswith("war3mapImported"):
+        return nm, dict(roster=roster, uid=ids[0], uids=ids, sheet=row["시트 글자"], title=f"{title} {row['원작 ID']}", attack="", s2=True, pairs=[("@평타", "@attack", "S2 신작: 연출 대본은 S2 j 해석 전까지 없음(평타만)", "중")])
     if nm in CFG: C = dict(CFG[nm]); C.update(uids=ids, roster=roster); return nm, C
     pairs, atks = auto_pairs(roster, ids)
     return nm, dict(roster=roster, uid=ids[0], uids=ids, sheet=row["시트 글자"], title=f"{title} {row['원작 ID']}", attack=atks[0] if atks else "", pairs=pairs)
 
 def pack(name, C):
     OUT = f"{H}/GRD_skin_swap/{name}"; os.makedirs(OUT, exist_ok=True)
-    WH, fold = next((g.rstrip("/"), d) for uu in C["uids"] for g in WHS for d in sorted(os.listdir(g)) if d.lower().startswith(uu.lower() + "_") and os.path.isdir(f"{g}{d}"))
+    WH, fold = next((g.rstrip("/"), d) for uu in C["uids"] for g in (WHN if C.get("s2") else WHS) for d in sorted(os.listdir(g)) if d.lower().startswith(uu.lower() + "_") and os.path.isdir(f"{g}{d}"))
     src = f"{WH}/{fold}"; mdir = OUT + "/model"; shutil.rmtree(mdir, ignore_errors=True); shutil.copytree(src, mdir)
     # 모델 json → 시퀀스·지오셋 숨김
-    jp = glob.glob(mdir + "/*.json")[0]; sd = json.load(open(jp)); mdx = next(p for p in (H + f"/GRD_motion_trial/{w}/work/{sd['model']}" for w in ("original_skin", "original_vfx")) if os.path.exists(p))
+    jp = glob.glob(mdir + "/*.json")[0]; sd = json.load(open(jp)); mdx = next(p for p in (H + f"/GRD_motion_trial/{w}/work/{sd['model']}" for w in (("s2_skin",) if C.get("s2") else ("original_skin", "original_vfx"))) if os.path.exists(p))
     info = mdx_anim.describe(open(mdx, "rb").read()); seqs = info["sequences"]
     def alpha_at(keys, t, default):
         if not keys or t < keys[0][0]: return default
@@ -142,7 +150,7 @@ def pack(name, C):
     hid = {}
     for sq in seqs:
         t = sq["start"]; hid[sq["name"]] = [m["mesh"] for m in sd["meshes"] if alpha_at(m.get("geosetAlphaKeys"), t, m.get("geosetAlphaStatic") if m.get("geosetAlphaStatic") is not None else 1.0) * alpha_at(m.get("layerAlphaKeys"), t, 1.0) < 0.05]
-    u = U[next(x for x in C["uids"] if x in U)]
+    u = s2_unit(C["uid"]) if C.get("s2") else U[next(x for x in C["uids"] if x in U)]
     def kind(n):
         l = n.lower()
         if any(w in l for w in ("gold", "portrait", "cinema", "altern", "victory", "channel", "morph", "birth", "decay", "dissipate")): return "Other"

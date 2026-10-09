@@ -41,7 +41,7 @@ J0 = json.load(open([os.path.join(mdir, f) for f in os.listdir(mdir) if f.endswi
 CM = json.load(open(os.path.join(FOLD, "clip_map.json")))
 mdx_name = J0["model"]
 work = None
-for w in ([args[1]] if len(args) > 1 else []) + [H + "/GRD_motion_trial/original_skin/work", H + "/GRD_motion_trial/original_vfx/work"]:
+for w in ([args[1]] if len(args) > 1 else []) + [H + "/GRD_motion_trial/original_skin/work", H + "/GRD_motion_trial/original_vfx/work", H + "/GRD_motion_trial/s2_skin/work"]:
     if os.path.exists(os.path.join(w, mdx_name)):
         work = w
         break
