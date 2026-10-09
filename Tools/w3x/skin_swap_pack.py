@@ -8,7 +8,7 @@
 import csv, glob, json, os, re, shutil, subprocess, sys, yaml
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE)); sys.path.insert(0, HERE)
 import mdx_anim, w3u
-H = os.path.expanduser("~"); WH = H + "/Desktop/구랜디스킨모음/원랜디_구버전_스킨/11_초월"
+H = os.path.expanduser("~"); WHR = H + "/Desktop/구랜디스킨모음/원랜디_구버전_스킨"; WHS = sorted(glob.glob(WHR + "/[0-9][0-9]_*/"))
 U = {u["id"]: u["mods"] for u in w3u.parse(HERE + "/원본/풀린것/war3map.w3u")}
 J = open(HERE + "/원본/풀린것/war3map.j", encoding="utf8", errors="replace").read().split("\n")
 def jline(tr):
@@ -29,6 +29,11 @@ CFG = {
            ("사장님_초월_양재모_AD_상호파의최강자", "Akainu_03", "평타 1/8 단일 ↔ 원작 아카이누 1/10 슬램(용암 균열)", "상"),
            ("회수_초월_양재모_AD_f54a123f", "Akainu_01_Shoot", "1/20 범위 ↔ 원작 유성 발사(Akainu_01_Shoot)", "중"),
            ("@평타", "@attack", "평타 ↔ 원작 아카이누 평타 투사체 MagmaHand_2year(용암 주먹)", "중")]),
+ "정준영_몽키": dict(roster="불멸_정준영", uid="h04D", sheet="E", title="몽키 D 드래곤 h04D", attack="Dragon_Attack",
+    pairs=[("사장님_불멸_정준영_범퍼숨통조이기", "Dragon_Skill_Mana", "PM 확정 대표 연출(드래곤 폭풍 — 마나 번개구름)을 이 스킬에 붙임", "상"),
+           ("사장님_불멸_정준영_단일마지막수업", "Dragon_Skill_1_T", "평타 1/8 단일 ↔ 원작 드래곤 태풍(Dragon_Skill_1_T)", "중"),
+           ("사장님_불멸_정준영_유닛회유", "-", "소환/회유형 — 원작 대응 연출 없음", "없음"),
+           ("@평타", "@attack", "평타 ↔ 원작 평타 투사체(ua1m)", "중")]),
  "박민석_브룩": dict(roster="초월_박민석_ADAP", uid="H09I", sheet="R", title="브룩 소울 킹 H09I/h04T", attack="BrookAttack",
     pairs=[("사장님_초월_박민석_ADAP_외동의고함", "Brook_Skill_Mana", "마나 125 범위 깡딜+스턴 ↔ 원작 브룩 마나 115 stomp 범위(525)", "상"),
            ("사장님_초월_박민석_ADAP_흑인", "Brook_Skill_1", "범퍼 15% 범위 300 ↔ 원작 브룩 1/7 연주", "중"),
@@ -119,7 +124,7 @@ def run_row(row):
 
 def pack(name, C):
     OUT = f"{H}/GRD_skin_swap/{name}"; os.makedirs(OUT, exist_ok=True)
-    fold = next(d for uu in C["uids"] for d in sorted(os.listdir(WH)) if d.lower().startswith(uu.lower() + "_") and os.path.isdir(f"{WH}/{d}"))
+    WH, fold = next((g.rstrip("/"), d) for uu in C["uids"] for g in WHS for d in sorted(os.listdir(g)) if d.lower().startswith(uu.lower() + "_") and os.path.isdir(f"{g}{d}"))
     src = f"{WH}/{fold}"; mdir = OUT + "/model"; shutil.rmtree(mdir, ignore_errors=True); shutil.copytree(src, mdir)
     # 모델 json → 시퀀스·지오셋 숨김
     jp = glob.glob(mdir + "/*.json")[0]; sd = json.load(open(jp)); mdx = next(p for p in (H + f"/GRD_motion_trial/{w}/work/{sd['model']}" for w in ("original_skin", "original_vfx")) if os.path.exists(p))
@@ -198,12 +203,21 @@ def pack(name, C):
         d = yaml.safe_load(open(pth, encoding="utf8").read().split("--- !u!114 &11400000\n", 1)[1])["MonoBehaviour"]; L = d["levels"][0]
         g = {0: "확률 %.3g" % L["triggerChance"], 1: "쿨 자동", 2: "오라(상시)", 3: "횟수/게이지", 4: "범위 진입", 5: "액티브 버튼"}.get(d["triggerType"], "")
         return d["skillName"][:50], g, f"사거리/반경 {L['range']}"
+    REP = {"불멸_고도현": "대표 연출 있음: 시키 함대 소환(Shiki_Attack A0T4) → SkillData_사장님_불멸_고도현_무중생유", "불멸_정준영": "대표 연출 있음: 드래곤 폭풍(Dragon_Skill_Mana) → SkillData_사장님_불멸_정준영_범퍼숨통조이기", "제한_전법규": "대표 연출 있음: 에넬 엘토르", "초월_황준석_ADAP": "대표 연출 있음: 샹크스 패기 폭발"}
     with open(OUT + "/pairing.csv", "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f); w.writerow(["우리 스킬 에셋", "우리 스킬 이름", "우리 발동", "우리 범위", "원작 연출(트리거)", "대본 파일", "짝 근거(모양·게이트)", "확신", "겹침 표시"])
         for skill, trig, why, conf in C["pairs"]:
             n_, g_, r_ = sinfo(skill) if not skill.startswith("@") else ("(평타 자체)", "", "")
             scr = ("scripts/" + [x for x in os.listdir(OUT + "/scripts") if x.endswith(".json") and (f"__{trig}" in x or (trig == "@attack" and "평타" in x) or (trig == "@thunderclap" and "천둥" in x))][0]) if trig not in ("-",) and any(x.endswith(".json") and (f"__{trig}" in x or (trig == "@attack" and "평타" in x) or (trig == "@thunderclap" and "천둥" in x)) for x in os.listdir(OUT + "/scripts")) else ""
-            w.writerow(["SkillData_" + skill if not skill.startswith("@") else skill, n_, g_, r_, trig, scr, why, conf, fx.get(trig, "")])
+            w.writerow(["SkillData_" + skill if not skill.startswith("@") else skill, n_, g_, r_, trig, scr, why, conf, "; ".join(x for x in (fx.get(trig, ""), REP.get(C["roster"], "") if (not skill.startswith("@") and conf in ("상", "중")) else "") if x)])
+    if C["roster"] in REP:
+        with open(OUT + "/pairing.csv", "a", encoding="utf-8-sig", newline="") as f:
+            csv.writer(f).writerow([REP[C["roster"]].split("→")[-1].strip(), "(대표 연출 — 이미 이 유닛 스킬에 붙어 있음)", "", "", REP[C["roster"]].split("→")[0].replace("대표 연출 있음:", "").strip(), "", "원작 캐릭터가 바뀌어도(스킨 교체) 이 대표 연출을 유지할지 PM 결정 필요", "표시", REP[C["roster"]]])
+    # 실패 대본은 _제외로
+    sd_ = OUT + "/scripts"; rej = sd_ + "/_제외"
+    for fpth in glob.glob(sd_ + "/*.json"):
+        if json.load(open(fpth)).get("quality") != "양호":
+            os.makedirs(rej, exist_ok=True); shutil.move(fpth, rej + "/" + os.path.basename(fpth))
     open(OUT + "/README.md", "w").write(f"# {name} — {C['title']} 스킨 교체 시범 (범위 가: 겉모습·동작·연출만)\n- model/: 원작 FBX(30fps 구움)+Textures(알파0 수정)+json · clip_map.json: 시퀀스→우리 클립·타격 시점·숨김 메시 · scripts/: 연출 대본 + scripts_render/ 재현 사진 · pairing.csv: 우리 스킬↔원작 연출 짝\n- 원작 시트 글자: {C['sheet']} · 우리 유닛: {C['roster']}\n")
     print(name, "클립", len(clips), "대본", len([x for x in os.listdir(OUT + "/scripts") if x.endswith(".json")]), "타격", hit["attackHitSec"])
 
