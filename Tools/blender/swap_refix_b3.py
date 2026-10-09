@@ -101,6 +101,8 @@ for nid in order:
 
 
 MINS_KEYS = [0]
+BIG = [0]
+MAXSTEP = [0.0]      # 한 프레임 사이 최대 회전각(도) — 60° 넘으면 FBX를 1/4프레임 간격으로 구워 오일러 보간이 최단 경로에 가깝게 한다
 
 
 def local_m(nid, t_ms, skip=False):
@@ -266,6 +268,8 @@ for si, seq in enumerate(seqs):
     nfr = max(2, int(math.ceil(dur / 1000 * FPS)) + 1)
     act = bpy.data.actions.new(f"{tag}|{seq['name']}")
     arm.animation_data.action = act
+    prevq_raw = {}
+    prevq = {}                                       # 뼈별 직전 프레임 쿼터니언 — 부호를 맞춰(내적 ≥ 0) 최단 경로 보간이 되게 한다(10-09 가프 머리 뒤집힘 조사)
     for fi in range(nfr):
         t_ms = seq["start"] + min(dur, fi * 1000 / FPS)
         world = world_all(t_ms)
@@ -279,6 +283,13 @@ for si, seq in enumerate(seqs):
             l, r, s = basis.decompose()
             pb = pbs[nid]
             pb.rotation_mode = "QUATERNION"
+            if nid in prevq and prevq[nid].dot(r) < 0:
+                r = Quaternion((-r.w, -r.x, -r.y, -r.z))
+            if nid in prevq_raw:
+                MAXSTEP[0] = max(MAXSTEP[0], math.degrees(2 * math.acos(min(1.0, abs(prevq_raw[nid].dot(r))))))
+            prevq_raw[nid] = r.copy()
+            prevq[nid] = r.copy()
+            BIG[0] = max(BIG[0], 0)
             pb.location, pb.rotation_quaternion, pb.scale = l, r, s
             pb.keyframe_insert("location", frame=fi + 1, group=bname[nid])
             pb.keyframe_insert("rotation_quaternion", frame=fi + 1, group=bname[nid])
@@ -366,7 +377,8 @@ arm.select_set(True)
 for ob in meshes:
     ob.select_set(True)
 dst = os.path.join(odir, tag + ".fbx")
-bpy.ops.export_scene.fbx(filepath=dst, use_selection=True, object_types={"ARMATURE", "MESH"}, apply_unit_scale=True,
+BAKE_STEP = 0.25 if MAXSTEP[0] > 60 else 1.0
+bpy.ops.export_scene.fbx(filepath=dst, use_selection=True, bake_anim_step=BAKE_STEP, object_types={"ARMATURE", "MESH"}, apply_unit_scale=True,
                          apply_scale_options="FBX_SCALE_UNITS", axis_forward="-Z", axis_up="Y", mesh_smooth_type="FACE",
                          path_mode="STRIP", embed_textures=False, bake_anim=True, bake_anim_use_all_actions=True,
                          bake_anim_use_nla_strips=False, bake_anim_force_startend_keying=True, bake_anim_simplify_factor=0.0,
@@ -378,7 +390,7 @@ if SHORT:
     os.makedirs(SHORT, exist_ok=True)
     for a, sq in zip([bpy.data.actions[x["action"]] for x in actions], actions):
         a.name = sq["name"]
-    bpy.ops.export_scene.fbx(filepath=os.path.join(SHORT, tag + ".fbx"), use_selection=True, object_types={"ARMATURE", "MESH"}, apply_unit_scale=True,
+    bpy.ops.export_scene.fbx(filepath=os.path.join(SHORT, tag + ".fbx"), use_selection=True, bake_anim_step=BAKE_STEP, object_types={"ARMATURE", "MESH"}, apply_unit_scale=True,
                              apply_scale_options="FBX_SCALE_UNITS", axis_forward="-Z", axis_up="Y", mesh_smooth_type="FACE",
                              path_mode="STRIP", embed_textures=False, bake_anim=True, bake_anim_use_all_actions=True,
                              bake_anim_use_nla_strips=False, bake_anim_force_startend_keying=True, bake_anim_simplify_factor=0.0, add_leaf_bones=False)
@@ -389,7 +401,7 @@ J["sequences"] = actions
 J["fixed"] = dict(
     note="휴식 포즈 = Stand 첫 프레임 · 액션 재굽기 · 숨김 뼈(Stand 스케일<0.05)는 옛 휴식 유지",
     restClip=seqs[stand_i]["name"], hiddenBonesAtStand=[bname[n] for n in sorted(hidden_nodes)],
-    clipVisibility=clipvis, clipVisibilityAnytime=clipvis_any, bodyMaxDimM=round(bodymax, 3), minScaleKeys=MINS_KEYS[0], warnings=warn,
+    clipVisibility=clipvis, clipVisibilityAnytime=clipvis_any, bodyMaxDimM=round(bodymax, 3), minScaleKeys=MINS_KEYS[0], maxBoneStepDeg=round(MAXSTEP[0], 1), bakeStep=BAKE_STEP, warnings=warn,
     clipMapHidden={c["fbxAction"]: c["hiddenMeshes"] for c in CM["clips"]})
 json.dump(J, open(os.path.join(odir, tag + ".json"), "w"), ensure_ascii=False, indent=1, default=list)
 # clip_map과 대조
