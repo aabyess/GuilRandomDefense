@@ -1,0 +1,110 @@
+using System.Collections;
+using System.Linq;
+using UnityEngine;
+
+/// <summary>복사본 판매 거절 + 조합 결과 레인 가운데 두 창 확인(빌드 사본 전용, 훅 -mpTestCheck14 초, 사진 -mpCheck14Shot 접두). 로그 「[C14]」.
+/// 호스트: 클라 슬롯 소유로 박진웅을 세워 볼보이 복사본을 만들고, 안흔함 식 재료를 창고에 넣고 기다린다.
+/// 클라: 복사본 판매 칸 흐림·판매 요청 거절 → 안흔함 조합 요청 → 결과가 내 레인 가운데에 생기는지.</summary>
+public class NetCheck14Test : MonoBehaviour
+{
+    public float startAt = 25f;
+    static string Shot { get { var a = System.Environment.GetCommandLineArgs(); int i = System.Array.IndexOf(a, "-mpCheck14Shot"); return i >= 0 && i + 1 < a.Length ? a[i + 1] : null; } }
+    CombineRecipe recipe;
+
+    CombineRecipe FindRecipe(CombineSystem system)
+    {
+        foreach (CombineRecipe r in system.Recipes)
+        {
+            if (r == null || r.result == null || r.result.grade != UnitGrade.Uncommon) continue;
+            if (r.ingredients == null || r.ingredients.Count == 0 || r.ingredients.Any(i => i.kind != IngredientKind.SpecificUnit || i.unit == null || i.alternativeUnit != null)) continue;
+            if ((r.resourceCosts != null && r.resourceCosts.Count > 0) || r.requiredSaveCount > 0 || r.minRound > 0 || r.resultDelaySeconds > 0f) continue;
+            return r;
+        }
+        return null;
+    }
+
+    IEnumerator Start()
+    {
+        yield return new WaitForSecondsRealtime(startAt);
+        bool host = GameAuthority.IsServer;
+        string side = host ? "호스트" : "클라";
+        var system = FindFirstObjectByType<CombineSystem>();
+        recipe = FindRecipe(system);
+        Debug.Log($"[C14] {side} 시작 — 식 {(recipe != null ? recipe.commandId + "→" + recipe.result.unitName : "없음")}");
+        if (host) yield return HostRun(system); else yield return ClientRun(system);
+    }
+
+    IEnumerator HostRun(CombineSystem system)
+    {
+        var other = PlayerContext.Occupied.FirstOrDefault(p => p.PlayerId != LocalPlayer.LocalPlayerId);
+        if (other == null) { Debug.Log("[C14] 호스트: 다른 플레이어 없음"); yield break; }
+        int slot = other.PlayerId;
+        var spawner = FindFirstObjectByType<UnitSpawner>();
+        var lane = LaneMarker.Get(slot);
+        UnitData jin = NetLauncher.Catalog.units.FirstOrDefault(u => u != null && u.name == "특별함_박진웅");
+        var go = spawner.Spawn(jin, lane.LaneCenter, slot);
+        var atk = go.GetComponent<UnitAttacker>();
+        var m = typeof(UnitAttacker).GetMethod("TrySummonOnHit", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        for (int i = 0; i < 60; i++) m.Invoke(atk, null);
+        var copies = UnitIdentity.Active.Where(u => u != null && u.OwnerId == slot && u.IsCopy).ToList();
+        Debug.Log($"[C14] 호스트: 슬롯 {slot} 박진웅 복사본 {copies.Count}기 · 위습 {WispCount(slot)}기 · 목재 {other.ResourceWallet.Get(ResourceType.Wood)}");
+        other.GoldWallet.Add(100000);
+        foreach (var ing in recipe.ingredients)
+            for (int k = 0; k < ing.count; k++) other.Warehouse.Store(spawner.Spawn(ing.unit, lane.LaneCenter + new Vector3(k * 8f, 0f, 0f), slot));
+        Vector3 wh = other.Warehouse.Stored.Count > 0 ? other.Warehouse.Stored[0].transform.position : Vector3.zero;
+        Debug.Log($"[C14] 호스트: 재료 {other.Warehouse.Stored.Count}기 창고에 보관(창고 자리 {wh:F0}) · 레인 가운데 {lane.LaneCenter:F0}");
+        yield return new WaitForSecondsRealtime(30f);
+        int copiesAfter = UnitIdentity.Active.Count(u => u != null && u.OwnerId == slot && u.IsCopy);
+        Debug.Log($"[C14] 호스트 결과: 복사본 {copies.Count}→{copiesAfter}기(판매 거절이면 그대로) · 위습 {WispCount(slot)}기 · 목재 {other.ResourceWallet.Get(ResourceType.Wood)}");
+        var res = UnitIdentity.Active.FirstOrDefault(u => u != null && u.OwnerId == slot && u.Data == recipe.result);
+        if (res != null)
+        {
+            float d = Vector2.Distance(new Vector2(res.transform.position.x, res.transform.position.z), new Vector2(lane.LaneCenter.x, lane.LaneCenter.z));
+            Debug.Log($"[C14] 호스트 결과: 조합 결과 {res.Data.unitName} 위치 {res.transform.position:F0} · 레인 가운데에서 {d:F0} · 창고 안 {other.Warehouse.Contains(res.gameObject)}");
+        }
+        else Debug.Log("[C14] 호스트 결과: 조합 결과 유닛 없음");
+    }
+
+    static int WispCount(int slot) => Wisp.Active == null ? 0 : Wisp.Active.Count(w => w != null && w.TryGetComponent(out OwnedByPlayer o) && o.OwnerId == slot);
+
+    IEnumerator ClientRun(CombineSystem system)
+    {
+        int me = LocalPlayer.LocalPlayerId;
+        yield return new WaitForSecondsRealtime(8f);
+        var mine = UnitIdentity.Active.Where(u => u != null && u.OwnerId == me && u.Data != null && u.Data.unitName.Contains("볼보이")).ToList();
+        Debug.Log($"[C14] 클라 내 볼보이 {mine.Count}기 · IsCopy {mine.Count(u => u.IsCopy)}기(복제 확인)");
+        if (mine.Count > 0)
+        {
+            var sel = FindFirstObjectByType<SelectionManager>();
+            var s = mine[0].GetComponent<Selectable>();
+            sel.SelectOnly(s);
+            yield return new WaitForSecondsRealtime(1.5f);
+            var hud = FindFirstObjectByType<GameHud>();
+            var f = typeof(GameHud).GetField("sellSlotEnabled", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var shown = typeof(GameHud).GetField("sellSlotShown", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var tip = typeof(GameHud).GetField("sellSlotTooltip", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            Debug.Log($"[C14] 클라 복사 볼보이 선택 → 판매 칸 표시 {shown.GetValue(hud)} · 누를 수 있음 {f.GetValue(hud)} · 문구 「{tip.GetValue(hud)}」");
+            NetCommands.RequestHudUnitAction(NetHudAction.Sell, s, 0);
+            Debug.Log("[C14] 클라 판매 요청 보냄(호스트가 거절해야 함)");
+            if (Shot != null) ScreenCapture.CaptureScreenshot($"{Shot}_sell_client.png");
+            yield return new WaitForSecondsRealtime(2f);
+            Debug.Log($"[C14] 클라 판매 요청 뒤 내 볼보이 {UnitIdentity.Active.Count(u => u != null && u.OwnerId == me && u.Data != null && u.Data.unitName.Contains("볼보이"))}기");
+        }
+        yield return new WaitForSecondsRealtime(3f);
+        var caster = UnitIdentity.Active.FirstOrDefault(u => u != null && u.OwnerId == me && recipe.ingredients.Any(i => i.unit == u.Data));
+        Debug.Log($"[C14] 클라 조합 요청 시도 — 시전 유닛 {(caster != null ? caster.Data.unitName + " 위치 " + caster.transform.position.ToString("F0") : "없음")}");
+        if (caster != null) NetCommands.RequestCombine(system, recipe, caster.GetComponent<Selectable>());
+        yield return new WaitForSecondsRealtime(4f);
+        var res = UnitIdentity.Active.FirstOrDefault(u => u != null && u.OwnerId == me && u.Data == recipe.result);
+        var lane = LaneMarker.Get(me);
+        if (res != null)
+        {
+            float d = Vector2.Distance(new Vector2(res.transform.position.x, res.transform.position.z), new Vector2(lane.LaneCenter.x, lane.LaneCenter.z));
+            Debug.Log($"[C14] 클라 조합 결과 {res.Data.unitName} 위치 {res.transform.position:F0} · 내 레인 가운데 {lane.LaneCenter:F0}에서 {d:F0}");
+            var cam = FindFirstObjectByType<RtsCameraController>(); if (cam != null) cam.MoveTo(res.transform.position + Vector3.forward * 30f);
+            yield return new WaitForSecondsRealtime(1.5f);
+            if (Shot != null) ScreenCapture.CaptureScreenshot($"{Shot}_combine_client.png");
+        }
+        else Debug.Log("[C14] 클라 조합 결과 유닛 안 보임");
+    }
+}
