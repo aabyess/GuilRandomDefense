@@ -8,7 +8,7 @@ H = os.path.expanduser("~"); HOME = H + "/GRD_cutin_swap"; os.makedirs(HOME + "/
 if not os.path.exists(HOME + "/layers"): shutil.copytree(H + "/GRD_cutin/layers", HOME + "/layers")
 if not os.path.exists(HOME + "/fonts"): os.symlink(H + "/GRD_cutin/fonts", HOME + "/fonts")
 EXTRA_HIDE = {"초월_이태훈_AP": ["rokugu_tr4_g5", "rokugu_tr4_g6"]}      # 덩굴 메시(몸이 작아 보이던 원인, 10-09 PM)
-PICKS = {"불멸_신지우": {"pick": "c1", "zoom": 1.45}, "불멸_정윤식": {"pick": "c1", "zoom": 1.4}}   # 작게 보이는 둘은 확대 자르기
+PICKS = {"불멸_신지우": {"pick": "c3", "zoom": 1.9}, "불멸_정윤식": {"pick": "c3", "zoom": 1.0}, "불멸_이이삭": {"pick": "c2", "zoom": 1.5}}   # 작게 보이는 둘은 확대 자르기
 json.dump(dict({"_설명": "교체 스킨 컷인: 옛 포즈 목록 대신 필요한 유닛만 확대(zoom)"}, **PICKS), open(HOME + "/_no_picks.json", "w"), ensure_ascii=False)
 env = dict(os.environ, CUTIN_HOME=HOME, CUTIN_PICKS=HOME + "/_no_picks.json", ONLY="C")
 rows = list(csv.DictReader(open(H + "/GRD_skin_swap/교체목록.csv", encoding="utf-8-sig")))

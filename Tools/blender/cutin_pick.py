@@ -13,7 +13,7 @@ import os
 import shutil
 import sys
 
-from PIL import Image
+from PIL import Image, ImageFilter
 
 HOME = os.path.expanduser(os.environ.get("CUTIN_HOME", "~/GRD_cutin"))
 R = os.path.join(HOME, "render")
@@ -37,6 +37,10 @@ def band_mask():
             m = ImageChops.lighter(m, Image.open(st[0]).split()[3])
         BAND = m
     return BAND
+
+
+BODY_EXEMPT = {"초월_박민석_ADAP", "초월_양재모_AD"}   # 몸이 가늘어(해골·긴 망토) 값이 낮지만 눈으로 확인해 정상(10-09)
+BODY_MIN = 0.12   # 두꺼운 몸이 화면 넓이의 12% 이상(15기 실측: 정상 12~35%, 덩굴 가린 이태훈·작은 신지우/정윤식 10~11%)
 
 
 def check(cand, zoom=1.0):
@@ -80,8 +84,11 @@ def check(cand, zoom=1.0):
     bot = min(H, Y0 + dy + bb[3] * HH / im.height)
     cover = (bot - top) / H
     head_ok = (top_scr + dy) >= TOP_MARGIN - 1 and not head_clipped_in_render
+    # 몸 비율: 얇은 것(덩굴·창·소품)은 깎아 낸 뒤 남는 「두꺼운 몸」이 화면 넓이에서 차지하는 비율 — 덩굴만 보여도 통과하던 구멍(10-09 PM 이태훈)
+    sm = im.resize((256, 256)).point(lambda v: 255 if v > 40 else 0).filter(ImageFilter.MinFilter(9))
+    body = sum(1 for v in sm.getdata() if v) / (256 * 256) * (HH * HH) / (W * H)
     return dict(eye_ok=bool(eye_in and not covered), eye=[round(ex), round(ey)], height=round(cover, 2), height_ok=cover >= 0.5,
-                head_ok=bool(head_ok), dy=dy)
+                head_ok=bool(head_ok), dy=dy, body=round(body, 3), body_ok=body >= BODY_MIN)
 
 
 def main(only):
@@ -99,7 +106,8 @@ def main(only):
         zoom0 = mp0.get("zoom", 1.0) if isinstance(mp0, dict) else 1.0
         for c in inf["candidates"]:
             c["checks"] = check(c, zoom0)
-        ok = lambda c: c["checks"]["eye_ok"] and c["checks"]["height_ok"] and c["checks"]["head_ok"]
+            if u in BODY_EXEMPT: c["checks"]["body_ok"] = True
+        ok = lambda c: c["checks"]["eye_ok"] and c["checks"]["height_ok"] and c["checks"]["head_ok"] and c["checks"]["body_ok"]
         byid = {c["id"]: c for c in inf["candidates"]}
         why = ""
         chosen = None
@@ -127,9 +135,9 @@ def main(only):
         shutil.copyfile(os.path.join(R, chosen["file"]), os.path.join(R, f"C_{u}_thigh.png"))
         json.dump(inf, open(f, "w"), ensure_ascii=False, indent=1)
         ck = chosen["checks"]
-        passed = ck["eye_ok"] and ck["height_ok"] and ck["head_ok"]
+        passed = ck["eye_ok"] and ck["height_ok"] and ck["head_ok"] and ck["body_ok"]
         n_ok += passed
-        lines.append(f"{'통과' if passed else '실패'}\t{u}\t{chosen['id']}\t눈 {'보임' if ck['eye_ok'] else '안 보임'} {ck['eye']}\t높이 {int(ck['height'] * 100)}%\t머리 {'안 잘림' if ck['head_ok'] else '잘림'}{f'(내림 {ck[chr(100)+chr(121)]}px)' if ck['dy'] else ''}\t{why}")
+        lines.append(f"{'통과' if passed else '실패'}\t{u}\t{chosen['id']}\t눈 {'보임' if ck['eye_ok'] else '안 보임'} {ck['eye']}\t높이 {int(ck['height'] * 100)}%\t몸 {int(ck['body'] * 100)}%{'' if ck['body_ok'] else '(작음)'}\t머리 {'안 잘림' if ck['head_ok'] else '잘림'}{f'(내림 {ck[chr(100)+chr(121)]}px)' if ck['dy'] else ''}\t{why}")
     os.makedirs(os.path.join(HOME, "C_all"), exist_ok=True)
     rep = os.path.join(HOME, "C_all", "_check.txt")
     with open(rep, "w") as fp:
