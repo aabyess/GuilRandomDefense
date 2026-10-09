@@ -43,6 +43,8 @@ public class NetEntity : NetworkBehaviour
     [Networked] public NetworkBool SlowVfx { get; set; }
     // 적: 광폭화 유닛(BerserkMob)이다 — 클라 겉모습에 이름 「광폭화 ○○」·붉은 틴트·원판·고리를 붙인다(10-07).
     [Networked] public NetworkBool Berserk { get; set; }
+    // 유닛: 복사본(박진웅 볼보이·모리아 좀비)이다 — 클라 판매 버튼이 흐려지게 UnitIdentity.IsCopy로 되돌린다(10-09).
+    [Networked] public NetworkBool CopyUnit { get; set; }
     // 적: 퇴치 의뢰 미니보스(QuestMobLook)다 — 값 = 의뢰 틴트 번호(1~7), 0 = 아님. 클라 겉모습에 같은 색·원판을 입힌다(10-08). 크기는 transform.localScale 복제로 이미 따라온다.
     [Networked] public byte QuestMobTint { get; set; }
     // 플레이어 유닛: 마나·체력 게이지 스킬의 현재/최대(UnitAttacker.ShownManaNow 등, 10-08) — 클라 초상 아래 막대가 그린다. 최대 0 = 그 막대 없음.
@@ -131,6 +133,8 @@ public class NetEntity : NetworkBehaviour
             if (QuestMobTint != questTint) QuestMobTint = questTint;
         }
 
+        if (Real.TryGetComponent(out UnitIdentity realIdentity) && CopyUnit != realIdentity.IsCopy) CopyUnit = realIdentity.IsCopy;
+
         if (realAttacker != null)
         {
             if (AttackDamage != realAttacker.AttackDamage) AttackDamage = realAttacker.AttackDamage;
@@ -174,6 +178,8 @@ public class NetEntity : NetworkBehaviour
                 replicaEnemy.NameOverride = "광폭화 " + (replicaEnemy.Data != null && !string.IsNullOrEmpty(replicaEnemy.Data.enemyName) ? replicaEnemy.Data.enemyName : "적");
             }
         }
+
+        if (!HasStateAuthority && Visual != null && Visual.TryGetComponent(out UnitIdentity visualIdentity) && visualIdentity.IsCopy != CopyUnit) visualIdentity.IsCopy = CopyUnit;
 
         // 호스트 실물에 리롤 능력이 붙었으면 겉모습에도 붙인다 — GameHud가 그 컴포넌트로 리롤 버튼을 띄운다(실행은 요청).
         if (!HasStateAuthority && RerollAbility > 0 && Visual != null && !Visual.TryGetComponent(out UniqueRerollAbility _) && NetLauncher.Catalog != null

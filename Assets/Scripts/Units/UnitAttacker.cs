@@ -4019,6 +4019,7 @@ public class UnitAttacker : MonoBehaviour
         Vector3 position = lane != null ? lane.TakeSpawnPosition(data.summonOnHitUnit) : transform.position;
         GameObject summoned = raiseSpawner.Spawn(data.summonOnHitUnit, position, owner.OwnerId);
         if (summoned == null) return;
+        if (summoned.TryGetComponent(out UnitIdentity summonedIdentity)) summonedIdentity.IsCopy = true;   // 복사본은 판매 불가(10-09)
         if (data.summonOnHitLifetimeSeconds > 0f) summoned.AddComponent<TimedLife>().Begin(data.summonOnHitLifetimeSeconds);
         summonedOnHit.Add(summoned);
     }
@@ -4038,6 +4039,7 @@ public class UnitAttacker : MonoBehaviour
         LaneMarker lane = LaneMarker.Get(owner.OwnerId);
         Vector3 position = lane != null ? lane.TakeSpawnPosition(data.raiseOnKillUnit) : transform.position;
         GameObject raised = raiseSpawner.Spawn(data.raiseOnKillUnit, position, owner.OwnerId);
+        if (raised != null && raised.TryGetComponent(out UnitIdentity raisedIdentity)) raisedIdentity.IsCopy = true;   // 모리아 좀비도 복사본 — 판매 불가(10-09)
         if (raised != null && data.raiseOnKillLifetimeSeconds > 0f)
             raised.AddComponent<TimedLife>().Begin(data.raiseOnKillLifetimeSeconds);
     }

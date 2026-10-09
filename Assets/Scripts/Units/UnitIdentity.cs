@@ -43,6 +43,8 @@ public class UnitIdentity : MonoBehaviour
     public bool IsSummon { get; set; }
     /// <summary>회유 유닛(불멸 「유닛회유」로 적에서 바뀐 것) — 소환수지만 판매 버튼으로 팔 수 있다(37% 랜덤위습·그중 40% +100엔·목재 1).</summary>
     public bool IsRecruit { get; set; }
+    /// <summary>복사본(사장님 10-09) — 박진웅이 평타로 소환한 볼보이·모리아가 죽인 적에서 일어난 좀비처럼 다른 유닛 능력으로 생긴 유닛. 원작 좀비(h00H)는 판매 능력(A0JE 등)이 없어 팔 수 없다 — 판매 버튼·다중 판매·단축키·멀티 요청 모두 막는다. 조합 재료로는 쓸 수 있다(원작 좀비×3 → 압살롬). 멀티는 NetEntity.CopyUnit으로 복제.</summary>
+    public bool IsCopy { get; set; }
 
     /// <summary>이 유닛의 소유 플레이어 ID. 아직 OwnedByPlayer가 안 붙었으면(생성 직후 극히
     /// 짧은 순간) -1 — UnitSpawner.Spawn이 Instantiate 직후 곧바로 붙이므로 실사용 시점엔

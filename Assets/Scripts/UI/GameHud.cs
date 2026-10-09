@@ -1846,7 +1846,9 @@ public class GameHud : MonoBehaviour
 
         if (!sellable)
         {
-            sellSlotTooltip = count == 1 ? "판매할 수 없는 유닛입니다(판매 보상이 없습니다)." : "고른 유닛 중 판매할 수 있는 유닛이 없습니다.";
+            bool onlyCopies = count >= 1;
+            for (int i = 0; i < count; i++) if (selection.Selected[i] == null || !selection.Selected[i].TryGetComponent(out UnitIdentity copyCheck) || !copyCheck.IsCopy) onlyCopies = false;
+            sellSlotTooltip = onlyCopies ? "복사된 유닛은 팔 수 없습니다." : count == 1 ? "판매할 수 없는 유닛입니다(판매 보상이 없습니다)." : "고른 유닛 중 판매할 수 있는 유닛이 없습니다.";
             return;
         }
 
@@ -2530,6 +2532,7 @@ public class GameHud : MonoBehaviour
     {
         if (s == null || !s.TryGetComponent(out UnitIdentity identity) || identity.Data == null) return false;
         if (identity.IsSummon && !identity.IsRecruit) return false;
+        if (identity.IsCopy) return false;   // 복사본(박진웅 볼보이·모리아 좀비)은 판매 불가(사장님 10-09)
         if (!IsSellable(identity.Data)) return false;
         if (!s.TryGetComponent(out OwnedByPlayer sellOwner) || sellOwner.OwnerId != LocalPlayer.LocalPlayerId) return false;   // 판매는 원래 주인만(동맹 공유는 조종만, 10-08)
         return identity.IsRecruit || identity.Data.SellableGrade;
@@ -2569,6 +2572,11 @@ public class GameHud : MonoBehaviour
     // MP: 버튼(위)과 멀티 호스트가 받은 클라 요청(NetCommands)이 같이 쓰는 본체 — 줄 내용은 그대로다.
     public void ExecuteSellOn(Selectable single)
     {
+        if (single != null && single.TryGetComponent(out UnitIdentity copyIdentity) && copyIdentity.IsCopy)   // 복사본 판매 거절(멀티 요청·단축키 포함, 10-09)
+        {
+            if (single.TryGetComponent(out OwnedByPlayer copyOwner)) PlayerNotification.Show(copyOwner.OwnerId, "복사된 유닛은 팔 수 없습니다.", 3f);
+            return;
+        }
         if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null || (identity.IsSummon && !identity.IsRecruit) ||   // 소환수는 판매 불가(최상호 구일 소환수 20초) — 회유 유닛(IsRecruit)만 예외
             (identity.Data.sellRewardWisp == null && identity.Data.sellRewardTraitPoints <= 0 &&
              identity.Data.sellRewardWood <= 0 && identity.Data.sellTriggersItemGamblePool == null &&
