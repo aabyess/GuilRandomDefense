@@ -8,7 +8,7 @@ using UnityEngine;
 /// </summary>
 public class CinematicScript : ScriptableObject
 {
-    public enum Op { Spawn, Set, Ramp, Kill, CameraShake }
+    public enum Op { Spawn, Set, Ramp, Kill, CameraShake, Teleport }
     public enum Anchor { Caster, Target, Ship }
 
     [Serializable]
@@ -24,6 +24,8 @@ public class CinematicScript : ScriptableObject
         public float lifeSec = -1f;      // 음수 = 시퀀스 길이를 따른다
         public float deathSec = 0.1f;
         public Anchor anchor;
+        public bool hasOffset;           // 자동 대본: anchor 기준 (x=시전자→대상 방향, y=왼쪽) 워3 단위
+        public float offsetX, offsetY;
         public bool hasPolar;
         public float polarRadius, polarAngleDeg;   // 워3 단위·도
         public string anim;              // birth / death / "" (= stand)

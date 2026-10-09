@@ -65,6 +65,7 @@ public static class SkillCinematic
         public bool ramping;
         public Vector3 anchorPos;
         public float polarRadius, polarAngle;
+        public Vector2 offsetWc3; public bool hasOffset;
         public bool hasMove; public Vector3 moveTarget; public float moveSpeed;
         public float spawnedAt, lifeSec = -1f, deathSec = 0.1f;
         public bool dying; public float dieAt;
@@ -132,6 +133,9 @@ public static class SkillCinematic
                 case CinematicScript.Op.Ramp:
                     if (insts.TryGetValue(e.id, out Inst ri)) { ri.ramping = true; ri.rampTo = e.rampTo; ri.rampRate = Mathf.Max(0.01f, e.rampRate); }
                     break;
+                case CinematicScript.Op.Teleport:
+                    if (insts.TryGetValue(e.id, out Inst ti) && e.hasOffset) { ti.anchorPos = AnchorPos(e); ti.offsetWc3 = new Vector2(e.offsetX, e.offsetY); ti.hasOffset = true; ti.hasMove = false; ti.moveTotal = 0f; }
+                    break;
                 case CinematicScript.Op.Kill:
                     if (insts.TryGetValue(e.id, out Inst ki)) Kill(ki);
                     break;
@@ -149,7 +153,7 @@ public static class SkillCinematic
             {
                 go = Instantiate(m.prefab, transform),
                 baseScale = e.baseScale, scalePercent = e.scalePercent, flyHeight = e.flyHeight,
-                anchorPos = AnchorPos(e), polarRadius = e.hasPolar ? e.polarRadius : 0f, polarAngle = e.polarAngleDeg,
+                anchorPos = AnchorPos(e), polarRadius = e.hasPolar ? e.polarRadius : 0f, polarAngle = e.polarAngleDeg, hasOffset = e.hasOffset, offsetWc3 = new Vector2(e.offsetX, e.offsetY),
                 spawnedAt = elapsed, lifeSec = e.lifeSec, deathSec = e.deathSec,
                 yaw = e.facingRandom ? Random.Range(0f, 360f) : 0f,
             };
@@ -227,8 +231,15 @@ public static class SkillCinematic
                 float progress = n.hasMove ? Mathf.Clamp01(1f - rest.magnitude / n.moveTotal) : 1f;
                 arc = Mathf.Sin(Mathf.PI * progress) * n.arcHeight;   // 곡선 포물선 궤적
             }
+            Vector3 off = Vector3.zero;
+            if (n.hasOffset)
+            {
+                Vector3 fwd = targetPos - casterPos; fwd.y = 0f; fwd = fwd.sqrMagnitude < 1e-4f ? Vector3.forward : fwd.normalized;
+                Vector3 left = Vector3.Cross(fwd, Vector3.up);   // y = 왼쪽
+                off = (fwd * n.offsetWc3.x + left * n.offsetWc3.y) * (SizeScale / WorldScale.Value);
+            }
             Vector3 polar = n.polarRadius > 0f ? Quaternion.Euler(0f, n.polarAngle, 0f) * Vector3.forward * (n.polarRadius * SizeScale / WorldScale.Value) : Vector3.zero;
-            n.go.transform.SetPositionAndRotation(n.anchorPos + polar + Vector3.up * (n.flyHeight * SizeScale / WorldScale.Value + arc), Quaternion.Euler(0f, n.yaw, 0f));
+            n.go.transform.SetPositionAndRotation(n.anchorPos + off + polar + Vector3.up * (n.flyHeight * SizeScale / WorldScale.Value + arc), Quaternion.Euler(0f, n.yaw, 0f));
             float size = (n.substituteScale > 0f ? n.substituteScale * n.scalePercent / 100f : n.baseScale * n.scalePercent / 100f * MetersToWorld) * SizeScale;
             float age = elapsed - n.spawnedAt;
             float pop = Mathf.Clamp01(age / 0.25f);                                   // 등장: 0.25초에 솟아오름

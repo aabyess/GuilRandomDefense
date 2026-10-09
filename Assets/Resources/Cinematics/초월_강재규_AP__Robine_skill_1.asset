@@ -1,0 +1,93 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3184e6f55ca934891a8135d9eff5e47b, type: 3}
+  m_Name: "\uCD08\uC6D4_\uAC15\uC7AC\uADDC_AP__Robine_skill_1"
+  m_EditorClassIdentifier: 
+  scriptId: "\uCD08\uC6D4_\uAC15\uC7AC\uADDC_AP__Robine_skill_1"
+  title: "\uC624\uD558\uB77C\uC758 \uB9C8\uC9C0\uB9C9 \uC0DD\uC874\uC790 \u2014 Robine_skill_1"
+  duration: 1.35
+  events:
+  - t: 0
+    op: 0
+    id: u1
+    model: BlinkPinkCaster
+    baseScale: 2.5
+    scalePercent: 100
+    flyHeight: 70
+    lifeSec: 1
+    deathSec: 0.1
+    anchor: 1
+    hasOffset: 1
+    offsetX: -447.73
+    offsetY: -436.08
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 1
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0.35
+    op: 0
+    id: u4
+    model: IceNova
+    baseScale: 2.25
+    scalePercent: 100
+    flyHeight: 100
+    lifeSec: 1
+    deathSec: 0.15
+    anchor: 1
+    hasOffset: 1
+    offsetX: 0
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 1
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  models:
+  - name: BlinkPinkCaster
+    prefab: {fileID: 5792590349151972752, guid: 15e3af7dc75334491847cd0a43a38581, type: 3}
+    substitute: 
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    thickness: 1
+    substituteLengthWc3: 0
+    substituteNativeLength: 0
+  - name: IceNova
+    prefab: {fileID: 7970867332462000797, guid: 45e341ccdb0824a66a8206d9ac2f522b, type: 3}
+    substitute: 
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    thickness: 1
+    substituteLengthWc3: 0
+    substituteNativeLength: 0

@@ -56,12 +56,65 @@ MonoBehaviour:
     alphaValues: []
     uvTimes: []
     uvOffsets: []
+    globalAlphaTimes:
+    - 0
+    - 90.7
+    - 90.8
+    - 91.1
+    - 91.333
+    - 92
+    globalAlphaValues:
+    - 0
+    - 0
+    - 1
+    - 1
+    - 0
+    - 0
   - renderer: {fileID: 8671466423976973820}
     staticAlpha: 1
     alphaTimes: []
     alphaValues: []
     uvTimes: []
     uvOffsets: []
+    globalAlphaTimes:
+    - 0
+    - 90.7
+    - 90.7
+    - 90.733
+    - 90.8
+    - 90.833
+    - 91
+    - 91
+    - 91.233
+    - 91.367
+    - 91.433
+    - 92
+    globalAlphaValues:
+    - 0
+    - 0
+    - 1
+    - 0.5
+    - 1
+    - 1
+    - 1
+    - 1
+    - 0
+    - 0
+    - 0
+    - 0
+  clips:
+  - name: s0_nothing
+    clip: {fileID: 3325402106816228047, guid: 9d869d721a5294201aa0034118d9590d, type: 3}
+    startSec: 4294967
+    lengthSec: 0.001
+    looping: 1
+  - name: s1_stand
+    clip: {fileID: -481409621856319836, guid: 9d869d721a5294201aa0034118d9590d, type: 3}
+    startSec: 90.7
+    lengthSec: 1.3
+    looping: 0
+  AlphaMultiplier: 1
+  Tint: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1001 &2094718414576830227
 PrefabInstance:
   m_ObjectHideFlags: 0

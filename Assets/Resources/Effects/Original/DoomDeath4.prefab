@@ -62,6 +62,18 @@ MonoBehaviour:
     - 0
     uvTimes: []
     uvOffsets: []
+    globalAlphaTimes:
+    - 2.133
+    - 2.233
+    - 2.633
+    - 3
+    - 3.05
+    globalAlphaValues:
+    - 0
+    - 1
+    - 0
+    - 0
+    - 0
   - renderer: {fileID: 5551168531210300146}
     staticAlpha: 0
     alphaTimes:
@@ -78,6 +90,24 @@ MonoBehaviour:
     - 0
     uvTimes: []
     uvOffsets: []
+    globalAlphaTimes:
+    - 2.133
+    - 2.133
+    - 2.233
+    - 2.6
+    - 2.633
+    - 3
+    - 3
+    - 3.05
+    globalAlphaValues:
+    - 0
+    - 1
+    - 1
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
   - renderer: {fileID: 7330459576840603940}
     staticAlpha: 0
     alphaTimes:
@@ -96,6 +126,41 @@ MonoBehaviour:
     - 0
     uvTimes: []
     uvOffsets: []
+    globalAlphaTimes:
+    - 2.133
+    - 2.133
+    - 2.267
+    - 2.5
+    - 2.633
+    - 2.633
+    - 3
+    - 3
+    - 3.05
+    - 3.05
+    globalAlphaValues:
+    - 0
+    - 1
+    - 1
+    - 1
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+    - 0
+  clips:
+  - name: s0_stand
+    clip: {fileID: -2305545843307299708, guid: 1ee00fd0c77f04ae4a5246bf7bc832ca, type: 3}
+    startSec: 2.133
+    lengthSec: 0.5
+    looping: 0
+  - name: s1_death
+    clip: {fileID: 220591644947419716, guid: 1ee00fd0c77f04ae4a5246bf7bc832ca, type: 3}
+    startSec: 3
+    lengthSec: 0.05
+    looping: 0
+  AlphaMultiplier: 1
+  Tint: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1001 &6166482550730856929
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -106,7 +171,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 1ee00fd0c77f04ae4a5246bf7bc832ca, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.004824877
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 1ee00fd0c77f04ae4a5246bf7bc832ca, type: 3}
       propertyPath: m_LocalPosition.y
@@ -114,7 +179,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 1ee00fd0c77f04ae4a5246bf7bc832ca, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -2.433169
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 1ee00fd0c77f04ae4a5246bf7bc832ca, type: 3}
       propertyPath: m_LocalRotation.w

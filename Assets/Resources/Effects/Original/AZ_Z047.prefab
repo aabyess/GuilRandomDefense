@@ -62,6 +62,14 @@ MonoBehaviour:
     - 0
     uvTimes: []
     uvOffsets: []
+    globalAlphaTimes:
+    - 0
+    - 0.5
+    - 2
+    globalAlphaValues:
+    - 0.5
+    - 0
+    - 0
   - renderer: {fileID: 2373321496223651415}
     staticAlpha: 1
     alphaTimes:
@@ -74,6 +82,14 @@ MonoBehaviour:
     - 0
     uvTimes: []
     uvOffsets: []
+    globalAlphaTimes:
+    - 0
+    - 0.2
+    - 2
+    globalAlphaValues:
+    - 1
+    - 0
+    - 0
   - renderer: {fileID: 7864295871306934367}
     staticAlpha: 1
     alphaTimes:
@@ -86,6 +102,27 @@ MonoBehaviour:
     - 0
     uvTimes: []
     uvOffsets: []
+    globalAlphaTimes:
+    - 0
+    - 0.5
+    - 2
+    globalAlphaValues:
+    - 0.9
+    - 0
+    - 0
+  clips:
+  - name: s0_BirthAZ
+    clip: {fileID: 7144282228006152993, guid: a6a2d823e5f6f4791b3012bd303a82fb, type: 3}
+    startSec: 0
+    lengthSec: 2
+    looping: 0
+  - name: s1_AZQQ3358167564
+    clip: {fileID: 3620192854987761796, guid: a6a2d823e5f6f4791b3012bd303a82fb, type: 3}
+    startSec: 6
+    lengthSec: 0.001
+    looping: 0
+  AlphaMultiplier: 1
+  Tint: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1001 &8961401219566029094
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -96,7 +133,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: a6a2d823e5f6f4791b3012bd303a82fb, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.0007238388
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a6a2d823e5f6f4791b3012bd303a82fb, type: 3}
       propertyPath: m_LocalPosition.y
@@ -104,7 +141,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a6a2d823e5f6f4791b3012bd303a82fb, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 3.3789692
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: a6a2d823e5f6f4791b3012bd303a82fb, type: 3}
       propertyPath: m_LocalRotation.w

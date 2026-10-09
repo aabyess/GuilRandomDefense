@@ -74,6 +74,8 @@ public static class CinematicImporter
                     ev.deathSec = F(e, "deathSec", 0.1f); ev.anim = S(e, "anim"); ev.timescale = F(e, "timescale", 1f); ev.vertexAlpha = F(e, "vertexAlpha", 1f);
                     var at = D(e, "at");
                     ev.anchor = ParseAnchor(S(at, "anchor")); ev.anchorShip = S(at, "ship");
+                    var offs = L(at, "offset");
+                    if (offs != null && offs.Count >= 2) { ev.hasOffset = true; ev.offsetX = System.Convert.ToSingle(offs[0]); ev.offsetY = System.Convert.ToSingle(offs[1]); }
                     var polar = D(at, "polar");
                     if (polar != null) { ev.hasPolar = true; ev.polarRadius = F(polar, "radius"); ev.polarAngleDeg = F(polar, "angleDeg"); }
                     string facing = e.TryGetValue("facing", out object fo) ? fo as string : null;
@@ -88,6 +90,14 @@ public static class CinematicImporter
                     break;
                 case "ramp": ev.op = CinematicScript.Op.Ramp; ev.rampTo = F(e, "to"); ev.rampRate = F(e, "ratePerSec", 1f); break;
                 case "kill": ev.op = CinematicScript.Op.Kill; break;
+                case "teleport":
+                    {
+                        ev.op = CinematicScript.Op.Teleport;
+                        var to = D(e, "to"); ev.anchor = ParseAnchor(S(to, "anchor"));
+                        var o2 = L(to, "offset");
+                        if (o2 != null && o2.Count >= 2) { ev.hasOffset = true; ev.offsetX = System.Convert.ToSingle(o2[0]); ev.offsetY = System.Convert.ToSingle(o2[1]); }
+                        break;
+                    }
                 case "camera_shake": ev.op = CinematicScript.Op.CameraShake; ev.shakeDuration = F(e, "durationSec"); ev.shakeMagnitude = F(e, "magnitude"); break;
                 default: continue;   // note·damage는 재생기에서 안 쓴다
             }
