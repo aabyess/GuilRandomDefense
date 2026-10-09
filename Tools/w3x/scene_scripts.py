@@ -30,7 +30,7 @@ def model_block(name):
     t = tag(name); folder = t if os.path.isdir(f"{T}/{t}") else None
     b = dict(folder=folder, inMap=bool(ARC.read(re.sub(r"\.mdl$", ".mdx", name.replace("\\\\", "\\"), flags=re.I)) or ARC.read(re.sub(r"\.mdl$", ".mdx", os.path.basename(name.replace("\\", "/")), flags=re.I))))
     if not folder: b["note"] = "워크3 기본 모델(맵에 없음) — 변환 불가, 우리 쪽 자체 메시/프리팹으로 대체"; return b
-    jd = json.load(open(f"{T}/{t}/{t}.json")); src = next((p for p in (H + f"/GRD_motion_trial/{w}/work/" + jd["model"] for w in ("original_vfx", "transcend_vfx", "grade_extra", "original_skin")) if os.path.exists(p)), None)
+    jd = json.load(open(f"{T}/{t}/{t}.json")); src = next((p for p in (H + f"/GRD_motion_trial/{w}/work/" + jd["model"] for w in ("original_vfx", "transcend_vfx", "grade_extra", "original_skin", "s2_skin")) if os.path.exists(p)), None)
     raw = open(src, "rb").read(); info = mdx_anim.describe(raw); geo = mdx_geo.parse(raw); workd = os.path.dirname(src)
     def stand_seq():
         for sq in info["sequences"]:

@@ -9,7 +9,33 @@
 import math, os, random, re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-J = open(os.path.join(HERE, "원본/풀린것/war3map.j"), encoding="utf8", errors="replace").read()
+S2 = bool(os.environ.get("JASS_S2"))                                    # S2(2.323) war3map.j: 난독화 이름·16진 ID — 옛 방언으로 번역해서 같은 해석기를 쓴다(10-09 박민수_조로)
+J = open(os.path.join(HERE, "원본_S2_2.323/풀린것/war3map.j" if S2 else "원본/풀린것/war3map.j"), encoding="utf8", errors="replace").read()
+
+
+def translate_s2(t):
+    """S2 j(난독화) → 옛 j 방언. 스테이지 머신 원시 함수만 바꾼다(BST=Setunit·BTV=Setlocation·BWT=Setreal·BVU=Setinteger·BJ3=SleepForStageNext·BJx=Flush·BJ7=SettingEx·HR[DR]=Stage·LoadXHandle=get_X)."""
+    L = "ABCDEFGHIJKLMNOP"
+    for a, b in (("BST", "Setunit"), ("BTV", "SetlocationAutoRemove"), ("BWT", "Setreal"), ("BVU", "Setinteger")):
+        t = re.sub(rf"\b{a}\(DR,", f"s__TrigVariables_{b}(GlobalTV,", t)
+    t = re.sub(r"\bBJ3\(DR,", "s__TrigVariables_SleepForStageNext(GlobalTV,", t)
+    t = re.sub(r"\bBJ5\(DR,([^,]+),", r"s__TrigVariables_SleepForStageAdd(GlobalTV,\1,", t) if False else t
+    t = re.sub(r"\bBJx\(DR\)", "s__TrigVariables_Flush(GlobalTV)", t)
+    t = re.sub(r"\bBJ7\((\d+)\)", r"s__TrigVariables_SettingEx(\1)", t)
+    t = re.sub(r"\bHR\[DR\]", "s__TrigVariables_Stage[GlobalTV]", t)
+    for h, g, kd in (("LoadUnitHandle(E2", None, "unit"), ("LoadLocationHandle(E9", None, "location"), ("LoadReal(FW", None, "real"), ("LoadInteger(FP", None, "integer")):
+        t = re.sub(re.escape(h) + r",0,DR\*EM\+(\d+)\)", lambda m, kd=kd: f"s__TrigVariables__get_{kd}{L[int(m.group(1))]}(GlobalTV)", t)
+    t = re.sub(r"\bBFi\(", "GetRandomInt(", t); t = re.sub(r"\bBFj\(", "GetRandomReal(", t)
+    def hexid(m):
+        try:
+            v = bytes.fromhex(m.group(1)).decode("ascii")
+            return f"'{v}'" if v.isprintable() and len(v) == 4 else m.group(0)
+        except Exception: return m.group(0)
+    t = re.sub(r"\$([0-9A-Fa-f]{8})\b", hexid, t)
+    return t
+
+
+if S2: J = translate_s2(J)
 FN = {}
 for m in re.finditer(r"function (\w+) takes [^\n]*?returns \w+(.*?)endfunction", J, re.S):
     FN[m.group(1)] = m.group(2)
@@ -153,7 +179,7 @@ class Run:
         E = Env()
         E.update(true=True, false=False, null=None, GlobalTV="TV")
         for kd in ("integer", "real", "unit", "location", "group", "timer"):
-            for li, L in enumerate("ABCDEFGHIJ"):
+            for li, L in enumerate("ABCDEFGHIJKLMNOP"):
                 E[f"s__TrigVariables__get_{kd}{L}"] = (lambda tv, kd=kd, li=li: me.slots.get((kd, li), Unk(f"{kd}{li}")))
         class StageMap:
             def __getitem__(s, k): return me.stage
@@ -331,6 +357,37 @@ class Run:
             elif fn == "AddSpecialEffectTargetUnitBJ": where = loc_of(A(1))
             sim.uid += 1; e = dict(t=round(tt, 3), op="spawn", id=f"u{sim.uid}", code="(이펙트)", effectModelPath=path, at=where.d(), owner="caster"); sim.events.append(e); sim.last_eff = e
             return
+        if S2 and fn in ("UnitApplyTimedLife", "SetUnitScale", "SetUnitVertexColor", "SetUnitAnimationByIndex", "SetUnitFlyHeight", "SetUnitTimeScale", "SetUnitAnimation"):
+            u = A(0)
+            if not isinstance(u, dict) or u.get("kind") != "dummy": return
+            base = dict(t=round(tt, 3), id=u["id"])
+            if fn == "UnitApplyTimedLife": d = A(2); sim.events.append(dict(base, op="set", lifeSec=float(d) if not isinstance(d, Unk) else 1))
+            elif fn == "SetUnitScale": v = A(1); sim.events.append(dict(base, op="set", scalePercent=round(float(v) * 100, 1) if not isinstance(v, Unk) else 100))
+            elif fn == "SetUnitVertexColor":
+                a = [A(i) for i in (1, 2, 3, 4)]
+                if not any(isinstance(x, Unk) for x in a): sim.events.append(dict(base, op="set", vertexColor=[round(x / 255, 3) for x in a[:3]], vertexAlpha=round(a[3] / 255, 3)))
+            elif fn == "SetUnitAnimationByIndex": v = A(1); sim.events.append(dict(base, op="set", animIndex=int(v) if not isinstance(v, Unk) else 0))
+            elif fn == "SetUnitFlyHeight":
+                h, r = A(1), A(2)
+                if not isinstance(h, Unk): sim.events.append(dict(base, op="ramp", prop="flyHeight", to=float(h), ratePerSec=float(r) if not isinstance(r, Unk) and float(r) > 0 else 1e6))
+            elif fn == "SetUnitTimeScale": v = A(1); sim.events.append(dict(base, op="set", timescale=float(v) if not isinstance(v, Unk) else 1))
+            elif fn == "SetUnitAnimation": sim.events.append(dict(base, op="set", anim=strs[int(re.search(r'@(\d+)@', args[1]).group(1))].strip('"')))
+            return
+        if S2 and fn == "Bcc":                                          # Bcc(시전자, 지연, 반경, 위치, 배율, 최소, 최대, 공격타입, 피해타입) = UnitDamagePointLoc(… 랜덤×배율 …)
+            r, l, mx = A(2), A(3), A(4)
+            sim.events.append(dict(t=round(tt, 3), op="damage", shape="circle", radius=float(r) if not isinstance(r, Unk) else None, around=(l.d() if isinstance(l, Loc) else None), amount=None)); return
+        if S2 and fn == "BFw":                                          # BFw("모델.mdx", 유닛, "attach") = 유닛에 붙는 특수효과
+            m_ = re.search(r'@(\d+)@', args[0]); path = strs[int(m_.group(1))].strip('"') if m_ else ""
+            if re.search(r"\.md[lx]$", path, re.I):
+                sim.uid += 1; e = dict(t=round(tt, 3), op="spawn", id=f"u{sim.uid}", code="(이펙트)", effectModelPath=path, at=loc_of(A(1)).d(), owner="caster"); sim.events.append(e); sim.last_eff = e
+            return
+        if S2 and fn == "BcY":                                          # BcY(유닛, 위치, 시간, 간격) = 유닛을 위치로 그 시간 동안 이동
+            u, l, dur = A(0), A(1), A(2)
+            if isinstance(u, dict) and u.get("kind") == "dummy" and isinstance(l, Loc): sim.events.append(dict(t=round(tt, 3), op="move", id=u["id"], to=l.d(), durationSec=float(dur) if not isinstance(dur, Unk) else 0.14))
+            return
+        if S2 and fn == "IssuePointOrderById" and "OrderId" in argstr:
+            o = re.search(r'OrderId\((@\d+@)\)', argstr); name_ = strs[int(re.search(r'\d+', o.group(1)).group(0))].strip('"') if o else "?"
+            sim.events.append(dict(t=round(tt, 3), op="note", text=f"더미에 {name_} 명령 — 범위·피해는 그 더미의 능력(S2 w3a)")); return
         if fn in ("SetUnitScalePercent", "SetUnitFlyHeightBJ", "SetUnitTimeScale", "SetUnitAnimation", "SetUnitVertexColorBJ", "UnitApplyTimedLifeBJ", "KillUnit", "RemoveUnit", "SetUnitPositionLoc", "SetUnitFacing"):
             ui = 2 if fn == "UnitApplyTimedLifeBJ" else 0
             u = A(ui)
@@ -388,7 +445,7 @@ Sim.udg_env = udg_env
 
 
 def run_trigger(sim, name, t0):
-    r = Run(sim, name, t0); fn = FN.get(f"Trig_{name}_Actions")
+    r = Run(sim, name, t0); fn = FN.get(f"Trig_{name}_Actions") or (FN.get(name) if S2 else None)
     if fn is None: return
     blk, strs = parse(fn); q = [(0.0, 0)]; n = 0; seen_self = 0
     r.slots[("unit", 0)] = CASTER; r.slots[("unit", 1)] = TARGET

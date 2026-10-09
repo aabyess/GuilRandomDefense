@@ -14,7 +14,7 @@ HALF = float(args[3]) if len(args) > 3 else 600.0
 CZ = float(args[4]) if len(args) > 4 else HALF * 0.35
 os.makedirs(OUTD, exist_ok=True)
 H = os.path.expanduser("~"); T = H + "/GRD_orig_vfx_trial"
-WORKS = [H + f"/GRD_motion_trial/{w}/work" for w in ("original_vfx", "transcend_vfx", "grade_extra", "original_skin")]
+WORKS = [H + f"/GRD_motion_trial/{w}/work" for w in ("original_vfx", "transcend_vfx", "grade_extra", "original_skin", "s2_skin")]
 src = open(HERE + "/render_cast_vfx.py", encoding="utf8").read()
 sys.argv = ["x", "--", "orig", WORKS[0], "/tmp/_rs"]
 src = src[:src.index("def do_orig")]

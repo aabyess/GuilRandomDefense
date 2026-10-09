@@ -13,8 +13,17 @@ import jass_sim, w3u, w3a, yaml                                     # noqa: E402
 from mpqread import Archive                                          # noqa: E402
 H = os.path.expanduser("~"); T = H + "/GRD_orig_vfx_trial"; OUT = os.environ.get("SCENE_OUT", H + "/GRD_scenes/auto"); os.makedirs(OUT, exist_ok=True)
 MODE = sys.argv[1] if len(sys.argv) > 1 else "compile"
-U = {u["id"]: u["mods"] for u in w3u.parse(HERE + "/원본/풀린것/war3map.w3u")}
-ARC = Archive(H + "/GRD_motion_trial/_work/ord.mpq")
+S2 = bool(os.environ.get("JASS_S2"))               # S2(2.323) 해석: 단위 자료는 슬크(unitui·unitbalance·unitdata), MPQ는 s2.mpq
+if S2:
+    import slk
+    ARC = Archive(H + "/GRD_motion_trial/_work/s2.mpq")
+    _ui, _bal, _dat = (slk.parse(ARC.read(f"units\\{n}.slk"))[1] for n in ("unitui", "unitbalance", "unitdata"))
+    fl = lambda v: float(v) if v not in (None, "", "-", "_") else None
+    U = {k: dict(umdl=r.get("file", ""), usca=fl(r.get("modelScale")) or 1.0, umvh=fl(_dat.get(k, {}).get("moveHeight")) or 0.0, udtm=fl(_dat.get(k, {}).get("death")) or 0.0,
+                 uhpm=fl(_bal.get(k, {}).get("HP")), uhpr=fl(_bal.get(k, {}).get("regenHP")), unam=f"S2 {k}") for k, r in _ui.items()}
+else:
+    U = {u["id"]: u["mods"] for u in w3u.parse(HERE + "/원본/풀린것/war3map.w3u")}
+    ARC = Archive(H + "/GRD_motion_trial/_work/ord.mpq")
 tag = lambda m: os.path.splitext(re.split(r"[\\/]", m)[-1])[0]
 clean = lambda s: re.sub(r"\|c[0-9a-fA-F]{8}|\|r", "", s or "")
 table = json.load(open(os.environ.get("SCENE_TABLE", H + "/GRD_scenes/scene_table.json")))
