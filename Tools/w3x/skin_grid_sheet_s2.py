@@ -8,7 +8,7 @@ def letter(i):
     s = ""; i += 1
     while i: i, r = divmod(i - 1, 26); s = chr(65 + r) + s
     return s
-W, Hh, LAB, COLS = 270, 330, 82, 6
+W, Hh, LAB, COLS = 270, 330, 96, 6
 n = len(items); rows = (n + COLS - 1) // COLS
 sh = Image.new("RGB", (W * COLS, 50 + (Hh + LAB) * rows), (28, 30, 36)); d = ImageDraw.Draw(sh)
 d.text((10, 10), title, font=F(22), fill=(255, 235, 170))
@@ -21,12 +21,14 @@ for i, it in enumerate(items):
     d.rectangle([x + 3, y + 3, x + 3 + 14 * (len(letter(i)) + 1) + 6, y + 28], fill=(0, 0, 0)); d.text((x + 8, y + 4), letter(i), font=F(22), fill=(255, 255, 0))
     if it.get("new"):
         d.rectangle([x + W - 62, y + 3, x + W - 4, y + 28], fill=(210, 40, 40)); d.text((x + W - 56, y + 5), "NEW", font=F(20), fill=(255, 255, 255))
-    nm = " / ".join(s.split(" ", 1)[1] if " " in s else s for s in it["names"][:2])
-    d.text((x + 6, y + Hh), f"{letter(i)}. {nm}"[:22], font=F(14), fill=(255, 255, 255))
+    nm = it.get("label") or " / ".join(s.split(" ", 1)[1] if " " in s else s for s in it["names"][:2])
+    d.text((x + 6, y + Hh), f"{letter(i)}. {nm}"[:20], font=F(16), fill=(255, 255, 255))
     d.text((x + 6, y + Hh + 18), "(" + ",".join(it["ids"][:3]) + ")  " + it["model"].split("\\")[-1][:20], font=F(11), fill=(170, 190, 215))
     ours = ", ".join(it["ours"]) or "대응 우리 유닛 없음"
     d.text((x + 6, y + Hh + 34), "우리: " + ours[:22], font=F(12), fill=(160, 230, 160) if it["ours"] else (170, 170, 170))
     d.text((x + 6, y + Hh + 50), "구버전 대비: " + it.get("vs", "")[:20], font=F(11), fill=(255, 150, 150) if it.get("new") else (150, 160, 170))
+    old = ", ".join((o.split(" ", 1)[1] if " " in o else o) for o in it.get("oldnames", [])[:2])
+    if old: d.text((x + 6, y + Hh + 78), "(옛 ID 이름) " + old[:26], font=F(10), fill=(120, 120, 125))
     r = chk.get(png)
     if r: d.text((x + 6, y + Hh + 64), f"메시{r['meshes']} 뼈{r['bones']} 안쪽면{r['inwardFacePct']}%" + (" 텍스처누락" if r["texMissing"] else "") + (f" 숨김{r['hiddenByAlpha']}" if r.get("hiddenByAlpha") else ""), font=F(11), fill=(230, 200, 120) if (r["texMissing"] or r["inwardFacePct"] > 40) else (150, 160, 170))
 sh.save(out); print(out, sh.size)
