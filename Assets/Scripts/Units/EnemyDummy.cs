@@ -860,7 +860,10 @@ public class EnemyDummy : MonoBehaviour
     int a11sStackLevels;
 
     // data.percentDamageTaken(=0.20+0.05×기본레벨)에서 기본 레벨을 역산한다.
-    int A11SBaseLevel => Mathf.RoundToInt(((data != null ? data.percentDamageTaken : 1f) - A11SLevelConst) / A11SLevelStep);
+    int A11SBaseLevel => a11sBaseOverride >= 0 ? a11sBaseOverride : Mathf.RoundToInt(((data != null ? data.percentDamageTaken : 1f) - A11SLevelConst) / A11SLevelStep);
+    int a11sBaseOverride = -1;   // 광폭화 몬스터는 A11S 레벨 1 고정(원작 Round_unit 생성: SetUnitAbilityLevel A11S 1) — 폭발형 피해를 ×0.25만 받는다(10-09)
+    /// <summary>A11S 기본 레벨을 덮어쓴다(광폭화 몬스터 = 1). 스택·라인 폭증은 그 위에 더해진다.</summary>
+    public void SetA11SBaseLevel(int level) { a11sBaseOverride = Mathf.Clamp(level, 0, A11SCapLevel); }
 
     /// <summary>원작 A11S 스택 — 스킬이 이 적의 A11S 레벨을 N만큼 올릴 때 부른다. 상한(23)은
     /// "기본 레벨(14 또는 16) + 스택" 총합 기준이라 기본 레벨을 역산해 정확히 자른다.</summary>
@@ -889,7 +892,7 @@ public class EnemyDummy : MonoBehaviour
         {
             // 폭증(LaneExplosiveAmp, 사장님 10-08): 이 적이 속한 라인에 서 있는 유닛들이 주는 추가 A11S 레벨. 보스(라운드·신세계)도 같은 식으로 받는다.
             int laneLevels = UnitAttacker.LaneExplosiveAmpLevels(LaneIndex);
-            if (a11sStackLevels == 0 && laneLevels == 0) return data != null ? data.percentDamageTaken : 1f;
+            if (a11sStackLevels == 0 && laneLevels == 0 && a11sBaseOverride < 0) return data != null ? data.percentDamageTaken : 1f;
             int level = Mathf.Min(A11SCapLevel, A11SBaseLevel + a11sStackLevels + laneLevels);
             return A11SLevelConst + A11SLevelStep * level;
         }

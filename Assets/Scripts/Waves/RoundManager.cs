@@ -40,7 +40,8 @@ public class RoundManager : MonoBehaviour
     // 덮어써서 R61+가 계속 38.67로 돈다. 새 이름을 쓰면 씬엔 아직 없는 필드라 이 기본값
     // (36.67)이 그대로 반영된다 — 씬을 직접 못 고치는 제약 안에서 값을 바꾸는 유일한
     // 방법이다. 옛 필드명은 씬에 무해하게 남는다(아무도 안 읽음).
-    [SerializeField] float finalRoundDuration = 36.67f;
+    [SerializeField] float finalRoundDuration = 36.67f;   // 낡음 — 10-09부터 NewWorldRoundSeconds(35.00)를 쓴다(씬에 굳은 값이라 필드는 남김)
+    public const float NewWorldRoundSeconds = 35.00f;
     [SerializeField] int newWorldStartRound = 61;
     // 원작 준비 시간 — 1라운드 시작 전 21초(첫 조합할 시간), 60라운드(신세계 진입) 전 40초.
     // 0으로 두면 예전처럼 대기 없이 바로 시작한다.
@@ -865,8 +866,10 @@ public class RoundManager : MonoBehaviour
     // 끼어든다(bossRoundDuration).
     float ResolveRoundDuration(int roundNumber, WaveData waveData)
     {
+        // 🔴 2026-10-09 j 재확인(blender NEW_WORLD_SPEC §③): 신세계 라운드(Round_10ver Stage 20)는 시계 **35.00초 고정**(Setreal 7,35.00) — 적 35기×0.65초(22.75) + 대기 12.25 = 35.00.
+        //    옛 36.67(=40.67−TimerReal 4)은 구세계 Stage 11 식을 신세계에도 쓴다고 가정한 것이었다. 씬에 굳은 옛 값(36.67)이 덮어쓰지 못하게 상수로 둔다.
         if (roundNumber >= newWorldStartRound)
-            return finalRoundDuration;
+            return NewWorldRoundSeconds;
 
         if (waveData != null && waveData.IsBossRound)
             return bossRoundDuration;

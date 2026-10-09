@@ -48,6 +48,7 @@ public class BerserkMob : MonoBehaviour
         if (self == null) self = GetComponent<EnemyDummy>();
         if (self == null) { enabled = false; return; }
         self.AddBuff(BuffId, 0f);
+        self.SetA11SBaseLevel(1);   // 원작: 광폭화 몬스터 A11S 레벨 1 → 체력비례(폭발형) 단일 피해 25%만(Tip 「25%만 받습니다」, j SetUnitAbilityLevel A11S 1)
         self.NameOverride = "광폭화 " + (self.Data != null && !string.IsNullOrEmpty(self.Data.enemyName) ? self.Data.enemyName : "적");
         defenseEffect = new SkillEffect { kind = SkillEffectKind.ArmorBonus, buffId = "A125", multiplier = defenseBonus };
         regenEffect = new SkillEffect { kind = SkillEffectKind.HealPercentOverTime, buffId = "A14I", multiplier = regenFraction };
