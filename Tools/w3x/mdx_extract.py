@@ -74,7 +74,10 @@ def main():
             out = os.path.join(work, "_tex", path.replace("\\", "_").replace("/", "_") + ".png")
             blp = arc.read(path) or arc.read(os.path.basename(path.replace("\\", "/")))
             if blp is not None:
-                Image.open(io.BytesIO(blp)).convert("RGBA").save(out)
+                im = Image.open(io.BytesIO(blp)).convert("RGBA")
+                if im.getchannel("A").getextrema()[1] == 0:           # 알파 비트 0인 BLP는 PIL이 알파를 전부 0으로 읽는다 → 불투명으로 고친다(10-09: 스킨 20·이펙트 수십 개 텍스처가 투명이었다)
+                    im.putalpha(255)
+                im.save(out)
             else:
                 approx.add(path)
                 placeholder(path).save(out)
