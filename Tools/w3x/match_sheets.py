@@ -44,6 +44,16 @@ bym = {}
 for k, v in UN.items():
     n = cl(v.get("unam", "")); m = (v.get("umdl") or "").lower()
     if m and n and n != "흔함영웅" and not n.startswith("흔함영웅"): bym.setdefault(m, []).append(n.split(" - ")[0].strip())
+# 우리 흔함 로스터에 대응된 안흔함 원작 5기(후쿠로·브룩·타시기·블루노·하찌)를 02_안흔함에서 덧붙인다
+import shutil
+AD = H + "/Desktop/구랜디스킨모음/원랜디_구버전_스킨/02_안흔함"; ai = json.load(open(AD + "/_items.json")); COMB = OUT + "/_cells_원랜디"
+shutil.rmtree(COMB, ignore_errors=True); os.makedirs(COMB)
+for i in range(len(oi)):
+    if os.path.exists(f"{OD}/_cells/{i:02d}.png"): shutil.copy(f"{OD}/_cells/{i:02d}.png", f"{COMB}/{i:02d}.png")
+for j, it in enumerate(ai):
+    if any(x in it["ids"] for x in ("h00A", "h00D", "h00E", "h00M", "h00F")):
+        n = len(oi); oi.append(it)
+        if os.path.exists(f"{AD}/_cells/{j:02d}.png"): shutil.copy(f"{AD}/_cells/{j:02d}.png", f"{COMB}/{n:02d}.png")
 for it in oi:                                                        # 「흔함영웅」은 이름이 아니라 등급 표시 — 같은 모델을 쓰는 다른 유닛의 캐릭터 이름을 쓴다
     it["label"] = next((n for n in (cl(x.split(" ", 1)[1]) if " " in x else x for x in it["names"]) if n and not n.startswith("흔함영웅")), None) or ((bym.get(it["model"]) or ["(이름 불명)"])[0] + " (같은 모델 다른 유닛 이름)")
 LET = [chr(65 + i) for i in range(26)] + ["AA", "AB", "AC", "AD", "AE", "AF", "AG", "AH"]
@@ -53,6 +63,6 @@ def short(l):
     out = [tk[0]] if tk else [base]
     if len(tk) > 1 and tk[1] not in DESC and len(tk[0]) + len(tk[1]) < 11 and not tk[1].isdigit(): out.append(tk[1])
     return " ".join(out) + (" *" if star else "")
-sheet(OD + "/_cells", [short(it["label"]) for it in oi], ["(" + ",".join(it["ids"][:3]) + ") " + it["model"][:18] + ("" if it["fbx"] else " · 모델 없음") for it in oi], OUT + "/원랜디_흔함.png", f"원랜디 흔함 유닛 — {len(oi)}칸 (글자 A~)   * = 흔함영웅이라 이름이 없어, 같은 모델을 쓰는 다른 유닛 이름으로 표기", 5, lambda i: LET[i])
+sheet(COMB, [short(it["label"]) for it in oi], ["(" + ",".join(it["ids"][:3]) + ") " + it["model"][:18] + ("" if it["fbx"] else " · 모델 없음") for it in oi], OUT + "/원랜디_흔함.png", f"원랜디 흔함 유닛 — {len(oi)}칸 (글자 A~, 마지막 5칸 = 우리 흔함에 대응된 안흔함)   * = 흔함영웅이라 이름이 없어, 같은 모델을 쓰는 다른 유닛 이름으로 표기", 5, lambda i: LET[i])
 with open(OUT + "/원랜디_흔함_목록.csv", "w", encoding="utf-8-sig", newline="") as f:
     w = csv.writer(f); w.writerow(["글자", "원작 ID", "원작 이름", "모델", "우리 대응", "렌더"]); [w.writerow([LET[i], ",".join(it["ids"]), " / ".join(it["names"]), it["model"], ", ".join(it["ours"]), "있음" if it["fbx"] else "모델 없음"]) for i, it in enumerate(oi)]

@@ -129,6 +129,7 @@ if MODE == "compile":
                 if sub:
                     d["substitute"] = sub
                     if sub.get("model") == "roarthunder": d["baseScale"] = 6.0; d["baseScaleNote"] = "roarthunder 기준 크기(드래곤 6)로 적음 — 원작 값 아님"
+                    elif sub.get("model") == "SuperBigExplosion": d["baseScale"] = min(d["baseScale"], 1.2); d["baseScaleNote"] = "범용 폭발 대체 — 화면 덮음 방지로 상한 1.2"
                     elif sub.get("model"): d["baseScale"] = min(d["baseScale"], 3.0); d["baseScaleNote"] = "대체 모델 크기 보정(원작 값 상한 3)"
                 out.append(d); models[t] = None
             else: out.append(e)
