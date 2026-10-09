@@ -10,6 +10,7 @@
 |---|---|---|
 | 원작 스킨 교체 24기 팩(model·model_fixed·클립·텍스처·clip_map) · 교체목록.csv(정본) | `~/GRD_skin_swap/` (이전 판 `_model_fixed_prev/`, 검증표 `_재수출검증.csv`, 클립 중 알파 `클립중_알파변화.json`) | `Tools/blender/swap_refix_b3.py` · `swap_verify_b3.py` · `swap_verify_cont.py` · `swap_render_b3.py` · `Tools/w3x/swap_refix_all.py` · `skin_swap_pack.py` |
 | 교체 전 옛 모델 | `~/GRD_swap_before/` | git `8c522dbce^`에서 풀기 |
+| 박민수_조로 S2 연출 5개(BxV·BxW·BxX·BxZ·Bxb, 미연결 — 특별함은 스킬이 없어 보관만, 스킬 생기면 사용) | `~/GRD_skin_swap/박민수_조로/scripts/` (시트 `스킬연출_시트.png`·`pairing.csv`) | `Tools/w3x/jass_sim.py`(JASS_S2=1) · `scene_auto.py` |
 | 교체 24기 전후 비교 카드·목록 | `~/Desktop/구랜디스킨모음/교체24_전후비교/` | `Tools/blender/swap_before_after.py` · `Tools/w3x/swap_before_after_run.py` |
 | 신작(S2 2.323) 원랜디 스킨 362기 FBX·텍스처·등급 격자·index.csv | `~/Desktop/구랜디스킨모음/원랜디_신작_스킨/` | `Tools/w3x/s2_units.py` → `mdx_extract.py` → `Tools/blender/export_mdx_anim_fbx.py` → `skin_grade_build_s2.py` 등(README 참고) |
 | 신작 매칭 시트(초월·불멸·영원·히든) | `~/Desktop/구랜디스킨모음/매칭_신작_<등급>/` | `Tools/w3x/match_sheet_s2.py <등급>` |
