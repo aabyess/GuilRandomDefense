@@ -45,6 +45,13 @@ public class NetEntity : NetworkBehaviour
     [Networked] public NetworkBool Berserk { get; set; }
     // 유닛: 복사본(박진웅 볼보이·모리아 좀비)이다 — 클라 판매 버튼이 흐려지게 UnitIdentity.IsCopy로 되돌린다(10-09).
     [Networked] public NetworkBool CopyUnit { get; set; }
+    // 적: 신세계 사이드보스(개인 신세계 보스, SideBossEncounter)가 전투 중이다 — 클라 화면에도 시전·스턴 막대·무적 표시를 그리게 값을 싣는다(10-09). 0~100.
+    [Networked] public NetworkBool SideBossOn { get; set; }
+    [Networked] public byte SideCast { get; set; }
+    [Networked] public byte SideStun { get; set; }
+    [Networked] public NetworkBool SideInvuln { get; set; }
+    /// <summary>클라: 이 PC가 거울로 보고 있는 적 목록(사이드보스 막대 UI가 훑는다).</summary>
+    public static readonly System.Collections.Generic.HashSet<NetEntity> ClientEnemies = new System.Collections.Generic.HashSet<NetEntity>();
     // 적: 퇴치 의뢰 미니보스(QuestMobLook)다 — 값 = 의뢰 틴트 번호(1~7), 0 = 아님. 클라 겉모습에 같은 색·원판을 입힌다(10-08). 크기는 transform.localScale 복제로 이미 따라온다.
     [Networked] public byte QuestMobTint { get; set; }
     // 플레이어 유닛: 마나·체력 게이지 스킬의 현재/최대(UnitAttacker.ShownManaNow 등, 10-08) — 클라 초상 아래 막대가 그린다. 최대 0 = 그 막대 없음.
@@ -95,7 +102,7 @@ public class NetEntity : NetworkBehaviour
         if (Visual != null)
         {
             ClientVisualCount++;
-            if (EntityKind == NetEntityKind.Enemy) Visual.TryGetComponent(out replicaEnemy);
+            if (EntityKind == NetEntityKind.Enemy) { Visual.TryGetComponent(out replicaEnemy); ClientEnemies.Add(this); }
             visualAnimator = Visual.GetComponentInChildren<CharacterAnimator>();
         }
     }
@@ -129,6 +136,15 @@ public class NetEntity : NetworkBehaviour
             if (SlowVfx != realEnemy.HasSlowVfx) SlowVfx = realEnemy.HasSlowVfx;
             bool isBerserk = realEnemy.TryGetComponent(out BerserkMob _);
             if (Berserk != isBerserk) Berserk = isBerserk;
+            bool sideOn = realEnemy.TryGetComponent(out SideBossEncounter sideBoss) && sideBoss.CurrentStage != SideBossEncounter.Stage.Done;
+            if (SideBossOn != sideOn) SideBossOn = sideOn;
+            if (sideOn)
+            {
+                byte cast = (byte)Mathf.Clamp(Mathf.RoundToInt(sideBoss.CastProgress), 0, 100), stun = (byte)Mathf.Clamp(Mathf.RoundToInt(sideBoss.StunGauge), 0, 100);
+                if (SideCast != cast) SideCast = cast;
+                if (SideStun != stun) SideStun = stun;
+                if (SideInvuln != sideBoss.IsInvulnerable) SideInvuln = sideBoss.IsInvulnerable;
+            }
             byte questTint = realEnemy.TryGetComponent(out QuestMobLook questLook) ? questLook.TintIndex : (byte)0;
             if (QuestMobTint != questTint) QuestMobTint = questTint;
         }
@@ -197,6 +213,7 @@ public class NetEntity : NetworkBehaviour
 
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
+        ClientEnemies.Remove(this);
         if (realAnimator != null) realAnimator.AttackPlayed -= OnRealAttack;
 
         if (Visual != null)

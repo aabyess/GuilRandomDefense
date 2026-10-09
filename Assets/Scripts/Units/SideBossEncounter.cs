@@ -156,11 +156,11 @@ public class SideBossEncounter : MonoBehaviour
             return;
         }
 
-        GameObject instance = waveSpawner.SpawnSideBoss(berserkMobData, laneIndex);
+        // 🔴 2026-10-09: B06B 꼬리표만이 아니라 BerserkMob 본체(방어 오라 A125·회복 오라 A14I·A11S 레벨 1·표시·크기)를 그대로 붙인다(berserk: true) —
+        //    BerserkMob.Start가 B06B 꼬리표도 건다. 원작도 이 소환이 광폭화 몬스터가 생기는 유일한 길이다.
+        GameObject instance = waveSpawner.SpawnSideBoss(berserkMobData, laneIndex, berserk: true);
         if (instance == null) return;
-
-        if (instance.TryGetComponent(out EnemyDummy mob))
-            mob.AddBuff("B06B", 0f);
+        PlayerNotification.Show(laneIndex, "보스가 스킬을 사용하여 광폭화 몬스터를 소환합니다.", 5f);   // j sin_boss_skill Stage 2 문구
     }
 
     void Finish()

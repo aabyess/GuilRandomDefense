@@ -175,6 +175,28 @@ public class SideBossBarLayer : MonoBehaviour
 
             used++;
         }
+
+        // MP 클라(10-09): 호스트의 SideBossEncounter는 이 PC에 없다 — 거울 적(NetEntity)이 실어 온 시전·스턴·무적 값으로 같은 막대를 그린다.
+        foreach (NetEntity replica in NetEntity.ClientEnemies)
+        {
+            if (replica == null || !replica.SideBossOn || replica.Visual == null) continue;
+
+            float height = 2f;
+            Renderer renderer = replica.Visual.GetComponentInChildren<Renderer>();
+            if (renderer != null) height = renderer.bounds.max.y - replica.Visual.transform.position.y;
+            Vector3 worldPos = replica.Visual.transform.position + Vector3.up * (height + barHeightMargin);
+            Vector3 screenPos = cam.WorldToScreenPoint(worldPos);
+            if (screenPos.z <= 0f) continue;
+            if (screenPos.x < 0f || screenPos.x > Screen.width || screenPos.y < 0f || screenPos.y > Screen.height) continue;
+
+            Group group = GetOrCreateGroup(used);
+            group.root.gameObject.SetActive(true);
+            group.root.position = new Vector3(screenPos.x, screenPos.y, 0f);
+            group.castFill.fillAmount = Mathf.Clamp01(replica.SideCast / 100f);
+            group.stunFill.fillAmount = Mathf.Clamp01(replica.SideStun / 100f);
+            group.invulnLabel.gameObject.SetActive(replica.SideInvuln);
+            used++;
+        }
     }
 
     // HealthBarLayer.HeadHeight와 같은 계산이다 — private static이라 그쪽 걸 재사용할 수

@@ -192,6 +192,9 @@ public class WaveSpawner : MonoBehaviour
 
     bool ShouldSpawnBerserk(EnemyData enemyData, int roundNumber, int alreadyThisRound)
     {
+        // 🔴 2026-10-09 사장님(「광폭화 몬스터는 원작처럼 개인 보스 소환물로」): 「일반 적 대신 10% 확률」 대체는 폐기 — 시험용 override(BerserkChanceOverride ≥ 0)만 남긴다.
+        //    광폭화는 이제 SideBossEncounter가 시전을 끝낼 때만 나온다(SpawnSideBoss(berserk: true)).
+        if (BerserkChanceOverride < 0f) return false;
         if (!berserkEnabled || berserkMode != BerserkMode.Chance || !GameAuthority.IsServer || enemyData == null || enemyData.isBoss) return false;
         int minRound = BerserkMinRoundOverride >= 0 ? BerserkMinRoundOverride : berserkMinRound;
         if (roundNumber < minRound || alreadyThisRound >= berserkMaxPerLanePerRound) return false;
@@ -254,7 +257,7 @@ public class WaveSpawner : MonoBehaviour
 
     // 신세계 사이드보스(2026-09-06) 전용 — WaveData.spawnList에 없는 별도 개체라 일반
     // SpawnRound 루프를 안 거치고 SideBossManager가 직접 부른다.
-    public GameObject SpawnSideBoss(EnemyData enemyData, int laneIndex)
+    public GameObject SpawnSideBoss(EnemyData enemyData, int laneIndex, bool berserk = false)
     {
         WaypointPath lanePath = GetLanePath(laneIndex);
         if (enemyData == null || enemyData.prefab == null || lanePath == null) return null;
@@ -281,7 +284,7 @@ public class WaveSpawner : MonoBehaviour
             difficultyMultiplier = 1f;
         }
 
-        return SpawnEnemyInternal(enemyData, laneIndex, lanePath, difficultyMultiplier);
+        return SpawnEnemyInternal(enemyData, laneIndex, lanePath, difficultyMultiplier, berserk);
     }
 
     // §⑦ 광폭화 소환(2026-09-06) — SideBossManager/SideBossEncounter가 "그 라운드의 잡몹
