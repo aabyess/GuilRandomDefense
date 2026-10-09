@@ -1,0 +1,49 @@
+using System.Collections;
+using System.Linq;
+using UnityEngine;
+using UnityEngine.UI;
+
+/// <summary>패배 창 「계속 지켜보기」 두 창 확인(빌드 사본 전용, 훅 -mpTestCheck15 초, 사진 -mpCheck15Shot 접두). 로그 「[C15]」.
+/// 호스트가 클라 슬롯을 패배(MarkDead)시킨다 → 클라에서 패배 창이 뜨고 「계속 지켜보기」 단추가 보이는지 → 누르면 창이 닫히는지. 호스트(안 진 쪽)엔 패배 창이 없어야 한다.</summary>
+public class NetCheck15Test : MonoBehaviour
+{
+    public float startAt = 25f;
+    static string Shot { get { var a = System.Environment.GetCommandLineArgs(); int i = System.Array.IndexOf(a, "-mpCheck15Shot"); return i >= 0 && i + 1 < a.Length ? a[i + 1] : null; } }
+
+    IEnumerator Start()
+    {
+        yield return new WaitForSecondsRealtime(startAt);
+        bool host = GameAuthority.IsServer; string side = host ? "호스트" : "클라";
+        if (host)
+        {
+            var other = PlayerContext.Occupied.FirstOrDefault(p => p.PlayerId != LocalPlayer.LocalPlayerId);
+            Debug.Log($"[C15] 호스트: 슬롯 {other?.PlayerId}을 패배시킨다");
+            other?.MarkDead("시험 패배(두 창 확인)");
+            yield return new WaitForSecondsRealtime(6f);
+            Debug.Log($"[C15] 호스트 화면: {Describe()}");
+            if (Shot != null) ScreenCapture.CaptureScreenshot(Shot + "_host.png");
+            yield break;
+        }
+        float t0 = Time.realtimeSinceStartup;
+        while (Time.realtimeSinceStartup - t0 < 15f && !(PlayerContext.Local != null && PlayerContext.Local.IsDead)) yield return null;
+        yield return new WaitForSecondsRealtime(1.5f);
+        Debug.Log($"[C15] 클라: 내 패배 {(PlayerContext.Local != null && PlayerContext.Local.IsDead)} · 화면: {Describe()}");
+        if (Shot != null) ScreenCapture.CaptureScreenshot(Shot + "_client_before.png");
+        var btn = FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None).FirstOrDefault(b => b.name == "SpectateButton" || b.transform.parent != null && b.transform.parent.name == "SpectateButton");
+        Debug.Log($"[C15] 클라: 지켜보기 단추 {(btn != null ? "있음 · 켜짐 " + btn.gameObject.activeInHierarchy : "없음")}");
+        if (btn != null && btn.gameObject.activeInHierarchy) btn.onClick.Invoke();
+        yield return new WaitForSecondsRealtime(1.5f);
+        Debug.Log($"[C15] 클라: 단추 누른 뒤 화면: {Describe()}");
+        if (Shot != null) ScreenCapture.CaptureScreenshot(Shot + "_client_after.png");
+    }
+
+    static string Describe()
+    {
+        var overlay = FindFirstObjectByType<DefeatOverlay>(FindObjectsInactive.Include);
+        if (overlay == null) return "DefeatOverlay 없음";
+        var panel = overlay.transform.Find("DefeatPanel");
+        var spectate = overlay.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "SpectateButton" || t.parent != null && t.parent.name == "SpectateButton");
+        var title = overlay.GetComponentsInChildren<TMPro.TMP_Text>(true).FirstOrDefault(t => t.name == "Title");
+        return $"패배 창 {(panel != null && panel.gameObject.activeSelf ? "보임" : "안 보임")} · 제목 「{title?.text}」 · 지켜보기 단추 {(spectate != null && spectate.gameObject.activeInHierarchy ? "보임" : "안 보임")}";
+    }
+}
