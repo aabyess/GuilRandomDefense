@@ -3,22 +3,12 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 패배했을 때 화면 한가운데에 알린다.
+/// 패배했을 때 화면 한가운데에 알린다(사장님 10-09: 제목 「상호파 입단 실패」 + 워크3 금속 톤 불투명 패널).
 ///
-/// 🔴 왜 만들었나 — **졌는데 진 줄 모른다.**
-/// 2026-09-24 긴 판(구현담당2, outbox 2107)에서 라운드 4에 졌는데, 화면에 나온 건
-/// 오른쪽 위 팀 칸의 작은 「플레이어 1 | 사망」 한 줄뿐이었다. 골드 몰수·유닛 소멸·
-/// 레인 정리는 설계대로 도는데(RoundManager.HandlePlayerDefeated) **사장님은 자기가 졌다는 걸
-/// 알 방법이 없었다.** 게임오버 표시는 F1 디버그 창에만 있었다(DebugHud.cs:173).
-/// 고장이 아니라 **아직 안 만든 것**이라, 여기서 만든다.
-///
-/// 무엇을 적는가: 「졌다」만으로는 부족하다. 사장님이 다음 판에 다르게 두려면
-/// **왜 졌는지(레인 적 70)와 무엇을 잃었는지(골드·유닛)와 무엇이 남았는지(위습)**를 알아야 한다.
-/// 셋 다 RoundManager가 실제로 하는 일과 같은 말로 적는다 — 화면과 코드가 다른 말을 하면
-/// 그게 다음 사람을 속인다.
-///
-/// GameHud와 분리된 자기완결 컴포넌트다(DifficultySelectHud와 같은 결) — 맵 생성이 씬에
-/// 하나 넣어 두면 그 뒤로는 스스로 뜨고 스스로 숨는다.
+/// 🔴 왜 만들었나 — **졌는데 진 줄 모른다.**(2026-09-24 긴 판: 라운드 4에 졌는데 화면엔 팀 칸의 작은 「사망」 한 줄뿐이었다.)
+/// 무엇을 적는가: 왜 졌는지(원인)와 무엇을 잃었는지와 무엇이 남았는지를 RoundManager가 **실제로 하는 일**과 같은 말로.
+/// GameHud와 분리된 자기완결 컴포넌트 — 맵 생성이 씬에 하나 넣어 두면 스스로 뜨고 숨는다.
+/// 10-09: 같이 하기에선 「계속 지켜보기」(창만 닫고 판을 둘러본다)·「처음 화면으로」 단추를 단다(처음 화면 = 메뉴와 같은 GameHud.LeaveGameFromDefeat).
 /// </summary>
 public class DefeatOverlay : MonoBehaviour
 {
@@ -27,52 +17,47 @@ public class DefeatOverlay : MonoBehaviour
 
     GameObject panel;
     TMP_Text titleText;
-    TMP_Text detailText;
-    bool shown;
+    TMP_Text roundText, reasonText, lostText, footText;
+    GameObject spectateButton;
+    bool shown, dismissed;
 
-    void Awake()
+    /// <summary>패배 문구를 상호파 톤으로(10-09 사장님): 「패배하셨습니다」→「상호파 입단에 실패하셨습니다」 등. 원작 이식 문구는 그대로 두고 보이는 말만 바꾼다.</summary>
+    public static string Tone(string text)
     {
-        BuildUI();
+        if (string.IsNullOrEmpty(text)) return text;
+        return text.Replace("패배하셨습니다", "상호파 입단에 실패하셨습니다").Replace("패배하였습니다", "상호파 입단에 실패하였습니다")
+                   .Replace("패배합니다", "상호파 입단에 실패합니다").Replace("패배하지", "입단에 실패하지").Replace("패배", "입단 실패");
     }
+
+    void Awake() { BuildUI(); }
 
     void Update()
     {
         PlayerContext local = PlayerContext.Local;
         bool dead = local != null && local.IsDead;
-
-        // 이미 띄웠으면 다시 만들지 않는다 — 패배는 되돌아오지 않는다(데스카운트는 누적식이라
-        // 70 아래로 내려가도 회복하지 않는다. RoundManager 주석 참고).
-        if (dead && !shown)
-        {
-            shown = true;
-            Fill();
-        }
-
-        // 메뉴가 열려 있는 동안만 비킨다(09-29 배포판 피드백 「게임오버 창과 메뉴 창이 겹친다」).
-        //    [계속하기]로 닫으면 다시 뜬다 — 진 사실은 그대로고, 둘러보다 메뉴를 한 번 연 것뿐이다.
-        if (shown) panel.SetActive(!GameHud.IsGameMenuOpen);
+        if (dead && !shown) { shown = true; Fill(); }
+        // 메뉴가 열려 있는 동안·「계속 지켜보기」를 누른 동안은 비킨다(09-29 「게임오버 창과 메뉴 창이 겹친다」).
+        if (shown) panel.SetActive(!GameHud.IsGameMenuOpen && !dismissed);
     }
 
     void Fill()
     {
-        // RoundManager는 싱글턴이 아니라 씬 오브젝트다. 패배는 한 판에 한 번이라
-        // 그때 한 번만 찾으면 된다(매 프레임 찾지 않는다).
         RoundManager rounds = FindFirstObjectByType<RoundManager>(FindObjectsInactive.Include);
-        PlayerContext local = PlayerContext.Local;   // 사유(원작 패배 문구) — 없으면(옛 경로) 데스카운트 문구
+        PlayerContext local = PlayerContext.Local;
         int round = rounds != null ? rounds.CurrentRound : 0;
         bool allDead = rounds != null && rounds.IsGameOver;
+        NetLauncher launcher = NetLauncher.Instance;
+        bool online = launcher != null && launcher.InRoom;
 
-        titleText.text = allDead ? "게임 오버" : "패배";
-
-        // ⚠️ 여기 적는 숫자·문장은 RoundManager가 **실제로 하는 일**과 같아야 한다.
-        //    「유닛을 잃었습니다」라고 써 놓고 안 잃으면 그 화면이 거짓말을 한다.
-        detailText.text =
-            $"라운드 {round}\n\n" +
-            $"{(string.IsNullOrEmpty(local?.DefeatMessage) ? "레인에 적이 너무 많아 데스카운트가 0이 됐습니다." : local.DefeatMessage)}\n" +
-            "골드·목재·특성 포인트를 잃고, 내 유닛·위습과 레인의 적이 사라졌습니다.\n\n" +
-            (allDead
-                ? "<size=80%>플레이 모드를 껐다 켜면 새 판이 시작됩니다.</size>"
-                : "<size=80%>다른 플레이어가 남아 있어 게임은 계속됩니다.</size>");
+        titleText.text = allDead ? "게임 오버" : "상호파 입단 실패";
+        roundText.text = $"<color=#FFD138>라운드 {round}</color>";
+        string reason = string.IsNullOrEmpty(local?.DefeatMessage) ? "레인에 적이 너무 많아 유닛 카운트가 0이 됐습니다." : local.DefeatMessage;
+        reasonText.text = "<color=#FF9A3A>원인</color>  " + Tone(reason);
+        // ⚠️ 여기 적는 문장은 RoundManager.HandlePlayerDefeated가 실제로 하는 일과 같아야 한다(골드·목재·특성 포인트 0, 내 유닛·위습·레인 적 제거).
+        lostText.text = "<color=#FF9A3A>잃은 것</color>  골드 · 목재 · 특성 포인트 · 내 유닛 · 위습 · 내 레인의 적";
+        footText.text = allDead ? "<color=#BBBBBB>모두가 입단에 실패했습니다. 처음 화면에서 새 판을 시작하세요.</color>"
+                                : "<color=#BBBBBB>다른 플레이어가 남아 있어 게임은 계속됩니다.</color>";
+        if (spectateButton != null) spectateButton.SetActive(!allDead && online);   // 같이 하기에서만 둘러보기 의미가 있다
     }
 
     void BuildUI()
@@ -80,36 +65,44 @@ public class DefeatOverlay : MonoBehaviour
         Canvas canvas = gameObject.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = SortingOrder;
-
         CanvasScaler scaler = gameObject.AddComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920f, 1080f);
         scaler.matchWidthOrHeight = 0.5f;
+        gameObject.AddComponent<GraphicRaycaster>();   // 단추를 누르게 — 바탕(어둠막)은 raycastTarget을 꺼서 아래 게임 클릭을 안 먹는다
 
-        // 버튼이 없으니 GraphicRaycaster를 안 붙인다 — 붙이면 화면을 덮은 검은 판이
-        // 그 아래 게임 클릭을 전부 먹는다. 패배 뒤에도 화면은 둘러볼 수 있어야 한다.
+        panel = new GameObject("DefeatPanel", typeof(RectTransform));
+        panel.transform.SetParent(transform, false);
+        RectTransform root = panel.GetComponent<RectTransform>();
+        root.anchorMin = Vector2.zero; root.anchorMax = Vector2.one; root.offsetMin = root.offsetMax = Vector2.zero;
+        RectTransform dim = CreatePanel(root, "Dim", new Color(0f, 0f, 0f, 0.5f));
+        Stretch(dim);
 
-        // 화면 전체를 어둡게. 게임 화면이 비쳐 보이되 「끝났다」가 읽히는 정도로만 덮는다.
-        RectTransform dim = CreatePanel(transform, "DefeatDim", new Color(0f, 0f, 0f, 0.55f));
-        SetAnchors(dim, Vector2.zero, Vector2.one);
-        panel = dim.gameObject;
+        RectTransform card = CreatePanel(root, "Card", new Color(0.03f, 0.04f, 0.08f, 1f));   // 불투명
+        card.anchorMin = card.anchorMax = card.pivot = new Vector2(0.5f, 0.5f);
+        card.sizeDelta = new Vector2(860f, 600f);
+        Image cardImage = card.GetComponent<Image>(); cardImage.raycastTarget = true;   // 카드 안 클릭은 게임으로 새지 않게
+        RectTransform frame = CreatePanel(card, "Wc3Frame", Color.white);
+        Stretch(frame);
+        Sprite panelSprite = UiSkin.Wc3("menu_panel");
+        if (!UiSkin.ApplyWc3(frame.GetComponent<Image>(), "menu_panel", 2f)) frame.GetComponent<Image>().color = new Color(0.14f, 0.12f, 0.12f, 1f);
 
-        RectTransform box = CreatePanel(dim, "DefeatBox", new Color(0.10f, 0.03f, 0.05f, 0.92f));
-        SetAnchors(box, new Vector2(0.30f, 0.33f), new Vector2(0.70f, 0.67f));
+        titleText = CreateLabel(card, "Title", "상호파 입단 실패", 64f, FontStyles.Bold, new Color(0.96f, 0.26f, 0.22f), new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(-90f, 92f), new Vector2(0f, -44f));
+        titleText.outlineWidth = 0.28f; titleText.outlineColor = new Color32(30, 0, 0, 255);
+        roundText = CreateLabel(card, "Round", "", 34f, FontStyles.Bold, Color.white, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(-90f, 44f), new Vector2(0f, -150f));
+        reasonText = CreateLabel(card, "Reason", "", 25f, FontStyles.Normal, Color.white, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(-110f, 84f), new Vector2(0f, -208f));
+        lostText = CreateLabel(card, "Lost", "", 25f, FontStyles.Normal, Color.white, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(-110f, 84f), new Vector2(0f, -300f));
+        footText = CreateLabel(card, "Foot", "", 22f, FontStyles.Normal, Color.white, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(-110f, 40f), new Vector2(0f, -396f));
+        foreach (TMP_Text t in new[] { reasonText, lostText }) { t.alignment = TextAlignmentOptions.Left; t.textWrappingMode = TextWrappingModes.Normal; }
 
-        titleText = CreateLabel(box, "DefeatTitle", "패배");
-        SetAnchors((RectTransform)titleText.transform, new Vector2(0.05f, 0.66f), new Vector2(0.95f, 0.95f));
-        titleText.fontSize = 64f;
-        titleText.fontStyle = FontStyles.Bold;
-        titleText.color = new Color(0.95f, 0.35f, 0.35f);
-
-        detailText = CreateLabel(box, "DefeatDetail", "");
-        SetAnchors((RectTransform)detailText.transform, new Vector2(0.07f, 0.05f), new Vector2(0.93f, 0.64f));
-        detailText.fontSize = 22f;
-        detailText.color = new Color(0.92f, 0.92f, 0.92f);
-
+        // 단추: 처음 화면으로(항상) · 계속 지켜보기(같이 하기)
+        TMP_Text homeLabel = GameHud.MakeWc3Button(card, "HomeButton", "처음 화면으로", new Vector2(250f, 62f), new Vector2(0.5f, 0f), new Vector2(150f, 52f), () => GameHud.LeaveGameFromDefeat());
+        GameObject spectate = GameHud.MakeWc3Button(card, "SpectateButton", "계속 지켜보기", new Vector2(250f, 62f), new Vector2(0.5f, 0f), new Vector2(-150f, 52f), () => { dismissed = true; panel.SetActive(false); }).transform.parent.gameObject;
+        spectateButton = spectate;
         panel.SetActive(false);
     }
+
+    static void Stretch(RectTransform r) { r.anchorMin = Vector2.zero; r.anchorMax = Vector2.one; r.offsetMin = r.offsetMax = Vector2.zero; }
 
     static RectTransform CreatePanel(Transform parent, string name, Color color)
     {
@@ -117,31 +110,23 @@ public class DefeatOverlay : MonoBehaviour
         obj.transform.SetParent(parent, false);
         Image image = obj.GetComponent<Image>();
         image.color = color;
-        image.raycastTarget = false;   // 위 GraphicRaycaster 주석과 같은 이유
+        image.raycastTarget = false;
         return obj.GetComponent<RectTransform>();
     }
 
-    static TMP_Text CreateLabel(Transform parent, string name, string content)
+    static TMP_Text CreateLabel(Transform parent, string name, string content, float size, FontStyles style, Color color, Vector2 anchorMin, Vector2 anchorMax, Vector2 sizeDelta, Vector2 anchoredPos)
     {
         GameObject obj = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
         obj.transform.SetParent(parent, false);
-
+        RectTransform rect = obj.GetComponent<RectTransform>();
+        rect.anchorMin = anchorMin; rect.anchorMax = anchorMax; rect.pivot = new Vector2(0.5f, 1f);
+        rect.sizeDelta = sizeDelta; rect.anchoredPosition = anchoredPos;
         TMP_Text text = obj.GetComponent<TextMeshProUGUI>();
         text.text = content;
-        // 레거시 Text가 아니라 TMP를 쓰는 이유는 화질이다(사장님 지적 2026-09-23
-        // "하단에 글씨 화질이 안 좋은데") — 레거시는 크기별 비트맵을 구워 확대하면 번진다.
         if (GameHud.UiFontAsset != null) text.font = GameHud.UiFontAsset;
+        text.fontSize = size; text.fontStyle = style; text.color = color;
         text.alignment = TextAlignmentOptions.Center;
-        text.textWrappingMode = TextWrappingModes.Normal;
         text.raycastTarget = false;
         return text;
-    }
-
-    static void SetAnchors(RectTransform rect, Vector2 min, Vector2 max)
-    {
-        rect.anchorMin = min;
-        rect.anchorMax = max;
-        rect.offsetMin = Vector2.zero;
-        rect.offsetMax = Vector2.zero;
     }
 }

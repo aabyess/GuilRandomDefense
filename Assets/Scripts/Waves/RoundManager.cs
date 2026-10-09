@@ -292,7 +292,7 @@ public class RoundManager : MonoBehaviour
     {
         if (!context.IsDead && !string.IsNullOrEmpty(reason))
         {
-            PlayerNotification.Show(playerId, $"<color=#00CED1>{reason}</color>", seconds);
+            PlayerNotification.Show(playerId, $"<color=#00CED1>{DefeatOverlay.Tone(reason)}</color>", seconds);
             PlayerNotification.Show(playerId, $"<color=#1E90FF>{DefeatFarewell}</color>", seconds);
         }
         // 원작 패배 분기: SavePlayer(p)를 **먼저** 부르고 그다음 udg_Save_Death=1(war3map_new.j:3388 데스카운트 한계,

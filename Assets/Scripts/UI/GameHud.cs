@@ -255,15 +255,23 @@ public class GameHud : MonoBehaviour
         "1. 패왕의 길", "2. 연합세력", "3. 도박광", "4. 도움소 강화", "5. 도움소 잠금",   // 동그라미 숫자는 이 폰트에서 「⊚」로 나온다(10-08)
     };
 
-    // ⚠️ 확인된 효과만 적는다(지어내지 않는다) — ②는 효과 자체가 아직 안 돈다는 걸
-    // 그대로 적는다. 수치는 실제 자산 값(SupportSkill_해루석/버스터콜.asset,
-    // GamblingOptionData.failureLuckyTokens, ItemGambleState.ReducedPoolActive)과 일치시킨다.
-    static readonly string[] NavigationOptionDescriptions =
+    // 항법 창 항목(10-09 사장님 「이름 크게 + 효과/대가 2줄, 대가는 붉게」) — 확인된 효과만 적는다(지어내지 않는다).
+    // 수치는 실제 자산 값(SupportSkill_해루석/버스터콜.asset, GamblingOptionData.failureLuckyTokens, ItemGambleState.ReducedPoolActive)과 일치시킨다.
+    static readonly string[] NavigationOptionEffects =
     {
-        "일반 몹 강화 코드 레벨 영구 +2 (배율 0.90배→1.00배)\n대가(원딜): 제한됨·초월·불멸·영원 중 한 기를 얻으면 그 네 등급 조합이 잠김",
-        "등급 특수함 이상 유닛 로스터 편입 시 랜덤위습 +1\n(원작 포인트값 100 초과 근사, RewardDistributor.unionWisp 씬 배선 필요)",
-        "「랜덤유닛 도박」 실패 시 행운의 토큰 +1 (1개→2개)",
-        "해루석 피해 250만→300만·마나 700→600\n버스터콜 재사용 100초→66초·마나 500→333",
+        "일반 몹 강화 코드 레벨 영구 +2 (배율 0.90배 → 1.00배)",
+        "특별함 이상 유닛을 얻을 때마다 랜덤유닛 위습 1기 추가",
+        "「랜덤유닛 도박」 실패 시 행운의 토큰 +1 (1개 → 2개)",
+        "해루석 피해 250만→300만·마나 700→600 / 버스터콜 재사용 100초→66초·마나 500→333",
+        "스토리 8 보상으로 [히든]실버즈 레일리 1기 추가",
+    };
+
+    static readonly string[] NavigationOptionCosts =
+    {
+        "제한됨·초월·불멸·영원 중 한 기를 얻으면 그 네 등급 조합이 잠김",
+        "없음",
+        "없음",
+        "없음",
         "아이템 도박 확률 풀이 13종으로 축소",
     };
 
@@ -275,7 +283,10 @@ public class GameHud : MonoBehaviour
     NavigationChoice lastNavigationChoice = NavigationChoice.None;
 
     GameObject navigationModalPanel;
-    readonly TMP_Text[] navigationRowTexts = new TMP_Text[5];
+    readonly TMP_Text[] navigationRowTexts = new TMP_Text[5];   // 이름 줄
+    readonly TMP_Text[] navigationRowEffects = new TMP_Text[5];
+    readonly TMP_Text[] navigationRowCosts = new TMP_Text[5];
+    readonly Image[] navigationRowFrames = new Image[5];
     readonly Button[] navigationRowButtons = new Button[5];
     readonly TMP_Text[] navigationRowButtonLabels = new TMP_Text[5];
 
@@ -1147,7 +1158,7 @@ public class GameHud : MonoBehaviour
             disabledSprite = UiSkin.Wc3("menu_btn_disabled"),
         };
         button.navigation = new Navigation { mode = Navigation.Mode.None };
-        button.onClick.AddListener(onClick);
+        if (onClick != null) button.onClick.AddListener(onClick);
 
         TMP_Text text = CreateLabel(rect, name + "Label", label);
         text.fontSize = 24;
@@ -1296,6 +1307,23 @@ public class GameHud : MonoBehaviour
         gameMenuMainButtons.SetActive(false);
         gameMenuScreenButtons.SetActive(false);
         gameMenuConfirmButtons.SetActive(true);
+    }
+
+    /// <summary>패배 창의 「처음 화면으로」 — 메뉴의 확인 뒤 동작과 같다(혼자 하기 첫 화면 · 같이 하기 나가기).</summary>
+    public static void LeaveGameFromDefeat()
+    {
+        GameHud hud = FindFirstObjectByType<GameHud>();
+        if (hud != null) hud.ConfirmLeaveGame();
+    }
+
+    /// <summary>워크3 금속 단추 하나(패배 창 등 다른 UI가 같은 모양을 쓰게). anchor·위치는 부모 기준, 돌려주는 글자의 부모가 단추 오브젝트다.</summary>
+    public static TMP_Text MakeWc3Button(Transform parent, string name, string label, Vector2 size, Vector2 anchor, Vector2 position, UnityEngine.Events.UnityAction onClick)
+    {
+        TMP_Text text = CreateWc3MenuButton(parent, name, label, 0f, size.y, onClick, null);
+        RectTransform rect = (RectTransform)text.transform.parent;
+        rect.anchorMin = rect.anchorMax = new Vector2(anchor.x, anchor.y); rect.pivot = new Vector2(0.5f, 0f);
+        rect.sizeDelta = size; rect.anchoredPosition = position;
+        return text;
     }
 
     void ConfirmLeaveGame()
@@ -3100,7 +3128,7 @@ public class GameHud : MonoBehaviour
     public static string NavigationHelpText()
     {
         var sb = new System.Text.StringBuilder();
-        for (int i = 0; i < NavigationOptionNames.Length; i++) sb.Append(i > 0 ? "\n" : "").Append(NavigationOptionNames[i]).Append(" — ").Append(NavigationOptionDescriptions[i].Replace("\n", " / "));
+        for (int i = 0; i < NavigationOptionNames.Length; i++) sb.Append(i > 0 ? "\n" : "").Append(NavigationOptionNames[i]).Append(" — ").Append(NavigationOptionEffects[i]).Append(NavigationOptionCosts[i] == "없음" ? "" : " (대가: " + NavigationOptionCosts[i] + ")");
         return sb.ToString();
     }
 
@@ -3112,63 +3140,96 @@ public class GameHud : MonoBehaviour
 
     // 화면 중앙 모달. 5행 + 상단 경고문 + 하단 "닫기"(안 고르고 진행 가능, 강제 아님).
     // 배경 Image가 raycastTarget 기본 true라 열려 있는 동안 뒤쪽 HUD 클릭을 자연히 막는다.
+    static readonly Color NavGold = new Color(1f, 0.80f, 0.22f);
+    static readonly Color NavRed = new Color(1f, 0.38f, 0.32f);
+
+    // 항법 선택 창(10-09 사장님): 불투명 워크3 금속 톤(F10 메뉴와 같은 menu_panel 틀) · 이름 크게 · 효과/대가 두 줄(대가 붉게) · 고른 항법 금빛 · 닫기.
     void BuildNavigationModal()
     {
-        RectTransform modal = CreatePanel(transform, "NavigationModalPanel", new Color(0.05f, 0.05f, 0.05f, 0.92f));
-        SetAnchors(modal, new Vector2(0.20f, 0.12f), new Vector2(0.80f, 0.88f));
+        RectTransform dim = CreatePanel(transform, "NavigationModalPanel", new Color(0f, 0f, 0f, 0.62f));   // 뒤 맵을 어둡게 + 클릭 막기
+        SetAnchors(dim, Vector2.zero, Vector2.one);
+        dim.GetComponent<Image>().raycastTarget = true;
 
-        RectTransform titleHolder = NewHolder(modal, "NavigationModalTitleHolder", new Vector2(0f, 0.90f), new Vector2(1f, 1f));
-        TMP_Text title = CreateLabel(titleHolder, "NavigationModalTitle",
-            "항법(진행 루트) 선택 — 플레이어당 평생 1회, 되돌릴 수 없습니다");
-        title.fontSize = 20;
-        title.color = new Color(1f, 0.55f, 0.35f);
-        title.raycastTarget = false;
+        RectTransform card = CreatePanel(dim, "Card", new Color(0.03f, 0.04f, 0.08f, 1f));   // 완전 불투명(뒤 글자가 비치지 않게)
+        card.anchorMin = card.anchorMax = card.pivot = new Vector2(0.5f, 0.5f);
+        card.sizeDelta = new Vector2(1020f, 850f);
+        card.anchoredPosition = Vector2.zero;
+        Image cardImage = card.GetComponent<Image>(); cardImage.sprite = null; cardImage.type = Image.Type.Simple; cardImage.raycastTarget = true;
+        RectTransform frame = CreatePanel(card, "Wc3Frame", Color.white);
+        frame.anchorMin = Vector2.zero; frame.anchorMax = Vector2.one; frame.offsetMin = frame.offsetMax = Vector2.zero;
+        if (!UiSkin.ApplyWc3(frame.GetComponent<Image>(), "menu_panel", 2f)) frame.GetComponent<Image>().color = new Color(0.12f, 0.12f, 0.16f, 1f);
+        frame.GetComponent<Image>().raycastTarget = false;
 
-        RectTransform subtitleHolder = NewHolder(modal, "NavigationModalSubtitleHolder", new Vector2(0f, 0.84f), new Vector2(1f, 0.90f));
-        TMP_Text subtitle = CreateLabel(subtitleHolder, "NavigationModalSubtitle",
-            "선택하지 않아도 진행할 수 있습니다 — 다섯 효과 모두 비활성 상태로 유지됩니다.");
-        subtitle.fontSize = 15;
-        subtitle.raycastTarget = false;
+        TMP_Text title = CreateLabel(card, "NavigationModalTitle", "항법 선택");
+        RectTransform tr = title.rectTransform;
+        tr.anchorMin = new Vector2(0f, 1f); tr.anchorMax = new Vector2(1f, 1f); tr.pivot = new Vector2(0.5f, 1f);
+        tr.sizeDelta = new Vector2(-84f, 56f); tr.anchoredPosition = new Vector2(0f, -36f);
+        title.fontSize = 42; title.fontStyle = FontStyles.Bold; title.color = NavGold;
+        title.outlineWidth = 0.22f; title.outlineColor = new Color32(0, 0, 0, 255); title.raycastTarget = false;
 
+        TMP_Text subtitle = CreateLabel(card, "NavigationModalSubtitle", "플레이어당 한 번, 되돌릴 수 없음 · 10라운드까지 안 고르면 「연합세력」 자동");
+        RectTransform sr = subtitle.rectTransform;
+        sr.anchorMin = new Vector2(0f, 1f); sr.anchorMax = new Vector2(1f, 1f); sr.pivot = new Vector2(0.5f, 1f);
+        sr.sizeDelta = new Vector2(-84f, 30f); sr.anchoredPosition = new Vector2(0f, -94f);
+        subtitle.fontSize = 20; subtitle.color = NavRed; subtitle.raycastTarget = false;
+        subtitle.outlineWidth = 0.2f; subtitle.outlineColor = new Color32(0, 0, 0, 255);
+
+        const float rowTop = 150f, rowHeight = 112f, rowGap = 8f, sideInset = 44f;
         for (int i = 0; i < NavigationOptionOrder.Length; i++)
         {
-            float top = 0.82f - i * 0.1525f;
-            float bottom = top - 0.13f;
+            RectTransform row = CreatePanel(card, $"NavigationRow{i}", new Color(0.06f, 0.07f, 0.11f, 1f));
+            row.anchorMin = new Vector2(0f, 1f); row.anchorMax = new Vector2(1f, 1f); row.pivot = new Vector2(0.5f, 1f);
+            row.offsetMin = new Vector2(sideInset, -(rowTop + rowHeight + i * (rowHeight + rowGap)));
+            row.offsetMax = new Vector2(-sideInset, -(rowTop + i * (rowHeight + rowGap)));
+            Image rowImage = row.GetComponent<Image>(); rowImage.raycastTarget = false;
+            // 금테(고른 항법만 켜진다)
+            RectTransform edge = CreatePanel(card, $"NavigationRowEdge{i}", new Color(0.35f, 0.30f, 0.18f, 0.55f));   // 행 뒤(형제)에 깔아 금테만 2px 보이게(자식이면 행 위를 덮는다)
+            edge.anchorMin = row.anchorMin; edge.anchorMax = row.anchorMax; edge.pivot = row.pivot;
+            edge.offsetMin = row.offsetMin + new Vector2(-2f, -2f); edge.offsetMax = row.offsetMax + new Vector2(2f, 2f);
+            edge.SetSiblingIndex(row.GetSiblingIndex()); edge.GetComponent<Image>().raycastTarget = false;
+            navigationRowFrames[i] = edge.GetComponent<Image>();
 
-            RectTransform rowPanel = CreatePanel(modal, $"NavigationRow{i}", new Color(1f, 1f, 1f, 0.08f));
-            SetAnchors(rowPanel, new Vector2(0.02f, bottom), new Vector2(0.98f, top));
+            TMP_Text name = CreateLabel(row, "Name", "");
+            name.alignment = TextAlignmentOptions.Left; name.fontSize = 28; name.fontStyle = FontStyles.Bold; name.color = Color.white;
+            name.outlineWidth = 0.2f; name.outlineColor = new Color32(0, 0, 0, 255); name.raycastTarget = false;
+            SetNavLine(name.rectTransform, 6f, 34f);
 
-            RectTransform textHolder = NewHolder(rowPanel, "Text", new Vector2(0f, 0f), new Vector2(0.72f, 1f));
-            TMP_Text label = CreateLabel(textHolder, "Label", "");
-            label.alignment = TextAlignmentOptions.Left;
-            label.fontSize = 15;
-            label.textWrappingMode = TextWrappingModes.Normal;
-            label.raycastTarget = false;
+            TMP_Text effect = CreateLabel(row, "Effect", "");
+            effect.alignment = TextAlignmentOptions.Left; effect.fontSize = 19; effect.color = new Color(0.86f, 0.92f, 1f);
+            effect.enableAutoSizing = true; effect.fontSizeMin = 13f; effect.fontSizeMax = 19f; effect.textWrappingMode = TextWrappingModes.Normal; effect.raycastTarget = false;
+            SetNavLine(effect.rectTransform, 42f, 32f);
 
-            RectTransform buttonHolder = CreatePanel(rowPanel, "SelectButton", new Color(1f, 1f, 1f, 0.25f));
-            SetAnchors(buttonHolder, new Vector2(0.75f, 0.15f), new Vector2(0.98f, 0.85f));
-            Button rowButton = buttonHolder.gameObject.AddComponent<Button>();
+            TMP_Text cost = CreateLabel(row, "Cost", "");
+            cost.alignment = TextAlignmentOptions.Left; cost.fontSize = 19; cost.color = NavRed;
+            cost.enableAutoSizing = true; cost.fontSizeMin = 13f; cost.fontSizeMax = 19f; cost.textWrappingMode = TextWrappingModes.Normal; cost.raycastTarget = false;
+            SetNavLine(cost.rectTransform, 76f, 32f);
+
+            TMP_Text buttonLabel = CreateWc3MenuButton(row, $"SelectButton{i}", "선택", 0f, 60f, null, null);
+            RectTransform buttonRect = (RectTransform)buttonLabel.transform.parent;
+            buttonRect.anchorMin = buttonRect.anchorMax = new Vector2(1f, 0.5f); buttonRect.pivot = new Vector2(1f, 0.5f);
+            buttonRect.sizeDelta = new Vector2(170f, 60f); buttonRect.anchoredPosition = new Vector2(-16f, 0f);
+            Button rowButton = buttonRect.GetComponent<Button>();
             int capturedIndex = i;
             rowButton.onClick.AddListener(() => OnNavigationOptionClicked(capturedIndex));
-            TMP_Text buttonLabel = CreateLabel(buttonHolder, "SelectButtonLabel", "선택");
-            buttonLabel.fontSize = 16;
-            buttonLabel.raycastTarget = false;
 
-            navigationRowTexts[i] = label;
-            navigationRowButtons[i] = rowButton;
-            navigationRowButtonLabels[i] = buttonLabel;
+            navigationRowTexts[i] = name; navigationRowEffects[i] = effect; navigationRowCosts[i] = cost;
+            navigationRowButtons[i] = rowButton; navigationRowButtonLabels[i] = buttonLabel;
         }
 
-        RectTransform closeHolder = CreatePanel(modal, "NavigationModalClose", new Color(1f, 1f, 1f, 0.2f));
-        SetAnchors(closeHolder, new Vector2(0.40f, 0.005f), new Vector2(0.60f, 0.055f));
-        Button closeButton = closeHolder.gameObject.AddComponent<Button>();
-        closeButton.onClick.AddListener(OnNavigationCloseClicked);
-        TMP_Text closeLabel = CreateLabel(closeHolder, "NavigationModalCloseLabel", "닫기");
-        closeLabel.fontSize = 16;
-        closeLabel.raycastTarget = false;
+        TMP_Text closeLabel = CreateWc3MenuButton(card, "NavigationModalClose", "닫기", 0f, 56f, OnNavigationCloseClicked, null);
+        RectTransform closeRect = (RectTransform)closeLabel.transform.parent;
+        closeRect.anchorMin = closeRect.anchorMax = new Vector2(0.5f, 0f); closeRect.pivot = new Vector2(0.5f, 0f);
+        closeRect.sizeDelta = new Vector2(240f, 56f); closeRect.anchoredPosition = new Vector2(0f, 44f);
 
-        navigationModalPanel = modal.gameObject;
+        navigationModalPanel = dim.gameObject;
         navigationModalPanel.SetActive(false);
+    }
+
+    // 항법 행 안의 한 줄(왼쪽 글, 오른쪽 선택 단추 자리를 비운다).
+    static void SetNavLine(RectTransform rect, float top, float height)
+    {
+        rect.anchorMin = new Vector2(0f, 1f); rect.anchorMax = new Vector2(1f, 1f); rect.pivot = new Vector2(0f, 1f);
+        rect.offsetMin = new Vector2(20f, -(top + height)); rect.offsetMax = new Vector2(-206f, -top);
     }
 
     static RectTransform NewHolder(Transform parent, string name, Vector2 min, Vector2 max)
@@ -3225,10 +3286,12 @@ public class GameHud : MonoBehaviour
         for (int i = 0; i < NavigationOptionOrder.Length; i++)
         {
             bool isChosenRow = hasChosen && choice == NavigationOptionOrder[i];
-
-            string body = $"{NavigationOptionNames[i]}\n{NavigationOptionDescriptions[i]}";
-            if (isChosenRow) body += "\n▶ 선택됨 — 되돌릴 수 없습니다";
-            navigationRowTexts[i].text = body;
+            navigationRowTexts[i].text = NavigationOptionNames[i] + (isChosenRow ? "   <color=#FFD138>▶ 선택됨</color>" : "");
+            navigationRowEffects[i].text = "효과: " + NavigationOptionEffects[i];
+            bool noCost = NavigationOptionCosts[i] == "없음";
+            navigationRowCosts[i].text = "대가: " + NavigationOptionCosts[i];
+            navigationRowCosts[i].color = noCost ? new Color(0.62f, 0.64f, 0.70f) : NavRed;
+            if (navigationRowFrames[i] != null) navigationRowFrames[i].color = isChosenRow ? new Color(1f, 0.80f, 0.22f, 1f) : new Color(0.35f, 0.30f, 0.18f, 0.55f);
 
             if (navigationRowButtons[i] != null) navigationRowButtons[i].interactable = !hasChosen;
             if (navigationRowButtonLabels[i] != null)
@@ -4172,7 +4235,10 @@ public class GameHud : MonoBehaviour
     {
         string text = PlayerFacingText.SkillName(skill);   // 10-06 개발 메모는 화면에 안 낸다
         string desc = PlayerFacingText.SkillDescription(skill);
+        bool leveledUp = caster != null && !string.IsNullOrEmpty(skill.levelUpBuffId) && caster.HasBuff(skill.levelUpBuffId);
+        if (leveledUp) text += " Lv.2 (최윤서 강화)";   // 승급한 개체는 이름에 Lv.2 표시(10-09)
         if (!string.IsNullOrEmpty(desc)) text += "\n" + desc;
+        if (!string.IsNullOrEmpty(skill.levelUpDescription)) text += "\n" + (leveledUp ? "<color=#FFD700>" + skill.levelUpDescription + "</color>" : "<color=#9AA0A6>" + skill.levelUpDescription.Replace("Lv.2", "Lv.2(아직)") + "</color>");
         if (skill.triggerType == SkillTriggerType.ActiveButton && skill.levels != null && skill.levels.Count > 0)
             text += $"\n[누르는 스킬] 쿨타임 {skill.levels[0].cooldown:0.#}초";
         return text;
@@ -4217,10 +4283,7 @@ public class GameHud : MonoBehaviour
     }
 
     // 마우스가 카드에 올라간 순간과, 그 뒤로는 TooltipRefreshInterval마다 다시 불린다
-        bool leveledUp = caster != null && !string.IsNullOrEmpty(skill.levelUpBuffId) && caster.HasBuff(skill.levelUpBuffId);
-        if (leveledUp) text += " Lv.2 (최윤서 강화)";   // 승급한 개체는 이름에 Lv.2 표시(10-09)
     // (RefreshHoveredTooltip) — 매 프레임 문자열을 새로 만들지 않는다.
-        if (!string.IsNullOrEmpty(skill.levelUpDescription)) text += "\n" + (leveledUp ? "<color=#FFD700>" + skill.levelUpDescription + "</color>" : "<color=#9AA0A6>" + skill.levelUpDescription.Replace("Lv.2", "Lv.2(아직)") + "</color>");
     void ShowHoveredTooltipNow(int index)
     {
         if (index < 0 || index >= unitCommandSlotRoots.Length || unitCommandSlotRoots[index] == null) return;
@@ -5984,7 +6047,7 @@ public class GameHud : MonoBehaviour
         //   제목 「|c00ffb0ff유닛 카운트 = |cFF00FF00N|c00ffb0ff<- 패배」 · 머리줄 「|cff00ffff난이도 :|r{모드}|cff00ffff모드|r」 / 「|c0000ff00남은 라운드 유닛 수」.
         //   이름은 플레이어 색(1 ff0202 · 2 0041FF · 3 530080 · 4 FFFC00)이고, 골드·목재는 점수판에 없다(상단 바 자원 — 사장님 확정 10-03).
         if (deathLimit > 0)
-            teamPanelBuilder.Append("<color=#FFB0FF>유닛 카운트 = </color><color=#00FF00>").Append(deathLimit).Append("</color><color=#FFB0FF> <- 패배</color>");
+            teamPanelBuilder.Append("<color=#FFB0FF>유닛 카운트 = </color><color=#00FF00>").Append(deathLimit).Append("</color><color=#FFB0FF> <- 입단 실패</color>");
         else
             teamPanelBuilder.Append("<color=#FFB0FF>유닛 카운트 </color>").Append(totalEnemies);
 
@@ -6033,7 +6096,7 @@ public class GameHud : MonoBehaviour
                 if (slotGrace[i] > 0 && !slotDead[i])
                     teamPanelBuilder.Append("<color=#FF8A65>연결 끊김 ").Append(slotGrace[i]).Append("초</color>");   // MP
                 else if (slotDead[i])
-                    teamPanelBuilder.Append("<color=#FF5050>사망</color>");
+                    teamPanelBuilder.Append("<color=#FF5050>입단 실패</color>");
                 else
                     teamPanelBuilder.Append(slotEnemy[i]);
                 // 원작 3열 「|cff00ffff풀카운트  :|r N  점」 — 신세계 진입 뒤부터(j 29702~29708).
