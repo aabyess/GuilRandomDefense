@@ -18,6 +18,7 @@ public class CreditsSplash : MonoBehaviour
         ("스폰서", "노무현제단"),
         ("PD", "임장혁"),
         ("도움을 준 사람들", "알두환 · 짬 모"),   // 사장님 10-06 「PD 임장혁 밑에」
+        ("후원자", "임장혁 · 강주혁"),            // 사장님 10-09 「도움을 준 사람들 밑에」
     };
     // 배경음악(첫 화면 곡) 출처 — CC BY 4.0은 이름을 밝히는 게 조건이다.
     const string MusicCredit = "Music: \"Tavern Tales\" by Alexander Nakarada (CreatorChords) · CC BY 4.0";
