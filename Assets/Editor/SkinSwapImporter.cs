@@ -27,7 +27,10 @@ public static class SkinSwapImporter
         return Swap(spec[0], Path.Combine(PackRoot, spec[1]));
     }
 
-    public static string SwapAll()
+    public static string RelinkAll() => SwapAll(true);
+
+    /// <summary>relinkOnly: FBX·프리팹은 그대로 두고 slot_textures.json만 다시 쓰고 텍스처·재질(알파 컷)을 다시 연결한다.</summary>
+    public static string SwapAll(bool relinkOnly = false)
     {
         var sb = new StringBuilder();
         string listFile = Path.Combine(PackRoot, "교체목록.csv");
@@ -49,9 +52,40 @@ public static class SkinSwapImporter
                 string oid = root.TryGetValue("originalId", out object o) ? (o as string ?? "").ToUpperInvariant() : "";
                 if (ids.Contains(oid)) { pack = dir; break; }
             }
-            sb.AppendLine(pack == null ? $"❌ {roster}: 교체 폴더 못 찾음({c[4]})" : Swap(roster, pack));
+            sb.AppendLine(pack == null ? $"❌ {roster}: 교체 폴더 못 찾음({c[4]})" : relinkOnly ? Relink(roster, pack) : Swap(roster, pack));
         }
         return sb.ToString();
+    }
+
+    static string Relink(string roster, string packDir)
+    {
+        string modelDir = Path.Combine(packDir, "model_fixed");
+        string dest = $"{UnitRoot}/{roster}";
+        WriteSlotTextures(modelDir, dest);
+        foreach (string t in Directory.GetFiles(Path.Combine(modelDir, "Textures"), "*.png")) File.Copy(t, Path.Combine(Directory.GetCurrentDirectory(), $"{dest}/Textures/{Path.GetFileName(t)}"), true);
+        AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+        ArtBinder.LinkTexturesFor(roster);
+        return $"✅ {roster} 텍스처 다시 연결";
+    }
+
+    static void WriteSlotTextures(string modelDir, string dest)
+    {
+        string modelJson = Directory.GetFiles(modelDir, "*.json").FirstOrDefault();
+        if (modelJson == null) return;
+        var mroot = (Dictionary<string, object>)MiniJson.Parse(File.ReadAllText(modelJson));
+        var sbj = new StringBuilder("{");
+        bool first = true;
+        if (mroot.TryGetValue("meshes", out object mo) && mo is List<object> ml)
+            foreach (object m in ml)
+            {
+                var md = (Dictionary<string, object>)m;
+                string tex = (md.TryGetValue("textureFile", out object tf) ? tf as string : null) ?? "";
+                if (tex.EndsWith(".png")) tex = tex.Substring(0, tex.Length - 4);
+                string filter = (md.TryGetValue("filter", out object fo) ? fo as string : null) ?? "none";
+                sbj.Append(first ? "" : ",").Append($"\"{md["mesh"]}\":{{\"tex\":\"{tex}\",\"filter\":\"{filter}\"}}");
+                first = false;
+            }
+        File.WriteAllText(Path.Combine(Directory.GetCurrentDirectory(), $"{dest}/slot_textures.json"), sbj.Append("}").ToString());
     }
 
     public static string Swap(string roster, string packDir)
@@ -77,6 +111,7 @@ public static class SkinSwapImporter
         if (Directory.Exists(texSrc))
             foreach (string t in Directory.GetFiles(texSrc)) if (!t.EndsWith(".meta")) File.Copy(t, Path.Combine(Directory.GetCurrentDirectory(), $"{dest}/Textures/{Path.GetFileName(t)}"), true);
         File.Copy(clipMapPath, Path.Combine(Directory.GetCurrentDirectory(), $"{dest}/clip_map.json"), true);
+        WriteSlotTextures(modelDir, dest);   // 슬롯(메시) 이름 → 텍스처·원본 필터 표(ArtBinder가 쓴다)
         File.WriteAllText(Path.Combine(Directory.GetCurrentDirectory(), $"{dest}/SOURCE.txt"),
             $"원작 스킨 교체(10-09): {Path.GetFileName(packDir)} — 원작 모델 {Path.GetFileName(srcFbx)}(blender 변환, 30fps). 스킬 효과·수치·이름은 그대로.\n받은 폴더: {packDir}\n⚠️ 원작(블리자드·모델러) 저작물이라 배포 전 라이선스 판단 필요.\n");
         AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
