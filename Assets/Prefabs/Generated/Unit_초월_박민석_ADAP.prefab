@@ -17,7 +17,6 @@ GameObject:
   - component: {fileID: 7847803151951404744}
   - component: {fileID: 3715769171538524515}
   - component: {fileID: 5466897139915464982}
-  - component: {fileID: 6228286750057034483}
   m_Layer: 0
   m_Name: "Unit_\uCD08\uC6D4_\uBC15\uBBFC\uC11D_ADAP"
   m_TagString: Untagged
@@ -61,10 +60,10 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 10.368001
-  m_Height: 57.600002
+  m_Radius: 11.4048
+  m_Height: 63.36
   m_Direction: 1
-  m_Center: {x: 0, y: 28.800001, z: 0}
+  m_Center: {x: 0, y: 31.68, z: 0}
 --- !u!195 &8858505996750466327
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -83,7 +82,7 @@ NavMeshAgent:
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
   m_AutoRepath: 1
-  m_Height: 57.600002
+  m_Height: 63.36
   m_BaseOffset: 1
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 1
@@ -188,32 +187,6 @@ MonoBehaviour:
   speedSmoothing: 10
   walkClipHeightsPerSecond: 0.8
   maxWalkPlaybackSpeed: 3
---- !u!114 &6228286750057034483
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1641539791884930035}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 977b89556685645db84278d89ed1058c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  entries:
-  - clip: Idle
-    meshes:
-    - brookcho3_g7_L0_cut
-  - clip: Attack
-    meshes:
-    - brookcho3_g8_L0_cut
-  - clip: Attack 2
-    meshes:
-    - brookcho3_g8_L0_cut
-  - clip: Move
-    meshes:
-    - brookcho3_g7_L0_cut
-  hiddenAlways: []
 --- !u!1 &6587155096890691846
 GameObject:
   m_ObjectHideFlags: 0
@@ -255,15 +228,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 510b6afc4064d4793a9da79df628e0be, type: 3}
       propertyPath: m_LocalScale.x
-      value: 47.34028
+      value: 52.074303
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 510b6afc4064d4793a9da79df628e0be, type: 3}
       propertyPath: m_LocalScale.y
-      value: 47.34028
+      value: 52.074303
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 510b6afc4064d4793a9da79df628e0be, type: 3}
       propertyPath: m_LocalScale.z
-      value: 47.34028
+      value: 52.074303
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 510b6afc4064d4793a9da79df628e0be, type: 3}
       propertyPath: m_LocalPosition.x
@@ -271,7 +244,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 510b6afc4064d4793a9da79df628e0be, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 3.868784
+      value: 4.255663
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 510b6afc4064d4793a9da79df628e0be, type: 3}
       propertyPath: m_LocalPosition.z
