@@ -28,10 +28,16 @@ static class UnitHeightProbe
             Bounds? b = null;
             foreach (Renderer r in g.GetComponentsInChildren<Renderer>()) if (r.enabled && !(r is ParticleSystemRenderer)) { if (r is SkinnedMeshRenderer s) s.updateWhenOffscreen = true; if (b == null) b = r.bounds; else { var q = b.Value; q.Encapsulate(r.bounds); b = q; } }
             float frac = 1f;
+            string headInfo = "head뼈없음";
+            {
+                Transform best = null;
+                foreach (Transform tr in g.GetComponentsInChildren<Transform>()) { string n = tr.name.ToLowerInvariant(); if ((n.Contains("head") || n == "bone_head" || n.Contains("atama")) && !n.Contains("end") && !n.Contains("top") && !n.Contains("band")) { if (best == null || tr.position.y > best.position.y) best = tr; } }
+                if (best != null) headInfo = $"{best.name} y={best.position.y - 9000f:F1}";
+            }
             var ys = new System.Collections.Generic.List<float>();
             foreach (var smr in g.GetComponentsInChildren<SkinnedMeshRenderer>()) { if (smr.sharedMesh == null || !smr.enabled) continue; foreach (var v in smr.sharedMesh.vertices) ys.Add(v.y); }
             if (ys.Count > 10) { ys.Sort(); float mn = ys[0], mx = ys[ys.Count - 1]; float p = ys[Mathf.Min(ys.Count - 1, (int)(ys.Count * 0.97f))]; frac = mx - mn > 1e-5f ? (p - mn) / (mx - mn) : 1f; }
-            sb.AppendLine(b == null ? name + "\t없음" : $"{name}\t{b.Value.size.y:F1}\t{b.Value.size.x:F1}\t{b.Value.size.z:F1}\t{frac:F3}\t{b.Value.size.y * frac:F1}");
+            sb.AppendLine(b == null ? name + "\t없음" : $"{name}\t{b.Value.size.y:F1}\t{b.Value.size.x:F1}\t{b.Value.size.z:F1}\t{frac:F3}\t{b.Value.size.y * frac:F1}\t{headInfo}\tmin={b.Value.min.y - 9000f:F1}\tmax={b.Value.max.y - 9000f:F1}");
             Object.DestroyImmediate(g);
         }
         return sb.ToString();

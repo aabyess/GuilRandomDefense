@@ -17,7 +17,6 @@ GameObject:
   - component: {fileID: 3175718176117954443}
   - component: {fileID: 7991669207396617501}
   - component: {fileID: 5924053052634156127}
-  - component: {fileID: 8689676599720446831}
   m_Layer: 0
   m_Name: "Unit_\uCD08\uC6D4_\uC774\uD0DC\uD6C8_AP"
   m_TagString: Untagged
@@ -61,10 +60,10 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 10.368001
-  m_Height: 57.600002
+  m_Radius: 9.74592
+  m_Height: 54.144
   m_Direction: 1
-  m_Center: {x: 0, y: 28.800001, z: 0}
+  m_Center: {x: 0, y: 27.072, z: 0}
 --- !u!195 &6091616845036736398
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -83,7 +82,7 @@ NavMeshAgent:
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
   m_AutoRepath: 1
-  m_Height: 57.600002
+  m_Height: 54.144
   m_BaseOffset: 1
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 1
@@ -188,40 +187,6 @@ MonoBehaviour:
   speedSmoothing: 10
   walkClipHeightsPerSecond: 0.8
   maxWalkPlaybackSpeed: 3
---- !u!114 &8689676599720446831
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3712243753628962930}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 977b89556685645db84278d89ed1058c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  entries:
-  - clip: Spell 3
-    meshes:
-    - rokugu_tr4_g5_L0_cut
-  - clip: Spell
-    meshes:
-    - rokugu_tr4_g6_L0_cut
-  - clip: Idle
-    meshes:
-    - rokugu_tr4_g5_L0_cut
-    - rokugu_tr4_g6_L0_cut
-  - clip: Attack 2
-    meshes:
-    - rokugu_tr4_g6_L0_cut
-  - clip: Attack
-    meshes:
-    - rokugu_tr4_g6_L0_cut
-  - clip: Move
-    meshes:
-    - rokugu_tr4_g0_L0_cut
-    - rokugu_tr4_g6_L0_cut
-  hiddenAlways: []
 --- !u!1 &7418484102004208474
 GameObject:
   m_ObjectHideFlags: 0
@@ -263,15 +228,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 20e6f67545fa549c1b35166a5eb1acc4, type: 3}
       propertyPath: m_LocalScale.x
-      value: 20.40937
+      value: 19.184807
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 20e6f67545fa549c1b35166a5eb1acc4, type: 3}
       propertyPath: m_LocalScale.y
-      value: 20.40937
+      value: 19.184807
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 20e6f67545fa549c1b35166a5eb1acc4, type: 3}
       propertyPath: m_LocalScale.z
-      value: 20.40937
+      value: 19.184807
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 20e6f67545fa549c1b35166a5eb1acc4, type: 3}
       propertyPath: m_LocalPosition.x
@@ -279,7 +244,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 20e6f67545fa549c1b35166a5eb1acc4, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 14.918907
+      value: 14.023771
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 20e6f67545fa549c1b35166a5eb1acc4, type: 3}
       propertyPath: m_LocalPosition.z

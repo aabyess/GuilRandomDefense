@@ -452,7 +452,38 @@ public static class ArtBinder
         return 1f;
     }
 
-    static float HeightScaleFor(string modelName) => HeightScaleBase(modelName) * GradeScaleFor(modelName);
+    static float HeightScaleFor(string modelName) => HeightScaleBase(modelName) * GradeScaleFor(modelName) * TierHeightMultiplier(modelName);
+
+    // 🔴 등급 키 맞추기 — 유닛별 최종 키 배수의 **한 곳**(사장님 10-09 「초월 키를 맞춰라, 카이도·빅맘은 더 크게」).
+    //   기준(PM 10-09 권유): 경계 높이는 소품(꼬리·무기·덩굴·망토)이 섞여 믿을 수 없다 → 몸 크기는 Head 뼈 높이로 본다(UnitHeightProbe: Idle 첫 프레임 Head 뼈 y).
+    //   초월 25기 중 Head 뼈가 있는 23기의 중간값 49.7이 기준. 배수 = 49.7 / 실측 Head y, 편차 5% 넘는 유닛만(Head 뼈 없는 김만경·임채민은 손대지 않음).
+    //   거구(원작 거구, 사장님이 명시한 둘): 카이도(전설적인_김용태)는 위 표에서 이미 최종 1.7이라 그대로, 빅맘(불멸_신지우)은 여기서 ×1.4.
+    //   ⚠️ 이 곱은 프리팹 키만 바꾼다. 콜라이더·에이전트·체력바 높이는 FitToHeight가 같은 키로 맞춘다(재조립해야 반영: ArtBinder.BindOneUnit).
+    static readonly (string unit, float multiplier)[] TierHeightMultipliers =
+    {
+        ("초월_구주호_AD", 0.94f),      // Head 52.8
+        ("초월_김건_AP", 1.15f),        // Head 43.3
+        ("초월_김민준_AP", 1.07f),      // Head 46.4
+        ("초월_박민수_AD", 1.07f),      // Head 46.3
+        ("초월_배성령_AD", 1.07f),      // Head 46.4
+        ("초월_신문철_AP", 1.18f),      // Head 42.2
+        ("초월_양재모_AD", 0.95f),      // Head 52.5
+        ("초월_유재헌_ADAP", 1.06f),    // Head 47.1
+        ("초월_이태훈_AP", 0.94f),      // Head 52.9
+        ("초월_황준석_ADAP", 0.95f),    // Head 52.4
+        ("초월_박민석_ADAP", 1.10f),    // 브룩: Head는 중간이지만 아프로·지팡이가 경계를 차지해 몸이 작다(눈대중 — 교체 전보다 작아 보임)
+        ("불멸_신지우", 1.4f),          // 빅맘 — 원작 거구(사장님 명시) → 중간값의 약 1.4배
+        // 거구 후보(적용 안 함, 사장님 확인 후): 불멸_이이삭·전설적인_이시원(흰수염) 1.3 · 쿠마·모리아류는 유닛 이름 확인 필요
+    };
+
+    static float TierHeightMultiplier(string modelName)
+    {
+        foreach ((string unit, float multiplier) in TierHeightMultipliers)
+            if (Nfc(unit) == Nfc(modelName)) return multiplier;
+        return 1f;
+    }
+
+    public static IEnumerable<string> TierHeightUnits => TierHeightMultipliers.Select(x => x.unit);
 
     static float HeightScaleBase(string modelName)
     {

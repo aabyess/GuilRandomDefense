@@ -11,7 +11,7 @@ static class UnitLineupShot
         string[] lines = File.ReadAllLines("ClaudeBridge/g2_lineup.txt").Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
         string tag = lines[0]; string[] names = lines.Skip(1).ToArray();
         const float spacing = 70f; Vector3 origin = new Vector3(0, 9000, 0);
-        int W = Mathf.RoundToInt(names.Length * 150f), H = 300;
+        int W = Mathf.RoundToInt(names.Length * 110f), H = 300;
         var camGo = new GameObject("LineCam") { hideFlags = HideFlags.HideAndDontSave };
         var cam = camGo.AddComponent<Camera>(); cam.orthographic = true; cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = new Color(0.78f, 0.82f, 0.86f); cam.enabled = false;
         float widthWorld = names.Length * spacing; cam.orthographicSize = widthWorld * H / W * 0.5f;
