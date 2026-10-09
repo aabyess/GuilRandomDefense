@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 5385455295149854827}
   - component: {fileID: 4426921228861124557}
   - component: {fileID: 3724128985333721474}
+  - component: {fileID: 2926363682417064152}
   m_Layer: 0
   m_Name: "Unit_\uBD88\uBA78_\uC774\uC774\uC0AD"
   m_TagString: Untagged
@@ -187,6 +188,55 @@ MonoBehaviour:
   speedSmoothing: 10
   walkClipHeightsPerSecond: 0.8
   maxWalkPlaybackSpeed: 3
+--- !u!114 &2926363682417064152
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6998637163620299591}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 977b89556685645db84278d89ed1058c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  entries:
+  - clip: Idle
+    meshes:
+    - war3bhz1_g10_L0_cut
+    - war3bhz1_g11_L0_cut
+    - war3bhz1_g12_L0_cut
+    - war3bhz1_g13_L0_cut
+    - war3bhz1_g14_L0_cut
+  - clip: Attack
+    meshes:
+    - war3bhz1_g10_L0_cut
+    - war3bhz1_g11_L0_cut
+    - war3bhz1_g12_L0_cut
+    - war3bhz1_g13_L0_cut
+    - war3bhz1_g14_L0_cut
+  - clip: Attack 2
+    meshes:
+    - war3bhz1_g10_L0_cut
+    - war3bhz1_g11_L0_cut
+    - war3bhz1_g12_L0_cut
+    - war3bhz1_g13_L0_cut
+    - war3bhz1_g14_L0_cut
+  - clip: Move
+    meshes:
+    - war3bhz1_g10_L0_cut
+    - war3bhz1_g11_L0_cut
+    - war3bhz1_g12_L0_cut
+    - war3bhz1_g13_L0_cut
+    - war3bhz1_g14_L0_cut
+  - clip: Spell
+    meshes:
+    - war3bhz1_g10_L0_cut
+    - war3bhz1_g11_L0_cut
+    - war3bhz1_g12_L0_cut
+    - war3bhz1_g13_L0_cut
+    - war3bhz1_g14_L0_cut
+  hiddenAlways: []
 --- !u!1 &8469044221913253602
 GameObject:
   m_ObjectHideFlags: 0
@@ -228,15 +278,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 697bf36744d28454dbde12695fe77a2a, type: 3}
       propertyPath: m_LocalScale.x
-      value: 32.000004
+      value: 20.623358
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 697bf36744d28454dbde12695fe77a2a, type: 3}
       propertyPath: m_LocalScale.y
-      value: 32.000004
+      value: 20.623358
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 697bf36744d28454dbde12695fe77a2a, type: 3}
       propertyPath: m_LocalScale.z
-      value: 32.000004
+      value: 20.623358
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 697bf36744d28454dbde12695fe77a2a, type: 3}
       propertyPath: m_LocalPosition.x
@@ -244,7 +294,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 697bf36744d28454dbde12695fe77a2a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 2.0723686
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 697bf36744d28454dbde12695fe77a2a, type: 3}
       propertyPath: m_LocalPosition.z
@@ -285,11 +335,7 @@ PrefabInstance:
     - target: {fileID: 5866666021909216657, guid: 697bf36744d28454dbde12695fe77a2a, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: 1d1f74ac90c824a7aa422d10f7193a72, type: 2}
-    - target: {fileID: 5866666021909216657, guid: 697bf36744d28454dbde12695fe77a2a, type: 3}
-      propertyPath: m_ApplyRootMotion
-      value: 0
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 9100000, guid: 3f8704b55300549ccb95600f2d7ea145, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

@@ -1,0 +1,74 @@
+{
+ "unit": "양문호_벤담(봉쿠레)",
+ "originalId": "h03O",
+ "originalName": "[히든조합]벤담2년 후 임펠다운 5.5층 뉴카마랜드 왕",
+ "model": "mr2bong3.mdx",
+ "fbxFolder": "/Users/sang/Desktop/구랜디스킨모음/원랜디_구버전_스킨/06_히든/h03O__히든조합_벤담2년 후 임펠다운 5.5층 뉴카마랜드 왕",
+ "fps": 30,
+ "clips": [
+  {
+   "index": 0,
+   "originalName": "stand",
+   "fbxAction": "s0_stand",
+   "startMs": 333,
+   "endMs": 2333,
+   "durationSec": 2.0,
+   "loop": true,
+   "kind": "Idle",
+   "ourClip": "Idle",
+   "hiddenMeshes": [
+    "mr2bong3_g1_L0_cut"
+   ]
+  },
+  {
+   "index": 1,
+   "originalName": "Walk",
+   "fbxAction": "s1_Walk",
+   "startMs": 4733,
+   "endMs": 5533,
+   "durationSec": 0.8,
+   "loop": true,
+   "kind": "Move",
+   "ourClip": "Move",
+   "hiddenMeshes": [
+    "mr2bong3_g1_L0_cut"
+   ]
+  },
+  {
+   "index": 2,
+   "originalName": "attack",
+   "fbxAction": "s2_attack",
+   "startMs": 9100,
+   "endMs": 9800,
+   "durationSec": 0.7,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack",
+   "hiddenMeshes": [
+    "mr2bong3_g1_L0_cut"
+   ]
+  }
+ ],
+ "hit": {
+  "attackHitSec": 0.2199999988079071,
+  "backswingSec": 0.10000000149011612,
+  "attackCooldownSec": 0.9399999976158142,
+  "castPointSec": 0.22499999403953552,
+  "range": 600,
+  "missileModel": "units\\critters\\Albatross\\Albatross.mdl",
+  "missileSpeed": 1650,
+  "unitScale": null,
+  "note": "타격 시점 = w3u udp1(공격 시작에서 투사체가 나가거나 피해가 들어가는 시각, 원작 애니 속도 1.0 기준). 우리 공격 속도에 맞춰 Attack 클립 재생 속도를 늘리거나 줄이면 이 시각도 같은 배율로 줄인다. 투사체 유닛이면 이 시각에 발사"
+ },
+ "ourStates": {
+  "Idle": "Stand(첫 시퀀스)",
+  "Move": "Walk",
+  "Attack": "Attack 계열(여러 개면 무작위/순환)",
+  "Spell": "Spell 계열(스킬 시전 연출)",
+  "Death": "Death"
+ },
+ "notes": [
+  "지오셋 숨김: clips[].hiddenMeshes = 그 시퀀스 시작 시각에 알파 0인 메시(변신체·숨은 소품) — 그 시퀀스 재생 중엔 숨긴다. FBX 자체엔 지오셋 알파가 안 실린다",
+  "알파 0 텍스처는 PNG를 불투명으로 고쳐 두었다(BLP 알파 비트 0 결함)"
+ ]
+}

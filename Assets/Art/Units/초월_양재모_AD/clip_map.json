@@ -1,0 +1,118 @@
+{
+ "unit": "양재모_아카이누",
+ "originalId": "H095",
+ "originalName": "신 해군원수 ",
+ "model": "AkainuBW7.mdx",
+ "fbxFolder": "/Users/sang/Desktop/구랜디스킨모음/원랜디_구버전_스킨/11_초월/H095_신 해군원수",
+ "fps": 30,
+ "clips": [
+  {
+   "index": 0,
+   "originalName": "attack",
+   "fbxAction": "s0_attack",
+   "startMs": 1700,
+   "endMs": 3166,
+   "durationSec": 1.466,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack",
+   "hiddenMeshes": [
+    "AkainuBW7_g5_L0_cut"
+   ]
+  },
+  {
+   "index": 1,
+   "originalName": "attack 2",
+   "fbxAction": "s1_attack2",
+   "startMs": 15000,
+   "endMs": 17500,
+   "durationSec": 2.5,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack 2",
+   "hiddenMeshes": [
+    "AkainuBW7_g2_L0_cut",
+    "AkainuBW7_g5_L0_cut"
+   ]
+  },
+  {
+   "index": 2,
+   "originalName": "spell slam",
+   "fbxAction": "s2_spellslam",
+   "startMs": 29163,
+   "endMs": 31700,
+   "durationSec": 2.537,
+   "loop": false,
+   "kind": "Spell",
+   "ourClip": "Spell",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 3,
+   "originalName": "Stand Ready",
+   "fbxAction": "s3_StandReady",
+   "startMs": 39000,
+   "endMs": 40400,
+   "durationSec": 1.4,
+   "loop": true,
+   "kind": "Idle",
+   "ourClip": "Idle 2(변형 — 필요 없으면 생략)",
+   "hiddenMeshes": [
+    "AkainuBW7_g2_L0_cut",
+    "AkainuBW7_g5_L0_cut"
+   ]
+  },
+  {
+   "index": 4,
+   "originalName": "Stand",
+   "fbxAction": "s4_Stand",
+   "startMs": 40833,
+   "endMs": 42233,
+   "durationSec": 1.4,
+   "loop": true,
+   "kind": "Idle",
+   "ourClip": "Idle",
+   "hiddenMeshes": [
+    "AkainuBW7_g2_L0_cut",
+    "AkainuBW7_g5_L0_cut"
+   ]
+  },
+  {
+   "index": 5,
+   "originalName": "Walk",
+   "fbxAction": "s5_Walk",
+   "startMs": 44333,
+   "endMs": 45266,
+   "durationSec": 0.933,
+   "loop": true,
+   "kind": "Move",
+   "ourClip": "Move",
+   "hiddenMeshes": [
+    "AkainuBW7_g2_L0_cut",
+    "AkainuBW7_g5_L0_cut"
+   ]
+  }
+ ],
+ "hit": {
+  "attackHitSec": 0.28999999165534973,
+  "backswingSec": 0.23000000417232513,
+  "attackCooldownSec": 0.7300000190734863,
+  "castPointSec": 0.22499999403953552,
+  "range": 625,
+  "missileModel": "MagmaHand_2year.mdl",
+  "missileSpeed": 3000,
+  "unitScale": 0.800000011920929,
+  "note": "타격 시점 = w3u udp1(공격 시작에서 투사체가 나가거나 피해가 들어가는 시각, 원작 애니 속도 1.0 기준). 우리 공격 속도에 맞춰 Attack 클립 재생 속도를 늘리거나 줄이면 이 시각도 같은 배율로 줄인다. 투사체 유닛이면 이 시각에 발사"
+ },
+ "ourStates": {
+  "Idle": "Stand(첫 시퀀스)",
+  "Move": "Walk",
+  "Attack": "Attack 계열(여러 개면 무작위/순환)",
+  "Spell": "Spell 계열(스킬 시전 연출)",
+  "Death": "Death"
+ },
+ "notes": [
+  "지오셋 숨김: clips[].hiddenMeshes = 그 시퀀스 시작 시각에 알파 0인 메시(변신체·숨은 소품) — 그 시퀀스 재생 중엔 숨긴다. FBX 자체엔 지오셋 알파가 안 실린다",
+  "알파 0 텍스처는 PNG를 불투명으로 고쳐 두었다(BLP 알파 비트 0 결함)"
+ ]
+}

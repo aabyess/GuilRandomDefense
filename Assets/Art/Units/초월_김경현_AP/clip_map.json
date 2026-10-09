@@ -1,0 +1,138 @@
+{
+ "unit": "김경현_상디",
+ "originalId": "H09G",
+ "originalName": "정열의 요리사",
+ "model": "jieermasz5.mdx",
+ "fbxFolder": "/Users/sang/Desktop/구랜디스킨모음/원랜디_구버전_스킨/11_초월/H09G_정열의 요리사",
+ "fps": 30,
+ "clips": [
+  {
+   "index": 0,
+   "originalName": "Stand",
+   "fbxAction": "s0_Stand",
+   "startMs": 333,
+   "endMs": 3833,
+   "durationSec": 3.5,
+   "loop": true,
+   "kind": "Idle",
+   "ourClip": "Idle",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 1,
+   "originalName": "Stand Ready",
+   "fbxAction": "s1_StandReady",
+   "startMs": 4333,
+   "endMs": 6300,
+   "durationSec": 1.967,
+   "loop": true,
+   "kind": "Idle",
+   "ourClip": "Idle 2(변형 — 필요 없으면 생략)",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 2,
+   "originalName": "Walk",
+   "fbxAction": "s2_Walk",
+   "startMs": 6966,
+   "endMs": 7700,
+   "durationSec": 0.734,
+   "loop": true,
+   "kind": "Move",
+   "ourClip": "Move",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 3,
+   "originalName": "Attack 1",
+   "fbxAction": "s3_Attack1",
+   "startMs": 12000,
+   "endMs": 13033,
+   "durationSec": 1.033,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack",
+   "hiddenMeshes": [
+    "jieermasz5_g4_L0_cut"
+   ]
+  },
+  {
+   "index": 4,
+   "originalName": "Attack 2",
+   "fbxAction": "s4_Attack2",
+   "startMs": 13700,
+   "endMs": 14700,
+   "durationSec": 1.0,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack 2",
+   "hiddenMeshes": [
+    "jieermasz5_g4_L0_cut"
+   ]
+  },
+  {
+   "index": 5,
+   "originalName": "spell one",
+   "fbxAction": "s5_spellone",
+   "startMs": 15366,
+   "endMs": 17166,
+   "durationSec": 1.8,
+   "loop": false,
+   "kind": "Spell",
+   "ourClip": "Spell",
+   "hiddenMeshes": [
+    "jieermasz5_g4_L0_cut"
+   ]
+  },
+  {
+   "index": 6,
+   "originalName": "spell two",
+   "fbxAction": "s6_spelltwo",
+   "startMs": 17833,
+   "endMs": 20633,
+   "durationSec": 2.8,
+   "loop": false,
+   "kind": "Spell",
+   "ourClip": "Spell 2",
+   "hiddenMeshes": [
+    "jieermasz5_g4_L0_cut"
+   ]
+  },
+  {
+   "index": 7,
+   "originalName": "Attack 3",
+   "fbxAction": "s7_Attack3",
+   "startMs": 21300,
+   "endMs": 22300,
+   "durationSec": 1.0,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack 3",
+   "hiddenMeshes": [
+    "jieermasz5_g4_L0_cut"
+   ]
+  }
+ ],
+ "hit": {
+  "attackHitSec": 0.33000001311302185,
+  "backswingSec": 0.07000000029802322,
+  "attackCooldownSec": 0.4399999976158142,
+  "castPointSec": 0.2800000011920929,
+  "range": 650,
+  "missileModel": "blackbladiable.mdl",
+  "missileSpeed": 2550,
+  "unitScale": 1.0399999618530273,
+  "note": "타격 시점 = w3u udp1(공격 시작에서 투사체가 나가거나 피해가 들어가는 시각, 원작 애니 속도 1.0 기준). 우리 공격 속도에 맞춰 Attack 클립 재생 속도를 늘리거나 줄이면 이 시각도 같은 배율로 줄인다. 투사체 유닛이면 이 시각에 발사"
+ },
+ "ourStates": {
+  "Idle": "Stand(첫 시퀀스)",
+  "Move": "Walk",
+  "Attack": "Attack 계열(여러 개면 무작위/순환)",
+  "Spell": "Spell 계열(스킬 시전 연출)",
+  "Death": "Death"
+ },
+ "notes": [
+  "지오셋 숨김: clips[].hiddenMeshes = 그 시퀀스 시작 시각에 알파 0인 메시(변신체·숨은 소품) — 그 시퀀스 재생 중엔 숨긴다. FBX 자체엔 지오셋 알파가 안 실린다",
+  "알파 0 텍스처는 PNG를 불투명으로 고쳐 두었다(BLP 알파 비트 0 결함)"
+ ]
+}

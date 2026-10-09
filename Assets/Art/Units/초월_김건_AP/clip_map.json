@@ -1,0 +1,152 @@
+{
+ "unit": "김건_마샬",
+ "originalId": "H090",
+ "originalName": "지진과 어둠의 검은수염",
+ "model": "blackbeard6.mdx",
+ "fbxFolder": "/Users/sang/Desktop/구랜디스킨모음/원랜디_구버전_스킨/11_초월/H090_지진과 어둠의 검은수염",
+ "fps": 30,
+ "clips": [
+  {
+   "index": 0,
+   "originalName": "Death",
+   "fbxAction": "s0_Death",
+   "startMs": 333,
+   "endMs": 2333,
+   "durationSec": 2.0,
+   "loop": true,
+   "kind": "Death",
+   "ourClip": "Death",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 1,
+   "originalName": "Spell 2",
+   "fbxAction": "s1_Spell2",
+   "startMs": 3000,
+   "endMs": 5800,
+   "durationSec": 2.8,
+   "loop": true,
+   "kind": "Spell",
+   "ourClip": "Spell",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 2,
+   "originalName": "spell throw",
+   "fbxAction": "s2_spellthrow",
+   "startMs": 6466,
+   "endMs": 9866,
+   "durationSec": 3.4,
+   "loop": false,
+   "kind": "Spell",
+   "ourClip": "Spell 3",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 3,
+   "originalName": "attack gold",
+   "fbxAction": "s3_attackgold",
+   "startMs": 10533,
+   "endMs": 13866,
+   "durationSec": 3.333,
+   "loop": false,
+   "kind": "Other",
+   "ourClip": null,
+   "hiddenMeshes": []
+  },
+  {
+   "index": 4,
+   "originalName": "attack slam",
+   "fbxAction": "s4_attackslam",
+   "startMs": 14533,
+   "endMs": 19366,
+   "durationSec": 4.833,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack 3",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 5,
+   "originalName": "attack 1",
+   "fbxAction": "s5_attack1",
+   "startMs": 20033,
+   "endMs": 20733,
+   "durationSec": 0.7,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 6,
+   "originalName": "attack 2",
+   "fbxAction": "s6_attack2",
+   "startMs": 21400,
+   "endMs": 22300,
+   "durationSec": 0.9,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack 2",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 7,
+   "originalName": "Spell 8",
+   "fbxAction": "s7_Spell8",
+   "startMs": 22966,
+   "endMs": 36966,
+   "durationSec": 14.0,
+   "loop": true,
+   "kind": "Spell",
+   "ourClip": "Spell 2",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 8,
+   "originalName": "Stand",
+   "fbxAction": "s8_Stand",
+   "startMs": 37633,
+   "endMs": 39633,
+   "durationSec": 2.0,
+   "loop": true,
+   "kind": "Idle",
+   "ourClip": "Idle",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 9,
+   "originalName": "Walk",
+   "fbxAction": "s9_Walk",
+   "startMs": 40300,
+   "endMs": 41033,
+   "durationSec": 0.733,
+   "loop": true,
+   "kind": "Move",
+   "ourClip": "Move",
+   "hiddenMeshes": []
+  }
+ ],
+ "hit": {
+  "attackHitSec": 0.28999999165534973,
+  "backswingSec": 0.3499999940395355,
+  "attackCooldownSec": 0.6100000143051147,
+  "castPointSec": 0.22499999403953552,
+  "range": 725,
+  "missileModel": "tichief1_tr.mdl",
+  "missileSpeed": 2000,
+  "unitScale": 1.4500000476837158,
+  "note": "타격 시점 = w3u udp1(공격 시작에서 투사체가 나가거나 피해가 들어가는 시각, 원작 애니 속도 1.0 기준). 우리 공격 속도에 맞춰 Attack 클립 재생 속도를 늘리거나 줄이면 이 시각도 같은 배율로 줄인다. 투사체 유닛이면 이 시각에 발사"
+ },
+ "ourStates": {
+  "Idle": "Stand(첫 시퀀스)",
+  "Move": "Walk",
+  "Attack": "Attack 계열(여러 개면 무작위/순환)",
+  "Spell": "Spell 계열(스킬 시전 연출)",
+  "Death": "Death"
+ },
+ "notes": [
+  "지오셋 숨김: clips[].hiddenMeshes = 그 시퀀스 시작 시각에 알파 0인 메시(변신체·숨은 소품) — 그 시퀀스 재생 중엔 숨긴다. FBX 자체엔 지오셋 알파가 안 실린다",
+  "알파 0 텍스처는 PNG를 불투명으로 고쳐 두었다(BLP 알파 비트 0 결함)"
+ ]
+}

@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 746338492032631682}
   - component: {fileID: 8508710605007359830}
   - component: {fileID: 156156547849868825}
+  - component: {fileID: 4455035704611555347}
   m_Layer: 0
   m_Name: "Unit_\uCD08\uC6D4_\uC591\uC7AC\uBAA8_AD"
   m_TagString: Untagged
@@ -187,6 +188,35 @@ MonoBehaviour:
   speedSmoothing: 10
   walkClipHeightsPerSecond: 0.8
   maxWalkPlaybackSpeed: 3
+--- !u!114 &4455035704611555347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1488769862913442245}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 977b89556685645db84278d89ed1058c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  entries:
+  - clip: Attack
+    meshes:
+    - AkainuBW7_g5_L0_cut
+  - clip: Attack 2
+    meshes:
+    - AkainuBW7_g2_L0_cut
+    - AkainuBW7_g5_L0_cut
+  - clip: Idle
+    meshes:
+    - AkainuBW7_g2_L0_cut
+    - AkainuBW7_g5_L0_cut
+  - clip: Move
+    meshes:
+    - AkainuBW7_g2_L0_cut
+    - AkainuBW7_g5_L0_cut
+  hiddenAlways: []
 --- !u!1 &6171049566148573119
 GameObject:
   m_ObjectHideFlags: 0
@@ -228,15 +258,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: c8e3bb46da31d4231a2fc70742086ac0, type: 3}
       propertyPath: m_LocalScale.x
-      value: 32.000004
+      value: 19.799913
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c8e3bb46da31d4231a2fc70742086ac0, type: 3}
       propertyPath: m_LocalScale.y
-      value: 32.000004
+      value: 19.799913
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c8e3bb46da31d4231a2fc70742086ac0, type: 3}
       propertyPath: m_LocalScale.z
-      value: 32.000004
+      value: 19.799913
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c8e3bb46da31d4231a2fc70742086ac0, type: 3}
       propertyPath: m_LocalPosition.x
@@ -244,7 +274,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c8e3bb46da31d4231a2fc70742086ac0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.50509644
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: c8e3bb46da31d4231a2fc70742086ac0, type: 3}
       propertyPath: m_LocalPosition.z

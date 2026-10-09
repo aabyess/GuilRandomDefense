@@ -1,0 +1,116 @@
+{
+ "unit": "고도현_센고쿠",
+ "originalId": "h04E",
+ "originalName": "센고쿠 해군원수 \"부처님\" - 불멸의",
+ "model": "sengoku3.mdx",
+ "fbxFolder": "/Users/sang/Desktop/구랜디스킨모음/원랜디_구버전_스킨/12_불멸/h04E_센고쿠 해군원수 _부처님_ - 불멸의",
+ "fps": 30,
+ "clips": [
+  {
+   "index": 0,
+   "originalName": "stand",
+   "fbxAction": "s0_stand",
+   "startMs": 333,
+   "endMs": 2333,
+   "durationSec": 2.0,
+   "loop": true,
+   "kind": "Idle",
+   "ourClip": "Idle",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 1,
+   "originalName": "Stand Ready",
+   "fbxAction": "s1_StandReady",
+   "startMs": 3000,
+   "endMs": 4666,
+   "durationSec": 1.666,
+   "loop": true,
+   "kind": "Idle",
+   "ourClip": "Idle 2(변형 — 필요 없으면 생략)",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 2,
+   "originalName": "Attack",
+   "fbxAction": "s2_Attack",
+   "startMs": 5300,
+   "endMs": 6333,
+   "durationSec": 1.033,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 3,
+   "originalName": "Attack - 2",
+   "fbxAction": "s3_Attack-2",
+   "startMs": 7000,
+   "endMs": 8000,
+   "durationSec": 1.0,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack 2",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 4,
+   "originalName": "Walk",
+   "fbxAction": "s4_Walk",
+   "startMs": 8666,
+   "endMs": 9900,
+   "durationSec": 1.234,
+   "loop": true,
+   "kind": "Move",
+   "ourClip": "Move",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 5,
+   "originalName": "Death",
+   "fbxAction": "s5_Death",
+   "startMs": 10566,
+   "endMs": 12566,
+   "durationSec": 2.0,
+   "loop": false,
+   "kind": "Death",
+   "ourClip": "Death",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 6,
+   "originalName": "spell one",
+   "fbxAction": "s6_spellone",
+   "startMs": 13233,
+   "endMs": 14233,
+   "durationSec": 1.0,
+   "loop": false,
+   "kind": "Spell",
+   "ourClip": "Spell",
+   "hiddenMeshes": []
+  }
+ ],
+ "hit": {
+  "attackHitSec": 0.3700000047683716,
+  "backswingSec": 0.3799999952316284,
+  "attackCooldownSec": 0.699999988079071,
+  "castPointSec": 0.22499999403953552,
+  "range": 600,
+  "missileModel": "effect_shengguang6.mdl",
+  "missileSpeed": 10000,
+  "unitScale": 1.909999966621399,
+  "note": "타격 시점 = w3u udp1(공격 시작에서 투사체가 나가거나 피해가 들어가는 시각, 원작 애니 속도 1.0 기준). 우리 공격 속도에 맞춰 Attack 클립 재생 속도를 늘리거나 줄이면 이 시각도 같은 배율로 줄인다. 투사체 유닛이면 이 시각에 발사"
+ },
+ "ourStates": {
+  "Idle": "Stand(첫 시퀀스)",
+  "Move": "Walk",
+  "Attack": "Attack 계열(여러 개면 무작위/순환)",
+  "Spell": "Spell 계열(스킬 시전 연출)",
+  "Death": "Death"
+ },
+ "notes": [
+  "지오셋 숨김: clips[].hiddenMeshes = 그 시퀀스 시작 시각에 알파 0인 메시(변신체·숨은 소품) — 그 시퀀스 재생 중엔 숨긴다. FBX 자체엔 지오셋 알파가 안 실린다",
+  "알파 0 텍스처는 PNG를 불투명으로 고쳐 두었다(BLP 알파 비트 0 결함)"
+ ]
+}
