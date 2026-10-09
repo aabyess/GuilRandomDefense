@@ -97,6 +97,8 @@ public class SelectionManager : MonoBehaviour
             {
                 if (isDragging)
                     SelectInBox(dragStart, Mouse.current.position.ReadValue());
+                else if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+                { /* 10-09 상점 풀림 방어: 누른 프레임엔 UI 판정이 낡아(EventSystem 처리 전) 월드 클릭으로 읽혔어도, 뗄 때 커서가 UI 위면 선택을 풀지 않는다 — 단추를 눌렀는데 빈 땅 클릭으로 새어 상점 선택이 풀리던 경로 */ }
                 else
                     TrySelectAtCursor();
             }
@@ -454,8 +456,12 @@ public class SelectionManager : MonoBehaviour
         }
     }
 
+    public static bool TraceClear = false;
+    public static string LastClearTrace = "";
+
     public void ClearSelection()
     {
+        if (TraceClear) LastClearTrace = new System.Diagnostics.StackTrace(1, false).ToString().Replace("\n", " <- ");   // 진단용(10-09 상점 풀림 추적)
         viewOnlyPick = null;
         targeting = TargetMode.None;   // 고를 유닛이 없어졌다 — 공격 대기도 끝
         foreach (Selectable s in selected)
