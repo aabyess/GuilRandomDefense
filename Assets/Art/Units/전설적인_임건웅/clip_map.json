@@ -1,0 +1,112 @@
+{
+ "unit": "임건웅_후지토라",
+ "originalId": "h031",
+ "originalName": "후지토라 잇쇼우 '신'해군대장 - 전설적인",
+ "model": "huji_re9.mdx",
+ "fbxFolder": "/Users/sang/Desktop/구랜디스킨모음/원랜디_구버전_스킨/05_전설/h031_후지토라 잇쇼우 '신'해군대장 - 전설적인",
+ "fps": 30,
+ "clips": [
+  {
+   "index": 0,
+   "originalName": "Attack - 1",
+   "fbxAction": "s0_Attack-1",
+   "startMs": 333,
+   "endMs": 1966,
+   "durationSec": 1.633,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 1,
+   "originalName": "Attack - 2",
+   "fbxAction": "s1_Attack-2",
+   "startMs": 2333,
+   "endMs": 3833,
+   "durationSec": 1.5,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack 2",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 2,
+   "originalName": "Walk",
+   "fbxAction": "s2_Walk",
+   "startMs": 5733,
+   "endMs": 6566,
+   "durationSec": 0.833,
+   "loop": true,
+   "kind": "Move",
+   "ourClip": "Move",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 3,
+   "originalName": "Stand",
+   "fbxAction": "s3_Stand",
+   "startMs": 7233,
+   "endMs": 9200,
+   "durationSec": 1.967,
+   "loop": true,
+   "kind": "Idle",
+   "ourClip": "Idle",
+   "hiddenMeshes": [
+    "huji_re9_g1_L0_cut",
+    "huji_re9_g6_L0_cut"
+   ]
+  },
+  {
+   "index": 4,
+   "originalName": "Stand Alternate",
+   "fbxAction": "s4_StandAlternate",
+   "startMs": 12300,
+   "endMs": 15966,
+   "durationSec": 3.666,
+   "loop": true,
+   "kind": "Other",
+   "ourClip": null,
+   "hiddenMeshes": [
+    "huji_re9_g0_L0_cut",
+    "huji_re9_g6_L0_cut"
+   ]
+  },
+  {
+   "index": 5,
+   "originalName": "Spell Throw",
+   "fbxAction": "s5_SpellThrow",
+   "startMs": 18700,
+   "endMs": 21100,
+   "durationSec": 2.4,
+   "loop": false,
+   "kind": "Spell",
+   "ourClip": "Spell",
+   "hiddenMeshes": [
+    "huji_re9_g6_L0_cut"
+   ]
+  }
+ ],
+ "hit": {
+  "attackHitSec": 0.5400000214576721,
+  "backswingSec": 0.5899999737739563,
+  "attackCooldownSec": 0.949999988079071,
+  "castPointSec": 0.22499999403953552,
+  "range": 625,
+  "missileModel": "[Spell]Swordlight_Black2.mdl",
+  "missileSpeed": 10000,
+  "unitScale": 2.009999990463257,
+  "note": "타격 시점 = w3u udp1(공격 시작에서 투사체가 나가거나 피해가 들어가는 시각, 원작 애니 속도 1.0 기준). 우리 공격 속도에 맞춰 Attack 클립 재생 속도를 늘리거나 줄이면 이 시각도 같은 배율로 줄인다. 투사체 유닛이면 이 시각에 발사"
+ },
+ "ourStates": {
+  "Idle": "Stand(첫 시퀀스)",
+  "Move": "Walk",
+  "Attack": "Attack 계열(여러 개면 무작위/순환)",
+  "Spell": "Spell 계열(스킬 시전 연출)",
+  "Death": "Death"
+ },
+ "notes": [
+  "지오셋 숨김: clips[].hiddenMeshes = 그 시퀀스 시작 시각에 알파 0인 메시(변신체·숨은 소품) — 그 시퀀스 재생 중엔 숨긴다. FBX 자체엔 지오셋 알파가 안 실린다",
+  "알파 0 텍스처는 PNG를 불투명으로 고쳐 두었다(BLP 알파 비트 0 결함)"
+ ]
+}

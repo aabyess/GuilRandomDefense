@@ -1,0 +1,128 @@
+{
+ "unit": "강재규_롭",
+ "originalId": "H08W",
+ "originalName": "CP.Zero",
+ "model": "RobLucciafter_Timeskip_BW47.mdx",
+ "fbxFolder": "/Users/sang/Desktop/구랜디스킨모음/원랜디_구버전_스킨/11_초월/H08W_CP.Zero",
+ "fps": 30,
+ "clips": [
+  {
+   "index": 0,
+   "originalName": "Attack slam",
+   "fbxAction": "s0_Attackslam",
+   "startMs": 333,
+   "endMs": 1466,
+   "durationSec": 1.133,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack 4",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 1,
+   "originalName": "Attack 1",
+   "fbxAction": "s1_Attack1",
+   "startMs": 2000,
+   "endMs": 4066,
+   "durationSec": 2.066,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 2,
+   "originalName": "spell slam",
+   "fbxAction": "s2_spellslam",
+   "startMs": 4733,
+   "endMs": 6400,
+   "durationSec": 1.667,
+   "loop": false,
+   "kind": "Spell",
+   "ourClip": "Spell",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 3,
+   "originalName": "Attack throw",
+   "fbxAction": "s3_Attackthrow",
+   "startMs": 7066,
+   "endMs": 8166,
+   "durationSec": 1.1,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack 5",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 4,
+   "originalName": "Attack 2",
+   "fbxAction": "s4_Attack2",
+   "startMs": 8833,
+   "endMs": 10666,
+   "durationSec": 1.833,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack 2",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 5,
+   "originalName": "Attack 3",
+   "fbxAction": "s5_Attack3",
+   "startMs": 12900,
+   "endMs": 14733,
+   "durationSec": 1.833,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack 3",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 6,
+   "originalName": "Stand",
+   "fbxAction": "s6_Stand",
+   "startMs": 18466,
+   "endMs": 20466,
+   "durationSec": 2.0,
+   "loop": true,
+   "kind": "Idle",
+   "ourClip": "Idle",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 7,
+   "originalName": "Walk",
+   "fbxAction": "s7_Walk",
+   "startMs": 23133,
+   "endMs": 23933,
+   "durationSec": 0.8,
+   "loop": true,
+   "kind": "Move",
+   "ourClip": "Move",
+   "hiddenMeshes": []
+  }
+ ],
+ "hit": {
+  "attackHitSec": 0.30000001192092896,
+  "backswingSec": 0.10000000149011612,
+  "attackCooldownSec": 0.5400000214576721,
+  "castPointSec": 0.22499999403953552,
+  "range": 550,
+  "missileModel": "animeslashfinal3.mdl",
+  "missileSpeed": 2250,
+  "unitScale": 1.2899999618530273,
+  "note": "타격 시점 = w3u udp1(공격 시작에서 투사체가 나가거나 피해가 들어가는 시각, 원작 애니 속도 1.0 기준). 우리 공격 속도에 맞춰 Attack 클립 재생 속도를 늘리거나 줄이면 이 시각도 같은 배율로 줄인다. 투사체 유닛이면 이 시각에 발사"
+ },
+ "ourStates": {
+  "Idle": "Stand(첫 시퀀스)",
+  "Move": "Walk",
+  "Attack": "Attack 계열(여러 개면 무작위/순환)",
+  "Spell": "Spell 계열(스킬 시전 연출)",
+  "Death": "Death"
+ },
+ "notes": [
+  "지오셋 숨김: clips[].hiddenMeshes = 그 시퀀스 시작 시각에 알파 0인 메시(변신체·숨은 소품) — 그 시퀀스 재생 중엔 숨긴다. FBX 자체엔 지오셋 알파가 안 실린다",
+  "알파 0 텍스처는 PNG를 불투명으로 고쳐 두었다(BLP 알파 비트 0 결함)"
+ ]
+}

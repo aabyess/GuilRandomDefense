@@ -1,0 +1,104 @@
+{
+ "unit": "임채민_키드",
+ "originalId": "H0B4",
+ "originalName": "유스타스'캡틴'",
+ "model": "kid19.mdx",
+ "fbxFolder": "/Users/sang/Desktop/구랜디스킨모음/원랜디_구버전_스킨/11_초월/H0B4_유스타스'캡틴'",
+ "fps": 30,
+ "clips": [
+  {
+   "index": 0,
+   "originalName": "Walk",
+   "fbxAction": "s0_Walk",
+   "startMs": 333,
+   "endMs": 1400,
+   "durationSec": 1.067,
+   "loop": true,
+   "kind": "Move",
+   "ourClip": "Move",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 1,
+   "originalName": "Stand",
+   "fbxAction": "s1_Stand",
+   "startMs": 2000,
+   "endMs": 4000,
+   "durationSec": 2.0,
+   "loop": true,
+   "kind": "Idle",
+   "ourClip": "Idle",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 2,
+   "originalName": "Spell Eight",
+   "fbxAction": "s2_SpellEight",
+   "startMs": 7333,
+   "endMs": 9166,
+   "durationSec": 1.833,
+   "loop": false,
+   "kind": "Spell",
+   "ourClip": "Spell",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 3,
+   "originalName": "Attack 2",
+   "fbxAction": "s3_Attack2",
+   "startMs": 9833,
+   "endMs": 10833,
+   "durationSec": 1.0,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack 2",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 4,
+   "originalName": "Attack",
+   "fbxAction": "s4_Attack",
+   "startMs": 11500,
+   "endMs": 12400,
+   "durationSec": 0.9,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 5,
+   "originalName": "Attack slam",
+   "fbxAction": "s5_Attackslam",
+   "startMs": 13066,
+   "endMs": 14233,
+   "durationSec": 1.167,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack 3",
+   "hiddenMeshes": []
+  }
+ ],
+ "hit": {
+  "attackHitSec": 0.33000001311302185,
+  "backswingSec": 0.20000000298023224,
+  "attackCooldownSec": 0.9900000095367432,
+  "castPointSec": 0.22499999403953552,
+  "range": 1000,
+  "missileModel": "BY_Wood_ArcLightning_small2.mdl",
+  "missileSpeed": 2800,
+  "unitScale": 1.159999966621399,
+  "note": "타격 시점 = w3u udp1(공격 시작에서 투사체가 나가거나 피해가 들어가는 시각, 원작 애니 속도 1.0 기준). 우리 공격 속도에 맞춰 Attack 클립 재생 속도를 늘리거나 줄이면 이 시각도 같은 배율로 줄인다. 투사체 유닛이면 이 시각에 발사"
+ },
+ "ourStates": {
+  "Idle": "Stand(첫 시퀀스)",
+  "Move": "Walk",
+  "Attack": "Attack 계열(여러 개면 무작위/순환)",
+  "Spell": "Spell 계열(스킬 시전 연출)",
+  "Death": "Death"
+ },
+ "notes": [
+  "지오셋 숨김: clips[].hiddenMeshes = 그 시퀀스 시작 시각에 알파 0인 메시(변신체·숨은 소품) — 그 시퀀스 재생 중엔 숨긴다. FBX 자체엔 지오셋 알파가 안 실린다",
+  "알파 0 텍스처는 PNG를 불투명으로 고쳐 두었다(BLP 알파 비트 0 결함)"
+ ]
+}

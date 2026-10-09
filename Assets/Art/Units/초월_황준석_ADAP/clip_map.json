@@ -1,0 +1,150 @@
+{
+ "unit": "황준석_쿠잔",
+ "originalId": "h04V",
+ "originalName": "쿠잔 전 해군대장 아오키지  - 초월함",
+ "model": "lb_kz.mdx",
+ "fbxFolder": "/Users/sang/Desktop/구랜디스킨모음/원랜디_구버전_스킨/11_초월/h04V_쿠잔 전 해군대장 아오키지  - 초월함",
+ "fps": 30,
+ "clips": [
+  {
+   "index": 0,
+   "originalName": "Stand",
+   "fbxAction": "s0_Stand",
+   "startMs": 333,
+   "endMs": 1833,
+   "durationSec": 1.5,
+   "loop": true,
+   "kind": "Idle",
+   "ourClip": "Idle",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 1,
+   "originalName": "walk",
+   "fbxAction": "s1_walk",
+   "startMs": 2333,
+   "endMs": 3333,
+   "durationSec": 1.0,
+   "loop": true,
+   "kind": "Move",
+   "ourClip": "Move",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 2,
+   "originalName": "attack",
+   "fbxAction": "s2_attack",
+   "startMs": 4000,
+   "endMs": 5000,
+   "durationSec": 1.0,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 3,
+   "originalName": "attack 2",
+   "fbxAction": "s3_attack2",
+   "startMs": 5666,
+   "endMs": 6666,
+   "durationSec": 1.0,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack 2",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 4,
+   "originalName": "spell two",
+   "fbxAction": "s4_spelltwo",
+   "startMs": 7333,
+   "endMs": 9000,
+   "durationSec": 1.667,
+   "loop": false,
+   "kind": "Spell",
+   "ourClip": "Spell",
+   "hiddenMeshes": [
+    "lb_kz_g8_L0_add"
+   ]
+  },
+  {
+   "index": 5,
+   "originalName": "attack gold",
+   "fbxAction": "s5_attackgold",
+   "startMs": 9666,
+   "endMs": 10766,
+   "durationSec": 1.1,
+   "loop": false,
+   "kind": "Other",
+   "ourClip": null,
+   "hiddenMeshes": [
+    "lb_kz_g8_L0_add"
+   ]
+  },
+  {
+   "index": 6,
+   "originalName": "stand gold",
+   "fbxAction": "s6_standgold",
+   "startMs": 11433,
+   "endMs": 12933,
+   "durationSec": 1.5,
+   "loop": true,
+   "kind": "Other",
+   "ourClip": null,
+   "hiddenMeshes": [
+    "lb_kz_g8_L0_add"
+   ]
+  },
+  {
+   "index": 7,
+   "originalName": "walk gold",
+   "fbxAction": "s7_walkgold",
+   "startMs": 13600,
+   "endMs": 14600,
+   "durationSec": 1.0,
+   "loop": true,
+   "kind": "Other",
+   "ourClip": null,
+   "hiddenMeshes": [
+    "lb_kz_g8_L0_add"
+   ]
+  },
+  {
+   "index": 8,
+   "originalName": "attack gold 2",
+   "fbxAction": "s8_attackgold2",
+   "startMs": 15266,
+   "endMs": 16166,
+   "durationSec": 0.9,
+   "loop": false,
+   "kind": "Other",
+   "ourClip": null,
+   "hiddenMeshes": [
+    "lb_kz_g8_L0_add"
+   ]
+  }
+ ],
+ "hit": {
+  "attackHitSec": 0.5,
+  "backswingSec": 0.5199999809265137,
+  "attackCooldownSec": 0.6899999976158142,
+  "castPointSec": 0.22499999403953552,
+  "range": 600,
+  "missileModel": "freezingsplinter3.mdl",
+  "missileSpeed": 2250,
+  "unitScale": 0.9200000166893005,
+  "note": "타격 시점 = w3u udp1(공격 시작에서 투사체가 나가거나 피해가 들어가는 시각, 원작 애니 속도 1.0 기준). 우리 공격 속도에 맞춰 Attack 클립 재생 속도를 늘리거나 줄이면 이 시각도 같은 배율로 줄인다. 투사체 유닛이면 이 시각에 발사"
+ },
+ "ourStates": {
+  "Idle": "Stand(첫 시퀀스)",
+  "Move": "Walk",
+  "Attack": "Attack 계열(여러 개면 무작위/순환)",
+  "Spell": "Spell 계열(스킬 시전 연출)",
+  "Death": "Death"
+ },
+ "notes": [
+  "지오셋 숨김: clips[].hiddenMeshes = 그 시퀀스 시작 시각에 알파 0인 메시(변신체·숨은 소품) — 그 시퀀스 재생 중엔 숨긴다. FBX 자체엔 지오셋 알파가 안 실린다",
+  "알파 0 텍스처는 PNG를 불투명으로 고쳐 두었다(BLP 알파 비트 0 결함)"
+ ]
+}

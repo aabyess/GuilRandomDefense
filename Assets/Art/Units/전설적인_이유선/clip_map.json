@@ -1,0 +1,128 @@
+{
+ "unit": "이유선_해군의",
+ "originalId": "H05N",
+ "originalName": "해군의 홍일점",
+ "model": "tashigi17.mdx",
+ "fbxFolder": "/Users/sang/Desktop/구랜디스킨모음/원랜디_구버전_스킨/11_초월/H05N_해군의 홍일점",
+ "fps": 30,
+ "clips": [
+  {
+   "index": 0,
+   "originalName": "Stand",
+   "fbxAction": "s0_Stand",
+   "startMs": 333,
+   "endMs": 2333,
+   "durationSec": 2.0,
+   "loop": true,
+   "kind": "Idle",
+   "ourClip": "Idle",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 1,
+   "originalName": "Stand Ready",
+   "fbxAction": "s1_StandReady",
+   "startMs": 3000,
+   "endMs": 5000,
+   "durationSec": 2.0,
+   "loop": true,
+   "kind": "Idle",
+   "ourClip": "Idle 2(변형 — 필요 없으면 생략)",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 2,
+   "originalName": "walk",
+   "fbxAction": "s2_walk",
+   "startMs": 5666,
+   "endMs": 6466,
+   "durationSec": 0.8,
+   "loop": true,
+   "kind": "Move",
+   "ourClip": "Move",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 3,
+   "originalName": "spell throw",
+   "fbxAction": "s3_spellthrow",
+   "startMs": 7133,
+   "endMs": 10233,
+   "durationSec": 3.1,
+   "loop": false,
+   "kind": "Spell",
+   "ourClip": "Spell",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 4,
+   "originalName": "Attack slam",
+   "fbxAction": "s4_Attackslam",
+   "startMs": 10900,
+   "endMs": 15600,
+   "durationSec": 4.7,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack 3",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 5,
+   "originalName": "attack gold",
+   "fbxAction": "s5_attackgold",
+   "startMs": 16266,
+   "endMs": 17733,
+   "durationSec": 1.467,
+   "loop": false,
+   "kind": "Other",
+   "ourClip": null,
+   "hiddenMeshes": []
+  },
+  {
+   "index": 6,
+   "originalName": "attack 1",
+   "fbxAction": "s6_attack1",
+   "startMs": 18400,
+   "endMs": 19400,
+   "durationSec": 1.0,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 7,
+   "originalName": "attack 2",
+   "fbxAction": "s7_attack2",
+   "startMs": 20066,
+   "endMs": 22633,
+   "durationSec": 2.567,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack 2",
+   "hiddenMeshes": []
+  }
+ ],
+ "hit": {
+  "attackHitSec": 0.2750000059604645,
+  "backswingSec": null,
+  "attackCooldownSec": 0.8799999952316284,
+  "castPointSec": null,
+  "range": 625,
+  "missileModel": "BlueWave.mdl",
+  "missileSpeed": 3000,
+  "unitScale": 0.8199999928474426,
+  "note": "타격 시점 = w3u udp1(공격 시작에서 투사체가 나가거나 피해가 들어가는 시각, 원작 애니 속도 1.0 기준). 우리 공격 속도에 맞춰 Attack 클립 재생 속도를 늘리거나 줄이면 이 시각도 같은 배율로 줄인다. 투사체 유닛이면 이 시각에 발사"
+ },
+ "ourStates": {
+  "Idle": "Stand(첫 시퀀스)",
+  "Move": "Walk",
+  "Attack": "Attack 계열(여러 개면 무작위/순환)",
+  "Spell": "Spell 계열(스킬 시전 연출)",
+  "Death": "Death"
+ },
+ "notes": [
+  "지오셋 숨김: clips[].hiddenMeshes = 그 시퀀스 시작 시각에 알파 0인 메시(변신체·숨은 소품) — 그 시퀀스 재생 중엔 숨긴다. FBX 자체엔 지오셋 알파가 안 실린다",
+  "알파 0 텍스처는 PNG를 불투명으로 고쳐 두었다(BLP 알파 비트 0 결함)"
+ ]
+}

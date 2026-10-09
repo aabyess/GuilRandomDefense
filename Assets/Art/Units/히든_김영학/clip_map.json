@@ -1,0 +1,188 @@
+{
+ "unit": "김영학_시류",
+ "originalId": "h03J",
+ "originalName": "[히든조합]시류비의 시류",
+ "model": "siru2year.mdx",
+ "fbxFolder": "/Users/sang/Desktop/구랜디스킨모음/원랜디_구버전_스킨/06_히든/h03J__히든조합_시류비의 시류",
+ "fps": 30,
+ "clips": [
+  {
+   "index": 0,
+   "originalName": "stand",
+   "fbxAction": "s0_stand",
+   "startMs": 333,
+   "endMs": 2333,
+   "durationSec": 2.0,
+   "loop": true,
+   "kind": "Idle",
+   "ourClip": "Idle",
+   "hiddenMeshes": [
+    "siru2year_g2_L0_cut"
+   ]
+  },
+  {
+   "index": 1,
+   "originalName": "attack 3",
+   "fbxAction": "s1_attack3",
+   "startMs": 2666,
+   "endMs": 4000,
+   "durationSec": 1.334,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack 3",
+   "hiddenMeshes": [
+    "siru2year_g2_L0_cut"
+   ]
+  },
+  {
+   "index": 2,
+   "originalName": "walk",
+   "fbxAction": "s2_walk",
+   "startMs": 4333,
+   "endMs": 5133,
+   "durationSec": 0.8,
+   "loop": true,
+   "kind": "Move",
+   "ourClip": "Move",
+   "hiddenMeshes": [
+    "siru2year_g2_L0_cut"
+   ]
+  },
+  {
+   "index": 3,
+   "originalName": "spell one",
+   "fbxAction": "s3_spellone",
+   "startMs": 8666,
+   "endMs": 9000,
+   "durationSec": 0.334,
+   "loop": true,
+   "kind": "Spell",
+   "ourClip": "Spell",
+   "hiddenMeshes": [
+    "siru2year_g2_L0_cut"
+   ]
+  },
+  {
+   "index": 4,
+   "originalName": "spell four",
+   "fbxAction": "s4_spellfour",
+   "startMs": 14333,
+   "endMs": 15333,
+   "durationSec": 1.0,
+   "loop": false,
+   "kind": "Spell",
+   "ourClip": "Spell 2",
+   "hiddenMeshes": [
+    "siru2year_g1_L0_cut"
+   ]
+  },
+  {
+   "index": 5,
+   "originalName": "attack 1",
+   "fbxAction": "s5_attack1",
+   "startMs": 15666,
+   "endMs": 17666,
+   "durationSec": 2.0,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack",
+   "hiddenMeshes": [
+    "siru2year_g1_L0_cut"
+   ]
+  },
+  {
+   "index": 6,
+   "originalName": "spell slam one",
+   "fbxAction": "s6_spellslamone",
+   "startMs": 18000,
+   "endMs": 19333,
+   "durationSec": 1.333,
+   "loop": false,
+   "kind": "Spell",
+   "ourClip": "Spell 3",
+   "hiddenMeshes": [
+    "siru2year_g2_L0_cut"
+   ]
+  },
+  {
+   "index": 7,
+   "originalName": "attack 2",
+   "fbxAction": "s7_attack2",
+   "startMs": 21333,
+   "endMs": 23333,
+   "durationSec": 2.0,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack 2",
+   "hiddenMeshes": [
+    "siru2year_g2_L0_cut"
+   ]
+  },
+  {
+   "index": 8,
+   "originalName": "spell slam five",
+   "fbxAction": "s8_spellslamfive",
+   "startMs": 23666,
+   "endMs": 24066,
+   "durationSec": 0.4,
+   "loop": true,
+   "kind": "Spell",
+   "ourClip": "Spell 4",
+   "hiddenMeshes": [
+    "siru2year_g1_L0_cut",
+    "siru2year_g2_L0_cut"
+   ]
+  },
+  {
+   "index": 9,
+   "originalName": "attack slam",
+   "fbxAction": "s9_attackslam",
+   "startMs": 24333,
+   "endMs": 26000,
+   "durationSec": 1.667,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack 4",
+   "hiddenMeshes": [
+    "siru2year_g1_L0_cut",
+    "siru2year_g2_L0_cut"
+   ]
+  },
+  {
+   "index": 10,
+   "originalName": "spell alternate three",
+   "fbxAction": "s10_spellalternatethree",
+   "startMs": 31000,
+   "endMs": 33666,
+   "durationSec": 2.666,
+   "loop": false,
+   "kind": "Other",
+   "ourClip": null,
+   "hiddenMeshes": [
+    "siru2year_g2_L0_cut"
+   ]
+  }
+ ],
+ "hit": {
+  "attackHitSec": 0.25999999046325684,
+  "backswingSec": 0.3700000047683716,
+  "attackCooldownSec": 0.699999988079071,
+  "castPointSec": 0.22499999403953552,
+  "range": 600,
+  "missileModel": "Objects\\Spawnmodels\\Critters\\Albatross\\CritterBloodAlbatross.mdl",
+  "missileSpeed": null,
+  "unitScale": 1.4199999570846558,
+  "note": "타격 시점 = w3u udp1(공격 시작에서 투사체가 나가거나 피해가 들어가는 시각, 원작 애니 속도 1.0 기준). 우리 공격 속도에 맞춰 Attack 클립 재생 속도를 늘리거나 줄이면 이 시각도 같은 배율로 줄인다. 투사체 유닛이면 이 시각에 발사"
+ },
+ "ourStates": {
+  "Idle": "Stand(첫 시퀀스)",
+  "Move": "Walk",
+  "Attack": "Attack 계열(여러 개면 무작위/순환)",
+  "Spell": "Spell 계열(스킬 시전 연출)",
+  "Death": "Death"
+ },
+ "notes": [
+  "지오셋 숨김: clips[].hiddenMeshes = 그 시퀀스 시작 시각에 알파 0인 메시(변신체·숨은 소품) — 그 시퀀스 재생 중엔 숨긴다. FBX 자체엔 지오셋 알파가 안 실린다",
+  "알파 0 텍스처는 PNG를 불투명으로 고쳐 두었다(BLP 알파 비트 0 결함)"
+ ]
+}

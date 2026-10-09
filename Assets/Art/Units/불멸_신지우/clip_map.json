@@ -1,0 +1,188 @@
+{
+ "unit": "신지우_빅",
+ "originalId": "h04Q",
+ "originalName": "빅 맘 강철 풍선 - 불멸의",
+ "model": "BIGMOM7.mdx",
+ "fbxFolder": "/Users/sang/Desktop/구랜디스킨모음/원랜디_구버전_스킨/12_불멸/h04Q_빅 맘 강철 풍선 - 불멸의",
+ "fps": 30,
+ "clips": [
+  {
+   "index": 0,
+   "originalName": "Stand",
+   "fbxAction": "s0_Stand",
+   "startMs": 333,
+   "endMs": 1666,
+   "durationSec": 1.333,
+   "loop": true,
+   "kind": "Idle",
+   "ourClip": "Idle",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 1,
+   "originalName": "Attack",
+   "fbxAction": "s1_Attack",
+   "startMs": 2333,
+   "endMs": 3666,
+   "durationSec": 1.333,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 2,
+   "originalName": "Walk",
+   "fbxAction": "s2_Walk",
+   "startMs": 6333,
+   "endMs": 7333,
+   "durationSec": 1.0,
+   "loop": true,
+   "kind": "Move",
+   "ourClip": "Move",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 3,
+   "originalName": "Stand Channel",
+   "fbxAction": "s3_StandChannel",
+   "startMs": 8000,
+   "endMs": 9166,
+   "durationSec": 1.166,
+   "loop": true,
+   "kind": "Other",
+   "ourClip": null,
+   "hiddenMeshes": []
+  },
+  {
+   "index": 4,
+   "originalName": "Spell Slam Alternate",
+   "fbxAction": "s4_SpellSlamAlternate",
+   "startMs": 9833,
+   "endMs": 12833,
+   "durationSec": 3.0,
+   "loop": false,
+   "kind": "Other",
+   "ourClip": null,
+   "hiddenMeshes": []
+  },
+  {
+   "index": 5,
+   "originalName": "attack gold",
+   "fbxAction": "s5_attackgold",
+   "startMs": 13500,
+   "endMs": 14200,
+   "durationSec": 0.7,
+   "loop": false,
+   "kind": "Other",
+   "ourClip": null,
+   "hiddenMeshes": []
+  },
+  {
+   "index": 6,
+   "originalName": "attack 2",
+   "fbxAction": "s6_attack2",
+   "startMs": 14866,
+   "endMs": 15700,
+   "durationSec": 0.834,
+   "loop": false,
+   "kind": "Attack",
+   "ourClip": "Attack 2",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 7,
+   "originalName": "Death",
+   "fbxAction": "s7_Death",
+   "startMs": 16366,
+   "endMs": 18366,
+   "durationSec": 2.0,
+   "loop": false,
+   "kind": "Death",
+   "ourClip": "Death",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 8,
+   "originalName": "spell throw",
+   "fbxAction": "s8_spellthrow",
+   "startMs": 19000,
+   "endMs": 20000,
+   "durationSec": 1.0,
+   "loop": false,
+   "kind": "Spell",
+   "ourClip": "Spell 4",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 9,
+   "originalName": "spell slam",
+   "fbxAction": "s9_spellslam",
+   "startMs": 20150,
+   "endMs": 20750,
+   "durationSec": 0.6,
+   "loop": true,
+   "kind": "Spell",
+   "ourClip": "Spell 2",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 10,
+   "originalName": "spell gold",
+   "fbxAction": "s10_spellgold",
+   "startMs": 22100,
+   "endMs": 23000,
+   "durationSec": 0.9,
+   "loop": false,
+   "kind": "Other",
+   "ourClip": null,
+   "hiddenMeshes": []
+  },
+  {
+   "index": 11,
+   "originalName": "spell swim",
+   "fbxAction": "s11_spellswim",
+   "startMs": 24080,
+   "endMs": 25000,
+   "durationSec": 0.92,
+   "loop": false,
+   "kind": "Spell",
+   "ourClip": "Spell 3",
+   "hiddenMeshes": []
+  },
+  {
+   "index": 12,
+   "originalName": "spell one",
+   "fbxAction": "s12_spellone",
+   "startMs": 25900,
+   "endMs": 27000,
+   "durationSec": 1.1,
+   "loop": false,
+   "kind": "Spell",
+   "ourClip": "Spell",
+   "hiddenMeshes": []
+  }
+ ],
+ "hit": {
+  "attackHitSec": 0.4000000059604645,
+  "backswingSec": 0.44999998807907104,
+  "attackCooldownSec": 1.149999976158142,
+  "castPointSec": 0.22499999403953552,
+  "range": 875,
+  "missileModel": "",
+  "missileSpeed": 10000,
+  "unitScale": 1.149999976158142,
+  "note": "타격 시점 = w3u udp1(공격 시작에서 투사체가 나가거나 피해가 들어가는 시각, 원작 애니 속도 1.0 기준). 우리 공격 속도에 맞춰 Attack 클립 재생 속도를 늘리거나 줄이면 이 시각도 같은 배율로 줄인다. 투사체 유닛이면 이 시각에 발사"
+ },
+ "ourStates": {
+  "Idle": "Stand(첫 시퀀스)",
+  "Move": "Walk",
+  "Attack": "Attack 계열(여러 개면 무작위/순환)",
+  "Spell": "Spell 계열(스킬 시전 연출)",
+  "Death": "Death"
+ },
+ "notes": [
+  "지오셋 숨김: clips[].hiddenMeshes = 그 시퀀스 시작 시각에 알파 0인 메시(변신체·숨은 소품) — 그 시퀀스 재생 중엔 숨긴다. FBX 자체엔 지오셋 알파가 안 실린다",
+  "알파 0 텍스처는 PNG를 불투명으로 고쳐 두었다(BLP 알파 비트 0 결함)"
+ ]
+}
