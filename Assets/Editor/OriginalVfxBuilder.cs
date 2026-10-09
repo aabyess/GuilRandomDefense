@@ -26,6 +26,9 @@ public static class OriginalVfxBuilder
 
     public static string BuildTrial() => Build(Trial);
 
+    /// <summary>ClaudeBridge/g2_models.txt(줄마다 모델 폴더 이름)의 모델만 다시 반입한다(텍스처 갱신 등).</summary>
+    public static string BuildListed() => Build(File.ReadAllLines("ClaudeBridge/g2_models.txt").Select(l => l.Trim()).Where(l => l.Length > 0).ToArray());
+
     /// <summary>등급별 반입(PM 지시 10-08: 초월 → 불멸 → 영원 → 하위, 등급마다 커밋·MB 보고): 그 등급 CSV들이 가리키는 모델만 반입하고 스킬 표를 다시 만든다.
     /// 호출: call OriginalVfxBuilder.BuildChowol / BuildBulmyeol / BuildYeongwon / BuildLower / BuildAssignments(전부)</summary>
     public static string BuildChowol() => BuildAssignments(f => f.StartsWith("초월"));
