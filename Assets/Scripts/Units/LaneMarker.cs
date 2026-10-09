@@ -186,7 +186,9 @@ public class LaneMarker : MonoBehaviour
         return index;
     }
 
-    /// <summary>흔함 아닌 유닛에게 내줄 레인 가운데 빈 자리를 예약하고 돌려준다.</summary>
+    /// <summary>레인 가운데 빈 자리를 예약하고 돌려준다 — 흔함 아닌 새 유닛과, 조합 결과는 등급·조합한 위치(창고·칸·필드)와 상관없이 항상 여기(사장님 10-09, 원작 johabzone).</summary>
+    public Vector3 TakeCenterPosition() => TakeFreeSlot();
+
     Vector3 TakeFreeSlot()
     {
         int index = LowestFreeCenterIndex();

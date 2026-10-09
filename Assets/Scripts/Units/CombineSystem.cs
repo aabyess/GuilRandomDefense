@@ -382,7 +382,9 @@ public class CombineSystem : MonoBehaviour
     // 🔴 2026-10-04 친구 피드백(노무현) 「조합 버튼 누른 유닛이 변하든가 그 근처에 조합된 유닛이 나오게」 — 09-25 원작화(시전 유닛 자리, war3map.j L15134)를 다시 켠다.
     //    흔함 등급 결과는 예전처럼 흔함 칸(LaneMarker.TakeSpawnPosition — 「흔함은 칸 안」 규칙)으로 간다. 그 밖의 결과만 누른 유닛 곁에 나온다.
     //    사장님 09-26 「조합 결과는 레인 가운데」와 반대라 PM·사장님 확인 뒤 켜 둔다 — 되돌리려면 false 한 줄.
-    const bool ResultAtCasterUnit = true;
+    // 🔴 2026-10-09 사장님 버그 신고(창고에서 조합하니 결과가 창고 안에 생겨 못 나옴): 조합 결과는 **등급·조합 위치(창고·칸·필드) 무관 항상 그 플레이어 레인 가운데**. 10-04 「누른 유닛 곁」 규칙을 끈다 —
+    //    원작도 창고 출구 트리거(Trig_house_OUTcommon, 1comZone)가 나온 유닛을 조합 구역(johabzone)·안흔함 조합 자리로 옮긴다. 흔함 결과도 칸 안 규칙은 조합엔 없다(원작 j 확인).
+    const bool ResultAtCasterUnit = false;
     const float ResultAtCasterJitter = 6f;   // 같은 자리에 포개 서면 클릭하기 어렵다 — 시전 유닛 바로 곁 한 몸쯤 옆(NavMesh로 다시 보정)
 
     Vector3 ResolveResultPosition(Vector3? casterPosition, UnitData result, int ownerId)
@@ -403,7 +405,7 @@ public class CombineSystem : MonoBehaviour
         // UnitMover.TryMoveToCursor가 이동 목적지에 같은 검사를 한다.
         // 지상 유닛 자리를 바다에서 찾지 않도록 그 유닛이 실제로 쓸 areaMask로 본다.
         int areaMask = UnitSpawner.ComputeAreaMask(result.movementAbility);
-        Vector3 slot = lane.TakeSpawnPosition(result);
+        Vector3 slot = lane.TakeCenterPosition();   // 흔함 결과도 칸이 아니라 레인 가운데
         return NavMesh.SamplePosition(slot, out NavMeshHit hit, ResultSampleRadius, areaMask) ? hit.position : slot;
     }
 
