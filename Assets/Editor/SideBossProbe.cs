@@ -14,6 +14,20 @@ static class SideBossProbe
         sb.Append($"\n   광폭화 몬스터 {berserk.Count}기: " + string.Join(" · ", berserk.Select(x => $"{x.name} 크기 {x.transform.localScale.x:F1} B06B {x.GetComponent<EnemyDummy>().HasBuff("B06B")} 레인 {x.GetComponent<EnemyDummy>().LaneIndex}")));
         return sb.ToString();
     }
+    static string Close()
+    {
+        var sb = new StringBuilder();
+        foreach (var b in SideBossEncounter.Active.Where(x => x != null))
+        {
+            var d = b.GetComponent<EnemyDummy>();
+            var rends = b.GetComponentsInChildren<Renderer>(true);
+            sb.Append($"{b.name} 크기 {b.transform.localScale.x:F2} 위치 {b.transform.position} 렌더러 {rends.Length} 자식: {string.Join(",", b.GetComponentsInChildren<Transform>(true).Take(8).Select(t => t.name))} QuestMobLook {b.GetComponent<QuestMobLook>() != null}\n");
+            sb.Append("   데이터 " + (d != null && d.Data != null ? d.Data.name + " 프리팹 " + UnityEditor.AssetDatabase.GetAssetPath(d.Data.prefab) : "?") + "\n");
+            var cam = Object.FindFirstObjectByType<RtsCameraController>();
+            if (cam != null) cam.MoveTo(b.transform.position);
+        }
+        return sb.Length > 0 ? sb.ToString() : "사이드보스 없음";
+    }
     static string Mid() => Describe();
     static string End() => Describe();
 }
