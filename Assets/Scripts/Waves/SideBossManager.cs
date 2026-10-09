@@ -122,6 +122,9 @@ public class SideBossManager : MonoBehaviour
         GameObject instance = waveSpawner.SpawnSideBoss(bossData, laneIndex);
         if (instance == null) return;
 
+        // 옛 보스 모델(R10 주영호·R20 박은석·R30 김만경)을 쓰는 「강화판」 — 크기 ×1.2 + 붉은 틴트/발광(QuestMobLook, MP는 NetEntity.QuestMobTint로 같은 색)(사장님 10-09).
+        instance.transform.localScale *= 1.2f;
+        instance.AddComponent<QuestMobLook>().Begin(QuestMobLook.TintIndexFor("신세계사이드보스"));
         SideBossEncounter encounter = instance.AddComponent<SideBossEncounter>();
         int playerId = laneIndex; // "레인 N = 플레이어 N"(WaveSpawner 관례 그대로).
         float startingGauge = playerId >= 0 && playerId < MaxPlayers ? stunGauge[playerId] : 100f;
