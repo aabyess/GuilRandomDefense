@@ -71,13 +71,13 @@ public class CreditsSplash : MonoBehaviour
         var head = new GameObject("Title", typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TextMeshProUGUI>();
         head.transform.SetParent(transform, false);
         Stretch((RectTransform)head.transform);
-        ((RectTransform)head.transform).offsetMin = new Vector2(0f, 330f);   // 화면 위쪽 1/3 쯤
+        ((RectTransform)head.transform).offsetMin = new Vector2(0f, 480f);   // 화면 위쪽 1/3 쯤 — 10-09 후원자 줄(5줄째) 추가로 목록이 길어져 330이면 「제작」 줄과 겹침
         head.font = gothic != null ? gothic : text.font;
         head.alignment = TextAlignmentOptions.Center;
         head.fontSize = 120f;
         head.color = text.color;
         head.text = "G.R.D";
-        ((RectTransform)text.transform).offsetMax = new Vector2(0f, -120f);   // 본문은 제목 아래로
+        ((RectTransform)text.transform).offsetMax = new Vector2(0f, -180f);   // 본문은 제목 아래로
         var sb = new System.Text.StringBuilder();
         foreach ((string role, string name) in Lines)
             sb.Append("<color=#A89878><size=34>").Append(role).Append("</size></color>   ").Append(name).Append('\n');
