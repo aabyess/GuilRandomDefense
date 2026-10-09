@@ -613,6 +613,30 @@ public static class ArtBinder
     //   컬은 그대로(끄지 않는다) — 판자 뒷면이 필요하면 그때 유닛별로.
     static readonly HashSet<string> AlphaCutUnits = new HashSet<string> { "다른세계_모리야_스와코" };
 
+    static void MakeOpaqueSlot(Material material)
+    {
+        material.SetFloat("_Surface", 0f);
+        material.SetFloat("_AlphaClip", 0f);
+        material.DisableKeyword("_ALPHATEST_ON");
+        material.SetOverrideTag("RenderType", "Opaque");
+        material.renderQueue = -1;
+    }
+
+    /// <summary>유닛 폴더의 slot_textures.json({"슬롯": {"tex": "mm03.blp", "filter": "transparent"}}) → 소문자 슬롯 이름 표. 없으면 null.</summary>
+    static Dictionary<string, (string tex, string filter)> LoadSlotTextures(string folder)
+    {
+        string path = System.IO.Path.Combine(folder, "slot_textures.json");
+        if (!System.IO.File.Exists(path)) return null;
+        var root = (Dictionary<string, object>)MiniJson.Parse(System.IO.File.ReadAllText(path));
+        var map = new Dictionary<string, (string, string)>();
+        foreach (var kv in root)
+        {
+            var d = (Dictionary<string, object>)kv.Value;
+            map[kv.Key.ToLowerInvariant()] = ((d["tex"] as string) ?? "", (d["filter"] as string) ?? "none");
+        }
+        return map;
+    }
+
     static void MakeAlphaCut(Material material)
     {
         material.SetFloat("_Surface", 0f);
@@ -685,11 +709,21 @@ public static class ArtBinder
 
             string unitName = Nfc(System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(modelPath)));
 
+            // 원작 스킨 교체(10-09): blender json의 「메시 → 텍스처·필터」표(slot_textures.json). 슬롯 이름(BIGMOM7_g0_L0_cut)이 텍스처 파일명(mm03.blp)과 달라 이름 맞추기로는 못 붙는다.
+            Dictionary<string, (string tex, string filter)> slotMap = LoadSlotTextures(System.IO.Path.GetDirectoryName(modelPath));
+
             foreach (AssetImporter.SourceAssetIdentifier slot in slots)
             {
+                string slotFilter = null;
+                Texture2D mapped = null;
+                if (slotMap != null && slotMap.TryGetValue(slot.name.ToLowerInvariant(), out var sm))
+                {
+                    mapped = ownTextures.FirstOrDefault(t => t.name.ToLowerInvariant() == sm.tex.ToLowerInvariant());
+                    slotFilter = sm.filter;
+                }
                 // 유닛별 강제 지정이 먼저다 — Mixamo가 재질 이름을 통째로 잃은 모델은
                 // 이름으로는 영영 못 맞춘다(2026-09-08 신문철: 재질 0개, 텍스처 10장).
-                Texture2D texture = ForcedTextureFor(unitName, ownTextures)
+                Texture2D texture = mapped ?? ForcedTextureFor(unitName, ownTextures)
                                     ?? MatchTexture(slot.name, ownTextures);
                 if (texture == null)
                 {
@@ -712,7 +746,8 @@ public static class ArtBinder
                 material.shader = shader;
                 material.SetTexture("_BaseMap", texture);
                 material.SetTexture("_MainTex", texture);   // Standard 폴백
-                if (AlphaCutUnits.Contains(unitName)) MakeAlphaCut(material);
+                if (AlphaCutUnits.Contains(unitName) || (slotFilter != null && slotFilter != "none")) MakeAlphaCut(material);   // 원본 필터가 none이 아니면(transparent·blend·add) 알파 컷
+                else if (slotFilter == "none") MakeOpaqueSlot(material);
                 EditorUtility.SetDirty(material);
 
                 importer.AddRemap(slot, material);

@@ -41,6 +41,7 @@ public class CreditsSplash : MonoBehaviour
     CanvasGroup musicGroup;
     RectTransform[] dust; float[] dustSpeed, dustPhase, dustSize;
     Color gold, goldDim, goldBright;
+    CreditsConcepts concept;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Install()
@@ -81,6 +82,16 @@ public class CreditsSplash : MonoBehaviour
 
         // 켄번스 루트 — 배경·장식·글자 전부 이 안에서 같이 아주 약하게 커진다
         root = NewRect("Root", transform); Stretch(root);
+
+        // 시안 C·D·E(10-09): 구도가 전혀 다른 연출은 CreditsConcepts가 맡는다(건너뛰기·페이드·고정 촬영은 여기 그대로)
+        if (Variant >= 2)
+        {
+            var blackBg = NewRect("Black", root, true); Stretch(blackBg); blackBg.GetComponent<Image>().color = Color.black;
+            concept = new CreditsConcepts(Variant, root,
+                Resources.Load<TMP_FontAsset>("Fonts/UnifrakturMaguntia SDF"), Resources.Load<TMP_FontAsset>("Fonts/NanumMyeongjo-ExtraBold SDF"), Resources.Load<TMP_FontAsset>("Fonts/Pretendard-Bold SDF"));
+            Apply(0f);
+            return;
+        }
 
         // 배경: 가장자리 검정 → 가운데 은은한 남색/갈색(방사 그라데이션 한 장)
         var bg = NewRect("Bg", root, true); Stretch(bg);
@@ -226,6 +237,7 @@ public class CreditsSplash : MonoBehaviour
 
     void Apply(float time)
     {
+        if (concept != null) { concept.Apply(time); return; }
         float total = FadeIn + Hold + FadeOut;
         // 켄번스: 처음부터 끝까지 1.00 → 1.035
         root.localScale = Vector3.one * (1f + 0.035f * Mathf.Clamp01(time / total));

@@ -10,6 +10,13 @@ static class CreditsPreview
 
     static string ShowA() { if (!Application.isPlaying) return "❌ 플레이 중에만"; CreditsSplash.FreezeAt = -1f; CreditsSplash.ShowPreview(0); return "A 시작"; }
     static string ShowB() { if (!Application.isPlaying) return "❌ 플레이 중에만"; CreditsSplash.FreezeAt = -1f; CreditsSplash.ShowPreview(1); return "B 시작"; }
+    static string ShowC() => Show(2);
+    static string ShowD() => Show(3);
+    static string ShowE() => Show(4);
+    static string Show(int v) { if (!Application.isPlaying) return "❌ 플레이 중에만"; CreditsSplash.FreezeAt = -1f; CreditsSplash.ShowPreview(v); return "시안 " + v; }
+    static string FreezeC() => Freeze(2);
+    static string FreezeD() => Freeze(3);
+    static string FreezeE() => Freeze(4);
     static string FreezeA() => Freeze(0);
     static string FreezeB() => Freeze(1);
     static string Freeze(int variant)
