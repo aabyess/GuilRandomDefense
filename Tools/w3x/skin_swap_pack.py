@@ -34,6 +34,10 @@ CFG = {
            ("사장님_불멸_정준영_단일마지막수업", "Dragon_Skill_1_T", "평타 1/8 단일 ↔ 원작 드래곤 태풍(Dragon_Skill_1_T)", "중"),
            ("사장님_불멸_정준영_유닛회유", "-", "소환/회유형 — 원작 대응 연출 없음", "없음"),
            ("@평타", "@attack", "평타 ↔ 원작 평타 투사체(ua1m)", "중")]),
+ "이유선_해군의": dict(roster="전설적인_이유선", uid="H05N", sheet="초월A", title="해군의 홍일점 대령 타시기 H05N", attack="Tasigi_Attack",
+    pairs=[("원작능력_전설적인_이유선", "tahsigi", "1/10 범위 충격파(500) ↔ 원작 타시기 범위 연출(링·베기·창, 가장 큰 범위 연출)", "중"),
+           ("원작트리거_전설적인_이유선_Legend8_인의", "-", "아군 공격력 오라(6초) — 원작 대응 연출 없음(유지)", "없음"),
+           ("@평타", "@attack", "평타 ↔ 원작 평타 투사체(ua1m)", "중")]),
  "박민석_브룩": dict(roster="초월_박민석_ADAP", uid="H09I", sheet="R", title="브룩 소울 킹 H09I/h04T", attack="BrookAttack",
     pairs=[("사장님_초월_박민석_ADAP_외동의고함", "Brook_Skill_Mana", "마나 125 범위 깡딜+스턴 ↔ 원작 브룩 마나 115 stomp 범위(525)", "상"),
            ("사장님_초월_박민석_ADAP_흑인", "Brook_Skill_1", "범퍼 15% 범위 300 ↔ 원작 브룩 1/7 연주", "중"),
@@ -203,7 +207,7 @@ def pack(name, C):
         d = yaml.safe_load(open(pth, encoding="utf8").read().split("--- !u!114 &11400000\n", 1)[1])["MonoBehaviour"]; L = d["levels"][0]
         g = {0: "확률 %.3g" % L["triggerChance"], 1: "쿨 자동", 2: "오라(상시)", 3: "횟수/게이지", 4: "범위 진입", 5: "액티브 버튼"}.get(d["triggerType"], "")
         return d["skillName"][:50], g, f"사거리/반경 {L['range']}"
-    REP = {"불멸_고도현": "대표 연출 있음: 시키 함대 소환(Shiki_Attack A0T4) → SkillData_사장님_불멸_고도현_무중생유", "불멸_정준영": "대표 연출 있음: 드래곤 폭풍(Dragon_Skill_Mana) → SkillData_사장님_불멸_정준영_범퍼숨통조이기", "제한_전법규": "대표 연출 있음: 에넬 엘토르", "초월_황준석_ADAP": "대표 연출 있음: 샹크스 패기 폭발"}
+    REP = {"불멸_고도현": "대표 연출 있음: 시키 함대 소환(Shiki_Attack A0T4) → SkillData_사장님_불멸_고도현_무중생유", "불멸_정준영": "대표 연출 있음: 드래곤 폭풍(Dragon_Skill_Mana) → SkillData_사장님_불멸_정준영_범퍼숨통조이기", "제한_전법규": "대표 연출 있음: 에넬 엘토르", "전설적인_임채현": "대표 연출 있음: Legend35ulti_trg3 → 임채현 대표 연출", "초월_황준석_ADAP": "대표 연출 있음: 샹크스 패기 폭발"}
     with open(OUT + "/pairing.csv", "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f); w.writerow(["우리 스킬 에셋", "우리 스킬 이름", "우리 발동", "우리 범위", "원작 연출(트리거)", "대본 파일", "짝 근거(모양·게이트)", "확신", "겹침 표시"])
         for skill, trig, why, conf in C["pairs"]:
@@ -218,14 +222,19 @@ def pack(name, C):
     for fpth in glob.glob(sd_ + "/*.json"):
         if json.load(open(fpth)).get("quality") != "양호":
             os.makedirs(rej, exist_ok=True); shutil.move(fpth, rej + "/" + os.path.basename(fpth))
+            prow = list(csv.reader(open(OUT + "/pairing.csv", encoding="utf-8-sig")))
+            for r_ in prow[1:]:
+                if r_[5] and os.path.basename(r_[5]) == os.path.basename(fpth): r_[5] = ""; r_[6] += " [대본 해석 실패(보이는 연출 모델 없음)라 제외]"; r_[7] = "없음"
+            csv.writer(open(OUT + "/pairing.csv", "w", encoding="utf-8-sig", newline="")).writerows(prow)
     open(OUT + "/README.md", "w").write(f"# {name} — {C['title']} 스킨 교체 시범 (범위 가: 겉모습·동작·연출만)\n- model/: 원작 FBX(30fps 구움)+Textures(알파0 수정)+json · clip_map.json: 시퀀스→우리 클립·타격 시점·숨김 메시 · scripts/: 연출 대본 + scripts_render/ 재현 사진 · pairing.csv: 우리 스킬↔원작 연출 짝\n- 원작 시트 글자: {C['sheet']} · 우리 유닛: {C['roster']}\n")
     print(name, "클립", len(clips), "대본", len([x for x in os.listdir(OUT + "/scripts") if x.endswith(".json")]), "타격", hit["attackHitSec"])
 
 
 if __name__ == "__main__":
     rows = list(csv.DictReader(open(H + "/GRD_skin_swap/교체목록.csv", encoding="utf-8-sig")))
-    want = sys.argv[1:]
+    want = [a for a in sys.argv[1:] if a != "--new"]; only_new = "--new" in sys.argv
     for r in rows:
         nm, C = run_row(r)
         if want and nm not in want: continue
+        if only_new and os.path.isdir(f"{H}/GRD_skin_swap/{nm}"): continue
         C.setdefault("uids", [C["uid"]]); print("==", nm, [p[1] for p in C["pairs"]]); pack(nm, C)
