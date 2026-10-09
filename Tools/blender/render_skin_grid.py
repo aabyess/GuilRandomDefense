@@ -58,6 +58,27 @@ def hide_by_geoset_alpha(new, fbx):
         if ga * la < 0.05: o.hide_render = True; o.hide_viewport = True; n += 1
     return n
 
+def texture_fallback(new, fbx):
+    """FBX가 텍스처 경로를 못 잇는 우리 쪽 유닛(Assets/Art/Units/<이름>/Textures): 재질 이름으로 Base_Color 이미지를 찾아 붙인다(렌더 전용)."""
+    tdir = os.path.join(os.path.dirname(fbx), "Textures")
+    if not os.path.isdir(tdir): return 0
+    files = os.listdir(tdir); n = 0
+    for o in new:
+        if o.type != "MESH": continue
+        for sl in o.material_slots:
+            m = sl.material
+            if not m or not m.use_nodes: continue
+            if any(nd.type == "TEX_IMAGE" and nd.image and os.path.exists(bpy.path.abspath(nd.image.filepath)) for nd in m.node_tree.nodes): continue
+            base = m.name.split(".")[0].lower()
+            cand = [f for f in files if not f.endswith(".meta") and f.lower().rsplit(".", 1)[0] in (base, base + "_base_color", base + "_basecolor", base + "_albedo", base + "_diffuse", base + "_d")]
+            cand = cand or [f for f in files if not f.endswith(".meta") and base in f.lower() and ("base_color" in f.lower() or "albedo" in f.lower() or "diffuse" in f.lower())]
+            if not cand: continue
+            bs = next((nd for nd in m.node_tree.nodes if nd.type == "BSDF_PRINCIPLED"), None)
+            if not bs: continue
+            tn = m.node_tree.nodes.new("ShaderNodeTexImage"); tn.image = bpy.data.images.load(os.path.join(tdir, cand[0]))
+            m.node_tree.links.new(tn.outputs["Color"], bs.inputs["Base Color"]); n += 1
+    return n
+
 def bbox(objs):
     dg = bpy.context.evaluated_depsgraph_get(); pts = []
     for o in objs:
@@ -95,7 +116,7 @@ for i, it in enumerate(ITEMS):
     try: bpy.ops.import_scene.fbx(filepath=it["fbx"])
     except Exception as e: report.append(dict(model=it["model"], error=str(e)[:100])); continue
     new = [o for o in bpy.data.objects if o not in before and o.name not in ("sun",)]
-    arm = next((o for o in new if o.type == "ARMATURE"), None); an = stand_pose(arm); hidden = hide_by_geoset_alpha(new, it["fbx"]); bpy.context.view_layer.update()
+    arm = next((o for o in new if o.type == "ARMATURE"), None); an = stand_pose(arm); hidden = hide_by_geoset_alpha(new, it["fbx"]); texture_fallback(new, it["fbx"]); bpy.context.view_layer.update()
     bb = bbox(new)
     if not bb: report.append(dict(model=it["model"], error="메시 없음")); continue
     lo, hi = bb; h = max(hi.z - lo.z, 1e-6); c = (lo + hi) / 2
