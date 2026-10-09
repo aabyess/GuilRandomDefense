@@ -16,7 +16,11 @@ public class NetCheck16Test : MonoBehaviour
         if (host)
         {
             var rm = FindFirstObjectByType<RoundManager>();
-            Debug.Log($"[C16] 호스트: R62 직행 요청 → {rm.DebugJumpToRound(62)} · 난이도 {DifficultyManager.Instance?.Current}");
+            var bf = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+            typeof(RoundManager).GetField("currentRound", bf).SetValue(rm, 62);
+            typeof(RoundManager).GetField("waitingForNextRound", bf)?.SetValue(rm, false);
+            typeof(RoundManager).GetMethod("StartRound", bf).Invoke(rm, new object[] { 62 });
+            Debug.Log($"[C16] 호스트: R62 직행(리플렉션) · 난이도 {DifficultyManager.Instance?.Current}");
         }
         float t0 = Time.realtimeSinceStartup; bool shot = false;
         while (Time.realtimeSinceStartup - t0 < 45f)
