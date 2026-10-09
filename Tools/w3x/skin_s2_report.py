@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """S2 신작 스킨 README·실패_목록.md·구버전 「맵에 없음」 42기 대조. /usr/bin/python3 Tools/w3x/skin_s2_report.py"""
 import csv, glob, os, re
 H = os.path.expanduser("~"); R = H + "/Desktop/구랜디스킨모음/원랜디_신작_스킨"; OLD = H + "/Desktop/구랜디스킨모음/원랜디_구버전_스킨/실패_목록.md"
