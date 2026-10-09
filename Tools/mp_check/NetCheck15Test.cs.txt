@@ -28,7 +28,10 @@ public class NetCheck15Test : MonoBehaviour
         while (Time.realtimeSinceStartup - t0 < 15f && !(PlayerContext.Local != null && PlayerContext.Local.IsDead)) yield return null;
         yield return new WaitForSecondsRealtime(1.5f);
         Debug.Log($"[C15] 클라: 내 패배 {(PlayerContext.Local != null && PlayerContext.Local.IsDead)} · 화면: {Describe()}");
+        yield return new WaitForSecondsRealtime(2.5f);
+        Debug.Log($"[C15] 클라: 2.5초 뒤 화면: {Describe()}");
         if (Shot != null) ScreenCapture.CaptureScreenshot(Shot + "_client_before.png");
+        yield return new WaitForSecondsRealtime(1f);
         var btn = FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None).FirstOrDefault(b => b.name == "SpectateButton" || b.transform.parent != null && b.transform.parent.name == "SpectateButton");
         Debug.Log($"[C15] 클라: 지켜보기 단추 {(btn != null ? "있음 · 켜짐 " + btn.gameObject.activeInHierarchy : "없음")}");
         if (btn != null && btn.gameObject.activeInHierarchy) btn.onClick.Invoke();
