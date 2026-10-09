@@ -27,7 +27,12 @@ public class NetCheck17Test : MonoBehaviour
         SelectionManager.TraceClear = true;
         var sel = FindFirstObjectByType<SelectionManager>();
         var hud = FindFirstObjectByType<GameHud>();
-        Selectable shop = Selectable.All.FirstOrDefault(s => s != null && s.name.Contains(shopName));
+        Selectable shop = null;   // 내 레인 상점만 고를 수 있다(남의 레인 것은 SelectOnly가 거절) — 고른 게 서는 첫 번째를 쓴다
+        foreach (var cand in Selectable.All.Where(x => x != null && x.name.Contains(shopName)).ToList())
+        {
+            sel.SelectOnly(cand);
+            if (sel.Selected.Count == 1 && sel.Selected[0] == cand) { shop = cand; break; }
+        }
         if (shop == null) { Debug.Log("[C17] ❌ 상점 없음 " + shopName + " · Selectable " + Selectable.All.Count); yield break; }
         Mouse mouse = InputSystem.AddDevice<Mouse>("C17Mouse"); mouse.MakeCurrent();
         foreach (Mouse m in InputSystem.devices.OfType<Mouse>().Where(m => m != mouse && m.enabled).ToList()) InputSystem.DisableDevice(m);
