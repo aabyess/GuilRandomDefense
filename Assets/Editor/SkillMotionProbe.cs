@@ -40,8 +40,9 @@ static class SkillMotionProbe
         EnemyData enemyData = AssetDatabase.LoadAssetAtPath<EnemyData>("Assets/Data/Enemies/Enemy_R01_박진웅.asset");
         float k = 1f / WorldScale.Value;
         Time.captureFramerate = Fps;
-        foreach (string name in names)
+        foreach (string spec in names)
         {
+            string name = spec.Split('@')[0]; bool far = spec.Contains("@far"), close = spec.Contains("@close"), dump = spec.Contains("@dump");
             UnitData data = AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{name}.asset");
             if (data == null) { log.AppendLine("❌ 없음 " + name); continue; }
             string dir = $"/tmp/g1n_motion/{name}"; Directory.CreateDirectory(dir);
@@ -53,9 +54,10 @@ static class SkillMotionProbe
             float baseRange = Mathf.Max(3f, data.attackRange * k);
             var enemies = new List<EnemyDummy>();
             var offsets = new[] { new Vector3(1, 0, 0.3f), new Vector3(0.9f, 0, -0.5f), new Vector3(1.4f, 0, 0.1f), new Vector3(0.4f, 0, 1f) };
+            if (spec.Contains("@south")) offsets = new[] { new Vector3(0.2f, 0, -1), new Vector3(-0.3f, 0, -1), new Vector3(0.6f, 0, -1.2f), new Vector3(0f, 0, -1.5f) };   // 적이 카메라 쪽 — 유닛이 정면을 보인다
             foreach (Vector3 o in offsets)
             {
-                GameObject eg = Object.Instantiate(enemyData.prefab, c + o.normalized * baseRange * 0.7f, Quaternion.identity);
+                GameObject eg = Object.Instantiate(enemyData.prefab, c + o.normalized * baseRange * (far ? 6f : 0.7f), Quaternion.identity);
                 if (eg.TryGetComponent(out WaypointMover mv)) mv.enabled = false;
                 var e = eg.GetComponent<EnemyDummy>(); e.Initialize(enemyData, 1e6f); e.SetLane(-1);
                 enemies.Add(e);
@@ -68,7 +70,7 @@ static class SkillMotionProbe
             string clips = anim != null && anim.runtimeAnimatorController != null ? string.Join(",", anim.runtimeAnimatorController.animationClips.Select(x => x.name).Distinct()) : "-";
             log.AppendLine($"[{name}] 컨트롤러 {ctrl} · 파라미터 [{pars}] · 클립 [{clips}] · 스킬 {data.skills.Count}개 [{string.Join(" | ", data.skills.Select(s => s.skillName.Split(' ')[0] + "/" + s.triggerType))}]");
             for (int w = 0; w < 120; w++) yield return null;   // 획득 컷인·알림이 지나가길 기다린 뒤 찍는다
-            rts.FlyTo(c, 110f);
+            rts.FlyTo(c, close ? 90f : 110f);
             for (int w = 0; w < 40; w++) yield return null;   // 카메라 도착
             rts.enabled = false;   // 사람 마우스가 화면 가장자리에 있으면 카메라가 흘러간다 — 도착하면 얼린다
             MethodInfo cast = typeof(UnitAttacker).GetMethod("CastSkillLevel", NP);
@@ -80,6 +82,17 @@ static class SkillMotionProbe
                     SkillData s = data.skills[castNo % data.skills.Count]; castNo++;
                     try { cast.Invoke(atk, new object[] { s.levels[0], s.levels[0].WorldRange, enemies[castNo % enemies.Count], atk.AttackDamage }); }
                     catch (System.Exception ex) { log.AppendLine("   시전 예외 " + s.skillName + " " + ex.InnerException?.Message); }
+                }
+                if (dump && f % 7 == 0)
+                {
+                    var on = go.GetComponentsInChildren<Renderer>(true).Where(r => r.enabled && r.gameObject.activeInHierarchy).Select(r => r.gameObject.name).ToList();
+                    var off = go.GetComponentsInChildren<Renderer>(true).Where(r => !r.enabled || !r.gameObject.activeInHierarchy).Select(r => r.gameObject.name).ToList();
+                    string clip = anim != null && anim.GetCurrentAnimatorClipInfo(0).Length > 0 ? anim.GetCurrentAnimatorClipInfo(0)[0].clip.name : "-";
+                    var smalls = go.GetComponentsInChildren<Transform>(true).Where(t => t.lossyScale.magnitude < 0.2f * go.transform.lossyScale.magnitude).Select(t => t.name).Take(6);
+                    var heads = go.GetComponentsInChildren<Transform>(true).Where(t => t.name.ToLower().Contains("head")).Select(t => $"{t.name} y {(t.position.y - go.transform.position.y):F2} 스케일 {t.lossyScale.x:F2}");
+                    var mr = go.GetComponentsInChildren<SkinnedMeshRenderer>(true).Where(r => r.enabled).Select(r => $"{r.gameObject.name} 경계높이 {r.bounds.max.y - go.transform.position.y:F1}");
+                    log.AppendLine($"   f{f:D4} 머리뼈 [{string.Join("; ", heads)}] · 작은 뼈 [{string.Join(",", smalls)}] · 켜진 메시 [{string.Join("; ", mr)}]");
+                    log.AppendLine($"   f{f:D4} 클립 {clip} · 꺼진 렌더러 [{string.Join(",", off)}] · 켜진 {on.Count}개");
                 }
                 ScreenCapture.CaptureScreenshot($"{dir}/f{f:D4}.png");
                 yield return null;
