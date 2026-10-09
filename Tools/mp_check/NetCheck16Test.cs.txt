@@ -1,0 +1,61 @@
+using System.Collections;
+using System.Linq;
+using UnityEngine;
+
+/// <summary>신세계 사이드보스(개인 보스) 막대·광폭화 소환 두 창 확인(빌드 사본 전용, 훅 -mpTestCheck16 초, 사진 -mpCheck16Shot 접두). 로그 「[C16]」.
+/// 호스트가 R62로 건너뛰면(DebugJumpToRound) 15번째 투입에 두 플레이어 레인에 사이드보스가 서고 시전 막대가 찬다 → 양쪽이 보스·막대 값을 로그·사진, 시전이 끝나면 광폭화 몬스터가 나오는지.</summary>
+public class NetCheck16Test : MonoBehaviour
+{
+    public float startAt = 25f;
+    static string Shot { get { var a = System.Environment.GetCommandLineArgs(); int i = System.Array.IndexOf(a, "-mpCheck16Shot"); return i >= 0 && i + 1 < a.Length ? a[i + 1] : null; } }
+
+    IEnumerator Start()
+    {
+        yield return new WaitForSecondsRealtime(startAt);
+        bool host = GameAuthority.IsServer; string side = host ? "호스트" : "클라";
+        if (host)
+        {
+            var rm = FindFirstObjectByType<RoundManager>();
+            Debug.Log($"[C16] 호스트: R62 직행 요청 → {rm.DebugJumpToRound(62)} · 난이도 {DifficultyManager.Instance?.Current}");
+        }
+        float t0 = Time.realtimeSinceStartup; bool shot = false;
+        while (Time.realtimeSinceStartup - t0 < 45f)
+        {
+            yield return new WaitForSecondsRealtime(1.5f);
+            string d = Describe(host);
+            Debug.Log($"[C16] {side} +{Time.realtimeSinceStartup - t0:F0}s {d}");
+            if (!shot && d.Contains("사이드보스 1") || d.Contains("사이드보스 2"))
+            {
+                if (!shot)
+                {
+                    var cam = FindFirstObjectByType<RtsCameraController>();
+                    Vector3? p = BossPos(host);
+                    if (cam != null && p.HasValue) cam.MoveTo(p.Value + Vector3.back * 30f);
+                    yield return new WaitForSecondsRealtime(0.8f);
+                    if (Shot != null) ScreenCapture.CaptureScreenshot($"{Shot}_{(host ? "host" : "client")}.png");
+                    shot = true;
+                }
+            }
+        }
+    }
+
+    static Vector3? BossPos(bool host)
+    {
+        if (host) { var b = SideBossEncounter.Active.FirstOrDefault(x => x != null); return b != null ? b.transform.position : (Vector3?)null; }
+        var r = NetEntity.ClientEnemies.FirstOrDefault(e => e != null && e.SideBossOn && e.Visual != null);
+        return r != null ? r.Visual.transform.position : (Vector3?)null;
+    }
+
+    static string Describe(bool host)
+    {
+        if (host)
+        {
+            var l = SideBossEncounter.Active.Where(b => b != null).ToList();
+            int berserk = BerserkMob.Active.Count(b => b != null);
+            return $"사이드보스 {l.Count}기 {string.Join(" ", l.Select(b => $"[{b.name.Replace("(Clone)", "")} {b.CurrentStage} 시전 {b.CastProgress:F0} 스턴 {b.StunGauge:F0} 무적 {b.IsInvulnerable}]"))} · 광폭화 {berserk}기";
+        }
+        var r = NetEntity.ClientEnemies.Where(e => e != null && e.SideBossOn).ToList();
+        int bz = NetEntity.ClientEnemies.Count(e => e != null && e.Berserk);
+        return $"사이드보스 {r.Count}기 {string.Join(" ", r.Select(e => $"[시전 {e.SideCast} 스턴 {e.SideStun} 무적 {e.SideInvuln}]"))} · 광폭화 {bz}기";
+    }
+}
