@@ -45,26 +45,30 @@ def noise(S, seed, octaves=5, base=4, persist=0.55):
 # ── 글로 ──
 def glow(n, S=256):
     x, y, r, th = grid(S); l = n.lower(); col = color_of(n)
-    if "faded" in l or "dim" in l: a = np.exp(-(r / 0.55) ** 2 * 2.2) * 0.7
-    elif "glow2" in l or "glow3" in l or "magic" in l: a = 0.75 * np.exp(-(r / 0.3) ** 2 * 2.0) + 0.5 * np.exp(-(r / 0.75) ** 2 * 3.0)       # 밝은 심 + 넓은 후광
+    if "faded" in l or "dim" in l: a = np.exp(-(r / 0.42) ** 2 * 2.2) * 0.6
+    elif "glow2" in l or "glow3" in l or "magic" in l: a = 0.8 * np.exp(-(r / 0.26) ** 2 * 2.0) + 0.22 * np.exp(-(r / 0.5) ** 2 * 3.0)       # 밝은 심 + 좁은 후광
     elif "glowx" in l or "glow5" in l or "glow1" in l: a = 0.8 * np.exp(-(r / 0.35) ** 2 * 2.0) + 0.35 * (np.exp(-(x / 0.05) ** 2) * np.exp(-(y / 0.75) ** 2) + np.exp(-(y / 0.05) ** 2) * np.exp(-(x / 0.75) ** 2))
     elif "crescent" in l: a = np.exp(-(((r - 0.6) / 0.14) ** 2)) * smooth(-0.4, 0.5, x * 0.6 + 0.2)
     elif "barglow" in l: a = np.exp(-(y / 0.35) ** 2) * smooth(1.0, 0.7, np.abs(x))
     elif "rune" in l: a = np.exp(-(((r - 0.7) / 0.08) ** 2)) * (0.5 + 0.5 * np.cos(th * 8))
-    else: a = np.exp(-(r / 0.5) ** 2 * 2.4)
-    a = a * smooth(1.0, 0.82, r)                                                              # 가장자리 0
+    else: a = np.exp(-(r / 0.4) ** 2 * 2.4)
+    a = a * smooth(0.85, 0.5, r)                                                               # 가장자리 일찍 0
     return pack(a, col, S, tint_core=0.55)
 
 
 # ── 충격파 ──
 def shock(n, S=256):
     x, y, r, th = grid(S); l = n.lower(); col = color_of(n)
-    ring = np.exp(-(((r - 0.78) / 0.09) ** 2)) + 0.25 * np.exp(-(((r - 0.55) / 0.2) ** 2))
-    inner = smooth(0.1, 0.78, r) ** 2 * 0.45                                                  # 안쪽으로 서서히 옅어지는 면
-    a = (ring + inner) * smooth(1.0, 0.9, r)
-    if "9" in l: a = (np.exp(-(((r - 0.82) / 0.05) ** 2)) + 0.7 * np.exp(-(((r - 0.6) / 0.05) ** 2)) + 0.4 * np.exp(-(((r - 0.4) / 0.05) ** 2))) * smooth(1.0, 0.9, r)
+    side = np.where(r < 0.78, 0.04, 0.13)                                                       # 안쪽은 날카롭게, 바깥은 길게 번진다
+    ring = np.exp(-(((r - 0.78) / side) ** 2)) + 0.12 * np.exp(-(((r - 0.55) / 0.2) ** 2))
+    inner = smooth(0.1, 0.78, r) ** 2 * 0.2
+    a = (ring + inner) * smooth(1.0, 0.7, r) * 0.45                                             # 반투명(원작 느낌): 알파 45%
+    if "9" in l:                                                                                # 삼중 링: 간격 넓게, 안쪽일수록 흐리게
+        a = (0.9 * np.exp(-(((r - 0.88) / 0.035) ** 2)) + 0.45 * np.exp(-(((r - 0.6) / 0.035) ** 2)) + 0.2 * np.exp(-(((r - 0.32) / 0.035) ** 2))) * 0.5
+        a = a + 0.2 * np.exp(-(((r - 0.88) / 0.12) ** 2)) * (r > 0.88)
+        a = a * smooth(1.0, 0.92, r)
     if "black" in l: col = np.array((0.1, 0.1, 0.14))
-    return pack(a, col, S, tint_core=0.35)
+    return pack(a, col, S, tint_core=0.12)
 
 
 # ── 번개 ──
@@ -107,13 +111,13 @@ def lightning(n, S=256):
 def star(n, S=256):
     x, y, r, th = grid(S); l = n.lower(); col = color_of(n); m = re.search(r"star(\d+)", l); k = int(m.group(1)) if m else 4
     pts = {1: 4, 2: 4, 3: 4, 4: 4, 6: 6, 7: 8, 8: 8, 10: 4, 11: 4, 32: 4}.get(k, 4)
-    spikes = np.abs(np.cos(th * pts / 2)) ** 24
-    a = np.exp(-(r / 0.5) ** 2 * 6) * 0.9 + spikes * np.exp(-(r / 0.85) ** 2 * 3) * 0.9 * smooth(0.0, 0.1, r)
+    spikes = np.abs(np.cos(th * pts / 2)) ** 9
+    a = np.exp(-(r / 0.5) ** 2 * 3.5) * 1.0 + spikes * np.exp(-(r / 0.8) ** 2 * 3.5) * 0.95
     return pack(a * smooth(1.0, 0.85, r), col, S, tint_core=0.7)
 
 
 def sparkle(n, S=256):
-    x, y, r, th = grid(S); col = color_of(n); a = np.exp(-(np.abs(x) / 0.04) ** 1.2) * np.exp(-(np.abs(y) / 0.7) ** 2 * 2) + np.exp(-(np.abs(y) / 0.04) ** 1.2) * np.exp(-(np.abs(x) / 0.7) ** 2 * 2) + np.exp(-(r / 0.2) ** 2 * 3)
+    x, y, r, th = grid(S); col = color_of(n); a = np.exp(-(np.abs(x) / 0.09) ** 1.2) * np.exp(-(np.abs(y) / 0.7) ** 2 * 2) + np.exp(-(np.abs(y) / 0.09) ** 1.2) * np.exp(-(np.abs(x) / 0.7) ** 2 * 2) + np.exp(-(r / 0.28) ** 2 * 3)
     return pack(a * smooth(1.0, 0.85, r), col, S, tint_core=0.7)
 
 
