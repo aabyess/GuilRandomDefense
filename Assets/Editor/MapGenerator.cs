@@ -7229,6 +7229,10 @@ public static class MapGenerator
     /// </summary>
     static string SweepTiledMaterials()
     {
+        // 🔴 10-14: 부분 수리(Repair*)가 불러도 안 지운다 — TiledUsed엔 그 수리가 건드린 것만 있어 씬이 쓰는 다른 재질(조합표_흔함 띠 combine_NxM)이 낡은 것으로 지워졌다.
+        //    전체 맵 생성은 재질 수십 종을 거치므로(Surfaces 표 크기 이상) 그때만 청소한다.
+        if (TiledUsed.Count < Surfaces.Count)
+            return $" · 크기별 재질 청소 건너뜀(부분 생성 — 쓴 것 {TiledUsed.Count}종)";
         int removed = 0;
         foreach (string guid in AssetDatabase.FindAssets("t:Material", new[] { MaterialFolder }))
         {

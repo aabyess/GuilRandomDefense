@@ -61,6 +61,45 @@ public static class StaleDollRepair
         if (Application.isBatchMode) EditorApplication.Exit(w == null ? 1 : 0);
     }
 
+    /// <summary>10-14 조합표_흔함 띠 형광 분홍(재질 없음) 수리: 씬에서 재질이 비었거나 사라진 MeshRenderer를 찾아 보고하고, 조합표 띠면 MapGenerator.Paint(combine)로 다시 입힌다. GameManager.recipes의 죽은(null) 항목도 걷어낸다.</summary>
+    public static void RepairMissingMaterials()
+    {
+        EditorSceneManager.OpenScene(ScenePath);
+        MethodInfo paint = typeof(MapGenerator).GetMethod("Paint", BindingFlags.NonPublic | BindingFlags.Static);
+        int found = 0, fixedCount = 0;
+        foreach (MeshRenderer r in Object.FindObjectsByType<MeshRenderer>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            bool broken = false;
+            foreach (Material m in r.sharedMaterials) if (m == null) broken = true;
+            if (!broken) continue;
+            found++;
+            string path = r.transform.parent != null ? r.transform.parent.name + "/" + r.name : r.name;
+            if (r.name.StartsWith("조합표_") && !r.name.Contains("인형"))
+            {
+                Vector3 s = r.transform.localScale;
+                paint.Invoke(null, new object[] { r.gameObject, "combine", s.x, s.z });
+                fixedCount++;
+                Debug.Log($"[재질 수리] {path} ← combine {s.x:F1}x{s.z:F1}");
+            }
+            else Debug.LogWarning($"[재질 수리] 못 고침(보고만): {path}");
+        }
+        int nulls = 0;
+        foreach (MonoBehaviour gm in Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (gm == null) continue;
+            var so = new SerializedObject(gm);
+            SerializedProperty list = gm == null ? null : so.FindProperty("recipes");
+            if (list == null || !list.isArray) continue;
+            for (int i = list.arraySize - 1; i >= 0; i--)
+                if (list.GetArrayElementAtIndex(i).objectReferenceValue == null) { list.DeleteArrayElementAtIndex(i); nulls++; }
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+        AssetDatabase.SaveAssets();
+        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
+        Debug.Log($"[재질 수리] 재질 빈 렌더러 {found} · 다시 입힘 {fixedCount} · recipes 죽은 항목 {nulls}개 제거");
+    }
+
     public static void Check()
     {
         EditorSceneManager.OpenScene(ScenePath);
