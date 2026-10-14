@@ -753,22 +753,64 @@ public class RewardDistributor : MonoBehaviour
         }
     }
 
-    /// <summary>30R 보스 파칭코 당첨 보상(사장님 10-14): 살아 있는 플레이어 전원에게 전설·히든 위습(신세계 보상과 같은 위습) — 솔·성탄·뻬꼼 제외, 풀카운트 감점 없음(NewWorldReward 표식을 안 건다).</summary>
-    public void GrantPachinkoWisps()
+    // 30R 보스 파칭코 꽝 보상 위습(사장님 10-14) — 씬 직렬화 필드(MapGenerator.RepairSaveRewardWisps가 배선). FindObjectsOfTypeAll만 쓰면 솔플에서 못 찾는 함정.
+    [SerializeField] WispData pachinkoReachMissWisp;   // 리치 꽝 → Wisp_희귀함
+    [SerializeField] WispData pachinkoMissWisp;        // 그냥 꽝 → Wisp_특별함
+
+    WispData FindWispByName(string assetName)
+    {
+        foreach (WispData data in Resources.FindObjectsOfTypeAll<WispData>())
+            if (data != null && data.name == assetName && data.prefab != null) return data;
+        return null;
+    }
+
+    /// <summary>30R 보스 파칭코 보상(사장님 10-14): 그 슬롯 플레이어만. 777 = 랜덤유닛 직접 · 당첨 = 전설·히든 위습(솔·성탄·뻬꼼 제외, 풀카운트 감점 없음) · 리치 꽝 = 희귀함 위습 · 꽝 = 특별함 위습.</summary>
+    public void GrantPachinkoReward(int slot, PachinkoPlan plan)
     {
         if (!GameAuthority.IsServer) return;
-        if (legendHiddenWisp == null) legendHiddenWisp = newWorldWisp;
-        if (legendHiddenWisp == null)
-            foreach (WispData data in Resources.FindObjectsOfTypeAll<WispData>())
-                if (data != null && data.targetGrade == UnitGrade.Legendary && !data.isPlayerChoice && data.prefab != null) { legendHiddenWisp = data; break; }
-        if (legendHiddenWisp == null) { Debug.LogWarning("RewardDistributor: 전설·히든 위습(WispData)을 못 찾아 파칭코 보상을 못 줍니다."); return; }
-        foreach (PlayerContext context in PlayerContext.Occupied)
+        PlayerContext context = null;
+        foreach (PlayerContext c in PlayerContext.Occupied) if (c.PlayerId == slot) { context = c; break; }
+        if (context == null || context.IsDead) return;
+        int count = PachinkoSettings.WispCountPerPlayer;
+
+        if (plan.jackpot)
         {
-            if (context.IsDead) continue;
-            SpawnWisp(context, legendHiddenWisp, PachinkoSettings.WispCountPerPlayer, newWorldReward: false, excludeRestricted: true);
-            PlayerNotification.Show(context.PlayerId, "<color=#FFD700>大当たり! 전설·히든 위습을 받았습니다.</color>", 6f);
-            Debug.Log($"[파칭코보상] 슬롯 {context.PlayerId}에게 전설·히든 위습 {PachinkoSettings.WispCountPerPlayer}기(솔·성탄·뻬꼼 제외)");
+            UnitSpawner spawner = SpawnerRef;
+            GachaTable table = null;
+            foreach (UnitPortal portal in FindObjectsByType<UnitPortal>(FindObjectsSortMode.None))
+                if (portal.Table != null && portal.Table.entries != null
+                    && portal.Table.entries.Exists(e => e != null && e.grade == UnitGrade.RandomUnit && e.pool != null && e.pool.Count > 0))
+                { table = portal.Table; break; }
+            UnitData unit = table != null ? table.RollFromGrade(UnitGrade.RandomUnit) : null;
+            if (spawner == null || unit == null || unit.prefab == null)
+            { Debug.LogWarning("RewardDistributor: 777 보상(랜덤유닛)을 줄 수 없어 희귀함 위습으로 대신합니다."); }
+            else
+            {
+                LaneMarker lane = LaneMarker.Get(slot);
+                Vector3 position = lane != null ? lane.TakeSpawnPosition(unit)
+                                 : context.Warehouse != null ? context.Warehouse.transform.position : context.transform.position;
+                spawner.Spawn(unit, position, slot);
+                PlayerNotification.Show(slot, "<color=#FFD700>大当たり報酬：ランダムユニット ×1</color>", 8f);
+                Debug.Log($"[파칭코보상] 슬롯 {slot} 777 → 랜덤유닛 {unit.unitName}");
+                return;
+            }
         }
+
+        WispData wisp; string label; bool exclude = false;
+        if (plan.win)
+        {
+            if (legendHiddenWisp == null) legendHiddenWisp = newWorldWisp;
+            if (legendHiddenWisp == null)
+                foreach (WispData data in Resources.FindObjectsOfTypeAll<WispData>())
+                    if (data != null && data.targetGrade == UnitGrade.Legendary && !data.isPlayerChoice && data.prefab != null) { legendHiddenWisp = data; break; }
+            wisp = legendHiddenWisp; label = "전설·히든 위습"; exclude = true;
+        }
+        else if (plan.reach) { wisp = pachinkoReachMissWisp != null ? pachinkoReachMissWisp : (pachinkoReachMissWisp = FindWispByName("Wisp_희귀함")); label = "희귀함 위습"; }
+        else { wisp = pachinkoMissWisp != null ? pachinkoMissWisp : (pachinkoMissWisp = FindWispByName("Wisp_특별함")); label = "특별함 위습"; }
+        if (wisp == null) { Debug.LogWarning($"RewardDistributor: 파칭코 보상 위습({label})을 못 찾아 슬롯 {slot}에게 못 줍니다."); return; }
+        SpawnWisp(context, wisp, count, newWorldReward: false, excludeRestricted: exclude);
+        PlayerNotification.Show(slot, plan.win ? $"<color=#FFD700>当たり報酬：伝説・ヒドゥンの魂 ×{count}</color>" : plan.reach ? $"残念賞：希少の魂 ×{count}" : $"残念賞：特別の魂 ×{count}", 6f);
+        Debug.Log($"[파칭코보상] 슬롯 {slot} {plan} → {label} {count}기{(exclude ? "(솔·성탄·뻬꼼 제외)" : "")}");
     }
 
     public void GrantWisps(PlayerContext context, List<WispReward> wispRewards)

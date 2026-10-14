@@ -228,21 +228,22 @@ public class NetGameState : NetworkBehaviour
     }
 
     // 30R 보스 파칭코(10-14): 호스트가 정한 연출 길(PachinkoPlan.Pack)을 전원에게 — 각 PC가 PachinkoController.PlayHandler(오버레이)를 부른다. 정지는 CutinHold가 맡는다.
-    public void BroadcastPachinko(int packedPlan) { if (HasStateAuthority) RPC_Pachinko(packedPlan); }
+    // 사양(사장님 10-14): 플레이어마다 따로 뽑는다 — 슬롯별 plan을 한 번씩 보내고 각 PC는 자기 슬롯 것만 쓴다.
+    public void BroadcastPachinko(int slot, int packedPlan) { if (HasStateAuthority) RPC_Pachinko((sbyte)slot, packedPlan); }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.Proxies)]
-    public void RPC_Pachinko(int packedPlan)
+    public void RPC_Pachinko(sbyte slot, int packedPlan)
     {
-        PachinkoController.ReceivePlan(packedPlan);
+        PachinkoController.ReceivePlan(slot, packedPlan);
     }
 
-    // PUSH가 눌렸다(호스트가 받아 전원에게): slot = 누른 슬롯, -1 = 시간 끝 자동.
-    public void BroadcastPachinkoPushed(int slot) { if (HasStateAuthority) RPC_PachinkoPushed((sbyte)slot); }
+    // 그 슬롯의 PUSH가 눌렸다(who = 슬롯) 또는 시간 끝(-1) — 호스트가 그 슬롯의 PC에 알린다(다른 PC는 무시).
+    public void BroadcastPachinkoPushed(int slot, int who) { if (HasStateAuthority) RPC_PachinkoPushed((sbyte)slot, (sbyte)who); }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.Proxies)]
-    public void RPC_PachinkoPushed(sbyte slot)
+    public void RPC_PachinkoPushed(sbyte slot, sbyte who)
     {
-        PachinkoController.ReceivePushed(slot);
+        PachinkoController.ReceivePushed(slot, who);
     }
 
     // 스킬 효과음(09-30) — 표 번호(SkillSfxTable.txt의 C줄 순서)·볼륨 배수·자리. 거리 감쇠는 받는 쪽 화면 기준으로 SkillSfx가 센다.

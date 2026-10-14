@@ -8,7 +8,7 @@ static class PachinkoProbe
     {
         if (!Application.isPlaying) return "❌ 플레이 중에만";
         string mode = File.ReadAllText("ClaudeBridge/g1n_pachinko.txt").Trim();
-        PachinkoController.Begin(PachinkoPlan.Roll(mode == "random" ? null : mode));
+        PachinkoController.Begin(mode.Split(','));
         return $"발동 {mode} · 정지 {GamePause.CutinHold}";
     }
 

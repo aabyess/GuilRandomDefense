@@ -6546,6 +6546,8 @@ public static class MapGenerator
         EnsureAssetRef(distributor, "saveRewardCommonChoiceWisp", AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_흔함선택.asset"));
         EnsureAssetRef(distributor, "saveRewardRandomWisp", AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_랜덤유닛.asset"));
         EnsureAssetRef(distributor, "newWorldWisp", AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_전설히든.asset"));   // 10-14 솔플 신세계 보상
+        EnsureAssetRef(distributor, "pachinkoReachMissWisp", AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_희귀함.asset"));   // 10-14 30R 파칭코 리치 꽝
+        EnsureAssetRef(distributor, "pachinkoMissWisp", AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_특별함.asset"));   // 10-14 30R 파칭코 꽝
     }
 
     /// <summary>이미 물려 있던 참조 중 **남의 오브젝트를 가리키는 것**만 한 줄로. 없으면 빈 문자열.</summary>

@@ -54,7 +54,8 @@ public static class StaleDollRepair
         typeof(MapGenerator).GetMethod("RepairSaveRewardWisps", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, null);
         var d = Object.FindFirstObjectByType<RewardDistributor>(FindObjectsInactive.Include);
         var w = new SerializedObject(d).FindProperty("newWorldWisp").objectReferenceValue;
-        Debug.Log($"[신세계보상 배선] newWorldWisp = {(w == null ? "NULL" : w.name)}");
+        var so = new SerializedObject(d);
+        Debug.Log($"[신세계보상 배선] newWorldWisp = {(w == null ? "NULL" : w.name)} · pachinkoReachMissWisp = {so.FindProperty("pachinkoReachMissWisp").objectReferenceValue?.name ?? "NULL"} · pachinkoMissWisp = {so.FindProperty("pachinkoMissWisp").objectReferenceValue?.name ?? "NULL"}");
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
         if (Application.isBatchMode) EditorApplication.Exit(w == null ? 1 : 0);

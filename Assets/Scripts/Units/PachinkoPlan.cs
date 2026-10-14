@@ -8,23 +8,23 @@ public enum PachinkoHold : byte { White, Blue, Green, Red, Gold }
 public enum PachinkoBg : byte { None, Green, Red, Gold }
 public enum PachinkoCut : byte { None, Blue, Red, Gold }
 
-/// <summary>사장님이 정할 값(답 대기 — 기본은 PM 추천). 바꿀 땐 여기만.</summary>
+/// <summary>사장님이 정할 값(사장님 10-14 확정: 777 5% · 세 같은 숫자 20% · 리치 꽝 35% · 꽝 40%, 플레이어마다 따로 뽑는다). 바꿀 땐 여기만.</summary>
 public static class PachinkoSettings
 {
     /// <summary>이 라운드 보스를 잡는 순간 한 번(판당 1회).</summary>
     public const int TriggerRound = 30;
-    /// <summary>당첨 확률.</summary>
-    public const float WinChance = 1f / 81f;
-    /// <summary>꽝 중 리치가 걸리는 비율.</summary>
-    public const float ReachChanceWhenMiss = 1f / 3f;
-    /// <summary>PUSH 버튼 시간(초).</summary>
-    public const float PushSeconds = 4f;
-    /// <summary>true면 전원, false면 보스를 잡은 사람(처치자)만. 지금은 전원만 구현.</summary>
-    public const bool RewardAllPlayers = true;
-    /// <summary>당첨 보상: 전설·히든 위습 몇 기씩.</summary>
+    /// <summary>777 = 랜덤유닛 직접 지급.</summary>
+    public const float JackpotChance = 0.05f;
+    /// <summary>7을 뺀 세 같은 숫자 = 전설·히든 위습.</summary>
+    public const float WinChance = 0.20f;
+    /// <summary>리치(3▢3)만 걸렸다 빗나감 = 희귀함 위습. 나머지(1-JackpotChance-WinChance-이 값 = 40%)는 그냥 꽝 = 특별함 위습.</summary>
+    public const float ReachMissChance = 0.35f;
+    /// <summary>자기 PUSH 시간(초) — 각자 자기 버튼, 이 안에 한 번 누르면 자기 줄만 정지, 안 누르면 끝에 자동.</summary>
+    public const float PushSeconds = 5f;
     public const int WispCountPerPlayer = 1;
-    /// <summary>결과 화면(대당첨/꽝)이 떠 있는 시간 — 지나면 정지를 풀고 보상을 준다.</summary>
+    /// <summary>결과 화면이 떠 있는 시간.</summary>
     public const float WinResultSeconds = 5.5f;
+    public const float JackpotExtraSeconds = 2.5f;
     public const float ReviveExtraSeconds = 2.0f;
     public const float MissResultSeconds = 2.6f;
     /// <summary>오버레이가 없을 때(임시 경로) 로그만 찍고 결과까지 가는 시간.</summary>
@@ -34,7 +34,7 @@ public static class PachinkoSettings
 [System.Serializable]
 public struct PachinkoPlan
 {
-    public bool win, reach, revive;
+    public bool win, reach, revive, jackpot;
     public byte left, center, right;   // 1~9
     public PachinkoHold hold;
     public byte yokoku;                // 0~3 (継続 ×N+1)
@@ -43,38 +43,55 @@ public struct PachinkoPlan
 
     /// <summary>네트워크용 25비트 포장.</summary>
     public int Pack() =>
-        (win ? 1 : 0) | (reach ? 2 : 0) | (revive ? 4 : 0) |
+        (win ? 1 : 0) | (reach ? 2 : 0) | (revive ? 4 : 0) | (jackpot ? 1 << 25 : 0) |
         (left & 15) << 3 | (center & 15) << 7 | (right & 15) << 11 |
         ((int)hold & 7) << 15 | (yokoku & 3) << 18 | ((int)bg & 3) << 20 | ((int)cut & 7) << 22;
 
     public static PachinkoPlan Unpack(int v) => new PachinkoPlan
     {
-        win = (v & 1) != 0, reach = (v & 2) != 0, revive = (v & 4) != 0,
+        win = (v & 1) != 0, reach = (v & 2) != 0, revive = (v & 4) != 0, jackpot = (v & (1 << 25)) != 0,
         left = (byte)((v >> 3) & 15), center = (byte)((v >> 7) & 15), right = (byte)((v >> 11) & 15),
         hold = (PachinkoHold)((v >> 15) & 7), yokoku = (byte)((v >> 18) & 3), bg = (PachinkoBg)((v >> 20) & 3), cut = (PachinkoCut)((v >> 22) & 7),
     };
 
     public override string ToString() =>
-        $"{(win ? "당첨" : "꽝")}{(revive ? "(부활)" : "")} {left}{center}{right} 리치 {reach} 보류 {hold} 예고 {yokoku} 배경 {bg} 컷인 {cut}";
+        $"{(jackpot ? "777대당첨" : win ? "당첨" : reach ? "리치꽝" : "꽝")}{(revive ? "(부활)" : "")} {left}{center}{right} 리치 {reach} 보류 {hold} 예고 {yokoku} 배경 {bg} 컷인 {cut}";
 
     /// <summary>
-    /// 시안 plan()의 C# 이식. mode: null=확률 그대로, "win"=당첨(강한 금 길), "revive"=꽝인 척 부활, "miss"=꽝(짧은 리치), "reach"=빨강까지 가서 꽝.
+    /// 시안 plan()의 C# 이식(10-14 사양: 777 / 세 같은 숫자(7 제외) / 리치 꽝 / 그냥 꽝 네 결과).
+    /// mode: null=확률 그대로, "jackpot"=777, "win"=당첨(강한 금 길), "revive"=꽝인 척 부활 당첨, "reach"=리치 꽝(빨강까지 갔다가), "miss"=그냥 꽝.
     /// </summary>
     public static PachinkoPlan Roll(string mode = null)
     {
-        var p = new PachinkoPlan();
-        int n = Random.Range(1, 10);
-        int other; do { other = Random.Range(1, 10); } while (other == n);
-        bool win, reach;
-        if (mode == null) { win = Random.value < PachinkoSettings.WinChance; reach = win || Random.value < PachinkoSettings.ReachChanceWhenMiss; }
-        else { win = mode == "win" || mode == "revive"; reach = mode != "none"; }
-        p.win = win; p.reach = reach; p.revive = false;
-        p.left = (byte)n;
-        p.right = (byte)(reach ? n : other);
-        p.center = (byte)(win ? n : (reach ? (n % 9) + 1 : Random.Range(1, 10)));
-        if (!reach && p.left == p.right) p.right = (byte)other;
+        bool jackpot, win, reach;
+        if (mode == null)
+        {
+            float r = Random.value;
+            jackpot = r < PachinkoSettings.JackpotChance;
+            win = !jackpot && r < PachinkoSettings.JackpotChance + PachinkoSettings.WinChance;
+            reach = !jackpot && !win && r < PachinkoSettings.JackpotChance + PachinkoSettings.WinChance + PachinkoSettings.ReachMissChance;
+        }
+        else { jackpot = mode == "jackpot"; win = mode == "win" || mode == "revive"; reach = mode == "reach"; }
+        var p = new PachinkoPlan { jackpot = jackpot, win = win || jackpot, reach = reach || win || jackpot };
 
-        if (win)
+        int n;
+        if (jackpot) n = 7;
+        else if (win) { do { n = Random.Range(1, 10); } while (n == 7); }
+        else n = Random.Range(1, 10);
+        int other; do { other = Random.Range(1, 10); } while (other == n);
+        p.left = (byte)n;
+        p.right = (byte)(p.reach ? n : other);
+        p.center = (byte)(p.win ? n : (p.reach ? (n % 9) + 1 : Random.Range(1, 10)));
+        if (!p.reach && p.left == p.right) p.right = (byte)other;
+
+        if (jackpot)
+        {
+            p.hold = Pick(PachinkoHold.Green, 20, PachinkoHold.Red, 40, PachinkoHold.Gold, 40);
+            p.yokoku = (byte)PickInt(2, 30, 3, 70);
+            p.bg = Pick(PachinkoBg.Red, 30, PachinkoBg.Gold, 70);
+            p.cut = Pick(PachinkoCut.Red, 20, PachinkoCut.Gold, 80);
+        }
+        else if (win)
         {
             p.hold = Pick(PachinkoHold.Blue, 15, PachinkoHold.Green, 25, PachinkoHold.Red, 40, PachinkoHold.Gold, 20);
             p.yokoku = (byte)PickInt(0, 15, 1, 20, 2, 30, 3, 35);
@@ -97,10 +114,11 @@ public struct PachinkoPlan
 
         switch (mode)
         {
+            case "jackpot": p.hold = PachinkoHold.Gold; p.yokoku = 3; p.bg = PachinkoBg.Gold; p.cut = PachinkoCut.Gold; break;
             case "win": p.hold = PachinkoHold.Red; p.yokoku = 3; p.bg = PachinkoBg.Gold; p.cut = PachinkoCut.Gold; p.revive = false; break;
             case "revive": p.hold = PachinkoHold.Blue; p.yokoku = 1; p.bg = PachinkoBg.Green; p.cut = PachinkoCut.Blue; p.revive = true; break;
             case "reach": p.hold = PachinkoHold.Red; p.yokoku = 2; p.bg = PachinkoBg.Red; p.cut = PachinkoCut.Red; break;
-            case "miss": p.hold = PachinkoHold.White; p.yokoku = 0; p.bg = PachinkoBg.None; p.cut = PachinkoCut.Blue; break;
+            case "miss": p.hold = PachinkoHold.White; p.yokoku = 0; p.bg = PachinkoBg.None; p.cut = PachinkoCut.None; p.reach = false; break;
         }
         return p;
     }
@@ -142,5 +160,5 @@ public struct PachinkoPlan
     }
 
     /// <summary>PUSH 뒤(또는 시간 끝) 결과 화면이 떠 있는 시간.</summary>
-    public float ResultSeconds() => win ? PachinkoSettings.WinResultSeconds + (revive ? PachinkoSettings.ReviveExtraSeconds : 0f) : PachinkoSettings.MissResultSeconds;
+    public float ResultSeconds() => win ? PachinkoSettings.WinResultSeconds + (revive ? PachinkoSettings.ReviveExtraSeconds : 0f) + (jackpot ? PachinkoSettings.JackpotExtraSeconds : 0f) : PachinkoSettings.MissResultSeconds;
 }
