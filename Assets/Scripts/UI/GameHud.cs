@@ -3793,6 +3793,8 @@ public class GameHud : MonoBehaviour
         text.alignment = TextAlignmentOptions.Center;
         text.fontSize = height >= 28f ? 22f : 15f;
         text.textWrappingMode = TextWrappingModes.NoWrap;
+        // 10-14 이름 줄에 「- 원작 등급 이름」이 붙어 길어진다 — 띠를 넘으면 글자를 줄여 넣는다.
+        text.enableAutoSizing = true; text.fontSizeMax = text.fontSize; text.fontSizeMin = text.fontSize * 0.55f;
         text.raycastTarget = false;
         strip.gameObject.SetActive(false);
         return text;
@@ -5448,7 +5450,8 @@ public class GameHud : MonoBehaviour
                 unitHeroStatText.text = $"<color=#FF9A3A>힘</color> {Mathf.FloorToInt(attacker.CurrentStrength)}  <color=#FF9A3A>민</color> {Mathf.FloorToInt(attacker.CurrentAgility)}  <color=#FF9A3A>지</color> {Mathf.FloorToInt(attacker.CurrentIntelligence)}";
             if (!unitStatRows.activeSelf) unitStatRows.SetActive(true);
             if (wc3NameText != null)
-                SetWc3Strips(true, $"{firstPart}{secondPart}", $"<color=#{gradeColorHex}>{grade}{levelLabel}</color>" + (data.OriginalMatchLabel.Length > 0 ? $"   <b><color=#FFD27A>{data.OriginalMatchLabel}</color></b>" : ""));   // 10-09 사장님: 이름 줄 바로 아래 가운데에 눈에 띄게(「원작: 초월 징베」)
+                // 10-14 사장님: 하단 정보창 가운데 이름 옆에 「초월 양재모 - 초월 조로」(우리 등급·이름 - 대응 원작 등급·이름), 전 등급.
+                SetWc3Strips(true, $"<color=#{gradeColorHex}>{grade}</color> {firstPart}{secondPart}" + (data.OriginalMatchLabel.Length > 0 ? $" <b><color=#FFD27A>- {data.originalMatchName}</color></b>" : ""), $"<color=#{gradeColorHex}>{grade}{levelLabel}</color>");
             if (skillIconRow != null && skillIconRow.activeSelf) skillIconRow.SetActive(false);   // 10-07 스킬 아이콘은 명령 카드로 옮김(ReflowFlexSlots Passive)
             // 10-08 6·7: 막대는 유닛 게이지(현재/문턱)다 — 지갑 마나(도움소)는 여기서 뺐다. 게이지가 없으면 체력은 가득·마나 막대는 숨김.
             int lifeNow = 0, lifeMax = 0, manaNow = 0, manaMax = 0;
