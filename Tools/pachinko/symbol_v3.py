@@ -1,4 +1,4 @@
-"""파칭코 숫자 v3(10-14, blender): 사장님 확정 웹 시안(digits.html, claude.ai/artifact/VFAuaknTYmQN2uHaZRmmhp)의 SVG를 그대로 단독 페이지로 렌더.
+"""파칭코 숫자 v3(10-14, blender; 2차: 시안 좌표계 viewBox 0 0 600 600 · 필터 수치 시안 그대로, SVG 크기만 1024로 확대): 사장님 확정 웹 시안(digits.html, claude.ai/artifact/VFAuaknTYmQN2uHaZRmmhp)의 SVG를 그대로 단독 페이지로 렌더.
   /usr/bin/python3 Tools/pachinko/symbol_v3.py [출력폴더=~/GRD_pachinko_art/symbols_v3]
 폰트: Bodoni Moda(OFL, 가변 wght 900) · Abril Fatface(OFL, 7) — <출력>/fonts/ 에 TTF+OFL.txt. 렌더: 헤드리스 Chrome 투명 PNG 1024.
 산출: symbol_N.png(홀수·7 = f0) · symbol_N_f0~f5.png(불꽃 6프레임, feTurbulence seed 바꿈) · 크리스털(짝수) symbol_N.png + symbol_N_s0/s1(별빛 반짝) · symbol_N_blur.png(세로 모션블러)"""
@@ -23,8 +23,8 @@ def scaled_defs(k, seed):
     d = re.sub(r'surfaceScale="([\d.]+)"', lambda m: f'surfaceScale="{float(m.group(1)) * k:.2f}"', d)
     d = d.replace('width="16" height="16"', f'width="{16 * k:.0f}" height="{16 * k:.0f}"')
     return d
-def page(n, seed, sparkle_seed=None, size=640):
-    k = size / 400
+def page(n, seed, sparkle_seed=None, size=400):
+    k = 1.0   # 필터 수치는 시안 그대로(400 기준 좌표계). 확대는 SVG width/height로만(브라우저가 필터까지 같이 확대)
     kind = "gold" if n == 7 else ("fire" if n % 2 else "crystal")
     fam = "Abril Fatface, Bodoni Moda, serif" if n == 7 else "Bodoni Moda, Didot, serif"
     gsz = size * (1.05 if n == 7 else 1.0)
@@ -50,8 +50,8 @@ def page(n, seed, sparkle_seed=None, size=640):
             L.append(f"<path d='M{sx} {sy - r * 3}L{sx + r * .4} {sy - r * .4}L{sx + r * 3} {sy}L{sx + r * .4} {sy + r * .4}L{sx} {sy + r * 3}L{sx - r * .4} {sy + r * .4}L{sx - r * 3} {sy}L{sx - r * .4} {sy - r * .4}Z' fill='#fff' opacity='.9'/>")
     body = "".join(L)
     return (f"<!doctype html><meta charset=utf8><style>{fonts_css()}html,body{{margin:0;background:transparent;overflow:hidden}}svg{{display:block}}</style>"
-            f"<svg xmlns='http://www.w3.org/2000/svg' width='1024' height='1024' viewBox='0 0 1024 1024'><defs>{scaled_defs(k, seed)}</defs>"
-            f"<g transform='translate(512 {size * 1.18}) skewX(-12)'>{body}</g></svg>")
+            f"<svg xmlns='http://www.w3.org/2000/svg' width='1024' height='1024' viewBox='0 0 600 600'><defs>{scaled_defs(k, seed)}</defs>"
+            f"<g transform='translate(300 455) skewX(-12)'>{body}</g></svg>")
 def shoot(html, png):
     f = OUT + "/pages/" + os.path.basename(png)[:-4] + ".html"; open(f, "w", encoding="utf8").write(html)
     subprocess.run([CHROME, "--headless=new", "--disable-gpu", "--hide-scrollbars", "--default-background-color=00000000", "--window-size=1024,1024",
