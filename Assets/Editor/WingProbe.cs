@@ -21,14 +21,14 @@ static class WingProbe
         {
             var d = AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{names[i]}.asset");
             if (d == null) { sb.AppendLine("❌ " + names[i]); continue; }
-            var go = spawner.Spawn(d, c + new Vector3((i - 1) * 34f, 0f, 0f), 0);
+            var go = spawner.Spawn(d, c + new Vector3((i - 1) * 110f, 0f, 0f), 0);
             if (go == null) continue;
             if (go.TryGetComponent(out UnityEngine.AI.NavMeshAgent a)) a.enabled = false;
             if (go.TryGetComponent(out UnitFacing f)) f.enabled = false;
             go.transform.rotation = Quaternion.Euler(0f, front ? 180f : 0f, 0f);
             sb.AppendLine($"{names[i]} 등급 {d.grade} 날개 {UnitWings.WingNameFor(d.grade)}");
         }
-        rts.FlyTo(c, 170f);
+        rts.FlyTo(c, 300f);
         return sb.ToString();
     }
 

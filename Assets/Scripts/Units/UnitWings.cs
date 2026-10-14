@@ -57,6 +57,16 @@ public static class UnitWings
         wing.transform.localScale = new Vector3(worldScale / Mathf.Max(0.0001f, parentScale.x), worldScale / Mathf.Max(0.0001f, parentScale.y), worldScale / Mathf.Max(0.0001f, parentScale.z));
         wing.transform.position = chest + unit.transform.rotation * (model != null ? model.chestOffset * worldScale : Vector3.zero);
         wing.transform.localRotation = Quaternion.Euler(model != null ? model.localEuler : Vector3.zero);
+        // 좌우 중심 보정(10-14): 불 날개처럼 뿌리가 한쪽 끝인 초승달 모양은 몸 가운데에 두면 한쪽으로 쏠린다.
+        // 휴식 자세의 렌더러 경계 중심이 유닛 좌우 축에서 가슴 중심과 같아지게 옆으로만 옮긴다(대칭 날개는 거의 0).
+        Renderer[] wr = wing.GetComponentsInChildren<Renderer>(false);
+        if (wr.Length > 0)
+        {
+            Bounds wb = wr[0].bounds; for (int i = 1; i < wr.Length; i++) wb.Encapsulate(wr[i].bounds);
+            Vector3 right = unit.transform.right;
+            float lateral = Vector3.Dot(chest - wb.center, right);
+            wing.transform.position += right * lateral;
+        }
         // 뼈가 있으면 그 뼈를 따라 움직이게(동작할 때 몸과 같이) — 월드 위치·회전·크기는 그대로 둔 채 부모만 옮긴다. 이름이 안 맞으면 루트에 둔다.
         Transform bone = FindChestBone(unit.transform);
         if (bone != null) wing.transform.SetParent(bone, true);
