@@ -2957,6 +2957,8 @@ public static class MapGenerator
         // 모델별 인형 키 배수 — 인형은 프리팹 크기를 안 먹고 목표 키(height)에 맞춰 다시 키우므로, 「이 유닛은 작게」는 여기서도 같이 줘야 한다.
         //    (ArtBinder.ModelAdjustments의 키 배수와 짝 — 10-04 흔함_강재규(쵸파) 「반으로」: 프리팹 0.85→0.425였는데 부스·조합판 인형은 그대로 같은 키였다.)
         if (DollHeightMultiplier.TryGetValue(brokenCheck, out float dollMultiplier)) height *= dollMultiplier;
+        foreach (string gradePrefix in ArtBinder.TranscendImmortalPrefixes)   // 초월·불멸 키 ×1.2(사장님 10-14) — 프리팹(ArtBinder.GradeScaleFor)과 같은 값
+            if (brokenCheck.StartsWith(gradePrefix)) { height *= ArtBinder.TranscendImmortalExtraScale; break; }
 
         GameObject figure = Object.Instantiate(unit.prefab, parent);
         figure.name = name;

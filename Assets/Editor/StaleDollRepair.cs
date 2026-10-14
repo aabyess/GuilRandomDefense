@@ -20,11 +20,24 @@ public static class StaleDollRepair
     /// <summary>흔함_강재규(쵸파) 키 배수 변경(10-14) 뒤: 씬의 쵸파 인형을 새 배수로 다시 세운다.</summary>
     public static void RebuildChopper() { onlyModel = "흔함_강재규"; Run(); }
 
+    static string[] onlyPrefixes;   // 지정하면 그 접두 등급(초월_·불멸_) 모델의 인형을 전부 다시 세운다
+
+    /// <summary>초월·불멸 키 ×1.2(10-14) 뒤: 씬의 초월_·불멸_ 전시 인형을 새 키로 다시 세운다.</summary>
+    public static void RebuildTranscendImmortal() { onlyPrefixes = ArtBinder.TranscendImmortalPrefixes; Run(); onlyPrefixes = null; }
+
     static List<DollIdle> FindStale()
     {
         var stale = new List<DollIdle>();
         foreach (DollIdle doll in Object.FindObjectsByType<DollIdle>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
+            if (onlyPrefixes != null)
+            {
+                bool hit = false;
+                foreach (Transform c in doll.transform)
+                    foreach (string pre in onlyPrefixes) if (c.name.StartsWith(pre)) hit = true;
+                if (hit) stale.Add(doll);
+                continue;
+            }
             if (onlyModel != null)
             {
                 foreach (Transform c in doll.transform) if (c.name == onlyModel) { stale.Add(doll); break; }
@@ -149,7 +162,7 @@ public static class StaleDollRepair
         }
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
-        onlyModel = null;
+        onlyModel = null; onlyPrefixes = null;
         int left = FindStale().Count;
         Debug.Log($"[인형 수리] 다시 세움 {fixedCount}기 · 실패 {failed.Count}" + (failed.Count > 0 ? " " + string.Join(", ", failed) : "") + $" · 남은 끊김 {left}");
         if (Application.isBatchMode) EditorApplication.Exit(left == 0 && failed.Count == 0 ? 0 : 1);

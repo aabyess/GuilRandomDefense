@@ -442,13 +442,22 @@ public static class ArtBinder
     const float UpperGradeHeightScale = 1.2f;
     static readonly string[] UpperGradePrefixes = { "전설적인_", "변화됨_", "제한_", "초월_", "불멸_", "영원_", "랜덤_", "다른세계_" };
 
+    // 사장님 10-14 「초월·불멸 유닛 크기 키우기」(PM 제안 ×1.2): 위 UpperGradeHeightScale 위에 초월·불멸만 한 번 더 곱한다(전시 인형은 MapGenerator.TryPlaceUnitModel이 같은 값을 쓴다).
+    public const float TranscendImmortalExtraScale = 1.2f;
+    public static readonly string[] TranscendImmortalPrefixes = { "초월_", "불멸_" };
+
     static float GradeScaleFor(string modelName)
     {
         string unit = Nfc(modelName);
         foreach ((string model, string target) in ModelOverrides)
             if (Nfc(model) == unit) { unit = Nfc(target); break; }
         foreach (string prefix in UpperGradePrefixes)
-            if (unit.StartsWith(Nfc(prefix))) return UpperGradeHeightScale;
+            if (unit.StartsWith(Nfc(prefix)))
+            {
+                foreach (string extra in TranscendImmortalPrefixes)
+                    if (unit.StartsWith(Nfc(extra))) return UpperGradeHeightScale * TranscendImmortalExtraScale;
+                return UpperGradeHeightScale;
+            }
         return 1f;
     }
 
