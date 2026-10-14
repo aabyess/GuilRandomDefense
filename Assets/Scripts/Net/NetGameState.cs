@@ -246,6 +246,22 @@ public class NetGameState : NetworkBehaviour
         PachinkoController.ReceivePushed(slot, who);
     }
 
+    // 파칭코 테마 투표(10-14): 호스트가 열기·집계(슬롯당 2비트)·마감 결과를 전원에게.
+    public void BroadcastPachinkoVoteOpen(float seconds) { if (HasStateAuthority) RPC_PachinkoVoteOpen(seconds); }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.Proxies)]
+    public void RPC_PachinkoVoteOpen(float seconds) { PachinkoController.ReceiveVoteOpen(seconds); }
+
+    public void BroadcastPachinkoVoteTally(int packed) { if (HasStateAuthority) RPC_PachinkoVoteTally(packed); }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.Proxies)]
+    public void RPC_PachinkoVoteTally(int packed) { PachinkoController.ReceiveVoteTally(packed); }
+
+    public void BroadcastPachinkoVoteClose(int theme) { if (HasStateAuthority) RPC_PachinkoVoteClose((sbyte)theme); }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.Proxies)]
+    public void RPC_PachinkoVoteClose(sbyte theme) { PachinkoController.ReceiveVoteClose(theme); }
+
     // 스킬 효과음(09-30) — 표 번호(SkillSfxTable.txt의 C줄 순서)·볼륨 배수·자리. 거리 감쇠는 받는 쪽 화면 기준으로 SkillSfx가 센다.
     // 놓쳐도 되는 것이라 이펙트와 같은 비신뢰 채널.
     void RouteSkillSfx(int clip, float volume, Vector3 position) => RPC_SkillSfx((short)clip, (byte)Mathf.RoundToInt(Mathf.Clamp01(volume) * 255f), position);

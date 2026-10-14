@@ -423,6 +423,18 @@ public static class NetCommands
         NetPlayer.Local.RPC_PachinkoPush();
     }
 
+    public static void RequestPachinkoVote(int theme)
+    {
+        if (NetPlayer.Local == null) return;
+        NetPlayer.Local.RPC_PachinkoVote((sbyte)theme);
+    }
+
+    public static void ExecutePachinkoVote(NetPlayer sender, int theme)
+    {
+        if (sender == null || sender.Runner == null || !sender.Runner.IsServer) return;
+        PachinkoController.ReceiveVote(sender.Slot, theme);
+    }
+
     public static void ExecutePachinkoPush(NetPlayer sender)
     {
         if (sender == null || sender.Runner == null || !sender.Runner.IsServer) return;
