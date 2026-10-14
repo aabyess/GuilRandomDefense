@@ -292,7 +292,14 @@ public class CombineSystem : MonoBehaviour
 
         int ownerId = ResolveOwnerId();
         // 재료를 없애기 전에 읽어야 한다 — 자리를 재료들이 서 있던 곳에서 정하기 때문이다.
-        Vector3 resultPosition = ResolveResultPosition(casterPosition, recipe.result, ownerId);
+        // 누른 유닛 위치가 없거나(조합표 창에서 선택 없이 누름·창고 안) 창고 안이면, 필드에 서 있는 재료 한 기 곁에 낸다(10-14 친구 피드백).
+        Vector3? nearPosition = casterPosition;
+        Warehouse ownerWarehouse = PlayerContext.Get(ownerId)?.Warehouse;
+        if (nearPosition.HasValue && IsInWarehouse(ownerWarehouse, nearPosition.Value)) nearPosition = null;
+        if (!nearPosition.HasValue)
+            foreach (UnitIdentity material in unitsToRemove)
+                if (material != null && !IsInWarehouse(ownerWarehouse, material.transform.position)) { nearPosition = material.transform.position; break; }
+        Vector3 resultPosition = ResolveResultPosition(nearPosition, recipe.result, ownerId);
 
         // 재료는 인벤토리에서 빼는 것으로 끝나지 않는다. 필드에 서 있는 그 개체를 없애야
         // 인벤토리와 필드가 어긋나지 않는다 — 예전엔 이걸 안 해서 조합할수록 필드에 재료가 쌓였다.
@@ -328,7 +335,7 @@ public class CombineSystem : MonoBehaviour
         if (recipe.resultDelaySeconds > 0f)
         {
             // 영원함 조세민 「180초뒤에 생성」 — 재료는 이미 소모됐고 결과는 지연 뒤에 나온다. 알림은 조합한 사람에게.
-            StartCoroutine(SpawnResultLater(recipe, ownerId));
+            StartCoroutine(SpawnResultLater(recipe, ownerId, nearPosition));
             PlayerNotification.Show(ownerId, $"<color=#FFD54F>{recipe.result.unitName}이(가) {Mathf.CeilToInt(recipe.resultDelaySeconds)}초 뒤에 나타납니다.</color>", 8f);
         }
         else { spawner.Spawn(recipe.result, resultPosition, ownerId, combined: true); GrantAcquireGold(recipe, ownerId); }
@@ -351,12 +358,12 @@ public class CombineSystem : MonoBehaviour
     }
 
     // 지연 생성 결과(CombineRecipe.resultDelaySeconds) — 시간이 지난 뒤 결과 유닛을 세운다. 서버만(TryCombine이 서버 전용).
-    System.Collections.IEnumerator SpawnResultLater(CombineRecipe recipe, int ownerId)
+    System.Collections.IEnumerator SpawnResultLater(CombineRecipe recipe, int ownerId, Vector3? near)
     {
         yield return new WaitForSeconds(recipe.resultDelaySeconds);
         UnitSpawner spawner = Spawner;
         if (spawner == null || !GameAuthority.IsServer) yield break;
-        spawner.Spawn(recipe.result, ResolveResultPosition(null, recipe.result, ownerId), ownerId, combined: true);
+        spawner.Spawn(recipe.result, ResolveResultPosition(near, recipe.result, ownerId), ownerId, combined: true);
         PlayerNotification.Show(ownerId, $"<color=#FFD54F>{recipe.result.unitName}이(가) 나타났습니다!</color>", 8f);
         GrantAcquireGold(recipe, ownerId);
     }
@@ -402,18 +409,30 @@ public class CombineSystem : MonoBehaviour
     //    사장님 09-26 「조합 결과는 레인 가운데」와 반대라 PM·사장님 확인 뒤 켜 둔다 — 되돌리려면 false 한 줄.
     // 🔴 2026-10-09 사장님 버그 신고(창고에서 조합하니 결과가 창고 안에 생겨 못 나옴): 조합 결과는 **등급·조합 위치(창고·칸·필드) 무관 항상 그 플레이어 레인 가운데**. 10-04 「누른 유닛 곁」 규칙을 끈다 —
     //    원작도 창고 출구 트리거(Trig_house_OUTcommon, 1comZone)가 나온 유닛을 조합 구역(johabzone)·안흔함 조합 자리로 옮긴다. 흔함 결과도 칸 안 규칙은 조합엔 없다(원작 j 확인).
-    const bool ResultAtCasterUnit = false;
+    // 🔴 2026-10-14 친구 피드백 「조합하면 근처가 아니라 필드 가운데에서 생긴다」 — 다시 켠다. 10-09 사장님 버그(창고 안 조합 → 결과가 창고 안)는
+    //    「창고 안 유닛이 시전자·재료 기준이면 쓰지 않는다」로 막는다(IsInWarehouse). 흔함 결과도 칸 안이 아니라 곁에(원작 조합엔 칸 규칙 없음, 10-09 j 확인).
+    const bool ResultAtCasterUnit = true;
     const float ResultAtCasterJitter = 6f;   // 같은 자리에 포개 서면 클릭하기 어렵다 — 시전 유닛 바로 곁 한 몸쯤 옆(NavMesh로 다시 보정)
+
+    /// <summary>이 자리에 창고 보관 유닛이 서 있는가(창고 섬은 바다 건너라 그 유닛 위치를 기준으로 결과를 내면 창고 안에 생긴다).</summary>
+    static bool IsInWarehouse(Warehouse warehouse, Vector3 position)
+    {
+        if (warehouse == null) return false;
+        foreach (GameObject stored in warehouse.Stored)
+            if (stored != null && (stored.transform.position - position).sqrMagnitude < 0.0025f) return true;
+        return false;
+    }
 
     Vector3 ResolveResultPosition(Vector3? casterPosition, UnitData result, int ownerId)
     {
         LaneMarker lane = LaneMarker.Get(ownerId);
         if (lane == null) return transform.position;
 
-        if (ResultAtCasterUnit && casterPosition.HasValue && result != null && result.grade != UnitGrade.Common)
+        if (ResultAtCasterUnit && casterPosition.HasValue && result != null)
         {
             int casterMask = UnitSpawner.ComputeAreaMask(result.movementAbility);
-            Vector3 near = casterPosition.Value + new Vector3(ResultAtCasterJitter, 0f, 0f);
+            Vector2 ring = Random.insideUnitCircle.normalized * ResultAtCasterJitter;   // 같은 자리에 포개 서면 클릭하기 어렵다
+            Vector3 near = casterPosition.Value + new Vector3(ring.x, 0f, ring.y);
             if (NavMesh.SamplePosition(near, out NavMeshHit casterHit, ResultSampleRadius, casterMask)) return casterHit.position;
             // 시전 유닛 곁이 NavMesh 밖이면(스토리존 건물 위 등) 레인 가운데로 — 아래 옛 규칙
         }
