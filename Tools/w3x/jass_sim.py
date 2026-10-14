@@ -312,6 +312,7 @@ class Run:
         if fn in ("s__TrigVariables_SleepForStage", "s__TrigVariables_SleepForStageAdd"):
             d, s = A(1), A(2)
             if isinstance(d, Unk) or isinstance(s, Unk): d, s = 0.1, self.stage + 1; sim.unres += 1
+            elif fn.endswith("Add") and os.environ.get("JASS_ADD_REL"): s = self.stage + int(float(s))   # Add = 스테이지 += n (10-14)
             self.pending = (float(d), int(float(s))) if float(d) < 8 else None   # 8초 이상 대기는 재진입(쿨다운 성격) — 연출이 아니라 무시
             return
         if fn == "s__TrigVariables_SleepForStageNext":
