@@ -38,8 +38,8 @@
 |---|---|---|
 | 초월 스킬 동작 영상(4기·합본·재촬영 4기)·BLP 전후 게임 사진 | `~/Desktop/구랜디_초월_스킬모션/` | `Assets/Editor/SkillMotionProbe.cs` |
 | 동작 시트·가프 머리 프레임·초월 키 줄세우기 전후·크레딧 C/D/E 캡처 | `~/GRD_skill_motion/` (원래 `/tmp/g1n_motion`·w2 shots에서 옮김) | `SkillMotionProbe` · `UnitLineupShot` · `UnitHeightProbe` |
+| `~/GRD_scenes/add_rel_26/` | SleepForStageAdd 상대값 해석(JASS_ADD_REL=1)으로 다시 푼 연출 대본 26트리거 + 전후표·전후 렌더(compare/)·판정표·반영목록 | `JASS_ADD_REL=1 SCENE_TABLE=… SCENE_OUT=… Tools/w3x/scene_auto.py compile` (10-14) |
 
 ## 함정
 - 원작 BLP(JPEG) 알파는 PIL로 열면 검게 나온다 → 반드시 `blp_decode.py`(10-09 이전 추출본은 audit으로 고쳐 둠).
 - 원작 모델 회전 키는 쿼터니언 부호 연속으로 다시 구워야 유니티 보간이 안 튄다(`swap_refix_b3.py`).
-| `~/GRD_scenes/add_rel_26/` | SleepForStageAdd 상대값 해석(JASS_ADD_REL=1)으로 다시 푼 연출 대본 26트리거 + 전후표·전후 렌더(compare/)·판정표·반영목록 | `JASS_ADD_REL=1 SCENE_TABLE=… SCENE_OUT=… Tools/w3x/scene_auto.py compile` (10-14) |
