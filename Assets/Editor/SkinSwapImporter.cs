@@ -31,6 +31,8 @@ public static class SkinSwapImporter
 
     /// <summary>프리팹을 다시 지은 뒤(키 맞추기 등) 사라진 SkinClipHider(숨김 메시 + 클립 도중 알파)를 clip_map·클립중_알파변화.json에서 다시 채운다. call SkinSwapImporter.RehideAll</summary>
     public static string RehideAll() => SwapAll(false, true) + ApplyTimedAlpha();
+    /// <summary>배치 모드용: Unity -batchmode -executeMethod SkinSwapImporter.RehideAllBatch</summary>
+    public static void RehideAllBatch() => Debug.Log(RehideAll());
 
     /// <summary>relinkOnly: FBX·프리팹은 그대로 두고 slot_textures.json만 다시 쓰고 텍스처·재질(알파 컷)을 다시 연결한다.</summary>
     public static string SwapAll(bool relinkOnly = false, bool rehideOnly = false)
