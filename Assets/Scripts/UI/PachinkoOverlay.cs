@@ -1010,9 +1010,11 @@ public class PachinkoOverlay : MonoBehaviour
         var rts = new List<Image>();
         for (int i = 0; i < count; i++)
         {
-            Image im = Img("flare", fireworkRoot, null, c);
+            Sprite streak = FxSpr(c.b > c.r ? "streak_teal" : "streak_white");
+            Image im = Img("flare", fireworkRoot, streak, c);
+            im.preserveAspect = false;
             im.rectTransform.anchorMin = im.rectTransform.anchorMax = new Vector2(0f, 1f);
-            im.rectTransform.sizeDelta = new Vector2(1920f, UnityEngine.Random.Range(3f, 6f));
+            im.rectTransform.sizeDelta = streak != null ? new Vector2(2300f, UnityEngine.Random.Range(40f, 70f)) : new Vector2(1920f, UnityEngine.Random.Range(3f, 6f));
             im.rectTransform.anchoredPosition = new Vector2(960f, -(y + i * UnityEngine.Random.Range(-26f, 26f)));
             rts.Add(im);
         }
@@ -1026,8 +1028,29 @@ public class PachinkoOverlay : MonoBehaviour
         foreach (Image im in rts) Destroy(im.gameObject);
     }
 
+    Image speedImage;
     IEnumerator SpeedBurst(float seconds)
     {
+        Sprite sl = FxSpr("speedlines");
+        if (sl != null)
+        {   // blender 집중선 그림(가운데 비움) — 화면 전체, 0.2초
+            if (speedImage == null)
+            {
+                speedImage = Img("speedImg", stage, sl, new Color(1f, 1f, 1f, 0f)); speedImage.preserveAspect = false; Place(speedImage.rectTransform, 0, 0, 1920, 1080);
+                speedImage.transform.SetSiblingIndex(speedRect.GetSiblingIndex());
+            }
+            speedImage.gameObject.SetActive(true);
+            float st = 0f;
+            while (st < seconds)
+            {
+                st += Dt; float u = st / seconds;
+                speedImage.rectTransform.localScale = Vector3.one * Mathf.Lerp(1.12f, 0.96f, u);
+                speedImage.color = new Color(1f, 1f, 1f, (1f - u) * 0.8f);
+                yield return null;
+            }
+            speedImage.gameObject.SetActive(false);
+            yield break;
+        }
         speedRect.gameObject.SetActive(true);
         Image[] lines = speedRect.GetComponentsInChildren<Image>();
         float t = 0f;
@@ -1516,7 +1539,7 @@ public class PachinkoOverlay : MonoBehaviour
     }
 
     // ───────── 당첨 폭죽(사장님 10-14): 아래에서 꼬리를 끌며 솟아 정점에서 구형으로 터진다 ─────────
-    class Fw { public Image img; public Vector2 pos, vel; public float age, life, size, gravity, drag, apexY; public Color col; public int kind; public bool spawned2; }   // kind 0 로켓 · 1 불꽃 · 2 꼬리 · 3 2차 반짝
+    class Fw { public Sprite spark; public Image img; public Vector2 pos, vel; public float age, life, size, gravity, drag, apexY; public Color col; public int kind; public bool spawned2; }   // kind 0 로켓 · 1 불꽃 · 2 꼬리 · 3 2차 반짝
 
     Image GetFwImage()
     {
@@ -1554,7 +1577,8 @@ public class PachinkoOverlay : MonoBehaviour
                 float ang = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
                 float sp = baseSpeed * Mathf.Sqrt(UnityEngine.Random.value) + 80f;   // 구형(속이 찬 원)
                 Image img = GetFwImage();
-                live.Add(new Fw { img = img, pos = rocket.pos, vel = new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * sp, age = 0f, life = UnityEngine.Random.Range(1.0f, 1.7f),
+                img.preserveAspect = true;
+                live.Add(new Fw { img = img, spark = FxSpr("spark_" + UnityEngine.Random.Range(1, 9)), pos = rocket.pos, vel = new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * sp, age = 0f, life = UnityEngine.Random.Range(1.0f, 1.7f),
                                   size = UnityEngine.Random.Range(2.5f, 4.5f), gravity = 520f, drag = 0.985f, col = UnityEngine.Random.value < 0.7f ? main : alt, kind = 1 });
             }
             StartCoroutine(FlashColor(new Color(1f, 0.95f, 0.8f, 0.1f), 0.12f));   // 터질 때 작은 섬광
@@ -1608,9 +1632,19 @@ public class PachinkoOverlay : MonoBehaviour
                 f.img.rectTransform.anchoredPosition = new Vector2(f.pos.x, -f.pos.y);
                 float sz = f.size * (f.kind == 1 ? Mathf.Lerp(1f, 0.5f, k01) : 1f);
                 float spd = f.vel.magnitude;
-                f.img.sprite = null;   // 둥근 빛구슬 대신 속도 방향의 가는 불똥
-                f.img.rectTransform.sizeDelta = new Vector2(sz, f.kind == 0 ? 24f : Mathf.Clamp(spd * 0.045f, 6f, 26f));
-                f.img.rectTransform.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(-f.vel.y, f.vel.x) * Mathf.Rad2Deg - 90f);
+                if (f.spark != null && f.kind == 1)
+                {   // blender 불똥 그림(날카로운 별빛·파편)
+                    f.img.sprite = f.spark;
+                    float ss = Mathf.Lerp(46f, 18f, k01) * (f.size / 3.5f);
+                    f.img.rectTransform.sizeDelta = new Vector2(ss, ss);
+                    f.img.rectTransform.localRotation = Quaternion.Euler(0f, 0f, f.age * 240f * (f.size - 3f) + f.size * 40f);
+                }
+                else
+                {
+                    f.img.sprite = null;   // 둥근 빛구슬 대신 속도 방향의 가는 불똥
+                    f.img.rectTransform.sizeDelta = new Vector2(sz, f.kind == 0 ? 24f : Mathf.Clamp(spd * 0.045f, 6f, 26f));
+                    f.img.rectTransform.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(-f.vel.y, f.vel.x) * Mathf.Rad2Deg - 90f);
+                }
                 f.img.color = new Color(f.col.r, f.col.g, f.col.b, Mathf.Clamp01(a));
             }
             yield return null;
@@ -1658,6 +1692,18 @@ public class PachinkoOverlay : MonoBehaviour
         }
     }
 
+    /// <summary>blender fx 그림(Resources/Pachinko/Fx/<이름>) — 없으면 null(코드 대체물로 폴백). 파일만 바꾸면 교체된다.</summary>
+    static Sprite FxSpr(string name) => Spr("Fx/" + name);
+
+    Image NewFxImage(Sprite sprite, Color color, Vector2 size)
+    {
+        Image im = Img("fx", fireworkRoot, sprite, color);
+        im.preserveAspect = false;
+        im.rectTransform.anchorMin = im.rectTransform.anchorMax = new Vector2(0f, 1f);
+        im.rectTransform.sizeDelta = size;
+        return im;
+    }
+
     RibbonGraphic NewRibbon(Color c, float w0, float w1, bool both = false)
     {
         RectTransform r = Rt("ribbon", fireworkRoot);
@@ -1695,8 +1741,16 @@ public class PachinkoOverlay : MonoBehaviour
 
     void Tentacles(int count)
     {
+        bool haveArt = FxSpr("kagune_1") != null;
+        var order = new List<int> { 1, 2, 3, 4 };
         for (int i = 0; i < count; i++)
         {
+            if (haveArt)
+            {
+                int pick = order[UnityEngine.Random.Range(0, order.Count)]; order.Remove(pick); if (order.Count == 0) order.AddRange(new[] { 1, 2, 3, 4 });
+                StartCoroutine(KagureImage(pick, i * 0.08f));
+                continue;
+            }
             int edge = UnityEngine.Random.Range(0, 4);
             Vector2 from = edge == 0 ? new Vector2(-40f, UnityEngine.Random.Range(150f, 950f)) : edge == 1 ? new Vector2(1960f, UnityEngine.Random.Range(150f, 950f))
                          : edge == 2 ? new Vector2(UnityEngine.Random.Range(200f, 1700f), 1120f) : new Vector2(UnityEngine.Random.Range(200f, 1700f), -40f);
@@ -1705,9 +1759,60 @@ public class PachinkoOverlay : MonoBehaviour
         }
     }
 
+    /// <summary>blender 카구네 그림: 1·2 아래 왼/오른쪽 · 3 왼쪽 가장자리 · 4 아래 가운데 — 가장자리에서 휘감아 들어왔다 빠진다.</summary>
+    IEnumerator KagureImage(int variant, float delay)
+    {
+        if (delay > 0f) yield return Wait(delay);
+        Sprite sp = FxSpr("kagune_" + variant);
+        if (sp == null) yield break;
+        float h = 1080f * 1.05f, w = h * 0.5f;   // 1024×2048 비율
+        bool mirror = UnityEngine.Random.value < 0.5f;
+        Image im = NewFxImage(sp, new Color(1f, 1f, 1f, 0.96f), new Vector2(w, h));
+        Vector2 home, away;   // 화면 좌표(왼쪽 위 원점), 이미지 중심
+        switch (variant)
+        {
+            case 1: home = new Vector2(w * 0.5f - 40f, 1080f - h * 0.5f + 60f); away = home + new Vector2(0f, h * 0.7f); break;
+            case 2: home = new Vector2(1920f - w * 0.5f + 40f, 1080f - h * 0.5f + 60f); away = home + new Vector2(0f, h * 0.7f); break;
+            case 3: home = new Vector2(w * 0.5f - 60f, 540f); away = home + new Vector2(-w, 0f); break;
+            default: home = new Vector2(960f, 1080f - h * 0.5f + 80f); away = home + new Vector2(0f, h * 0.7f); break;
+        }
+        if (mirror && variant != 4) { home.x = 1920f - home.x; away.x = 1920f - away.x; im.rectTransform.localScale = new Vector3(-1f, 1f, 1f); }
+        const float total = 0.75f;
+        float t = 0f;
+        while (t < total)
+        {
+            t += Dt; float u = t / total;
+            float k = u < 0.4f ? Mathf.SmoothStep(0f, 1f, u / 0.4f) : (u < 0.6f ? 1f : 1f - Mathf.SmoothStep(0f, 1f, (u - 0.6f) / 0.4f));
+            Vector2 pos = Vector2.Lerp(away, home, k) + new Vector2(Mathf.Sin(t * 22f) * 6f, 0f) * k;   // 꿈틀
+            im.rectTransform.anchoredPosition = new Vector2(pos.x, -pos.y);
+            yield return null;
+        }
+        Destroy(im.gameObject);
+    }
+
     /// <summary>먹/피 붓 획 베기: 대각선으로 한 번 쓱.</summary>
     IEnumerator BrushSlash(bool leftToRight)
     {
+        string[] names = { "brush_ink", "brush_blood", "brush_ink_red" };
+        Sprite bs = FxSpr(names[UnityEngine.Random.Range(0, names.Length)]);
+        if (bs != null)
+        {
+            Image im = NewFxImage(bs, Color.white, new Vector2(2300f, 575f));
+            im.type = Image.Type.Filled; im.fillMethod = Image.FillMethod.Horizontal; im.fillOrigin = leftToRight ? 0 : 1; im.fillAmount = 0f;
+            im.rectTransform.anchoredPosition = new Vector2(960f, -540f);
+            im.rectTransform.localRotation = Quaternion.Euler(0, 0, UnityEngine.Random.Range(-28f, 28f));
+            if (!leftToRight) im.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
+            float bt = 0f;
+            while (bt < 0.42f)
+            {
+                bt += Dt; float u = bt / 0.42f;
+                im.fillAmount = Mathf.Clamp01(u / 0.25f);   // 쓱
+                im.color = new Color(1f, 1f, 1f, u < 0.5f ? 1f : 1f - (u - 0.5f) / 0.5f);
+                yield return null;
+            }
+            Destroy(im.gameObject);
+            yield break;
+        }
         Vector2 a = leftToRight ? new Vector2(-80f, 90f) : new Vector2(2000f, 90f), b = leftToRight ? new Vector2(2000f, 1000f) : new Vector2(-80f, 1000f);
         RibbonGraphic ink = NewRibbon(new Color(0.02f, 0.01f, 0.02f, 0.95f), 150f, 0f, true), edge = NewRibbon(new Color(0.9f, 0.05f, 0.1f, 0.95f), 16f, 0f, true);
         const int N = 22;
@@ -1741,6 +1846,23 @@ public class PachinkoOverlay : MonoBehaviour
     /// <summary>리제로: 시계 톱니가 짧게 돌고(사망 귀환) 보라 나비가 흩어진다.</summary>
     IEnumerator GearFx(float seconds)
     {
+        Sprite emblem = FxSpr("clock_emblem");
+        if (emblem != null)
+        {
+            Image em = NewFxImage(emblem, new Color(1f, 1f, 1f, 0.9f), new Vector2(900f, 900f));
+            em.rectTransform.anchoredPosition = new Vector2(960f, -540f);
+            float gt = 0f;
+            while (gt < seconds)
+            {
+                gt += Dt; float u = gt / seconds;
+                em.rectTransform.localScale = Vector3.one * Mathf.Lerp(0.7f, 1.12f, u);
+                em.rectTransform.localRotation = Quaternion.Euler(0, 0, -u * 220f);
+                em.color = new Color(1f, 1f, 1f, 0.9f * (1f - u * u));
+                yield return null;
+            }
+            Destroy(em.gameObject);
+            yield break;
+        }
         RectTransform g = Rt("gear", fireworkRoot); Place(g, 960 - 400, 540 - 400, 800, 800);
         var parts = new List<Image>();
         Color c = new Color(0.78f, 0.7f, 1f, 0.9f);
@@ -1774,6 +1896,36 @@ public class PachinkoOverlay : MonoBehaviour
 
     IEnumerator Butterflies(int count, float seconds)
     {
+        Sprite[] frames = { FxSpr("butterfly_0"), FxSpr("butterfly_1"), FxSpr("butterfly_2"), FxSpr("butterfly_3") };
+        if (frames[0] != null)
+        {
+            var bf = new List<(Image im, Vector2 pos, Vector2 vel, float phase, float size)>();
+            for (int i = 0; i < count; i++)
+            {
+                float sz = UnityEngine.Random.Range(90f, 170f);
+                Image im = NewFxImage(frames[0], Color.white, new Vector2(sz, sz));
+                bf.Add((im, new Vector2(UnityEngine.Random.Range(560f, 1360f), UnityEngine.Random.Range(560f, 900f)),
+                        new Vector2(UnityEngine.Random.Range(-160f, 160f), UnityEngine.Random.Range(-260f, -90f)), UnityEngine.Random.Range(0f, 6f), sz));
+            }
+            float bt = 0f;
+            while (bt < seconds)
+            {
+                bt += Dt; float u = bt / seconds;
+                for (int i = 0; i < bf.Count; i++)
+                {
+                    var b = bf[i];
+                    b.pos += b.vel * Dt; b.pos.x += Mathf.Sin(bt * 3f + b.phase) * 60f * Dt; bf[i] = b;
+                    int fr = (int)((bt * 12f + b.phase) % 4f);
+                    b.im.sprite = frames[Mathf.Clamp(fr, 0, 3)] ?? frames[0];
+                    b.im.rectTransform.anchoredPosition = new Vector2(b.pos.x, -b.pos.y);
+                    b.im.rectTransform.localRotation = Quaternion.Euler(0, 0, Mathf.Sin(bt * 2f + b.phase) * 18f);
+                    b.im.color = new Color(1f, 1f, 1f, Mathf.Clamp01(1f - u * u));
+                }
+                yield return null;
+            }
+            foreach (var b in bf) if (b.im != null) Destroy(b.im.gameObject);
+            yield break;
+        }
         var live = new List<(ButterflyGraphic g, Vector2 pos, Vector2 vel, float phase)>();
         for (int i = 0; i < count; i++)
         {
