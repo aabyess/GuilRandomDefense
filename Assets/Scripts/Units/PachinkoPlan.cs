@@ -14,11 +14,11 @@ public static class PachinkoSettings
     /// <summary>이 라운드 보스를 잡는 순간 한 번(판당 1회).</summary>
     public const int TriggerRound = 30;
     /// <summary>777 = 랜덤유닛 직접 지급.</summary>
-    public const float JackpotChance = 0.05f;
+    public const float JackpotChance = 0.20f;
     /// <summary>7을 뺀 세 같은 숫자 = 전설·히든 위습.</summary>
-    public const float WinChance = 0.20f;
-    /// <summary>리치(3▢3)만 걸렸다 빗나감 = 희귀함 위습. 나머지(1-JackpotChance-WinChance-이 값 = 40%)는 그냥 꽝 = 특별함 위습.</summary>
-    public const float ReachMissChance = 0.35f;
+    public const float WinChance = 0.40f;
+    /// <summary>리치(3▢3)만 걸렸다 빗나감 = 희귀함 위습. 나머지(1-JackpotChance-WinChance-이 값 = 20%)는 그냥 꽝 = 특별함 위습.</summary>
+    public const float ReachMissChance = 0.20f;
     /// <summary>자기 PUSH 시간(초) — 각자 자기 버튼, 이 안에 한 번 누르면 자기 줄만 정지, 안 누르면 끝에 자동.</summary>
     public const float PushSeconds = 5f;
     public const int WispCountPerPlayer = 1;
