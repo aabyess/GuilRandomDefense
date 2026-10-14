@@ -17,7 +17,7 @@ public enum NavigationChoice
     Hegemon,       // 패왕의길 — A11S 강화코드 레벨 +2(DamageLevelFixedState 경유)
     // 연합세력 — 2026-09-07 배선 완료(PM 지시). RewardDistributor.GrantUnionWispIfEligible
     // (UnitSpawner.Spawn에서 호출)이 원작 Trig_UnitJohabCounter_Actions를 재현한다 —
-    // 유닛 등급 Tier()>=Superior(포인트값>100 근사) + 이 항법 선택 시 랜덤위습(e0IX,
+    // 유닛 등급 Tier()>=Superior=전설·히든 이상(원작 PV>100: 희귀함 90 제외, 전설·히든 101~. 10-14 GameHud 문구 「특별함 이상」은 오기라 정정) + 이 항법 선택 시 랜덤위습(e0IX,
     // Wisp_랜덤유닛.asset — 라운드 보상 위습과 같은 것) 1기. RewardDistributor.unionWisp는 MapGenerator가 배선한다.
     // 🔴 09-27 정정(GAP 5번): 예전엔 e0IX를 Wisp_흔함.asset으로 적었는데 그건 흔함 선택 칸으로 가는 다른 위습이다.
     Union,
