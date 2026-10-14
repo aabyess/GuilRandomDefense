@@ -299,6 +299,12 @@ public class SelectionManager : MonoBehaviour
         if (WorldPick.TryHit(cam, Mouse.current.position.ReadValue(), out RaycastHit hit))
         {
             hit.collider.TryGetComponent(out hitSelectable);
+            // 상점 건물에 맞았어도 커서 둘레에 유닛이 보이면 유닛을 고른다(드래그 선택과 같은 「유닛 우선」, 사장님 10-14) — 유닛 콜라이더가 몸보다 가늘어 광선이 비껴 건물에 맞는 경우.
+            if (hitSelectable != null && hitSelectable.TryGetComponent(out ILaneShop _))
+            {
+                Selectable near = WorldPick.NearestUnitOnScreen(cam, Mouse.current.position.ReadValue(), 48f * Mathf.Max(1f, Screen.height / 1080f));
+                if (near != null) hitSelectable = near;
+            }
             // 위습이 칸마다 같은 자리에 겹쳐 나온다(사장님 10-08) — 맨 위가 남의 것이어도 같은 자리의 「내 것(또는 공유 받은 것)」을 우선 고른다.
             if (hitSelectable != null && !AllianceShare.CanControlLocal(hitSelectable.gameObject) && WorldPick.TryHitControllable(cam, Mouse.current.position.ReadValue(), hit.distance, out RaycastHit mine))
             {

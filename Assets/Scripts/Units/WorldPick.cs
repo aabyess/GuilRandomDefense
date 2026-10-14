@@ -45,17 +45,34 @@ public static class WorldPick
         return best;
     }
 
-    // 이번 광선이 맞은 상점 상자 중 하나가 이 점을 품고 있는가(상자의 넉넉한 여유 안에 선 유닛).
-    static bool InsideAnyShopBox(int count, Vector3 center, Vector3 point)
+    /// <summary>
+    /// 커서 둘레 <paramref name="pixels"/> 안에 화면으로 보이는 유닛·위습이 있으면 가장 가까운 것(발·몸 한가운데 중 가까운 쪽 기준). 없으면 null.
+    /// 단일 클릭이 상점 건물에 먼저 맞았을 때 드래그 선택처럼 유닛을 우선하려고 쓴다(사장님 10-14 「드래그는 유닛이 잡히는데 단일 클릭은 건물」).
+    /// </summary>
+    public static Selectable NearestUnitOnScreen(Camera cam, Vector2 screenPosition, float pixels)
     {
-        for (int i = 0; i < count; i++)
+        if (cam == null) return null;
+        Selectable best = null; float bestSqr = pixels * pixels; bool bestMine = false;
+        foreach (Selectable s in Selectable.All)
         {
-            Collider c = hits[i].collider;
-            if (!c.TryGetComponent(out ILaneShop _)) continue;
-            Bounds b = c.bounds;
-            if (b.Contains(center) || b.Contains(point)) return true;
+            if (s == null || !s.gameObject.activeInHierarchy) continue;
+            if (!s.TryGetComponent(out UnitIdentity _) && !s.TryGetComponent(out Wisp _)) continue;
+            Vector3 foot = cam.WorldToScreenPoint(s.transform.position);
+            if (foot.z <= 0f) continue;
+            float d = ((Vector2)foot - screenPosition).sqrMagnitude;
+            Collider c = s.GetComponentInChildren<Collider>();
+            if (c != null)
+            {
+                Vector3 mid = cam.WorldToScreenPoint(c.bounds.center);
+                if (mid.z > 0f) d = Mathf.Min(d, ((Vector2)mid - screenPosition).sqrMagnitude);
+            }
+            if (d > bestSqr) continue;
+            bool mine = AllianceShare.CanControlLocal(s.gameObject);
+            if (best != null && bestMine && !mine) continue;          // 내가 조종할 수 있는 것을 우선
+            if (best != null && bestMine == mine && d >= bestSqr) continue;
+            best = s; bestSqr = d; bestMine = mine;
         }
-        return false;
+        return best;
     }
 
     public static bool TryHit(Camera cam, Vector2 screenPosition, out RaycastHit hit)
@@ -69,13 +86,14 @@ public static class WorldPick
         // 첫 적중이 상점 상자인데 그 상자 안쪽에 서 있는 유닛(선택 가능·상점 아님)이 같은 광선에 맞으면 유닛을 우선한다.
         if (hit.collider.TryGetComponent(out ILaneShop _))
         {
+            // 사장님 10-14 재제보 「흔함 칸 왼쪽 유닛을 눌러도 건물이 눌린다」 — 선택 가능한 유닛이 광선에 하나라도 맞으면 상점보다 유닛이 먼저다(상점은 유닛이 안 맞을 때만).
             int count = Physics.RaycastNonAlloc(cam.ScreenPointToRay(screenPosition), hits, Mathf.Infinity, ~0, QueryTriggerInteraction.Collide);
             float bestDistance = float.MaxValue;
             for (int i = 0; i < count; i++)
             {
                 Collider c = hits[i].collider;
                 if (c.TryGetComponent(out ILaneShop _) || !c.TryGetComponent(out Selectable _)) continue;
-                if (hits[i].distance >= bestDistance || !InsideAnyShopBox(count, c.bounds.center, hits[i].point)) continue;
+                if (hits[i].distance >= bestDistance) continue;
                 bestDistance = hits[i].distance;
                 hit = hits[i];
             }
