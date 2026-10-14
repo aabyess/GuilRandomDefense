@@ -15,6 +15,9 @@ public class CharacterAnimator : MonoBehaviour
     public const string AttackParam = "Attack";
     public const string DieParam = "Die";
     public const string SpellParam = "Spell";   // 원작 스킨 교체(10-09): 스킬 시전 동작
+    // 같은 이름 변형 클립(Attack / Attack 2…, Spell / Spell 2…)을 무작위로 고르는 Int 파라미터(원작 워크3 방식, 10-14). 변형이 둘 이상일 때만 컨트롤러에 있다.
+    public const string AttackVariantParam = "AttackVariant";
+    public const string SpellVariantParam = "SpellVariant";
 
     [SerializeField] Animator animator;
     // 이동 속도를 0~1로 접어 넣는 기준. 이보다 빠르면 전력 이동으로 본다.
@@ -40,7 +43,11 @@ public class CharacterAnimator : MonoBehaviour
     static readonly int DieHash = Animator.StringToHash(DieParam);
     static readonly int SpellHash = Animator.StringToHash(SpellParam);
 
-    bool hasSpeed, hasAttack, hasDie, hasSpell;
+    static readonly int AttackVariantHash = Animator.StringToHash(AttackVariantParam);
+    static readonly int SpellVariantHash = Animator.StringToHash(SpellVariantParam);
+
+    bool hasSpeed, hasAttack, hasDie, hasSpell, hasAttackVariant, hasSpellVariant;
+    int attackVariantCount = 1, spellVariantCount = 1;
     float lastAttackTime = -10f;
 
     void Awake()
@@ -67,7 +74,12 @@ public class CharacterAnimator : MonoBehaviour
             else if (parameter.name == AttackParam) hasAttack = true;
             else if (parameter.name == DieParam) hasDie = true;
             else if (parameter.name == SpellParam) hasSpell = true;
+            else if (parameter.name == AttackVariantParam) hasAttackVariant = true;
+            else if (parameter.name == SpellVariantParam) hasSpellVariant = true;
         }
+        // 변형 개수 = 컨트롤러 클립 중 「Attack」「Attack 2」… 꼴(상태 순서는 컨트롤러가 번호순으로 짠다).
+        if (hasAttackVariant) attackVariantCount = CountVariants("Attack");
+        if (hasSpellVariant) spellVariantCount = CountVariants("Spell");
     }
 
     void Update()
@@ -125,7 +137,8 @@ public class CharacterAnimator : MonoBehaviour
     public void RebindBody(Animator newAnimator)
     {
         animator = newAnimator;
-        hasSpeed = hasAttack = hasDie = hasSpell = false;
+        hasSpeed = hasAttack = hasDie = hasSpell = hasAttackVariant = hasSpellVariant = false;
+        attackVariantCount = spellVariantCount = 1;
         bodyHeight = MeasureBodyHeight();
         CacheParameters();
     }
@@ -134,7 +147,11 @@ public class CharacterAnimator : MonoBehaviour
     public void PlayAttack()
     {
         lastAttackTime = Time.time;
-        if (animator != null && hasAttack) animator.SetTrigger(AttackHash);
+        if (animator != null && hasAttack)
+        {
+            if (hasAttackVariant && attackVariantCount > 1) animator.SetInteger(AttackVariantHash, Random.Range(0, attackVariantCount));
+            animator.SetTrigger(AttackHash);
+        }
         AttackPlayed?.Invoke(); // MP
     }
 
@@ -146,7 +163,20 @@ public class CharacterAnimator : MonoBehaviour
     public void PlaySpell()
     {
         if (animator == null || !hasSpell || Time.time - lastAttackTime < 0.45f) return;
+        if (hasSpellVariant && spellVariantCount > 1) animator.SetInteger(SpellVariantHash, Random.Range(0, spellVariantCount));
         animator.SetTrigger(SpellHash);
+    }
+
+    int CountVariants(string word)
+    {
+        var names = new System.Collections.Generic.HashSet<string>();
+        foreach (AnimationClip c in animator.runtimeAnimatorController.animationClips)
+        {
+            string n = c.name;
+            if (n == word) names.Add(n);
+            else if (n.StartsWith(word + " ") && int.TryParse(n.Substring(word.Length + 1), out _)) names.Add(n);
+        }
+        return Mathf.Max(1, names.Count);
     }
 
     /// <summary>죽을 때 부른다. 오브젝트가 바로 파괴되면 재생될 틈이 없으니, 죽음 처리보다 먼저 부를 것.</summary>

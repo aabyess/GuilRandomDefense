@@ -1624,6 +1624,11 @@ public static class ArtBinder
     {
         string modelPath = AssetDatabase.GetAssetPath(
             PrefabUtility.GetCorrespondingObjectFromSource(visual) ?? (Object)visual);
+        return CreateOwnClipController(modelPath);
+    }
+
+    static AnimatorController CreateOwnClipController(string modelPath)
+    {
         if (string.IsNullOrEmpty(modelPath)) return null;
 
         List<AnimationClip> clips = AssetDatabase.LoadAllAssetsAtPath(modelPath)
@@ -1685,37 +1690,50 @@ public static class ArtBinder
             toIdle.AddCondition(AnimatorConditionMode.Less, 0.05f, CharacterAnimator.SpeedParam);
         }
 
-        if (attack != null)
+        // 같은 이름 변형(Attack / Attack 2 / Attack 3…, Spell / Spell 2…)은 원작 워크3처럼 무작위로 고른다 — CharacterAnimator가
+        // 변형 개수만큼 0..n-1을 AttackVariant/SpellVariant에 쓰고 트리거를 건다. 상태 이름 = 클립 이름이라 SkinClipHider(클립 이름)와 맞는다.
+        List<AnimationClip> attackVariants = VariantClips(clips, "Attack", attack);
+        if (attackVariants.Count > 0)
         {
             made.AddParameter(CharacterAnimator.AttackParam, AnimatorControllerParameterType.Trigger);
+            if (attackVariants.Count > 1) made.AddParameter(CharacterAnimator.AttackVariantParam, AnimatorControllerParameterType.Int);
+            for (int k = 0; k < attackVariants.Count; k++)
+            {
+                AnimatorState attackState = machine.AddState(attackVariants[k].name);
+                attackState.motion = attackVariants[k];
+                attackState.speed = attackSpeed;
 
-            AnimatorState attackState = machine.AddState("Attack");
-            attackState.motion = attack;
-            attackState.speed = attackSpeed;
+                AnimatorStateTransition enter = machine.AddAnyStateTransition(attackState);
+                enter.hasExitTime = false;
+                enter.duration = 0.05f;
+                enter.canTransitionToSelf = false;
+                enter.AddCondition(AnimatorConditionMode.If, 0f, CharacterAnimator.AttackParam);
+                if (attackVariants.Count > 1) enter.AddCondition(AnimatorConditionMode.Equals, k, CharacterAnimator.AttackVariantParam);
 
-            AnimatorStateTransition enter = machine.AddAnyStateTransition(attackState);
-            enter.hasExitTime = false;
-            enter.duration = 0.05f;
-            enter.canTransitionToSelf = false;
-            enter.AddCondition(AnimatorConditionMode.If, 0f, CharacterAnimator.AttackParam);
-
-            // 공격은 한 번 재생하고 돌아온다 — 안 돌려보내면 그 자세로 굳는다.
-            AnimatorStateTransition exit = attackState.AddTransition(idleState);
-            exit.hasExitTime = true;
-            exit.exitTime = 0.9f;
-            exit.duration = 0.1f;
+                // 공격은 한 번 재생하고 돌아온다 — 안 돌려보내면 그 자세로 굳는다.
+                AnimatorStateTransition exit = attackState.AddTransition(idleState);
+                exit.hasExitTime = true;
+                exit.exitTime = 0.9f;
+                exit.duration = 0.1f;
+            }
         }
 
-        if (spell != null)
+        List<AnimationClip> spellVariants = VariantClips(clips, "Spell", spell);
+        if (spellVariants.Count > 0)
         {
             made.AddParameter(CharacterAnimator.SpellParam, AnimatorControllerParameterType.Trigger);
-            AnimatorState spellState = machine.AddState("Spell");
-            spellState.motion = spell;
-            AnimatorStateTransition enterSpell = machine.AddAnyStateTransition(spellState);
-            enterSpell.hasExitTime = false; enterSpell.duration = 0.05f; enterSpell.canTransitionToSelf = false;
-            enterSpell.AddCondition(AnimatorConditionMode.If, 0f, CharacterAnimator.SpellParam);
-            AnimatorStateTransition exitSpell = spellState.AddTransition(idleState);
-            exitSpell.hasExitTime = true; exitSpell.exitTime = 0.9f; exitSpell.duration = 0.1f;
+            if (spellVariants.Count > 1) made.AddParameter(CharacterAnimator.SpellVariantParam, AnimatorControllerParameterType.Int);
+            for (int k = 0; k < spellVariants.Count; k++)
+            {
+                AnimatorState spellState = machine.AddState(spellVariants[k].name);
+                spellState.motion = spellVariants[k];
+                AnimatorStateTransition enterSpell = machine.AddAnyStateTransition(spellState);
+                enterSpell.hasExitTime = false; enterSpell.duration = 0.05f; enterSpell.canTransitionToSelf = false;
+                enterSpell.AddCondition(AnimatorConditionMode.If, 0f, CharacterAnimator.SpellParam);
+                if (spellVariants.Count > 1) enterSpell.AddCondition(AnimatorConditionMode.Equals, k, CharacterAnimator.SpellVariantParam);
+                AnimatorStateTransition exitSpell = spellState.AddTransition(idleState);
+                exitSpell.hasExitTime = true; exitSpell.exitTime = 0.9f; exitSpell.duration = 0.1f;
+            }
         }
 
         if (death != null)
@@ -1730,6 +1748,40 @@ public static class ArtBinder
 
         EditorUtility.SetDirty(made);
         return made;
+    }
+
+    // 「Attack」「Attack 2」「Attack 3」꼴 변형 클립을 번호순으로(없으면 기본 클립 하나). 변형 번호는 컨트롤러 안 순서(0..n-1)다.
+    static List<AnimationClip> VariantClips(List<AnimationClip> clips, string word, AnimationClip fallback)
+    {
+        var rx = new Regex("^" + word + "( \\d+)?$", RegexOptions.IgnoreCase);
+        var list = clips.Where(c => rx.IsMatch(c.name))
+            .OrderBy(c => { Match m = Regex.Match(c.name, "(\\d+)$"); return m.Success ? int.Parse(m.Groups[1].Value) : 0; })
+            .GroupBy(c => c.name).Select(g => g.First()).ToList();
+        if (list.Count == 0 && fallback != null) list.Add(fallback);
+        return list;
+    }
+
+    public static string RebuildOwnControllersAll()
+    {
+        string list = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "GRD_skin_swap/교체목록.csv");
+        var sb = new System.Text.StringBuilder();
+        foreach (string line in System.IO.File.ReadAllLines(list).Skip(1))
+        {
+            string[] c = line.Split(',');
+            if (c.Length > 1 && c[1].Trim().Length > 0) sb.AppendLine(RebuildOwnControllers(c[1].Trim()));
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>자체 컨트롤러만 다시 짠다(프리팹·SkinClipHider는 그대로). call ArtBinder.RebuildOwnControllersAll — 교체 스킨 로스터 전부.</summary>
+    public static string RebuildOwnControllers(string roster)
+    {
+        var unit = AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{roster}.asset");
+        if (unit == null || unit.prefab == null) return $"❌ {roster}: 프리팹 없음";
+        AnimatorController c = CreateOwnClipController($"Assets/Art/Units/{roster}/{roster}.fbx");
+        if (c == null) return $"❌ {roster}: 컨트롤러 못 지음";
+        AssetDatabase.SaveAssets();
+        return $"✅ {roster}: " + string.Join(", ", c.layers[0].stateMachine.states.Select(x => x.state.name));
     }
 
     // 원작 스킨 교체(10-09): 우리 평타는 시작하자마자 피해가 들어가므로, 원작 공격 모션의 타격 시점(clip_map.json hit.attackHitSec)이
