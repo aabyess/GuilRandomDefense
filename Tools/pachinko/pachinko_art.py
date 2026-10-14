@@ -83,6 +83,7 @@ LOGOS = {  # 파일 · 글자 · 폰트px · 그라데이션 · 글로우 · 외
     "keizoku": ("継続", 480, [(0, "#ffffff"), (.55, "#f1f1f1"), (1, "#ffd23f")], "#ffffff", "#000000"),
     "fukkatsu": ("復活!!", 380, [(0, "#ffffff"), (.5, "#ffe6a0"), (1, "#ff6aa8")], "#ff1f6b", "#3a0010"),
     "gekiatsu": ("激アツ", 420, [(0, "#fffbe0"), (.3, "#ffd23f"), (.62, "#ff4f2d"), (1, "#c3001e")], "#ff1f4b", "#3a0006"),
+    "atari": ("当たり!", 330, [(0, "#fff6c0"), (.4, "#ffd23f"), (.72, "#ffa000"), (1, "#e06000")], "#ff9d00", "#4a1c00"),
     "zannen": ("ざんねん", 330, [(0, "#f4eefb"), (.55, "#cfc3dc"), (1, "#7b6a96")], "#6b4dff", "#1a0f2a"),
 }
 for key, (txt, px, st, glow, stroke) in LOGOS.items():
@@ -166,6 +167,76 @@ json.dump(dict(canvas=[1920, 1080], machine=dict(x=X0, y=Y0, w=MW, h=MH), reels=
                marquee=dict(x=MX0, y=MY0, w=MX1 - MX0, h=MY1 - MY0), holds=holds, bulbs=bulbs,
                note="reels = 투명 구멍(릴 이미지를 틀 뒤에 깔면 이 칸으로 보임). 숫자 심볼은 릴 폭에 맞춰 줄이면 됨(512 정사각). bulbs=전구 자리 중심점(점멸은 구현 쪽)"),
           open(OUT + "/machine_layout.json", "w"), ensure_ascii=False, indent=1)
+
+# ── 추가분(10-14): PUSH 버튼 2장 · SPACE 키캡 · 보상 띠 ──
+os.makedirs(OUT + "/ui", exist_ok=True)
+def radial(size, c_in, c_out, center=(.4, .3)):
+    w, h = size; im = Image.new("RGB", size); px = im.load(); a, b = hexc(c_in), hexc(c_out)
+    cx, cy = center[0] * w, center[1] * h; mx = math.hypot(max(cx, w - cx), max(cy, h - cy))
+    for y in range(h):
+        for x in range(w):
+            t = min(1, math.hypot(x - cx, y - cy) / mx); px[x, y] = tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
+    return im
+def push_button(pressed):
+    S2 = 2; W = 512 * S2; im = Image.new("RGBA", (W, W), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    cx = W // 2; r = 168 * S2; dy = 22 * S2 if pressed else 0
+    # 바닥 그림자 · 몸통 옆면(눌리면 옆면이 거의 없음)
+    sh = Image.new("L", (W, W), 0); ImageDraw.Draw(sh).ellipse([cx - r - 20 * S2, cx + 150 * S2, cx + r + 20 * S2, cx + 232 * S2], fill=170)
+    shim = Image.new("RGBA", (W, W), (0, 0, 0, 255)); shim.putalpha(sh.filter(ImageFilter.GaussianBlur(14 * S2))); im.alpha_composite(shim)
+    # 금·흰·어두운 테두리 고리
+    for rad, col in ((r + 56 * S2, (42, 18, 0, 255)), (r + 44 * S2, (255, 210, 63, 255)), (r + 30 * S2, (255, 255, 255, 255)), (r + 18 * S2, (42, 18, 0, 255))):
+        d.ellipse([cx - rad, cx - rad + 30 * S2, cx + rad, cx + rad + 30 * S2], fill=col)
+    side_h = (4 if pressed else 28) * S2
+    for k in range(side_h, 0, -1):
+        d.ellipse([cx - r, cx - r + 30 * S2 - 0 + k - 22 * S2 + dy, cx + r, cx + r + 30 * S2 + k - 22 * S2 + dy], fill=(74, 0, 12, 255))
+    top_box = [cx - r, cx - r + 30 * S2 - 22 * S2 + dy, cx + r, cx + r + 30 * S2 - 22 * S2 + dy]
+    face = radial((2 * r, 2 * r), "#ff9ab0" if not pressed else "#ff6a85", "#7a0016" if not pressed else "#5a0010").convert("RGBA")
+    m = Image.new("L", (2 * r, 2 * r), 0); ImageDraw.Draw(m).ellipse([0, 0, 2 * r - 1, 2 * r - 1], fill=255); face.putalpha(m)
+    im.alpha_composite(face, (top_box[0], top_box[1]))
+    # 윗면 하이라이트
+    hi = Image.new("L", (W, W), 0); ImageDraw.Draw(hi).ellipse([cx - r * .72, top_box[1] + r * .08, cx + r * .72, top_box[1] + r * .78], fill=110)
+    hm = Image.new("RGBA", (W, W), (255, 255, 255, 255)); hm.putalpha(hi.filter(ImageFilter.GaussianBlur(10 * S2))); im.alpha_composite(hm)
+    im = im.resize((512, 512), Image.LANCZOS)
+    t = fat_text("PUSH!", (512, 512), 92, [(0, "#ffffff"), (.5, "#fff0f4"), (1, "#ffb0c4")], 5, 5, stroke=(74, 0, 12, 255))
+    off = (0, (6 if pressed else -2) + (22 // 2 if pressed else 0))
+    im.alpha_composite(t, (0, 4 + (11 if pressed else 0)))
+    return im
+push_button(False).save(OUT + "/ui/push_button_normal.png"); push_button(True).save(OUT + "/ui/push_button_pressed.png")
+def keycap():
+    S2 = 2; W, H = 1024 * S2, 460 * S2; im = Image.new("RGBA", (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    X0, Y0, X1, Y1 = 40 * S2, 30 * S2, W - 40 * S2, H - 90 * S2
+    sh = Image.new("L", (W, H), 0); ImageDraw.Draw(sh).rounded_rectangle([X0, Y0 + 70 * S2, X1, Y1 + 80 * S2], 50 * S2, fill=170)
+    sm = Image.new("RGBA", (W, H), (0, 0, 0, 255)); sm.putalpha(sh.filter(ImageFilter.GaussianBlur(16 * S2))); im.alpha_composite(sm)
+    d.rounded_rectangle([X0, Y0 + 20 * S2, X1, Y1 + 60 * S2], 50 * S2, fill=(120, 124, 140, 255))              # 옆면(회색 그림자)
+    d.rounded_rectangle([X0, Y0 + 8 * S2, X1, Y1 + 40 * S2], 50 * S2, fill=(188, 192, 206, 255))
+    d.rounded_rectangle([X0, Y0, X1, Y1 + 24 * S2], 50 * S2, fill=(42, 18, 0, 255))                          # 검은 외곽선
+    d.rounded_rectangle([X0 + 5 * S2, Y0 + 5 * S2, X1 - 5 * S2, Y1 + 19 * S2], 46 * S2, fill=(250, 250, 252, 255))
+    d.rounded_rectangle([X0 + 34 * S2, Y0 + 26 * S2, X1 - 34 * S2, Y1 - 4 * S2], 34 * S2, fill=(255, 255, 255, 255), outline=(222, 226, 236, 255), width=4 * S2)  # 오목 윗면
+    im = im.resize((1024, 460), Image.LANCZOS)
+    t = fat_text("SPACE", (1024, 460), 190, [(0, "#4a5060"), (1, "#1c202c")], 0, 4, stroke=(255, 255, 255, 255), gloss=False)
+    im.alpha_composite(t.crop((0, 0, 1024, 460)), (0, -34))
+    return im
+keycap().save(OUT + "/ui/keycap_space.png")
+def reward_band():
+    S2 = 2; W, H = 1536 * S2, 240 * S2; m = Image.new("L", (W, H), 0); ImageDraw.Draw(m).rounded_rectangle([20 * S2, 20 * S2, W - 20 * S2, H - 20 * S2], 100 * S2, fill=255)
+    im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    g = Image.new("L", (W, H), 0); ImageDraw.Draw(g).rounded_rectangle([14 * S2, 14 * S2, W - 14 * S2, H - 14 * S2], 106 * S2, fill=255)
+    gl = Image.new("RGBA", (W, H), (255, 31, 107, 255)); gl.putalpha(g.filter(ImageFilter.GaussianBlur(14 * S2)).point(lambda v: v * 200 // 255)); im.alpha_composite(gl)
+    outer = Image.new("RGBA", (W, H), (255, 255, 255, 255)); om = Image.new("L", (W, H), 0); ImageDraw.Draw(om).rounded_rectangle([14 * S2, 14 * S2, W - 14 * S2, H - 14 * S2], 106 * S2, fill=255); outer.putalpha(om); im.alpha_composite(outer)
+    gold = Image.new("RGBA", (W, H), (255, 210, 63, 255)); gm = Image.new("L", (W, H), 0); ImageDraw.Draw(gm).rounded_rectangle([20 * S2, 20 * S2, W - 20 * S2, H - 20 * S2], 100 * S2, fill=255); gold.putalpha(gm); im.alpha_composite(gold)
+    # 가로 그라데이션 금 → 분홍 → 보라
+    stops = [(0, "#ff9d00"), (.35, "#ff1f6b"), (.7, "#9b4dff"), (1, "#7b2cff")]
+    gh = Image.new("RGB", (W, 1)); px = gh.load()
+    for x in range(W):
+        t = x / (W - 1)
+        for (p0, c0), (p1, c1) in zip(stops, stops[1:]):
+            if p0 <= t <= p1:
+                u = (t - p0) / (p1 - p0); a, b = hexc(c0), hexc(c1); px[x, 0] = tuple(int(a[i] + (b[i] - a[i]) * u) for i in range(3)); break
+    body = gh.resize((W, H)).convert("RGBA"); bm = Image.new("L", (W, H), 0); ImageDraw.Draw(bm).rounded_rectangle([34 * S2, 34 * S2, W - 34 * S2, H - 34 * S2], 86 * S2, fill=255); body.putalpha(bm); im.alpha_composite(body)
+    hl = Image.new("L", (W, H), 0); ImageDraw.Draw(hl).rounded_rectangle([60 * S2, 42 * S2, W - 60 * S2, 98 * S2], 28 * S2, fill=100)
+    hm = Image.new("RGBA", (W, H), (255, 255, 255, 255)); hm.putalpha(ImageChops.multiply(hl, bm).filter(ImageFilter.GaussianBlur(2 * S2))); im.alpha_composite(hm)
+    return im.resize((1536, 240), Image.LANCZOS)
+reward_band().save(OUT + "/ui/reward_band.png")
 # 시트
 sheet = Image.new("RGB", (1920, 1500), (30, 28, 38)); sd = ImageDraw.Draw(sheet)
 lab = ImageFont.truetype("/System/Library/Fonts/AppleSDGothicNeo.ttc", 22, index=0)
@@ -179,5 +250,10 @@ for key in LOGOS:
     s = Image.open(f"{OUT}/logos/logo_{key}.png"); w = 520; s = s.resize((w, int(s.height * w / s.width))); bg = Image.new("RGB", s.size, (40, 14, 60)); bg.paste(s, (0, 0), s)
     col = list(LOGOS).index(key); sheet.paste(bg, (30 + (col % 3) * 620, y + (col // 3) * 300))
 fr = Image.open(OUT + "/machine_frame_1920x1080.png"); bgf = Image.new("RGB", fr.size, (20, 80, 110)); bgf.paste(fr, (0, 0), fr)
-sheet2 = Image.new("RGB", (1920, 1130 + 540), (30, 28, 38)); sheet2.paste(sheet.crop((0, 0, 1920, 1130)), (0, 0)); sheet2.paste(bgf.resize((960, 540)), (30, 1140))
+sheet2 = Image.new("RGB", (1920, 2040), (30, 28, 38)); sheet2.paste(sheet.crop((0, 0, 1920, 1430)), (0, 0)); sheet2.paste(bgf.resize((960, 540)), (30, 1480))
+x = 1010
+for name, w in (("push_button_normal", 250), ("push_button_pressed", 250), ("keycap_space", 400)):
+    u = Image.open(f"{OUT}/ui/{name}.png"); u = u.resize((w, int(u.height * w / u.width))); bgu = Image.new("RGB", u.size, (40, 14, 60)); bgu.paste(u, (0, 0), u)
+    sheet2.paste(bgu, (x if name != "keycap_space" else 1010, 1490 if name != "keycap_space" else 1710)); x += 260
+rb = Image.open(OUT + "/ui/reward_band.png").resize((880, 138)); bgr = Image.new("RGB", rb.size, (40, 14, 60)); bgr.paste(rb, (0, 0), rb); sheet2.paste(bgr, (1010, 1900))
 sheet2.save(OUT + "/contact_sheet.png"); print("done", OUT)
