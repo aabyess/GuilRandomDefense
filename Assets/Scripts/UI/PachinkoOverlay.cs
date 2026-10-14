@@ -399,7 +399,7 @@ public class PachinkoOverlay : MonoBehaviour
             Place(rb.rectTransform, 24, 1030, 270, 40);
             TMP_Text rl = Label("reduceLabel", rb.transform, "", 24f, Color.white, TextAlignmentOptions.Center);
             Stretch(rl.rectTransform);
-            void Paint() { rl.text = (ReduceFlash ? "☑ " : "☐ ") + "번쩍임 줄이기"; }
+            void Paint() { rl.text = (ReduceFlash ? "[v] " : "[  ] ") + "번쩍임 줄이기"; }
             Paint();
             rb.gameObject.AddComponent<Button>().onClick.AddListener(() => { ReduceFlash = !ReduceFlash; Paint(); });
         }
