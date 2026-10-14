@@ -34,7 +34,7 @@ public static class StaleDollRepair
             {
                 bool hit = false;
                 foreach (Transform c in doll.transform)
-                    foreach (string pre in onlyPrefixes) if (c.name.StartsWith(pre)) hit = true;
+                    foreach (string pre in onlyPrefixes) if (c.name.Normalize(System.Text.NormalizationForm.FormC).StartsWith(pre)) hit = true;
                 if (hit) stale.Add(doll);
                 continue;
             }

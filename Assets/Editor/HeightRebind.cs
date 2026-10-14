@@ -11,7 +11,7 @@ static class HeightRebind
         var sb = new StringBuilder();
         foreach (string dir in System.IO.Directory.GetDirectories("Assets/Art/Units"))
         {
-            string unit = System.IO.Path.GetFileName(dir);
+            string unit = System.IO.Path.GetFileName(dir).Normalize(System.Text.NormalizationForm.FormC);   // 맥 폴더명은 NFD일 수 있다(초월_김경현_AP가 접두 비교에서 빠졌다)
             foreach (string pre in ArtBinder.TranscendImmortalPrefixes)
                 if (unit.StartsWith(pre)) { sb.AppendLine(ArtBinder.BindOneUnit(unit)); break; }
         }
