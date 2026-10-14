@@ -27,7 +27,7 @@ static class ShopClickProbe
             Vector3 toCam = cam.transform.position - sb2.center; toCam.y = 0f; toCam.Normalize();
 
             // ② 건물 몸통: 상자 바닥 가까이 가운데 — 카메라에서 그 점으로
-            Vector3 bodyPoint = sb2.center + Vector3.down * sb2.extents.y * 0.5f;
+            Vector3 bodyPoint = new Vector3(sb2.center.x, sb2.min.y + sb2.size.y * 0.3f, sb2.center.z);
             total++;
             bool shopHit = WorldPick.TryHit(cam, cam.WorldToScreenPoint(bodyPoint), out RaycastHit h2) && h2.collider == box;
             if (shopHit) ok++;

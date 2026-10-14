@@ -45,6 +45,19 @@ public static class WorldPick
         return best;
     }
 
+    // 이번 광선이 맞은 상점 상자 중 하나가 이 점을 품고 있는가(상자의 넉넉한 여유 안에 선 유닛).
+    static bool InsideAnyShopBox(int count, Vector3 center, Vector3 point)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            Collider c = hits[i].collider;
+            if (!c.TryGetComponent(out ILaneShop _)) continue;
+            Bounds b = c.bounds;
+            if (b.Contains(center) || b.Contains(point)) return true;
+        }
+        return false;
+    }
+
     public static bool TryHit(Camera cam, Vector2 screenPosition, out RaycastHit hit)
     {
         hit = default;
@@ -54,17 +67,15 @@ public static class WorldPick
 
         // 레인 상점 건물의 클릭 상자(건물보다 넉넉한 여유)가 앞에 선 흔함 유닛을 가렸다(사장님 10-14 제보) —
         // 첫 적중이 상점 상자인데 그 상자 안쪽에 서 있는 유닛(선택 가능·상점 아님)이 같은 광선에 맞으면 유닛을 우선한다.
-        if (hit.collider.TryGetComponent(out ILaneShop _) && hit.collider is BoxCollider shopBox)
+        if (hit.collider.TryGetComponent(out ILaneShop _))
         {
-            Bounds shopBounds = shopBox.bounds;
-            int count = Physics.RaycastNonAlloc(cam.ScreenPointToRay(screenPosition), hits, hit.distance + shopBounds.size.magnitude, ~0, QueryTriggerInteraction.Collide);
+            int count = Physics.RaycastNonAlloc(cam.ScreenPointToRay(screenPosition), hits, Mathf.Infinity, ~0, QueryTriggerInteraction.Collide);
             float bestDistance = float.MaxValue;
             for (int i = 0; i < count; i++)
             {
                 Collider c = hits[i].collider;
-                if (c == shopBox || c.TryGetComponent(out ILaneShop _) || !c.TryGetComponent(out Selectable unit)) continue;
-                if (!shopBounds.Contains(c.bounds.center) && !shopBounds.Contains(hits[i].point)) continue;
-                if (hits[i].distance >= bestDistance) continue;
+                if (c.TryGetComponent(out ILaneShop _) || !c.TryGetComponent(out Selectable _)) continue;
+                if (hits[i].distance >= bestDistance || !InsideAnyShopBox(count, c.bounds.center, hits[i].point)) continue;
                 bestDistance = hits[i].distance;
                 hit = hits[i];
             }
