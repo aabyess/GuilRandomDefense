@@ -394,6 +394,15 @@ public class PachinkoOverlay : MonoBehaviour
         pushGroup.gameObject.SetActive(false);
 
         // 보상 띠
+        {   // 「번쩍임 줄이기」 토글(켜면 경고 스트로브 끄고 섬광 α 절반)
+            Image rb = Img("reduceFlash", stage, null, new Color(0f, 0f, 0f, 0.4f), true);
+            Place(rb.rectTransform, 24, 1030, 270, 40);
+            TMP_Text rl = Label("reduceLabel", rb.transform, "", 24f, Color.white, TextAlignmentOptions.Center);
+            Stretch(rl.rectTransform);
+            void Paint() { rl.text = (ReduceFlash ? "☑ " : "☐ ") + "번쩍임 줄이기"; }
+            Paint();
+            rb.gameObject.AddComponent<Button>().onClick.AddListener(() => { ReduceFlash = !ReduceFlash; Paint(); });
+        }
         bandRect = Rt("reward", stage); Place(bandRect, 192, 860, 1536, 150);
         bandImage = bandRect.gameObject.AddComponent<Image>(); bandImage.sprite = Spr("UI/reward_band"); bandImage.raycastTarget = false;
         bandText = Label("bandText", bandRect, "", 56f, Color.white, TextAlignmentOptions.Center, 0.2f); Stretch(bandText.rectTransform);
@@ -659,12 +668,20 @@ public class PachinkoOverlay : MonoBehaviour
     // ───────── 릴(숫자 한 줄: 창·바탕 없이 큰 숫자가 세로로 흘러내린다) ─────────
     const float NumberSize = 640f, NumberSpacing = 1100f, ColumnWidth = 900f;   // 가로는 넉넉히(기울기·불꽃이 옆 칸으로 나가도 안 잘림), 세로만 자른다
     static readonly float[] BigX = { 420f, 960f, 1500f };
-    const float BigY = 600f, SmallY = 150f, SmallScale = 0.3f;
-    static readonly float[] SmallX = { 1480f, 1620f, 1760f };
+    const float BigY = 600f, SmallY = 320f, SmallScale = 0.34f;   // 미니 릴: 연출 중에도 위쪽 가운데에 작은 3칸이 항상 보인다(상단 띠 아래)
+    static readonly float[] SmallX = { 730f, 960f, 1190f };
     class Reel
     {
         public float scroll;       // 셀 단위 위치. 정수 = 그 번호가 정가운데
         public bool spinning;
+        public Vector2 punch = Vector2.one;   // 정지 타격(스쿼시) 배율
+        public float emphasis = 1f;           // 리치 강조 배율
+        public float liftT;                   // 가운데 줄: 착지 전까지 조금 작고 위(1) → 제자리(0)
+        public float shakeX;
+        public bool pink;                     // 리치 변형(_pink)
+        public CanvasGroup group;
+        public Image hit;                     // 정지 순간 그 숫자만 흰 섬광
+        public RectTransform Window => window;
         readonly Image[] cells = new Image[3];
         readonly Image[] overlays = new Image[3];
         readonly int index;
@@ -684,8 +701,13 @@ public class PachinkoOverlay : MonoBehaviour
                 overlays[k].rectTransform.anchorMin = Vector2.zero; overlays[k].rectTransform.anchorMax = Vector2.one;
                 overlays[k].rectTransform.offsetMin = overlays[k].rectTransform.offsetMax = Vector2.zero;
             }
+            hit = owner.Img("hit", window, null, new Color(1f, 1f, 1f, 0f));
+            hit.rectTransform.anchorMin = hit.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            hit.rectTransform.sizeDelta = new Vector2(NumberSize, NumberSize);
+            group = window.gameObject.AddComponent<CanvasGroup>();
             Refresh();
         }
+        public Sprite CenterSprite => cells[1].sprite;
         static Sprite SymSpr(string file) => Spr(activeSymbolDir + "/" + file) ?? Spr("Symbols/" + file);   // 테마별 심볼 세트(없으면 도쿄구울 v3로)
         public static int SymbolAt(int index) => ((index % 9) + 9) % 9 + 1;
         public void Refresh()
@@ -699,6 +721,7 @@ public class PachinkoOverlay : MonoBehaviour
                 int fi = (int)(Now * 12f) % 6;
                 bool fire = sym % 2 == 1;   // 홀수(7 금색 포함) = 불꽃 6프레임 / 짝수 = 크리스털(+별빛 2프레임)
                 if (spinning) { cells[k].sprite = SymSpr($"symbol_{sym}_blur"); overlays[k].enabled = false; }
+                else if (pink && SymSpr($"symbol_{sym}_pink") != null) { cells[k].sprite = SymSpr($"symbol_{sym}_pink"); overlays[k].enabled = false; }
                 else if (fire) { cells[k].sprite = SymSpr($"symbol_{sym}_f{fi}") ?? SymSpr($"symbol_{sym}"); overlays[k].enabled = false; }
                 else { cells[k].sprite = SymSpr($"symbol_{sym}"); overlays[k].sprite = SymSpr($"symbol_{sym}_s{(fi / 3) % 2}"); overlays[k].enabled = overlays[k].sprite != null; }
                 cells[k].rectTransform.anchoredPosition = new Vector2(0f, (frac - (k - 1)) * NumberSpacing);
@@ -708,8 +731,10 @@ public class PachinkoOverlay : MonoBehaviour
         public void SetSmall(float t)
         {
             float x = Mathf.Lerp(BigX[index], SmallX[index], t), y = Mathf.Lerp(BigY, SmallY, t);
-            window.anchoredPosition = new Vector2(x, -y);
-            window.localScale = Vector3.one * Mathf.Lerp(1f, SmallScale, t);
+            float lift = liftT * (1f - t);
+            window.anchoredPosition = new Vector2(x + shakeX, -y + 45f * lift);
+            float sc = Mathf.Lerp(1f, SmallScale, t) * emphasis * (1f - 0.1f * lift);
+            window.localScale = new Vector3(sc * punch.x, sc * punch.y, 1f);
         }
         public void Highlight(Color c) { foreach (Image cell in cells) cell.color = c; }
         public IEnumerator Stop(int symbol, float seconds, float speed)
@@ -761,7 +786,11 @@ public class PachinkoOverlay : MonoBehaviour
         raysRect.gameObject.SetActive(false);
         dim.color = new Color(0f, 0f, 0f, 0f); flash.color = new Color(1f, 1f, 1f, 0f);
         foreach (Image o in holdOrbs) { o.color = WhiteC; o.rectTransform.localScale = Vector3.one; }
-        foreach (Reel r in reels) { r.spinning = false; r.Highlight(Color.white); r.Refresh(); }
+        foreach (Reel r in reels) { r.spinning = false; r.Highlight(Color.white); r.pink = false; r.punch = Vector2.one; r.emphasis = 1f; r.liftT = 0f; r.shakeX = 0f; r.group.alpha = 1f; r.hit.color = new Color(1f, 1f, 1f, 0f); r.Refresh(); }
+        winFlashActive = false;
+        if (sharpRays != null) sharpRays.gameObject.SetActive(false);
+        if (lbTop != null) { lbTop.gameObject.SetActive(false); lbBottom.gameObject.SetActive(false); }
+        if (returnFade != null) returnFade.gameObject.SetActive(false);
         numbersSmallT = numbersSmallTarget = 0f;
         foreach (Image p in particlePool) p.gameObject.SetActive(false);
         kanekiRect.gameObject.SetActive(true); kanekiImage.sprite = Spr("Scene/helpme"); kanekiImage.enabled = true; kanekiImage.color = Color.white;
@@ -814,6 +843,7 @@ public class PachinkoOverlay : MonoBehaviour
         curReach = p.reach; reelsCenterHeld = true;
         { int off = UnityEngine.Random.Range(0, 9); for (int ri = 0; ri < 3; ri++) reels[ri].scroll = off + ri * 3; }   // 시작 숫자도 칸마다 다르게
         foreach (Reel r in reels) r.spinning = true;
+        reels[1].liftT = 1f;   // 가운데 줄은 착지 전까지 조금 작고 위
         Play(Slot.ReelSpin);
         videoFileName = BgVideoFile; videoNatural = false;
         StartVideo();   // 룰렛이 돌기 시작하면 배경 영상 15초
@@ -833,6 +863,7 @@ public class PachinkoOverlay : MonoBehaviour
             // 3) リーチ — 1.3초
             Play(Slot.Reach);
             Tentacles(2);   // 카구네 촉수
+            StartCoroutine(ReachEmphasis()); SharpRays(true);
             yield return Pop(logoReach, 1.3f, 3f);
             SetExpect(Mathf.Max(expect, 10));
             if (p.yokoku > 0 || p.bg != PachinkoBg.None || p.cut != PachinkoCut.None) numbersSmallTarget = 1f;   // 연출이 화면을 쓰는 동안 숫자는 작게 오른쪽 위로
@@ -860,7 +891,7 @@ public class PachinkoOverlay : MonoBehaviour
                     Impact(k == 0 ? new Color(0.5f, 1f, 0.7f, 0.5f) : new Color(1f, 0.25f, 0.25f, 0.7f), 0.4f, k >= 1);
                     if (k == 1) StartCoroutine(Embers());
                     chanceText.text = chance[k]; chanceText.color = chanceColor[k]; chanceText.gameObject.SetActive(true);
-                    if (k == 1) Play(Slot.SpStage);
+                    if (k == 1) { Play(Slot.SpStage); StartCoroutine(Letterbox("SP リーチ", "SPECIAL REACH", true)); }
                     SetExpect(Mathf.Max(expect, pct[k]));
                     yield return Wait(0.75f);
                 }
@@ -869,6 +900,7 @@ public class PachinkoOverlay : MonoBehaviour
                 {
                     yield return SpReach(p.bg);
                 }
+                if (lbTop != null && lbTop.gameObject.activeSelf) StartCoroutine(Letterbox("", "", false));
             }
             // 6) 최종 컷인 — 1.6초
             if (p.cut != PachinkoCut.None)
@@ -882,6 +914,7 @@ public class PachinkoOverlay : MonoBehaviour
         while (Now < target) yield return null;
 
         // 7) PUSH — PushSeconds 동안
+        SharpRays(false);
         yield return PushWindow();
         if (pushedWho == int.MinValue)
         {
@@ -898,6 +931,7 @@ public class PachinkoOverlay : MonoBehaviour
         Stop(Slot.PushOpen); Stop(Slot.ReelSpin);
         numbersSmallTarget = 0f;
         reels[1].Highlight(Color.white);
+        if (p.win && !p.revive) yield return WarnStrobe();   // 大当たり 직전 경고 스트로브
         int shown = p.revive ? (p.left % 9) + 1 : p.center;
         float stopDur = p.reach ? 0.9f : 0.6f;
         StopAllSpin();
@@ -920,7 +954,8 @@ public class PachinkoOverlay : MonoBehaviour
         if (p.win)
         {
             if (!p.revive) StartCoroutine(WinPicture());
-            StartCoroutine(ImpactCut(curTheme == 1 ? new Color(0.7f, 0.5f, 1f) : new Color(0.9f, 0.05f, 0.1f))); shakeUntil = Now + 0.4f;
+            StartCoroutine(WinFlashStandard()); StartCoroutine(ImpactCut(curTheme == 1 ? new Color(0.7f, 0.5f, 1f) : new Color(0.9f, 0.05f, 0.1f))); shakeUntil = Now + 0.4f;
+            StartCoroutine(WinGlints(p.ResultSeconds()));
             StartCoroutine(LineFlare(470f, curTheme == 1 ? new Color(0.8f, 0.9f, 1f, 0.9f) : new Color(1f, 0.85f, 0.7f, 0.9f)));
             StartCoroutine(curTheme == 1 ? RzWinFx() : KagureWinFx());
             LoadDefaultSfx(); PlayLine(WinLines[Mathf.Clamp(p.center, 1, 9) - 1]);   // 숫자별 대사(111~999) — 당첨 확정 순간
@@ -929,9 +964,10 @@ public class PachinkoOverlay : MonoBehaviour
             {
                 bgTarget = new Color(0.45f, 0.3f, 0f, 0.92f); bgPulse = 3f;
                 Play(Slot.Ooatari);
-                StartCoroutine(Confetti(5.5f));
+                StartCoroutine(Confetti(Mathf.Max(5.5f, p.ResultSeconds() - 0.4f)));
                 StartCoroutine(Fireworks(true, 0));
-                StartCoroutine(Pop(logoOoatari, 6f, 5f, keep: true));
+                StartCoroutine(Pop(logoOoatari, p.ResultSeconds() + 0.5f, 1.2f, keep: true));
+                StartCoroutine(Later(3.0f, Fireworks(true, curTheme)));
                 ShowBand("大当たり 보상: 랜덤 유닛 ×1");
             }
             else
@@ -939,7 +975,7 @@ public class PachinkoOverlay : MonoBehaviour
                 StartCoroutine(Fireworks(false, 0));
                 bgTarget = new Color(0.45f, 0.3f, 0f, 0.92f);
                 StartCoroutine(PlayFor(Slot.Atari, 6f));
-                StartCoroutine(Pop(logoAtari, 6f, 4f, keep: true));
+                StartCoroutine(Pop(logoAtari, p.ResultSeconds() + 0.5f, 1.2f, keep: true));
                 ShowBand("当たり 보상: 전설·히든 위습 ×1");
             }
         }
@@ -955,12 +991,13 @@ public class PachinkoOverlay : MonoBehaviour
         float until = resultStart + p.ResultSeconds();
         while (Now < until) yield return null;
         if (musicOn) StartCoroutine(MusicFadeOut(1f));   // 보상 띠가 끝나는 순간 1초 페이드아웃 → 게임 BGM 복귀
-        yield return Fade(0.25f);
+        yield return ReturnFade();
         while (VoiceActive() || musicOn) yield return null;   // 대사·음악 페이드는 끝까지
         StopAllSfx();
         StopVideoNow();
         duckTarget = 1f; GameBgm.Duck = 1f;
         root.gameObject.SetActive(false);
+        StartCoroutine(ReturnFadeOut());
         running = null;
     }
 
@@ -976,18 +1013,19 @@ public class PachinkoOverlay : MonoBehaviour
     IEnumerator FlashColor(Color c, float seconds)
     {
         // 흰 섬광은 2~3프레임만(0.06초 이하, α 0.5 이하) — 길게 남기지 않는다
+        if (winFlashActive) yield break;
         float sec = Mathf.Min(seconds, 0.06f);
         float t = 0f; float amax = Mathf.Min(c.a, 0.5f);
-        while (t < sec) { t += Dt; flash.color = new Color(c.r, c.g, c.b, amax * (1f - t / sec)); yield return null; }
-        flash.color = new Color(1f, 1f, 1f, 0f);
+        while (t < sec) { t += Dt; if (winFlashActive) yield break; flash.color = new Color(c.r, c.g, c.b, amax * (1f - t / sec)); yield return null; }
+        if (!winFlashActive) flash.color = new Color(1f, 1f, 1f, 0f);
     }
 
     /// <summary>임팩트 컷(애니 연출): 1~2프레임 흰색 → 1~2프레임 고대비 흑 + 한 색 사선만 남기고 바로 원래대로.</summary>
     IEnumerator ImpactCut(Color accent)
     {
-        flash.color = new Color(1f, 1f, 1f, 0.9f);
+        if (!winFlashActive) flash.color = new Color(1f, 1f, 1f, 0.9f);
         yield return null;
-        flash.color = new Color(0f, 0f, 0f, 0.9f);
+        if (!winFlashActive) flash.color = new Color(0f, 0f, 0f, 0.9f);
         var slashes = new List<RectTransform>();
         for (int i = 0; i < 4; i++)
         {
@@ -1001,7 +1039,7 @@ public class PachinkoOverlay : MonoBehaviour
         }
         yield return null;
         foreach (RectTransform r in slashes) if (r != null) Destroy(r.gameObject);
-        flash.color = new Color(1f, 1f, 1f, 0f);
+        if (!winFlashActive) flash.color = new Color(1f, 1f, 1f, 0f);
     }
 
     /// <summary>아나모픽 줄 플레어: 가로로 가늘고 긴 빛줄기(0.15초, 원형 글로우 금지).</summary>
@@ -1439,6 +1477,7 @@ public class PachinkoOverlay : MonoBehaviour
         curReach = p.reach; reelsCenterHeld = true;
         { int off = UnityEngine.Random.Range(0, 9); for (int ri = 0; ri < 3; ri++) reels[ri].scroll = off + ri * 3; }
         foreach (Reel r in reels) r.spinning = true;
+        reels[1].liftT = 1f;
         videoFileName = p.win ? "rezero_spin_win.mp4" : "rezero_spin_miss.mp4"; videoNatural = true;
         StartVideo();
         if (!p.win) PrepareResultVideo();
@@ -1456,6 +1495,7 @@ public class PachinkoOverlay : MonoBehaviour
             yield return WaitUntilTime(t0 + P * 0.52f + 2.0f);
             reels[1].Highlight(new Color(1f, 0.78f, 0.8f));
             StartCoroutine(GearFx(0.5f));   // 사망 귀환 — 시계 톱니
+            StartCoroutine(ReachEmphasis()); SharpRays(true);
             StartCoroutine(Pop(logoReach, 1.3f, 3f));
             SetExpect(Mathf.Max(expect, 10));
             float next = t0 + P * 0.52f + 3.6f;
@@ -1470,6 +1510,7 @@ public class PachinkoOverlay : MonoBehaviour
             }
         }
         yield return WaitUntilTime(t0 + P);
+        SharpRays(false);
 
         yield return PushWindow();
         if (pushedWho == int.MinValue)
@@ -1483,6 +1524,7 @@ public class PachinkoOverlay : MonoBehaviour
 
         // 가운데 줄 정지 — 영상이 끝나는 순간 결과
         reels[1].Highlight(Color.white);
+        if (p.win) yield return WarnStrobe();
         StopAllSpin();
         yield return StopReel(1, p.center, p.reach ? 0.9f : 0.6f, spinSpeeds[1] * 0.5f);
         yield return Wait(0.2f);
@@ -1490,7 +1532,8 @@ public class PachinkoOverlay : MonoBehaviour
         if (p.win)
         {
             if (videoPlayer.isPlaying) videoPlayer.Pause();   // 마지막 프레임을 붙잡아 둔다
-            StartCoroutine(ImpactCut(curTheme == 1 ? new Color(0.7f, 0.5f, 1f) : new Color(0.9f, 0.05f, 0.1f))); shakeUntil = Now + 0.4f;
+            StartCoroutine(WinFlashStandard()); StartCoroutine(ImpactCut(curTheme == 1 ? new Color(0.7f, 0.5f, 1f) : new Color(0.9f, 0.05f, 0.1f))); shakeUntil = Now + 0.4f;
+            StartCoroutine(WinGlints(p.ResultSeconds()));
             StartCoroutine(LineFlare(470f, curTheme == 1 ? new Color(0.8f, 0.9f, 1f, 0.9f) : new Color(1f, 0.85f, 0.7f, 0.9f)));
             StartCoroutine(curTheme == 1 ? RzWinFx() : KagureWinFx());
             SetExpect(100);
@@ -1499,15 +1542,16 @@ public class PachinkoOverlay : MonoBehaviour
             if (line != null) PlayLine(line);
             if (p.jackpot)
             {
-                StartCoroutine(Confetti(5.5f));
+                StartCoroutine(Confetti(Mathf.Max(5.5f, p.ResultSeconds() - 0.4f)));
                 StartCoroutine(Fireworks(true, 1));
-                StartCoroutine(Pop(logoOoatari, 6f, 5f, keep: true));
+                StartCoroutine(Pop(logoOoatari, p.ResultSeconds() + 0.5f, 1.2f, keep: true));
+                StartCoroutine(Later(3.0f, Fireworks(true, curTheme)));
                 ShowBand("大当たり 보상: 랜덤 유닛 ×1");
             }
             else
             {
                 StartCoroutine(Fireworks(false, 1));
-                StartCoroutine(Pop(logoAtari, 6f, 4f, keep: true));
+                StartCoroutine(Pop(logoAtari, p.ResultSeconds() + 0.5f, 1.2f, keep: true));
                 ShowBand("当たり 보상: 전설·히든 위습 ×1");
             }
         }
@@ -1522,13 +1566,14 @@ public class PachinkoOverlay : MonoBehaviour
         }
         float until = resultStart + p.ResultSeconds();
         while (Now < until) yield return null;
-        yield return Fade(0.25f);
+        yield return ReturnFade();
         while (VoiceActive()) yield return null;
         StopAllSfx();
         StopVideoNow();
         if (videoPlayer2 != null) videoPlayer2.Stop();
         duckTarget = 1f; GameBgm.Duck = 1f;
         root.gameObject.SetActive(false);
+        StartCoroutine(ReturnFadeOut());
         running = null;
     }
 
@@ -2132,20 +2177,292 @@ public class PachinkoOverlay : MonoBehaviour
 
     void StopAllSpin() { reelsCenterHeld = false; }
 
-    IEnumerator Thud(Reel r) { yield return null; }
+
+    // ───────── PM 10-14 숫자·화면 연출(레퍼런스 8기종 프레임 분석) ─────────
+    /// <summary>「번쩍임 줄이기」 — 켜면 경고 스트로브를 끄고 섬광 α를 절반으로(PlayerPrefs, 오버레이 왼쪽 아래 작은 토글).</summary>
+    public static bool ReduceFlash
+    {
+        get { try { return PlayerPrefs.GetInt("pachinko_reduce_flash", 0) == 1; } catch { return false; } }
+        set { try { PlayerPrefs.SetInt("pachinko_reduce_flash", value ? 1 : 0); } catch { } }
+    }
+    bool winFlashActive;
+
+    /// <summary>정지 타격: 0.08초 아래로 6% 눌렸다 튀어 오름 + 그 숫자만 0.05초 흰 섬광 + 2px 「탁」 흔들림. 7이면 금 빛 쓸기 + 반짝.</summary>
+    IEnumerator Thud(Reel r)
+    {
+        int idx = Array.IndexOf(reels, r);
+        r.hit.sprite = r.CenterSprite;
+        bool seven = Reel.SymbolAt(Mathf.RoundToInt(r.scroll)) == 7;
+        if (seven) { StartCoroutine(Sweep(r, new Color(1f, 0.88f, 0.4f, 0.9f), 0.45f, 0.1f)); StartCoroutine(SevenGlints(r)); }
+        float t = 0f; const float total = 0.2f;
+        int frame = 0;
+        while (t < total)
+        {
+            t += Dt; frame++;
+            float sy;
+            if (t < 0.08f) sy = Mathf.Lerp(1f, 0.94f, t / 0.08f);                  // 눌림
+            else if (t < 0.14f) sy = Mathf.Lerp(0.94f, 1.04f, (t - 0.08f) / 0.06f); // 튀어 오름
+            else sy = Mathf.Lerp(1.04f, 1f, (t - 0.14f) / 0.06f);
+            r.punch = new Vector2(1f + (1f - sy) * 0.6f, sy);
+            r.hit.color = new Color(1f, 1f, 1f, t < 0.05f ? 0.9f * (1f - t / 0.05f) : 0f);
+            r.shakeX = t < 0.1f ? (frame % 2 == 0 ? 2f : -2f) : 0f;
+            if (idx == 1) r.liftT = Mathf.Max(0f, 1f - t / 0.1f);
+            yield return null;
+        }
+        r.punch = Vector2.one; r.shakeX = 0f; r.liftT = 0f; r.hit.color = new Color(1f, 1f, 1f, 0f);
+    }
+
+    /// <summary>대각 빛 쓸기: 숫자 모양으로만 잘린 밝은 띠가 왼 → 오른쪽으로 지나간다.</summary>
+    IEnumerator Sweep(Reel r, Color c, float seconds, float delay = 0f)
+    {
+        if (delay > 0f) yield return Wait(delay);
+        RectTransform m = Rt("sweepMask", r.Window);
+        m.anchorMin = m.anchorMax = new Vector2(0.5f, 0.5f);
+        m.sizeDelta = new Vector2(NumberSize, NumberSize); m.anchoredPosition = Vector2.zero;
+        var mi = m.gameObject.AddComponent<Image>(); mi.sprite = r.CenterSprite; mi.raycastTarget = false;
+        var mk = m.gameObject.AddComponent<Mask>(); mk.showMaskGraphic = false;
+        RectTransform bar = Rt("bar", m);
+        var bi = bar.gameObject.AddComponent<Image>(); bi.color = c; bi.raycastTarget = false;
+        bar.anchorMin = bar.anchorMax = new Vector2(0.5f, 0.5f);
+        bar.sizeDelta = new Vector2(130f, NumberSize * 1.7f);
+        bar.localRotation = Quaternion.Euler(0, 0, 20f);
+        float t = 0f;
+        while (t < seconds)
+        {
+            t += Dt;
+            bar.anchoredPosition = new Vector2(Mathf.Lerp(-NumberSize * 0.75f, NumberSize * 0.75f, t / seconds), 0f);
+            yield return null;
+        }
+        Destroy(m.gameObject);
+    }
+
+    /// <summary>7: 별/광채 반짝 6개(위로 흩어졌다 사라짐).</summary>
+    IEnumerator SevenGlints(Reel r)
+    {
+        RectTransform parent = (RectTransform)r.Window.parent;
+        var items = new List<(RectTransform rt, Image im, Vector2 v, float life)>();
+        float sc = r.Window.localScale.x;
+        for (int i = 0; i < 7; i++)
+        {
+            RectTransform g = Rt("glint", parent);
+            var im = g.gameObject.AddComponent<Image>(); im.raycastTarget = false;
+            im.sprite = FxSpr("spark_" + UnityEngine.Random.Range(1, 9)); if (im.sprite == null) { Destroy(g.gameObject); continue; }
+            im.preserveAspect = true; im.color = new Color(1f, 0.9f, 0.5f, 1f);
+            g.anchorMin = g.anchorMax = r.Window.anchorMin;
+            g.pivot = new Vector2(0.5f, 0.5f);
+            float s = UnityEngine.Random.Range(70f, 140f) * Mathf.Max(0.5f, sc);
+            g.sizeDelta = new Vector2(s, s);
+            g.anchoredPosition = r.Window.anchoredPosition + new Vector2(UnityEngine.Random.Range(-220f, 220f), UnityEngine.Random.Range(-60f, 260f)) * sc;
+            items.Add((g, im, new Vector2(UnityEngine.Random.Range(-40f, 40f), UnityEngine.Random.Range(40f, 140f)), UnityEngine.Random.Range(0.4f, 0.7f)));
+        }
+        float t = 0f;
+        while (items.Count > 0)
+        {
+            t += Dt;
+            for (int i = items.Count - 1; i >= 0; i--)
+            {
+                var it = items[i];
+                float u = t / it.life;
+                if (u >= 1f) { Destroy(it.rt.gameObject); items.RemoveAt(i); continue; }
+                it.rt.anchoredPosition += it.v * Dt;
+                it.rt.localRotation = Quaternion.Euler(0, 0, u * 60f);
+                it.rt.localScale = Vector3.one * (u < 0.3f ? u / 0.3f : 1f - (u - 0.3f) * 0.5f);
+                it.im.color = new Color(1f, 0.9f, 0.5f, 1f - u);
+            }
+            yield return null;
+        }
+    }
+
+    /// <summary>리치 강조(에바 216.5s): 양쪽 숫자가 커지며 잔상 → 0.6초 뒤 원래 크기 + 빛 쓸기. 리치 변형(_pink)으로 바꾼다.</summary>
+    IEnumerator ReachEmphasis()
+    {
+        var ghosts = new List<(Image im, int side, int j)>();
+        foreach (int side in new[] { 0, 2 })
+        {
+            Reel r = reels[side];
+            for (int j = 1; j <= 3; j++)
+            {
+                Image g = Img("ghost", r.Window, r.CenterSprite, new Color(1f, 1f, 1f, 0.32f / j));
+                g.rectTransform.anchorMin = g.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                g.rectTransform.sizeDelta = new Vector2(NumberSize, NumberSize);
+                g.rectTransform.SetAsFirstSibling();
+                ghosts.Add((g, side, j));
+            }
+            r.pink = true;
+        }
+        float t = 0f; const float total = 0.6f;
+        StartCoroutine(Sweep(reels[0], new Color(1f, 1f, 1f, 0.85f), 0.4f, 0.25f));
+        StartCoroutine(Sweep(reels[2], new Color(1f, 1f, 1f, 0.85f), 0.4f, 0.25f));
+        while (t < total)
+        {
+            t += Dt;
+            float u = t / total;
+            float s = u < 0.3f ? 1f + 0.3f * (1f - Mathf.Pow(1f - u / 0.3f, 3f)) : 1.3f - 0.3f * Mathf.SmoothStep(0f, 1f, (u - 0.3f) / 0.7f);
+            reels[0].emphasis = reels[2].emphasis = s;
+            foreach (var g in ghosts)
+            {
+                float dir = g.side == 0 ? -1f : 1f;
+                g.im.rectTransform.anchoredPosition = new Vector2(dir * 38f * g.j * (1f - u), -16f * g.j * (1f - u));
+                g.im.color = new Color(1f, 1f, 1f, 0.32f / g.j * (1f - u));
+            }
+            yield return null;
+        }
+        reels[0].emphasis = reels[2].emphasis = 1f;
+        foreach (var g in ghosts) if (g.im != null) Destroy(g.im.gameObject);
+    }
+
+    /// <summary>경고 스트로브(大当たり·금 컷인 직전): 0.3초 흑/백 교대 → 0.1초 검정. 「번쩍임 줄이기」면 건너뛴다.</summary>
+    IEnumerator WarnStrobe()
+    {
+        if (ReduceFlash) yield break;
+        winFlashActive = true;
+        float t = 0f; bool white = false;
+        while (t < 0.3f)
+        {
+            t += Dt; white = !white;
+            flash.color = white ? new Color(1f, 1f, 1f, 0.8f) : new Color(0f, 0f, 0f, 0.9f);
+            yield return null;
+        }
+        flash.color = new Color(0f, 0f, 0f, 1f);
+        yield return Wait(0.1f);
+        winFlashActive = false;
+        flash.color = new Color(1f, 1f, 1f, 0f);
+    }
+
+    /// <summary>당첨 섬광 표준(가로·도쿄구울·심포기어 프레임 측정): 검정 1프레임 → 흰색 0.2초 → 0.5초에 흰→노랑→금으로 사라짐(파랑 채널 먼저).</summary>
+    IEnumerator WinFlashStandard()
+    {
+        winFlashActive = true;
+        float a = ReduceFlash ? 0.5f : 1f;
+        flash.color = new Color(0f, 0f, 0f, a);
+        yield return null;
+        flash.color = new Color(1f, 1f, 1f, a);
+        yield return Wait(0.2f);
+        float t = 0f; const float fade = 0.5f;
+        while (t < fade)
+        {
+            t += Dt;
+            float p = Mathf.Clamp01(t / fade);
+            flash.color = new Color(1f, 1f - 0.2f * p, Mathf.Clamp01(1f - 2.2f * p), a * (1f - p * p));
+            yield return null;
+        }
+        winFlashActive = false;
+        flash.color = new Color(1f, 1f, 1f, 0f);
+    }
+
+    /// <summary>당첨 후 결과 시간 동안 세 숫자에 빛 쓸기를 주기적으로(공백 메우기).</summary>
+    IEnumerator WinGlints(float seconds)
+    {
+        float end = Now + seconds, next = Now + 0.9f;
+        while (Now < end)
+        {
+            if (Now >= next)
+            {
+                next += 1.1f;
+                for (int i = 0; i < 3; i++) StartCoroutine(Sweep(reels[i], new Color(1f, 0.92f, 0.55f, 0.8f), 0.45f, i * 0.12f));
+            }
+            yield return null;
+        }
+    }
+
+    IEnumerator Later(float seconds, IEnumerator e) { yield return Wait(seconds); yield return e; }
+
+    // 복귀 페이드: 0.25초 어두워짐 → 오버레이 닫힘(정지 해제) → 0.25초 게임 화면 밝아짐
+    Image returnFade;
+    IEnumerator ReturnFade()
+    {
+        if (returnFade == null)
+        {
+            returnFade = Img("returnFade", root.parent, null, Color.black);
+            Stretch(returnFade.rectTransform);
+            returnFade.transform.SetAsLastSibling();
+        }
+        returnFade.gameObject.SetActive(true);
+        float t = 0f;
+        while (t < 0.25f) { t += Dt; returnFade.color = new Color(0f, 0f, 0f, t / 0.25f); yield return null; }
+        returnFade.color = Color.black;
+    }
+    IEnumerator ReturnFadeOut()
+    {
+        float t = 0f;
+        while (t < 0.25f) { t += Dt; returnFade.color = new Color(0f, 0f, 0f, 1f - t / 0.25f); yield return null; }
+        returnFade.gameObject.SetActive(false);
+    }
+
+    // 회전 집중선(가로 126.6s·105.4s): 노랑·검정 날카로운 방사선이 숫자 뒤에서 천천히 돈다
+    class RaysGraphic : MaskableGraphic
+    {
+        protected override void OnPopulateMesh(VertexHelper vh)
+        {
+            vh.Clear();
+            const int n = 36; float R = 1600f;
+            for (int i = 0; i < n; i++)
+            {
+                float a0 = i / (float)n * Mathf.PI * 2f, a1 = a0 + Mathf.PI * 2f / n * 0.5f;
+                Color c = i % 2 == 0 ? new Color(1f, 0.85f, 0.2f, 0.26f) : new Color(0f, 0f, 0f, 0.34f);
+                int b = vh.currentVertCount;
+                vh.AddVert(Vector3.zero, c, Vector2.zero);
+                vh.AddVert(new Vector3(Mathf.Cos(a0), Mathf.Sin(a0)) * R, c, Vector2.zero);
+                vh.AddVert(new Vector3(Mathf.Cos(a1), Mathf.Sin(a1)) * R, c, Vector2.zero);
+                vh.AddTriangle(b, b + 1, b + 2);
+            }
+        }
+    }
+    RectTransform sharpRays;
+    void SharpRays(bool on)
+    {
+        if (sharpRays == null)
+        {
+            sharpRays = Rt("sharpRays", stage);
+            var g = sharpRays.gameObject.AddComponent<RaysGraphic>(); g.raycastTarget = false;
+            sharpRays.anchorMin = sharpRays.anchorMax = new Vector2(0f, 1f);
+            sharpRays.anchoredPosition = new Vector2(960f, -540f);
+            sharpRays.sizeDelta = Vector2.zero;
+            sharpRays.SetSiblingIndex(Mathf.Max(0, machineRect.GetSiblingIndex()));
+        }
+        sharpRays.gameObject.SetActive(on);
+    }
+
+    // SP 리치 레터박스: 위아래 검은 띠가 0.3초에 화면 12%씩 들어오고 제목 카드
+    RectTransform lbTop, lbBottom; TMP_Text lbTitle;
+    IEnumerator Letterbox(string title, string sub, bool on)
+    {
+        if (lbTop == null)
+        {
+            Image a = Img("lbTop", stage, null, Color.black), b = Img("lbBottom", stage, null, Color.black);
+            lbTop = a.rectTransform; lbBottom = b.rectTransform;
+            lbTop.anchorMin = new Vector2(0, 1); lbTop.anchorMax = new Vector2(1, 1); lbTop.pivot = new Vector2(0.5f, 1f);
+            lbBottom.anchorMin = new Vector2(0, 0); lbBottom.anchorMax = new Vector2(1, 0); lbBottom.pivot = new Vector2(0.5f, 0f);
+            lbTitle = Label("lbTitle", lbBottom, "", 64f, Color.white, TextAlignmentOptions.Center, 0.2f);
+            Stretch(lbTitle.rectTransform);
+        }
+        lbTop.gameObject.SetActive(true); lbBottom.gameObject.SetActive(true);
+        lbTop.SetAsLastSibling(); lbBottom.SetAsLastSibling();
+        lbTitle.text = on ? $"{title}  <size=60%><color=#ff8a8a>{sub}</color></size>" : "";
+        float h = 1080f * 0.12f, t = 0f;
+        while (t < 0.3f)
+        {
+            t += Dt;
+            float u = Mathf.Clamp01(t / 0.3f); u = on ? 1f - Mathf.Pow(1f - u, 3f) : 1f - u;
+            lbTop.sizeDelta = new Vector2(0f, h * u); lbBottom.sizeDelta = new Vector2(0f, h * u);
+            yield return null;
+        }
+        if (!on) { lbTop.gameObject.SetActive(false); lbBottom.gameObject.SetActive(false); }
+    }
 
     IEnumerator Pop(Image logo, float seconds, float overshoot, bool keep = false)
     {
         logo.gameObject.SetActive(true);
         StartCoroutine(Ghosts(logo, 0.45f));
         Impact(new Color(1f, 0.85f, 0.85f, 0.55f), 0.3f, true);
+        shakeUntil = Mathf.Max(shakeUntil, Now + 0.12f);
         float t = 0f;
         while (t < seconds)
         {
             t += Dt;
-            float u = Mathf.Clamp01(t / 0.25f);
-            float s = Mathf.Lerp(overshoot, 1f, 1f - Mathf.Pow(1f - u, 3f));
-            if (t > 0.25f) s = 1f + 0.04f * Mathf.Sin((t - 0.25f) * 14f);
+            float u = Mathf.Clamp01(t / 0.14f);
+            float s = Mathf.Lerp(Mathf.Min(overshoot, 1.2f), 1f, 1f - Mathf.Pow(1f - u, 3f));   // 120% → 100% 「쾅」
+            if (t > 0.14f) s = 1f + 0.03f * Mathf.Exp(-(t - 0.14f) * 8f) * Mathf.Sin((t - 0.14f) * 36f);
             logo.rectTransform.localScale = Vector3.one * s;
             Color c = logo.color; c.a = Mathf.Clamp01(u * 1.5f); logo.color = c;
             yield return null;
@@ -2183,7 +2500,8 @@ public class PachinkoOverlay : MonoBehaviour
         cutText.text = cut == PachinkoCut.Gold ? "俺が…喰う!!!" : cut == PachinkoCut.Red ? "終わらせる!!" : "いくぞ!";
         cutText.color = cut == PachinkoCut.Gold ? new Color(1f, 0.97f, 0.78f) : Color.white;
         cutRect.gameObject.SetActive(true);
-        Tentacles(3); StartCoroutine(BrushSlash(true)); StartCoroutine(ImpactCut(new Color(0.9f, 0.05f, 0.1f)));
+        Tentacles(3); StartCoroutine(BrushSlash(true));
+        if (cut == PachinkoCut.Gold && !ReduceFlash) StartCoroutine(WarnStrobe()); else StartCoroutine(ImpactCut(new Color(0.9f, 0.05f, 0.1f)));
         Play(cut == PachinkoCut.Gold ? Slot.CutinGold : Slot.Cutin);
         if (cut == PachinkoCut.Gold) { SetExpect(100); } else if (cut == PachinkoCut.Red) SetExpect(Mathf.Max(expect, 56));
         float t = 0f; const float total = 1.6f;
@@ -2375,6 +2693,8 @@ public class PachinkoOverlay : MonoBehaviour
         }
         if (reels != null && numbersSmallT <= 0f) foreach (Reel rl in reels) if (!rl.spinning) rl.Refresh();   // 불꽃 프레임 순환
         numbersSmallT = Mathf.MoveTowards(numbersSmallT, numbersSmallTarget, Dt * 3f);
+        if (reels != null && reels.Length == 3) reels[1].group.alpha = (curReach && numbersSmallT > 0.6f && reels[1].spinning) ? 0.35f + 0.65f * Mathf.Abs(Mathf.Sin(Now * 8f)) : 1f;   // 리치면 미니 릴 가운데 칸 깜빡
+        if (sharpRays != null && sharpRays.gameObject.activeSelf) sharpRays.localRotation = Quaternion.Euler(0f, 0f, -Now * 6f);
         if (reels != null) foreach (Reel rl in reels) rl.SetSmall(numbersSmallT);
         if (tickerText != null)
         {

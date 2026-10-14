@@ -26,7 +26,7 @@ public static class PachinkoSettings
     public const float WinResultSeconds = 5.5f;
     public const float JackpotExtraSeconds = 2.5f;
     public const float ReviveExtraSeconds = 2.0f;
-    public const float MissResultSeconds = 2.6f;
+    public const float MissResultSeconds = 2.0f;
     /// <summary>오버레이가 없을 때(임시 경로) 로그만 찍고 결과까지 가는 시간.</summary>
     public const float NoOverlayDelay = 0.5f;
     /// <summary>Re:ゼロ 테마(사장님 10-14): 룰렛 배경 영상 길이 — 꽝 35초 · 당첨 39.1초(마지막 「見事」 직후 당첨 표시). 영상 끝에서 결과.</summary>
