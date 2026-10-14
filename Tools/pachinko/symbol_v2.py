@@ -106,6 +106,11 @@ def ribbon(pts_r, mat, width=0.55, height=0.22, per=12, name="rib", flat_z=0.0):
         for j in range(len(U) - 1):
             try: bm.faces.new((rows[i][j], rows[i][j + 1], rows[i + 1][j + 1], rows[i + 1][j]))
             except ValueError: pass
+    uvl = bm.loops.layers.uv.new("UVMap"); vuv = {}
+    for i, row in enumerate(rows):
+        for j, v in enumerate(row): vuv[v] = (j / (len(U) - 1), i / (n - 1))
+    for f in bm.faces:
+        for lp in f.loops: lp[uvl].uv = vuv[lp.vert]
     me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
     ob = bpy.data.objects.new(name, me); bpy.context.collection.objects.link(ob); ob.data.materials.append(mat)
     for p in ob.data.polygons: p.use_smooth = True
@@ -113,47 +118,72 @@ def ribbon(pts_r, mat, width=0.55, height=0.22, per=12, name="rib", flat_z=0.0):
     ss = ob.modifiers.new("ss", "SUBSURF"); ss.levels = 2; ss.render_levels = 2
     return ob
 
-# 숫자 붓획(단위 좌표 x -1..1, y -1.2..1.2, r=굵기). 끝은 r→작게 + extend()가 칼끝 꼬리를 이어 붙인다.
-D = {
- 6: dict(paths=[[(0.95, 1.2, .08), (0.55, 1.18, .55), (0.0, 0.95, .95), (-0.5, 0.35, 1.25), (-0.68, -0.4, 1.3), (-0.4, -0.98, 1.2), (0.18, -1.14, 1.1), (0.68, -0.8, 1.0), (0.7, -0.25, .9), (0.35, 0.05, .8), (-0.05, 0.0, .65), (-0.25, -0.35, .5)]], tails=[(-1, 3.4, 0.55)]),
- 3: dict(paths=[[(-0.75, 0.95, .1), (-0.35, 1.12, .8), (0.2, 1.18, 1.1), (0.66, 0.85, 1.15), (0.45, 0.4, 1.0), (0.0, 0.16, .8), (0.5, -0.02, 1.0), (0.8, -0.5, 1.15), (0.5, -1.0, 1.05), (-0.05, -1.16, .9), (-0.6, -0.95, .55)]], tails=[(-1, -2.4, 0.6)]),
- 1: dict(paths=[[(-0.5, 0.5, .1), (-0.1, 0.95, .8), (0.15, 1.2, 1.1), (0.08, 0.3, 1.2), (0.0, -0.4, 1.15), (-0.1, -1.0, .8)]], tails=[(-1, 1.6, 0.4)]),
- 2: dict(paths=[[(-0.7, 0.7, .1), (-0.3, 1.1, .85), (0.3, 1.18, 1.1), (0.72, 0.75, 1.1), (0.45, 0.2, 1.0), (-0.2, -0.45, 1.1), (-0.7, -1.0, 1.1), (0.0, -1.1, 1.0), (0.75, -1.05, .6)]], tails=[(-1, 3.0, 0.7)]),
- 4: dict(paths=[[(0.35, 1.2, .1), (-0.2, 0.5, .95), (-0.7, -0.2, 1.05), (-0.1, -0.35, .95), (0.55, -0.35, .8), (0.95, -0.38, .4)], [(0.38, 1.0, .5), (0.35, 0.2, 1.1), (0.28, -0.7, 1.0), (0.15, -1.15, .3)]], tails=[(-1, 2.6, 0.5)]),
- 5: dict(paths=[[(0.8, 1.12, .1), (0.2, 1.12, .8), (-0.35, 1.1, 1.0), (-0.45, 0.45, 1.05), (-0.38, 0.12, .95), (0.2, 0.3, 1.05), (0.7, 0.0, 1.15), (0.72, -0.55, 1.05), (0.3, -1.05, 1.0), (-0.3, -1.1, .8)]], tails=[(-1, -2.0, 0.6)]),
- 7: dict(paths=[[(-0.8, 1.0, .1), (-0.1, 1.12, .9), (0.7, 1.12, 1.1), (0.45, 0.2, 1.1), (0.1, -0.5, .9), (-0.15, -1.0, .5)]], tails=[(-1, 1.4, 0.5)]),
- 8: dict(paths=[[(0.3, 0.1, .9), (-0.35, 0.5, 1.05), (-0.3, 1.0, 1.15), (0.2, 1.15, 1.1), (0.55, 0.8, 1.0), (0.2, 0.3, 1.0), (-0.35, -0.2, 1.1), (-0.65, -0.7, 1.15), (-0.25, -1.1, 1.05), (0.35, -1.1, 1.0), (0.7, -0.65, 1.0), (0.4, -0.15, .8), (-0.1, 0.15, .5)]], tails=[(-1, 3.0, 0.55)]),
- 9: dict(paths=[[(0.45, -1.15, .1), (0.7, -0.5, .95), (0.62, 0.35, 1.1), (0.3, 0.95, 1.15), (-0.3, 1.1, 1.05), (-0.7, 0.7, 1.05), (-0.5, 0.15, .95), (-0.05, 0.0, .85), (0.4, 0.2, .6)]], tails=[(-1, 2.6, 0.5)]),
+# ── 3차: 겹쳐진 큰 붓 스우시 3~5장 + 획 방향 줄무늬 결(UV 노이즈) ──
+def streak_mat(kind, seed, shift=0.0):
+    """kind: flame(빨강→주황→노랑 결, 불사조 깃털) / chrome(은·하늘·연보라·흰 반투명 유리 결). U=폭 방향, V=획 방향."""
+    m = bpy.data.materials.new(f"{kind}{seed}"); m.use_nodes = True; nt = m.node_tree; nt.nodes.clear()
+    out = node(nt, "ShaderNodeOutputMaterial"); bsdf = node(nt, "ShaderNodeBsdfPrincipled")
+    uv = node(nt, "ShaderNodeUVMap"); mp = node(nt, "ShaderNodeMapping"); mp.inputs["Scale"].default_value = (14.0, 1.6, 1.0); mp.inputs["Location"].default_value = (seed * 3.1, seed * 1.7, 0)
+    nz = node(nt, "ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 1.0; nz.inputs["Detail"].default_value = 3.0; nz.inputs["Roughness"].default_value = 0.55
+    nt.links.new(uv.outputs[0], mp.inputs[0]); nt.links.new(mp.outputs[0], nz.inputs["Vector"])
+    sep = node(nt, "ShaderNodeSeparateXYZ"); uv2 = node(nt, "ShaderNodeUVMap"); nt.links.new(uv2.outputs[0], sep.inputs[0])
+    # 가로 위치: 가운데(0.5)=1, 가장자리=0 (삼각파) → 노이즈와 섞어 결 위에 중심 밝음
+    ab = node(nt, "ShaderNodeMath"); ab.operation = "SUBTRACT"; nt.links.new(sep.outputs["X"], ab.inputs[0]); ab.inputs[1].default_value = 0.5
+    ab2 = node(nt, "ShaderNodeMath"); ab2.operation = "ABSOLUTE"; nt.links.new(ab.outputs[0], ab2.inputs[0])
+    inv = node(nt, "ShaderNodeMath"); inv.operation = "MULTIPLY_ADD"; nt.links.new(ab2.outputs[0], inv.inputs[0]); inv.inputs[1].default_value = -2.0; inv.inputs[2].default_value = 1.0
+    mixf = node(nt, "ShaderNodeMix"); mixf.data_type = "FLOAT"; mixf.inputs[0].default_value = 0.5
+    nt.links.new(nz.outputs["Fac"], mixf.inputs[2]); nt.links.new(inv.outputs[0], mixf.inputs[3])
+    sh = node(nt, "ShaderNodeMath"); sh.operation = "ADD"; sh.inputs[1].default_value = shift; nt.links.new(mixf.outputs[0], sh.inputs[0])
+    if kind == "flame":
+        st = [(0.0, (0.55, 0.0, 0.0, 1)), (0.3, (0.95, 0.06, 0.01, 1)), (0.55, (1.0, 0.4, 0.03, 1)), (0.78, (1.0, 0.82, 0.2, 1)), (1.0, (1.0, 0.98, 0.7, 1))]
+    else:
+        st = [(0.0, (0.03, 0.06, 0.25, 1)), (0.3, (0.35, 0.55, 0.95, 1)), (0.5, (0.93, 0.96, 1.0, 1)), (0.72, (0.72, 0.66, 0.98, 1)), (1.0, (0.62, 0.92, 1.0, 1))]
+    cr = ramp(nt, st); nt.links.new(sh.outputs[0], cr.inputs[0])
+    nt.links.new(cr.outputs[0], bsdf.inputs["Base Color"])
+    if kind == "flame":
+        bsdf.inputs["Roughness"].default_value = 0.22; bsdf.inputs["Metallic"].default_value = 0.0
+        nt.links.new(cr.outputs[0], bsdf.inputs["Emission Color"]); bsdf.inputs["Emission Strength"].default_value = 0.4
+        try: bsdf.inputs["Coat Weight"].default_value = 0.6
+        except Exception: pass
+    else:
+        bsdf.inputs["Metallic"].default_value = 0.85; bsdf.inputs["Roughness"].default_value = 0.1
+        try: bsdf.inputs["Coat Weight"].default_value = 0.4
+        except Exception: pass
+    # 반투명(유리 느낌): 가장자리·결 사이로 비침
+    tr = node(nt, "ShaderNodeBsdfTransparent"); mix = node(nt, "ShaderNodeMixShader")
+    op = node(nt, "ShaderNodeMath"); op.operation = "MULTIPLY_ADD"; nt.links.new(sh.outputs[0], op.inputs[0]); op.inputs[1].default_value = 0.35 if kind == "chrome" else 0.2; op.inputs[2].default_value = 0.62 if kind == "chrome" else 0.8
+    clamp = node(nt, "ShaderNodeClamp"); nt.links.new(op.outputs[0], clamp.inputs[0])
+    nt.links.new(clamp.outputs[0], mix.inputs[0]); nt.links.new(tr.outputs[0], mix.inputs[1]); nt.links.new(bsdf.outputs[0], mix.inputs[2]); nt.links.new(mix.outputs[0], out.inputs[0])
+    return m
+def swoosh(ctrl, mat, width=0.6, lift=0.0, asym=0.35, per=14, height=0.12):
+    """ctrl=[(x,y)…] 중심선. 굵기 = 초승달꼴: 시작쪽이 굵고 양 끝은 칼끝."""
+    pts = catmull2([(x, y, 0.0) for x, y in ctrl], per); n = len(pts); out = []
+    for i, (x, y, _) in enumerate(pts):
+        t = i / (n - 1); prof = (math.sin(math.pi * t ** (1 - asym)) ** 0.9) ; out.append((x, y, prof * 1.0))
+    return ribbon(out, mat, width=width * 1.15, height=height, per=1, flat_z=lift)
+SW = {  # (중심선, 폭, 높이띄움, 재질 스트리크 shift, seed) — 겹쳐서 숫자 꼴
+ 3: [([(-0.85, 0.7), (-0.4, 1.12), (0.25, 1.2), (0.72, 0.9), (0.62, 0.45), (0.1, 0.12)], 0.62, 0.00, 0.0, 1),
+     ([(0.05, 0.22), (0.7, 0.0), (0.88, -0.5), (0.6, -1.0), (-0.1, -1.18), (-0.88, -0.78)], 0.7, 0.05, 0.0, 2),
+     ([(-0.35, 1.18), (0.35, 1.28), (0.95, 0.95), (0.9, 0.35), (0.35, 0.1)], 0.42, 0.10, 0.18, 3),
+     ([(0.15, -0.25), (0.58, -0.4), (0.55, -0.8), (0.1, -1.0)], 0.34, 0.14, 0.25, 4),
+     ([(0.55, 0.95), (0.85, 1.25), (1.1, 1.35), (1.05, 1.1)], 0.3, 0.18, 0.3, 5)],
+ 6: [([(1.0, 1.28), (0.35, 0.95), (-0.35, 0.45), (-0.68, -0.25), (-0.5, -0.95), (0.1, -1.2), (0.68, -0.9)], 0.72, 0.00, 0.0, 1),
+     ([(-0.5, -0.75), (-0.05, -1.12), (0.62, -0.95), (0.8, -0.3), (0.4, 0.1), (-0.12, 0.0), (-0.3, -0.4)], 0.6, 0.06, 0.0, 2),
+     ([(0.2, 1.0), (0.6, 1.3), (1.0, 1.28), (1.12, 1.05)], 0.28, 0.14, 0.2, 3),
+     ([(-0.62, 0.1), (-0.78, -0.6), (-0.4, -1.15)], 0.3, 0.12, 0.25, 4)],
 }
 STYLE = {d: ("flame" if d % 2 else "chrome") for d in range(1, 10)}
 def build(digit):
-    sc = reset(); style = STYLE[digit]; world_env(sc, style)
-    mat = chrome_mat() if style == "chrome" else flame_mat(); core = flame_core_mat(); tip = flame_tip_mat()
-    objs = []; rng = random.Random(digit * 11); allpts = []
-    for path in D[digit]["paths"]:
-        pth = list(path)
-        for (_, turn, ln) in D[digit]["tails"]: pth = extend(pth, turn, ln)
-        objs.append(ribbon(pth, mat, width=0.78, height=0.3))
-        if style == "flame":
-            objs.append(ribbon([(x, y, r * 0.42) for x, y, r in pth], core, width=0.78, height=0.36, flat_z=0.05))
-        allpts += catmull2([(x, y, r) for x, y, r in pth], 4)
-    if style == "flame":   # 위·오른쪽으로 한 방향 휩쓸려 날리는 얇고 뾰족한 불꽃 혀: 빨강(큰·반투명) → 주황 → 노랑(가는 심)
-        mats = [tongue_mat((1.0, 0.1, 0.02), 1.6, 0.42), tongue_mat((1.0, 0.42, 0.04), 2.2, 0.5), tongue_mat((1.0, 0.85, 0.25), 3.0, 0.62)]
-        widths = [0.6, 0.42, 0.24]
-        sel = [p for p in allpts if p[2] > 0.45]
-        for k in range(30):
-            x, y, r = rng.choice(sel); lay = k % 3
-            base = math.radians(58 + rng.uniform(-14, 14)); ln = rng.uniform(0.7, 1.7) * (0.55 + 0.45 * r) * (1.0 - 0.18 * lay); turn = rng.uniform(0.55, 0.95)
-            pts = [(x, y, 0.5 * r)]; a = base; px, py = x, y
-            for i in range(1, 8):
-                t = i / 7; a += turn / 7; px += math.cos(a) * ln / 7; py += math.sin(a) * ln / 7; pts.append((px, py, (0.95 * (1 - t) ** 1.25) * (0.55 + 0.45 * r) + 0.01))
-            objs.append(ribbon(pts, mats[lay], width=widths[lay], height=0.04, per=6, flat_z=0.14 + 0.06 * lay + rng.uniform(0, 0.1)))
+    sc = reset(); style = STYLE[digit]; world_env(sc, "chrome" if style == "chrome" else "flame")
+    objs = []
+    for ctrl, w, lift, shift, seed in SW[digit]:
+        objs.append(swoosh(ctrl, streak_mat(style, seed + digit * 10, shift - (0.26 if style == 'flame' else 0.0)), width=w, lift=lift))
     root = bpy.data.objects.new("root", None); bpy.context.collection.objects.link(root)
     for o in objs: o.parent = root
-    root.rotation_euler = (math.radians(8), math.radians(-6), math.radians(-9))
-    cam = bpy.data.cameras.new("c"); cam.type = "ORTHO"; cam.ortho_scale = 4.4
-    co = bpy.data.objects.new("c", cam); bpy.context.collection.objects.link(co); sc.camera = co; co.location = (0, 0.1, 8)
-    for loc, size, energy in (((-3, 3, 5), 3.0, 700), ((3.2, -2.5, 4), 2.0, 350)):
+    root.rotation_euler = (math.radians(6), math.radians(-5), math.radians(-8))
+    cam = bpy.data.cameras.new("c"); cam.type = "ORTHO"; cam.ortho_scale = 4.2
+    co = bpy.data.objects.new("c", cam); bpy.context.collection.objects.link(co); sc.camera = co; co.location = (0.05, 0.05, 8)
+    for loc, size, energy in (((-3, 3, 5), 3.0, 500), ((3.2, -2.5, 4), 2.0, 250)):
         li = bpy.data.lights.new("a", "AREA"); li.size = size; li.energy = energy; lo = bpy.data.objects.new("a", li); bpy.context.collection.objects.link(lo); lo.location = loc
         lo.rotation_euler = (math.radians(30), math.radians(20), 0)
     sc.render.filepath = f"{OUT}/symbol_{digit}.png"; bpy.ops.render.render(write_still=True)
