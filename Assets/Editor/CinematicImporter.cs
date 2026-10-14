@@ -235,7 +235,8 @@ public static class CinematicImporter
         }
         string outPath = $"{ModelOut}/{SafeName(modelName)}.prefab";
         GameObject contents;
-        if (AssetDatabase.LoadAssetAtPath<GameObject>(srcPrefab) != null) contents = PrefabUtility.LoadPrefabContents(srcPrefab);
+        bool loaded = AssetDatabase.LoadAssetAtPath<GameObject>(srcPrefab) != null;
+        if (loaded) contents = PrefabUtility.LoadPrefabContents(srcPrefab);
         else
         {   // 메시 없는 입자 전용 모델(orgia mode red 등) — 재생기만 달린 빈 루트
             contents = new GameObject(modelName);
@@ -253,7 +254,7 @@ public static class CinematicImporter
             PrefabUtility.SaveAsPrefabAsset(contents, outPath);
             if (n > 0) notes.Append($" · {modelName}: 입자 {n}");
         }
-        finally { PrefabUtility.UnloadPrefabContents(contents); }
+        finally { if (loaded) PrefabUtility.UnloadPrefabContents(contents); else Object.DestroyImmediate(contents); }   // 빈 루트는 LoadPrefabContents가 아니라 Unload하면 예외
         return AssetDatabase.LoadAssetAtPath<GameObject>(outPath);
     }
 

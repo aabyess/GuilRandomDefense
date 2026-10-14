@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3184e6f55ca934891a8135d9eff5e47b, type: 3}
-  m_Name: "\uC601\uC6D0_\uAE40\uC815\uB798__tots_R"
+  m_Name: 
   m_EditorClassIdentifier: 
   scriptId: "\uC601\uC6D0_\uAE40\uC815\uB798__tots_R"
   title: "|CFFFFFA78\uD1A0\uD2B8 \uBB34\uC9C0\uCE74 \uBD09\uC778\uB41C \uC545\uBCF4\uC758
     \uAD34\uBB3C -  \u2014 tots_R"
-  duration: 13
+  duration: 2.07
   events:
   - t: 0
     op: 0
@@ -55,6 +55,36 @@ MonoBehaviour:
     scalePercent: 100
     flyHeight: 0
     lifeSec: 1
+    deathSec: 0
+    anchor: 0
+    hasOffset: 1
+    offsetX: 175
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 1
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0
+    op: 0
+    id: u4
+    model: SuperBigExplosion
+    baseScale: 1
+    scalePercent: 100
+    flyHeight: 0
+    lifeSec: 10
     deathSec: 0
     anchor: 0
     hasOffset: 1
@@ -140,15 +170,15 @@ MonoBehaviour:
   - t: 0.6
     op: 0
     id: u9
-    model: BlackEnergyCharge
+    model: SuperBigExplosion
     baseScale: 1
     scalePercent: 100
     flyHeight: 0
-    lifeSec: 1
+    lifeSec: 10
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 0
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -178,7 +208,7 @@ MonoBehaviour:
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 0
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -197,18 +227,18 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 0.85
+  - t: 0.6
     op: 0
     id: u12
-    model: BlackEnergyCharge
+    model: SuperBigExplosion
     baseScale: 1
     scalePercent: 100
     flyHeight: 0
-    lifeSec: 1
+    lifeSec: 10
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 290
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -227,7 +257,7 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 0.85
+  - t: 0.6
     op: 0
     id: u13
     model: SuperBigExplosion
@@ -238,7 +268,7 @@ MonoBehaviour:
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 290
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -257,18 +287,18 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 1.1
+  - t: 0.64
     op: 0
     id: u15
-    model: BlackEnergyCharge
+    model: SuperBigExplosion
     baseScale: 1
     scalePercent: 100
     flyHeight: 0
-    lifeSec: 1
+    lifeSec: 10
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 580
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -287,7 +317,7 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 1.1
+  - t: 0.64
     op: 0
     id: u16
     model: SuperBigExplosion
@@ -298,7 +328,7 @@ MonoBehaviour:
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 580
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -317,18 +347,18 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 1.35
+  - t: 0.68
     op: 0
     id: u18
-    model: BlackEnergyCharge
+    model: SuperBigExplosion
     baseScale: 1
     scalePercent: 100
     flyHeight: 0
-    lifeSec: 1
+    lifeSec: 10
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 870
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -347,7 +377,7 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 1.35
+  - t: 0.68
     op: 0
     id: u19
     model: SuperBigExplosion
@@ -358,7 +388,7 @@ MonoBehaviour:
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 870
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -377,18 +407,18 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 1.6
+  - t: 0.72
     op: 0
     id: u21
-    model: BlackEnergyCharge
+    model: SuperBigExplosion
     baseScale: 1
     scalePercent: 100
     flyHeight: 0
-    lifeSec: 1
+    lifeSec: 10
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 0
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -407,7 +437,7 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 1.6
+  - t: 0.72
     op: 0
     id: u22
     model: SuperBigExplosion
@@ -418,7 +448,7 @@ MonoBehaviour:
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 0
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -437,18 +467,18 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 1.85
+  - t: 0.72
     op: 0
     id: u24
-    model: BlackEnergyCharge
+    model: SuperBigExplosion
     baseScale: 1
     scalePercent: 100
     flyHeight: 0
-    lifeSec: 1
+    lifeSec: 10
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 1160
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -467,7 +497,7 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 1.85
+  - t: 0.72
     op: 0
     id: u25
     model: SuperBigExplosion
@@ -478,7 +508,7 @@ MonoBehaviour:
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 1160
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -497,18 +527,18 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 2.1
+  - t: 0.76
     op: 0
     id: u27
-    model: BlackEnergyCharge
+    model: SuperBigExplosion
     baseScale: 1
     scalePercent: 100
     flyHeight: 0
-    lifeSec: 1
+    lifeSec: 10
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 1450
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -527,7 +557,7 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 2.1
+  - t: 0.76
     op: 0
     id: u28
     model: SuperBigExplosion
@@ -538,7 +568,7 @@ MonoBehaviour:
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 1450
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -557,18 +587,18 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 2.35
+  - t: 0.8
     op: 0
     id: u30
-    model: BlackEnergyCharge
+    model: SuperBigExplosion
     baseScale: 1
     scalePercent: 100
     flyHeight: 0
-    lifeSec: 1
+    lifeSec: 10
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 1740
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -587,7 +617,7 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 2.35
+  - t: 0.8
     op: 0
     id: u31
     model: SuperBigExplosion
@@ -598,7 +628,7 @@ MonoBehaviour:
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 1740
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -617,18 +647,18 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 2.6
+  - t: 0.84
     op: 0
     id: u33
-    model: BlackEnergyCharge
+    model: SuperBigExplosion
     baseScale: 1
     scalePercent: 100
     flyHeight: 0
-    lifeSec: 1
+    lifeSec: 10
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 0
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -647,7 +677,7 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 2.6
+  - t: 0.84
     op: 0
     id: u34
     model: SuperBigExplosion
@@ -658,7 +688,7 @@ MonoBehaviour:
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 0
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -677,18 +707,18 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 2.85
+  - t: 0.84
     op: 0
     id: u36
-    model: BlackEnergyCharge
+    model: SuperBigExplosion
     baseScale: 1
     scalePercent: 100
     flyHeight: 0
-    lifeSec: 1
+    lifeSec: 10
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 2030
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -707,7 +737,7 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 2.85
+  - t: 0.84
     op: 0
     id: u37
     model: SuperBigExplosion
@@ -718,7 +748,7 @@ MonoBehaviour:
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 2030
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -737,18 +767,18 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 3.1
+  - t: 0.88
     op: 0
     id: u39
-    model: BlackEnergyCharge
+    model: SuperBigExplosion
     baseScale: 1
     scalePercent: 100
     flyHeight: 0
-    lifeSec: 1
+    lifeSec: 10
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 2320
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -767,7 +797,7 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 3.1
+  - t: 0.88
     op: 0
     id: u40
     model: SuperBigExplosion
@@ -778,7 +808,7 @@ MonoBehaviour:
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 2320
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -797,39 +827,9 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 3.35
+  - t: 0.92
     op: 0
     id: u42
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 3.35
-    op: 0
-    id: u43
     model: SuperBigExplosion
     baseScale: 1
     scalePercent: 100
@@ -838,7 +838,7 @@ MonoBehaviour:
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 300
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -857,18 +857,18 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 3.6
+  - t: 0.92
     op: 0
-    id: u45
-    model: BlackEnergyCharge
+    id: u44
+    model: SuperBigExplosion
     baseScale: 1
     scalePercent: 100
     flyHeight: 0
-    lifeSec: 1
+    lifeSec: 10
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 600
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -887,7 +887,7 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 3.6
+  - t: 0.92
     op: 0
     id: u46
     model: SuperBigExplosion
@@ -898,7 +898,7 @@ MonoBehaviour:
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 900
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -917,39 +917,9 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 3.85
+  - t: 0.92
     op: 0
     id: u48
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 3.85
-    op: 0
-    id: u49
     model: SuperBigExplosion
     baseScale: 1
     scalePercent: 100
@@ -958,7 +928,7 @@ MonoBehaviour:
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 1200
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -977,18 +947,18 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 4.1
+  - t: 0.92
     op: 0
-    id: u51
-    model: BlackEnergyCharge
+    id: u50
+    model: SuperBigExplosion
     baseScale: 1
     scalePercent: 100
     flyHeight: 0
-    lifeSec: 1
+    lifeSec: 10
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
+    offsetX: 1500
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
@@ -1007,7 +977,7 @@ MonoBehaviour:
     hasScaleSet: 0
     hasTimescaleSet: 0
     anchorShip: 
-  - t: 4.1
+  - t: 1.07
     op: 0
     id: u52
     model: SuperBigExplosion
@@ -1018,1867 +988,7 @@ MonoBehaviour:
     deathSec: 0
     anchor: 0
     hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 4.35
-    op: 0
-    id: u54
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 4.35
-    op: 0
-    id: u55
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 4.6
-    op: 0
-    id: u57
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 4.6
-    op: 0
-    id: u58
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 4.85
-    op: 0
-    id: u60
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 4.85
-    op: 0
-    id: u61
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 5.1
-    op: 0
-    id: u63
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 5.1
-    op: 0
-    id: u64
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 5.35
-    op: 0
-    id: u66
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 5.35
-    op: 0
-    id: u67
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 5.6
-    op: 0
-    id: u69
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 5.6
-    op: 0
-    id: u70
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 5.85
-    op: 0
-    id: u72
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 5.85
-    op: 0
-    id: u73
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 6.1
-    op: 0
-    id: u75
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 6.1
-    op: 0
-    id: u76
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 6.35
-    op: 0
-    id: u78
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 6.35
-    op: 0
-    id: u79
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 6.6
-    op: 0
-    id: u81
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 6.6
-    op: 0
-    id: u82
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 6.85
-    op: 0
-    id: u84
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 6.85
-    op: 0
-    id: u85
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 7.1
-    op: 0
-    id: u87
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 7.1
-    op: 0
-    id: u88
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 7.35
-    op: 0
-    id: u90
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 7.35
-    op: 0
-    id: u91
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 7.6
-    op: 0
-    id: u93
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 7.6
-    op: 0
-    id: u94
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 7.85
-    op: 0
-    id: u96
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 7.85
-    op: 0
-    id: u97
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 8.1
-    op: 0
-    id: u99
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 8.1
-    op: 0
-    id: u100
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 8.35
-    op: 0
-    id: u102
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 8.35
-    op: 0
-    id: u103
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 8.6
-    op: 0
-    id: u105
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 8.6
-    op: 0
-    id: u106
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 8.85
-    op: 0
-    id: u108
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 8.85
-    op: 0
-    id: u109
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 9.1
-    op: 0
-    id: u111
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 9.1
-    op: 0
-    id: u112
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 9.35
-    op: 0
-    id: u114
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 9.35
-    op: 0
-    id: u115
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 9.6
-    op: 0
-    id: u117
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 9.6
-    op: 0
-    id: u118
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 9.85
-    op: 0
-    id: u120
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 9.85
-    op: 0
-    id: u121
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 10.1
-    op: 0
-    id: u123
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 10.1
-    op: 0
-    id: u124
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 10.35
-    op: 0
-    id: u126
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 10.35
-    op: 0
-    id: u127
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 10.6
-    op: 0
-    id: u129
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 10.6
-    op: 0
-    id: u130
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 10.85
-    op: 0
-    id: u132
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 10.85
-    op: 0
-    id: u133
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 11.1
-    op: 0
-    id: u135
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 11.1
-    op: 0
-    id: u136
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 11.35
-    op: 0
-    id: u138
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 11.35
-    op: 0
-    id: u139
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 11.6
-    op: 0
-    id: u141
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 11.6
-    op: 0
-    id: u142
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 11.85
-    op: 0
-    id: u144
-    model: BlackEnergyCharge
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 11.85
-    op: 0
-    id: u145
-    model: SuperBigExplosion
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 10
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 175
+    offsetX: 0
     offsetY: 0
     hasPolar: 0
     polarRadius: 0
