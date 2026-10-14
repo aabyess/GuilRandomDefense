@@ -1,10 +1,17 @@
 # 다음 세션 이어받기 — 2026-10-07 밤 마감 (PM 4번째, Opus 5.5)
 
 `CLAUDE.md` → `.claude/PROJECT_BRIEF.md` → `.claude/TEAM_RULES.md`를 먼저 읽고 이 문서로 온다.
-🔴 **10-14 PM 10 이어받기판(아래 맨 위 「PM 10 이어받기」)을 따를 것** (옛 줄: 10-09 PM 9판) (옛 줄: 10-08 저녁 PM 7번째 마감판 — 팀원은 이미 새 세션(PM 7이 마감 때 --fresh), `--fresh` 금지.** (옛 줄: 10-08 오후 PM 6번째 마감판.) (옛 줄: 새 PM(10-08 새벽 교체): 팀원은 그대로 — `--fresh` 돌리지 말 것.) 옛 PM이 마감 때 팀원 셋(구현담당1·2·blender)과 PM을 같이 갈아 끼웠다(사장님 「이거 다 되면 세션 다 바꿔보자」). ListAgents로 셋이 떠 있는지만 확인 → 「준비 완료」 받고 첫 지시(배경·에디터 순번 규칙 같이). 각자 `.claude/team/handoff_<역할>.md`(10-07 밤 최신).
+🔴 **10-14 저녁 PM 10 진행판(아래 맨 위 「PM 10 진행」)부터 읽을 것** (옛 줄: 10-09 PM 9판) (옛 줄: 10-08 저녁 PM 7번째 마감판 — 팀원은 이미 새 세션(PM 7이 마감 때 --fresh), `--fresh` 금지.** (옛 줄: 10-08 오후 PM 6번째 마감판.) (옛 줄: 새 PM(10-08 새벽 교체): 팀원은 그대로 — `--fresh` 돌리지 말 것.) 옛 PM이 마감 때 팀원 셋(구현담당1·2·blender)과 PM을 같이 갈아 끼웠다(사장님 「이거 다 되면 세션 다 바꿔보자」). ListAgents로 셋이 떠 있는지만 확인 → 「준비 완료」 받고 첫 지시(배경·에디터 순번 규칙 같이). 각자 `.claude/team/handoff_<역할>.md`(10-07 밤 최신).
 **작업이 진행되면 PM이 이 문서를 갱신한다(큰 단계마다).**
 
 ---
+
+## ⭐⭐⭐ PM 10 진행 (10-14 오후~저녁) — 0.3.19 배포 완료
+- **배포**: 0.3.19 드라이브 업로드 완료(0.3.18은 미배포로 합침). 빌드 사본 ../GuilRandomDefense-build release/0.3.19(a3859e795). 배포 전 관문 추가: `PinkMaterialProbe.FixAndRun`(재질 null·FBX 재임포트) · `StaleDollRepair.Check`(전시 인형 메시 끊김) · `Tools/check_missing_assets.py --tracked`(없는 guid 0) · 빌드 시험 `-mpSolo -soloDifficulty easy -pachinkoTest jackpot -mpShotAt …`.
+- **0.3.17 안 보이던 스킨 원인**: 맵 생성기가 씬에 구운 전시 인형(DollIdle, 프리팹 연결 없음)이 FBX 교체로 옛 메시 참조 끊김 → StaleDollRepair. FBX가 .mat보다 먼저 임포트되면 재질 null(조로 분홍) → PinkMaterialProbe.
+- **30R 파칭코(신규, 0.3.19)**: PachinkoController/Plan(구현담당1) + PachinkoOverlay(구현담당2). 테마 투표(도쿄구울/리제로, 클릭, 표 비율 확률) → 사람마다 결과. 확률 777 20%·같은 숫자 40%·리치 꽝 30%·꽝 10%. 보상 777 랜덤유닛·당첨 전설히든 위습·리치꽝 희귀함·꽝 특별함. 대사표·영상·이미지는 사장님 확정(메모리 pachinko-* 참고). 자료: ~/GRD_pachinko_art/(숫자 symbols_v3·fx·scene·bgvideo·rezero_*) · ~/GRD_pachinko_sfx/(sound.html = 「파칭코 사운드 띄워줘」).
+- **진행 중(사장님 3시간 자리 비움 19:30~)**: 파칭코 숫자·이펙트 개선 — 레퍼런스 조사 ~/GRD_pachinko_research/ · 리제로 보석 숫자(blender, symbols_rz) · 인게임 어색한 순간 목록(구현담당2).
+- 사장님 답 대기: 로딩 화면 사진 파일(받지 못함) · 제한 최영민 초월 오라 · 거구 3기 배율 · 아래 등급 원작 짝 랜덤 배정 여부 · 영원 김영원 짝 · 「help me」 그림 유지 여부.
 
 ## ⭐⭐ PM 10 이어받기 (10-14, PM 9가 사장님 지시로 전원 교체)
 ### 0) 맨 먼저
