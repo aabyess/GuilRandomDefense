@@ -53,6 +53,21 @@ public class DifficultyManager : MonoBehaviour
         //    ⚠️ 기억은 이 기계 안에서만이다(PlayerPrefs) — 판 상태가 아니라 사람의 편의값이다.
         //    ⚠️ 2026-10-03 사장님 확정으로 **사람 플레이에선 더 이상 건너뛰지 않는다** — 원작은 게임에 들어가서 방장이 매번 고른다
         //    (DifficultySelectHud). 기억값 자동 선택은 측정 도구(gameshot `mode:`)가 ToolAutoPick을 켰을 때만 쓴다.
+        // 빌드 시험용(10-14): -soloDifficulty easy|normal|hard|hell|god|nightmare — 호스트/혼자 하기에서 난이도 창 없이 시작한다(기억값은 안 건드린다).
+        if (GameAuthority.IsServer)
+        {
+            string[] cmd = System.Environment.GetCommandLineArgs();
+            for (int i = 0; i + 1 < cmd.Length; i++)
+            {
+                if (cmd[i] != "-soloDifficulty") continue;
+                if (System.Enum.TryParse(cmd[i + 1], true, out DifficultyMode argMode) && System.Enum.IsDefined(typeof(DifficultyMode), argMode))
+                {
+                    ApplyMode(argMode);
+                    Debug.Log($"[난이도] 개발 인자 -soloDifficulty {argMode} 로 시작");
+                    return;
+                }
+            }
+        }
         bool toolAutoPick = PlayerPrefs.GetInt(ToolAutoPickKey, 0) == 1;
         if (toolAutoPick) PlayerPrefs.DeleteKey(ToolAutoPickKey);   // 한 판짜리 신호 — 도구가 켜고 이 판이 시작하며 소비한다(남아도 다음 사람 플레이에 번지지 않게)
         if (toolAutoPick && GameAuthority.IsServer && PlayerPrefs.HasKey(SavedModeKey))

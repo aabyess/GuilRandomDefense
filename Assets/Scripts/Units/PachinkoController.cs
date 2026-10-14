@@ -59,6 +59,7 @@ public class PachinkoController : MonoBehaviour
     {
         if (Instance != null) return Instance;
         var go = new GameObject("PachinkoController");
+        DontDestroyOnLoad(go);   // 개발 인자(-pachinkoTest)는 첫 씬(NetBoot)에서 만들어져 혼자 하기 씬 전환 때 파괴되던 문제(0.3.18)
         Instance = go.AddComponent<PachinkoController>();
         return Instance;
     }
