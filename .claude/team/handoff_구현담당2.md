@@ -1,3 +1,30 @@
+# 구현담당2 인수인계 — 2026-10-14 저녁 (파칭코 오버레이 4차·리제로 테마·재반입 뒤)
+
+새 세션은 기억이 없다. 이 문서 → `.claude/NEXT_SESSION.md`. 작업 장소 worktree `../GuilRandomDefense-w2`(w2, 에디터는 내 것 — 무응답이면 껐다 켬: `nohup caffeinate -dimsu Unity -projectPath $PWD -logFile ~/GRD_w2_editorN.log &`). push 금지(PM 병합), SampleScene 수정 금지, 커밋은 `GIT_LITERAL_PATHSPECS=1 git add --pathspec-from-file=목록` (경로에 `[ ]` 있음), 병합 요청 전 `python3 Tools/check_missing_assets.py --tracked` 한 줄 같이.
+
+## 오늘 끝낸 일 (git log 제목으로 찾는다)
+- 교체 스킨 24기 재수출 FBX 재반입(가프 머리 OK)·조로·클립 중간 알파 사진·키 맞춘 유닛 콜라이더 추종(HeightFollowProbe)·변형 클립 무작위 재생(Attack/Attack 2…, 컨트롤러 AttackVariant/SpellVariant).
+- 연출 자동검사: blender 교체 대본 20+14+17건·tots_R·Franky 등 전부 PASS(CINEMATIC_CHECK.tsv 69행, 자동검사가 TSV를 덮어쓰니 매번 병합할 것).
+- **파칭코 오버레이** `Assets/Scripts/UI/PachinkoOverlay.cs`(약 2200줄): PachinkoController의 PlayHandler/PushedHandler/Vote*Handler에 붙음. PachinkoPlan.theme(Pack 26비트)·테마별 Prelude/Result. 도쿄구울: 15초 무음 영상(StreamingAssets pachinko_bg_15s.mp4)+음악 68초(Resources/Pachinko/Sfx/pachinko_music.mp3)·카네키 helpme 맥동→꽝=화면 전체 캡처 유리 깨짐→kaneki_miss·당첨=kaneki_win·숫자별 대사 WinLines[9]·MissLine(D09)·폭죽·타격 임팩트(Resources/Pachinko/Impacts/*.json, 영상 시각 기준). 리제로: 영상 꽝 35/당첨 39.1초에 맞춘 SequenceRz·꽝 깨짐→rezero_miss_6s·R10(리치꽝)/R11·RzWinLines. 투표 UI(클릭 1회, 한국어)는 내 것. 보류 구슬 1개. 소리 슬롯 Sfx[]는 전부 null(사장님 결정).
+- 도구: PachinkoProbe(Jackpot/Win/Revive/Reach/Miss)·PachinkoRecorder(결정론 30fps 프레임+events.json → Tools/pachinko/build_rec.py로 소리 포함 mp4, 녹화는 사장님이 중단시킴)·PachinkoFpsProbe(실시간 FPS: 에디터 18~22fps, 영상 정체 0회)·Tools/pachinko/make_border.py(금 틀 가운데 투명).
+
+## 남은 일
+1. **blender fx 그림으로 교체**: ~/GRD_pachinko_art/fx/(kagune_1~4·brush_*·streak_*·speedlines·clock_emblem·butterfly_0~3·spark_1~8, README.txt). 지금은 코드로 그린 대체물(RibbonGraphic 촉수·붓 획, 줄 플레어 Image, GearFx, ButterflyGraphic, 폭죽 불똥) — 그림이 오면 교체만. PM 「슬롯화」 요청: 아직 안 함.
+2. 도쿄구울 SP 리치 자리 `PachinkoOverlay.SpReachPlayer`(비어 있으면 칸 안 띄움) · 컷인 얼굴 그림 · 리제로 숫자 세트 `Resources/Pachinko/SymbolsRz/`(없으면 Symbols v3 폴백)는 사장님/blender 자료 대기.
+3. 배포 빌드(맥·윈)에서 VideoPlayer H.264(StreamingAssets mp4 4개) 실측 — PM이 맥 빌드는 확인함, 윈 미확인.
+4. 크레딧 E 결함 셋은 해소 확인함(g2_credE_3s.png). 연출 연결(LinkPassed) 표 갱신은 blender 대본이 바뀔 때마다 `call CinematicImporter.LinkPassed`.
+
+## 함정
+- **w2 에디터가 가끔 0% CPU로 멈춘다**(브리지 inbox가 안 먹힘) → 죽이고 caffeinate로 다시 띄움. 소스 편집은 에디터가 컴파일을 끝낸 뒤에야 gameshot이 의미 있다(도메인 리로드 오염).
+- 컴파일 오류가 있는 채 gameshot 돌리면 전부 「촬영 실패」 — 편집 직후 `bash Tools/ui/csc_check.sh .`(Editor 폴더는 안 봄).
+- Time.captureFramerate 중 unscaledDeltaTime은 실시간 — 오버레이는 RecordMode에서 자체 시계(Dt/Now)를 쓴다. 새 코드에서 Time.unscaled*를 직접 쓰지 말 것.
+- Dela Gothic One에는 한글이 없다 → Pretendard 폴백(Build에서 fallback 테이블에 추가). 새 한글 글자는 그냥 쓰면 된다.
+- `GameObject ?? AddComponent`는 유니티 객체에선 안 먹는다(Fade 버그) — null 비교로.
+- 자동검사(auto_check.py)는 TSV를 덮어쓴다 — 돌린 뒤 git checkout하고 새 행만 병합.
+- 이 문서 아래 구판(10-14 오전·10-08) 함정은 그대로 유효.
+
+---------- 아래는 10-14 오전 인수인계 ----------
+
 # 구현담당2 인수인계 — 2026-10-14 세션 교체 (스킨 교체 24기·키 맞추기·크레딧 E 뒤)
 
 새 세션은 기억이 없다. 이 문서 → `.claude/NEXT_SESSION.md` 순서. 작업 장소는 **worktree `../GuilRandomDefense-w2`(브랜치 w2, 에디터는 내 것)**. 거기서 커밋(`git add -- 경로` → `git commit -m … -- 경로`), push 금지(PM이 병합), **SampleScene.unity 수정 금지**, main 새 커밋은 `git merge main`(PM이 ff해 주기도 한다). 브리지 파일 접두 `g2_`, 이름은 매번 새로 + `rm -f outbox/이름.txt`(와일드카드 rm은 zsh에서 「no matches」 오류 — 이름을 그대로). 커밋 끝줄 `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. 🔴 gameshot 중에는 소스(.cs)를 건드리지 말 것 — 에디터가 재컴파일하며 그 건이 「촬영 실패」로 남는다(10-09 호시노 아이 건).
