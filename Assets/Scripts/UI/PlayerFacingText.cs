@@ -51,6 +51,10 @@ public static class PlayerFacingText
         string name = skill != null ? skill.skillName ?? "" : "";
         int dash = name.IndexOf('—');
         if (dash > 0) name = name.Substring(0, dash);   // 「이름 — 메모·수치」는 앞만(수치는 설명 줄에 따로 나온다)
+        // 10-14 사장님: 어떤 유닛에서 받았는지 표기 안 함 — 능력 코드 뒤 꼬리 괄호 속 원작 이름(「Unique20 1/10 (보아 핸콕)」)은 뗀다(숫자·%·: 든 괄호는 효과 설명이라 둔다).
+        string trimmed = name.Trim();
+        if (Regex.IsMatch(trimmed, @"^(?:[A-Z][0-9A-Z]{3}|k\d+|Unique\d+|Legend\d+|[A-Za-z]+_[A-Za-z0-9_]+)\s"))
+            name = Regex.Replace(trimmed, @"\s*[\(（][^\d%:\)）]*[\)）]\s*$", "");
         name = Regex.Replace(name.Trim(), @"^(?:(?:[A-Z][0-9A-Z]{3}|k\d+|Unique\d+|[A-Za-z]+_[A-Za-z0-9_]+)\s+)+", "");   // 앞머리 능력 코드
         name = Regex.Replace(name, @"\s+(?:\d+/\d+|Lv\d+|AND|\d+범위)(?=\s|$)", "");                                   // 「1/10」·「Lv2」 같은 꼬리
         name = name.TrimStart('!', ' ');
