@@ -24,6 +24,7 @@ public class UnitAcquireNotice : MonoBehaviour
     class Pending { public float flushAt; public readonly List<UnitData> units = new List<UnitData>(); }
     readonly Dictionary<int, Pending> pending = new Dictionary<int, Pending>();
     static UnitAcquireNotice instance;
+    static int saltCounter;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Install()
@@ -55,7 +56,9 @@ public class UnitAcquireNotice : MonoBehaviour
             Pending p = pair.Value;
             if (p.units.Count == 0 || Time.unscaledTime < p.flushAt) continue;
             List<string> lines = Lines(p.units);
-            foreach (string line in lines) PlayerNotification.Show(pair.Key, line, Duration);
+            // 같은 유닛을 둘 이상 얻으면 같은 문구가 와서 PlayerNotificationHud가 한 줄로 합쳤다(10-14 친구 피드백).
+            // 줄마다 뒤에 공백을 달리 붙여(보이지 않음) 얻은 수만큼 줄이 쌓이게 한다.
+            for (int i = 0; i < lines.Count; i++) PlayerNotification.Show(pair.Key, lines[i] + new string(' ', saltCounter++ % 7), Duration);
             Debug.Log($"[획득 알림] 플레이어 {pair.Key}: {string.Join(" / ", lines)}");   // 알림은 3초면 사라진다 — 로그로도 남겨 판 기록에서 셀 수 있게
             p.units.Clear();
         }
