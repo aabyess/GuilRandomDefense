@@ -13,25 +13,40 @@ def save(im, name): im.save(f"{OUT}/{name}.png"); print(name, im.size)
 def lerp(a, b, t): return tuple(a[i] + (b[i] - a[i]) * t for i in range(len(a)))
 
 # ① 카구네 촉수 -------------------------------------------------------------
-def tentacle(layer, P, w0, seed, grad=((205, 14, 34), (110, 4, 16), (8, 0, 4)), N=360, U=14):
-    d = ImageDraw.Draw(layer); rnd = random.Random(seed)
+def tentacle(layer, P, w0, seed, N=520, U=40, **_):
+    """젖은 광택·겹친 비늘 판·날카로운 끝·안쪽 붉은 맥동 줄(10-14 2차)."""
+    d = ImageDraw.Draw(layer)
     pts = [bez(P, i / N) for i in range(N + 1)]
+    NSEG = 26                                              # 마디(판) 수
     for i in range(N):
         s = i / N; x0, y0 = pts[i]; x1, y1 = pts[i + 1]
         dx, dy = x1 - x0, y1 - y0; L = math.hypot(dx, dy) or 1; nx, ny = -dy / L, dx / L
-        def W(ss): return w0 * (1 - ss) ** 0.75 * (1 + 0.07 * math.sin(ss * 40 + seed))
+        def W(ss): return w0 * (1 - ss) ** 1.3 * (1 + 0.05 * math.sin(ss * 31 + seed)) * (0.72 + 0.28 * min(1, ss * 9) ** 0.5 if ss < .12 else 1)
         wa, wb = W(s), W(min(1, s + 1 / N))
         for j in range(U):
             u0 = -1 + 2 * j / U; u1 = -1 + 2 * (j + 1) / U; um = (u0 + u1) / 2
-            base = lerp(grad[0], grad[1], min(1, s * 1.6)) if s < .625 else lerp(grad[1], grad[2], (s - .625) / .375)
-            light = 0.55 + 0.6 * (1 - abs(um)) ** 1.5       # 가운데 볼록
-            rim = 1.0 + 0.9 * max(0, abs(um) - 0.78) / 0.22  # 가장자리 붉은 테
-            v = (s * 70 + 0.55 * abs(um) ** 2) % 1.0         # 비늘 결(V 모양 줄)
-            scale = 0.42 if v < 0.12 else 1.0
-            c = [min(255, int(base[k] * light * scale * (rim if k == 0 else 1))) for k in range(3)]
-            q = [(x0 + nx * wa * u0, y0 + ny * wa * u0), (x1 + nx * wb * u0, y1 + ny * wb * u0),
-                 (x1 + nx * wb * u1, y1 + ny * wb * u1), (x0 + nx * wa * u1, y0 + ny * wa * u1)]
-            d.polygon(q, fill=tuple(c) + (255,))
+            # 겹친 판: 마디 시작에서 밝고 끝으로 어두워지며, 가운데가 앞으로 나온 V자 경계
+            q = (s * NSEG + 1.1 * um * um) % 1.0
+            plate = 0.52 + 0.75 * (1 - q) ** 2.2            # 판 앞 모서리 밝게 → 겹침 그림자
+            edge_line = 0.25 if q > 0.93 else 1.0           # 판 사이 가는 어두운 틈
+            body = 0.40 + 0.75 * (1 - abs(um) ** 1.8)       # 단면 볼록
+            tipfade = 1 - 0.80 * s
+            r = 150 * plate * body * edge_line * tipfade; g = 8 * plate * body * tipfade; bl = 18 * plate * body * tipfade
+            # 가장자리 어두운 보랏빛 윤곽
+            rim = max(0, abs(um) - 0.82) / 0.18; r *= (1 - 0.65 * rim); g *= (1 - rim); bl *= (1 - 0.3 * rim)
+            # 안쪽 붉은 맥동 줄(가운데, 마디마다 박동)
+            pulse = 0.35 + 0.65 * (0.5 + 0.5 * math.sin(s * NSEG * 2 * math.pi - 0.8)) ** 2
+            core = math.exp(-(um / 0.055) ** 2) * (0.25 + 0.75 * pulse) * 0.8 * (1 - 0.55 * s) * (1 if s < .93 else (1 - s) / .07)
+            r = r + 255 * core * 0.95; g = g + 70 * core; bl = bl + 55 * core
+            # 젖은 광택: 한쪽(-0.42)에 가늘고 날카로운 한 줄 + 판마다 끊김, 반대편엔 옅은 반사
+            gl = math.exp(-((um + 0.42) / 0.045) ** 2) * (0.55 + 0.45 * math.sin(s * 11 + seed)) * (1 - s) ** 0.6 * (0.5 if q > .9 else 1.0)
+            gl2 = math.exp(-((um - 0.55) / 0.04) ** 2) * 0.25 * (1 - s) ** 0.6
+            h = max(0.0, gl + gl2)
+            r = r + (255 - r) * min(1, h * 0.95); g = g + (210 - g) * min(1, h * 0.95); bl = bl + (205 - bl) * min(1, h * 0.95)
+            c = (max(0, min(255, int(r))), max(0, min(255, int(g))), max(0, min(255, int(bl))), 255)
+            qd = [(x0 + nx * wa * u0, y0 + ny * wa * u0), (x1 + nx * wb * u0, y1 + ny * wb * u0),
+                  (x1 + nx * wb * u1, y1 + ny * wb * u1), (x0 + nx * wa * u1, y0 + ny * wa * u1)]
+            d.polygon(qd, fill=c)
 def kagune():
     W, H = 1024 * SS, 2048 * SS
     specs = [  # (제어점, 두께, 추가 가지)
@@ -147,21 +162,50 @@ def clock():
         r = (200 + k * 40) * SS; a0 = 40 + k * 100
         d.arc((c - r, c - r, c + r, c + r), a0, a0 + 70, fill=silver, width=int(2 * SS))
     save(im.resize((1024, 1024), Image.LANCZOS), "clock_emblem")
+def _spline(pts, n=14):
+    out = []; m = len(pts)
+    for i in range(m):
+        p0, p1, p2, p3 = pts[(i - 1) % m], pts[i], pts[(i + 1) % m], pts[(i + 2) % m]
+        for k in range(n):
+            t = k / n; t2, t3 = t * t, t * t * t
+            out.append(tuple(0.5 * ((2 * p1[c]) + (-p0[c] + p2[c]) * t + (2 * p0[c] - 5 * p1[c] + 4 * p2[c] - p3[c]) * t2 + (-p0[c] + 3 * p1[c] - 3 * p2[c] + p3[c]) * t3) for c in (0, 1)))
+    return out
+FORE = [(4, -6), (16, -42), (50, -90), (98, -118), (126, -104), (118, -68), (102, -36), (70, -12), (28, -2)]
+HIND = [(6, 2), (40, 0), (82, 8), (106, 28), (112, 56), (104, 96), (94, 112), (84, 78), (68, 62), (54, 74), (38, 60), (22, 46), (10, 24)]
 def butterfly(f, S=256):
-    k = [1.0, 0.62, 0.22, 0.62][f]; im = Image.new("RGBA", (S * SS, S * SS), (0, 0, 0, 0)); d = ImageDraw.Draw(im); c = S * SS / 2
-    def wing(sign, up, lo):
-        U = [(0, -6), (28, -62), (86, -100), (112, -70), (92, -22), (40, 0)]
-        L = [(0, 2), (46, 6), (86, 30), (66, 82), (30, 62), (6, 28)]
-        for poly, col in ((U, (140, 70, 230, 235)), (L, (96, 40, 190, 235))):
-            pts = [(c + sign * x * k * (S / 256) * SS, c + y * (S / 256) * SS) for x, y in poly]
-            d.polygon(pts, fill=col, outline=(235, 215, 255, 255))
-            d.line(pts + [pts[0]], fill=(235, 215, 255, 255), width=SS * 2)
-        a, b = (c + sign * 70 * k * SS * S / 256, c - 52 * SS * S / 256), 7 * SS
-        d.ellipse((a[0] - b, a[1] - b, a[0] + b, a[1] + b), fill=(255, 235, 255, 255))
-    wing(-1, 0, 0); wing(1, 0, 0)
-    d.ellipse((c - 6 * SS, c - 40 * SS, c + 6 * SS, c + 56 * SS), fill=(40, 20, 70, 255))
-    d.line((c, c - 40 * SS, c - 22 * SS, c - 74 * SS), fill=(40, 20, 70, 255), width=2 * SS); d.line((c, c - 40 * SS, c + 22 * SS, c - 74 * SS), fill=(40, 20, 70, 255), width=2 * SS)
-    return im.resize((S, S), Image.LANCZOS)
+    k = [1.0, 0.64, 0.24, 0.64][f]; Q = 4; Z = S * Q; c = Z / 2; sc = S / 256 * Q
+    def wing_mask(poly, sign):
+        pts = [(c + sign * x * k * sc, c + (y + 6) * sc * (0.94 + 0.06 * k)) for x, y in _spline(poly)]
+        m = Image.new("L", (Z, Z), 0); ImageDraw.Draw(m).polygon(pts, fill=255); return m, pts
+    res = Image.new("RGBA", (Z, Z), (0, 0, 0, 0))
+    for sign in (-1, 1):
+        for poly, vein_n, tone in ((HIND, 6, 0.85), (FORE, 7, 1.0)):
+            m, pts = wing_mask(poly, sign)
+            depth = np.asarray(m.filter(ImageFilter.GaussianBlur(18 * Q / 4 * 1.6)), dtype=np.float32) / 255.0   # 안쪽일수록 큼
+            inside = np.asarray(m, dtype=np.float32) / 255.0
+            edge = np.clip(1.0 - (depth - 0.5) / 0.38, 0, 1) * inside      # 가장자리 1 → 안쪽 0
+            rgb = np.zeros((Z, Z, 3), np.float32)
+            rgb[..., 0] = 170 * (1 - edge) + 78 * edge; rgb[..., 1] = 130 * (1 - edge) + 22 * edge; rgb[..., 2] = 255 * (1 - edge) + 175 * edge
+            a = (0.10 + 0.78 * edge ** 1.2) * inside * 255 * tone
+            lay = Image.fromarray(np.dstack([rgb, a]).astype(np.uint8), "RGBA")
+            d = ImageDraw.Draw(lay)
+            ox, oy = c + sign * 6 * k * sc, c + 4 * sc                      # 날개맥: 날개 뿌리에서 가장자리로 방사
+            step = max(1, len(pts) // (vein_n * 2))
+            for q in range(2, len(pts) - 2, step):
+                tx, ty = pts[q]
+                d.line([(ox, oy), (ox + (tx - ox) * 0.55 + 0, oy + (ty - oy) * 0.55), (tx * 0.985 + ox * .015, ty * 0.985 + oy * .015)], fill=(225, 205, 255, 150), width=max(1, int(1.1 * Q / 2)))
+            mk = Image.new("L", (Z, Z), 0); mk.paste(m)
+            lay.putalpha(Image.fromarray((np.asarray(lay)[..., 3].astype(np.float32) * np.asarray(mk, np.float32) / 255).astype(np.uint8)))
+            d = ImageDraw.Draw(lay)
+            d.line(pts + [pts[0]], fill=(238, 238, 252, 235), width=max(1, int(1.6 * Q / 2)))   # 은빛 가장자리
+            res = Image.alpha_composite(res, lay)
+    glow = res.filter(ImageFilter.GaussianBlur(11 * Q / 4)).copy()
+    ga = np.asarray(glow).copy(); ga[..., 0], ga[..., 1], ga[..., 2] = 150, 80, 255; ga[..., 3] = (ga[..., 3] * 0.65).astype(np.uint8)
+    out = Image.alpha_composite(Image.fromarray(ga, "RGBA"), res)
+    d = ImageDraw.Draw(out)
+    d.ellipse((c - 5 * sc, c - 38 * sc, c + 5 * sc, c + 60 * sc), fill=(30, 14, 56, 255))
+    for sx in (-1, 1): d.line([(c, c - 36 * sc), (c + sx * 14 * sc, c - 70 * sc), (c + sx * 26 * sc, c - 84 * sc)], fill=(60, 36, 100, 255), width=int(1.5 * Q))
+    return out.resize((S, S), Image.LANCZOS)
 def butterflies():
     fr = [butterfly(i) for i in range(4)]
     for i, im in enumerate(fr): save(im, f"butterfly_{i}")
