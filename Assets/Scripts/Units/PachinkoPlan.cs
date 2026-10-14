@@ -17,8 +17,8 @@ public static class PachinkoSettings
     public const float JackpotChance = 0.20f;
     /// <summary>7을 뺀 세 같은 숫자 = 전설·히든 위습.</summary>
     public const float WinChance = 0.40f;
-    /// <summary>리치(3▢3)만 걸렸다 빗나감 = 희귀함 위습. 나머지(1-JackpotChance-WinChance-이 값 = 20%)는 그냥 꽝 = 특별함 위습.</summary>
-    public const float ReachMissChance = 0.20f;
+    /// <summary>리치(3▢3)만 걸렸다 빗나감 = 희귀함 위습. 나머지(1-JackpotChance-WinChance-이 값 = 10%)는 그냥 꽝 = 특별함 위습.</summary>
+    public const float ReachMissChance = 0.30f;
     /// <summary>자기 PUSH 시간(초) — 각자 자기 버튼, 이 안에 한 번 누르면 자기 줄만 정지, 안 누르면 끝에 자동.</summary>
     public const float PushSeconds = 5f;
     public const int WispCountPerPlayer = 1;
