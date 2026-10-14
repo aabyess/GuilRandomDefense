@@ -8,17 +8,17 @@ public enum PachinkoHold : byte { White, Blue, Green, Red, Gold }
 public enum PachinkoBg : byte { None, Green, Red, Gold }
 public enum PachinkoCut : byte { None, Blue, Red, Gold }
 
-/// <summary>사장님이 정할 값(사장님 10-14 확정: 777 5% · 세 같은 숫자 20% · 리치 꽝 35% · 꽝 40%, 플레이어마다 따로 뽑는다). 바꿀 땐 여기만.</summary>
+/// <summary>사장님이 정할 값(사장님 10-14 재확정: 777 5% · 세 같은 숫자 25% · 리치 꽝 40% · 꽝 30%, 플레이어마다 따로 뽑는다). 바꿀 땐 여기만.</summary>
 public static class PachinkoSettings
 {
     /// <summary>이 라운드 보스를 잡는 순간 한 번(판당 1회).</summary>
     public const int TriggerRound = 30;
     /// <summary>777 = 랜덤유닛 직접 지급.</summary>
-    public const float JackpotChance = 0.20f;
+    public const float JackpotChance = 0.05f;
     /// <summary>7을 뺀 세 같은 숫자 = 전설·히든 위습.</summary>
-    public const float WinChance = 0.40f;
-    /// <summary>리치(3▢3)만 걸렸다 빗나감 = 희귀함 위습. 나머지(1-JackpotChance-WinChance-이 값 = 10%)는 그냥 꽝 = 특별함 위습.</summary>
-    public const float ReachMissChance = 0.30f;
+    public const float WinChance = 0.25f;
+    /// <summary>리치(3▢3)만 걸렸다 빗나감 = 희귀함 위습. 나머지(1-JackpotChance-WinChance-이 값 = 30%)는 그냥 꽝 = 특별함 위습.</summary>
+    public const float ReachMissChance = 0.40f;
     /// <summary>자기 PUSH 시간(초) — 각자 자기 버튼, 이 안에 한 번 누르면 자기 줄만 정지, 안 누르면 끝에 자동.</summary>
     public const float PushSeconds = 5f;
     public const int WispCountPerPlayer = 1;
