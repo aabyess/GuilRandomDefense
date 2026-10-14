@@ -67,6 +67,8 @@ public static class SkillVfx
     const float HitDiameter = 1.4f * Unit;
     const float CasterDiameter = 2f * Unit;
     const float MinAreaDiameter = 2f * Unit;
+    // 범위 이펙트 상한(10-14: 구일외교관 @100이 반경 500→지름 240으로 맵을 덮었다). 피해 범위는 그대로, 그림만 이 지름까지.
+    const float MaxAreaDiameter = 4f * Unit;
     const int PrefabPoolCap = 16;
 
     /// <summary>MP: 팩 프리팹 이펙트를 실제로 띄울 때(번호·위치·지름) — 호스트의 NetGameState가 친구 화면으로 넘긴다.</summary>
@@ -80,7 +82,7 @@ public static class SkillVfx
         if (Enabled && CasterAllowsVfx && currentSkill != null) SkillCinematic.OnCast(currentSkill, casterPosition, aoeCenter);   // 원작 스킬 연출(10-09)
         if (!Enabled || !CasterAllowsVfx || currentEntry == null) return;
         if (currentEntry.area.IsSet)
-            PlaySlot(currentEntry.area, aoeCenter, Mathf.Max(MinAreaDiameter, worldRange * 2f), ground: true);
+            PlaySlot(currentEntry.area, aoeCenter, Mathf.Clamp(worldRange * 2f, MinAreaDiameter, MaxAreaDiameter), ground: true);
         if (currentEntry.caster.IsSet)
             PlaySlot(currentEntry.caster, casterPosition, CasterDiameter, ground: true);
     }

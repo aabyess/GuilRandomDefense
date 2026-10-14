@@ -117,7 +117,7 @@ public class OriginalVfxPlayer : MonoBehaviour
         if (clips.Length > 0) SelectClip(0);
         time = 0f; speed = 1f;
         runDuration = clips.Length > 0 ? clips[0].lengthSec : duration;
-        runLoop = loop;
+        runLoop = false;   // 스킬 이펙트는 한 번 재생 후 꺼진다(10-14: loop=true 프리팹이 영원히 남던 것)
         playing = true; Finished = false;
         gameObject.SetActive(true);
         Apply(0f);
