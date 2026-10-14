@@ -42,8 +42,8 @@ public class PachinkoOverlay : MonoBehaviour
     // ───────── 화면 요소 ─────────
     GameObject host;
     RectTransform root, stage;
-    Image kanekiImage, vignette, heartRed, burstGlow, backdrop, flash, dim, ringImage, pushBtnImage, gaugeFill, bandImage, cutBand;
-    RectTransform kanekiRect, kanekiPic, shardRoot, speedRect, holdsRect, machineRect, frameGroup, pushGroup, bandRect, cutRect, spSlotPanel, raysRect, ticker;
+    Image missImage, eyeGlow, kanekiImage, vignette, heartRed, burstGlow, backdrop, flash, dim, ringImage, pushBtnImage, gaugeFill, bandImage, cutBand;
+    RectTransform shatterRoot, kanekiRect, kanekiPic, shardRoot, speedRect, holdsRect, machineRect, frameGroup, pushGroup, bandRect, cutRect, spSlotPanel, raysRect, ticker;
     TMP_Text pauseText, tickerText, meterText, pushCount, pushKeyText, bandText, cutText, spText, yokokuSmall, chanceText;
     Image[] holdOrbs;
     Image logoReach, logoKeizoku, logoGekiatsu, logoFukkatsu, logoOoatari, logoAtari, logoZannen;
@@ -52,6 +52,23 @@ public class PachinkoOverlay : MonoBehaviour
     TMP_FontAsset font;
     Sprite circle;
     AudioSource audioSource;
+
+    // 배경 영상 15초(사장님 10-14: 룰렛이 돌기 시작하면 깐다, 음악 포함판 — StreamingAssets)
+    const string BgVideoFile = "pachinko_bg_15s_with_music.mp4";
+    const float BgVideoSeconds = 15f, BgVideoFade = 0.5f;
+    /// <summary>녹화 모드(PachinkoRecorder): 영상을 게임 시각에 묶는다.</summary>
+    public static bool RecordMode;
+    /// <summary>녹화용: (소리 이름, 게임 시각, 음량) — 대사·영상 음악이 울린 순간.</summary>
+    public static Action<string, float, float> AudioEvent;
+    UnityEngine.Video.VideoPlayer videoPlayer;
+    RenderTexture videoRT;
+    RawImage videoView;
+    Image videoDim;
+    AudioSource videoAudio;
+    CanvasGroup kanekiGroup;
+    float videoShow, videoShowTarget, videoStartTime;
+    bool videoStopRequested;
+    Coroutine videoCo;
 
     Coroutine running;
     bool standalone;          // 컨트롤러 없이 시험(Preview) — PUSH를 스스로 닫는다
@@ -168,6 +185,21 @@ public class PachinkoOverlay : MonoBehaviour
         backdrop = Img("backdrop", root, null, bgTint, raycast: true);   // 화면 전체를 막는다(뒤 클릭 차단)
         Stretch(backdrop.rectTransform);
 
+        // 룰렛 배경 영상(맨 뒤): 세로에 맞추고 좌우를 자른다(cover) + 숫자가 읽히게 어두운 막
+        videoRT = new RenderTexture(1920, 818, 0) { name = "PachinkoBgVideo" };
+        var vgo = new GameObject("bgVideo"); vgo.transform.SetParent(transform, false);
+        videoPlayer = vgo.AddComponent<UnityEngine.Video.VideoPlayer>();
+        videoPlayer.playOnAwake = false; videoPlayer.isLooping = false; videoPlayer.waitForFirstFrame = true;
+        videoPlayer.renderMode = UnityEngine.Video.VideoRenderMode.RenderTexture; videoPlayer.targetTexture = videoRT;
+        videoPlayer.audioOutputMode = UnityEngine.Video.VideoAudioOutputMode.AudioSource;
+        videoAudio = vgo.AddComponent<AudioSource>(); videoAudio.playOnAwake = false; videoAudio.ignoreListenerPause = true; videoAudio.spatialBlend = 0f;
+        videoPlayer.SetTargetAudioSource(0, videoAudio);
+        videoView = Rt("videoView", root).gameObject.AddComponent<RawImage>(); videoView.texture = videoRT; videoView.raycastTarget = false;
+        videoView.rectTransform.anchorMin = videoView.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        videoView.rectTransform.sizeDelta = new Vector2(1080f * 1920f / 818f, 1080f);   // 높이에 맞춤
+        videoView.color = new Color(1f, 1f, 1f, 0f);
+        videoDim = Img("videoDim", root, null, new Color(0f, 0f, 0f, 0f)); Stretch(videoDim.rectTransform);
+
         // 1920×1080 고정 무대(화면 비율이 달라도 맞춰 줄인다)
         stage = Rt("stage", root);
         stage.anchorMin = stage.anchorMax = new Vector2(0.5f, 0.5f); stage.pivot = new Vector2(0.5f, 0.5f);
@@ -190,10 +222,13 @@ public class PachinkoOverlay : MonoBehaviour
         kanekiRect = Rt("kaneki", stage); Place(kanekiRect, 0, 0, 1920, 1080);
         kanekiPic = Rt("pic", kanekiRect); Place(kanekiPic, 960 - 440, 0, 880, 1080);
         kanekiImage = kanekiPic.gameObject.AddComponent<Image>(); kanekiImage.sprite = Spr("Scene/helpme"); kanekiImage.raycastTarget = false; kanekiImage.preserveAspect = true;
+        missImage = Img("miss", kanekiRect, Spr("Scene/pachinko_miss"), Color.white); Place(missImage.rectTransform, 960 - 800, 540 - 450, 1600, 900); missImage.enabled = false;
+        eyeGlow = Img("eye", kanekiRect, circle, new Color(1f, 0.1f, 0.1f, 0f)); Place(eyeGlow.rectTransform, 1181 - 60, 419 - 60, 120, 120);
         heartRed = Img("heartRed", kanekiRect, null, new Color(0.8f, 0f, 0.05f, 0f)); Stretch(heartRed.rectTransform); heartRed.rectTransform.sizeDelta = new Vector2(2400, 1400);
         shardRoot = Rt("shards", kanekiRect); Place(shardRoot, 0, 0, 1920, 1080);
         vignette = Img("vignette", kanekiRect, MakeVignette(), Color.white); Place(vignette.rectTransform, -200, -120, 2320, 1320); vignette.preserveAspect = false;
         burstGlow = Img("burst", kanekiRect, circle, new Color(1f, 0.45f, 0.1f, 0f)); Place(burstGlow.rectTransform, 1100, 200, 500, 500);
+        kanekiGroup = kanekiRect.gameObject.AddComponent<CanvasGroup>();
         kanekiRect.gameObject.SetActive(false);
         speedRect = Rt("speedLines", stage); Place(speedRect, 960 - 1100, 540 - 1100, 2200, 2200);
         for (int i = 0; i < 28; i++)
@@ -272,7 +307,6 @@ public class PachinkoOverlay : MonoBehaviour
         Image gaugeBg = Img("gaugeBg", pushGroup, null, new Color(0f, 0f, 0f, 0.55f)); Place(gaugeBg.rectTransform, 150, 730, 500, 22);
         gaugeFill = Img("gaugeFill", gaugeBg.transform, null, new Color(1f, 0.55f, 0.15f));
         gaugeFill.rectTransform.anchorMin = Vector2.zero; gaugeFill.rectTransform.anchorMax = Vector2.one; gaugeFill.rectTransform.offsetMin = gaugeFill.rectTransform.offsetMax = Vector2.zero;
-        gaugeFill.type = Image.Type.Filled; gaugeFill.fillMethod = Image.FillMethod.Horizontal; gaugeFill.fillAmount = 1f;
         dim = Img("pushDim", stage, null, new Color(0f, 0f, 0f, 0f)); Stretch(dim.rectTransform); dim.rectTransform.SetSiblingIndex(pushGroup.GetSiblingIndex());
         dim.rectTransform.anchorMin = new Vector2(0.5f, 0.5f); dim.rectTransform.anchorMax = new Vector2(0.5f, 0.5f); dim.rectTransform.sizeDelta = new Vector2(2600, 1500);
         pushGroup.SetAsLastSibling();
@@ -288,6 +322,7 @@ public class PachinkoOverlay : MonoBehaviour
         meterText = Label("meter", stage, "期待度 –", 34f, Color.white, TextAlignmentOptions.MidlineRight, 0.15f);
         Place(meterText.rectTransform, 1420, 990, 480, 60);
 
+        shatterRoot = Rt("shatterRoot", root); Stretch(shatterRoot);   // 화면 전체 캡처를 깨는 층(스테이지 위, 섬광 아래)
         flash = Img("flash", root, null, new Color(1f, 1f, 1f, 0f)); Stretch(flash.rectTransform);
 
         root.gameObject.SetActive(false);
@@ -396,7 +431,7 @@ public class PachinkoOverlay : MonoBehaviour
             {
                 int idx = baseIndex + (k - 1);   // k=1이 가운데 칸
                 int sym = SymbolAt(idx);
-                int fi = (int)(Time.unscaledTime * 12f) % 6;
+                int fi = (int)(Now * 12f) % 6;
                 bool fire = sym % 2 == 1;   // 홀수(7 금색 포함) = 불꽃 6프레임 / 짝수 = 크리스털(+별빛 2프레임)
                 if (spinning) { cells[k].sprite = Spr($"Symbols/symbol_{sym}_blur"); overlays[k].enabled = false; }
                 else if (fire) { cells[k].sprite = Spr($"Symbols/symbol_{sym}_f{fi}") ?? Spr($"Symbols/symbol_{sym}"); overlays[k].enabled = false; }
@@ -421,7 +456,7 @@ public class PachinkoOverlay : MonoBehaviour
             float t = 0f;
             while (t < seconds)
             {
-                t += Time.unscaledDeltaTime;
+                t += Dt;
                 float u = Mathf.Clamp01(t / seconds);
                 float e = 1f - Mathf.Pow(1f - u, 3f);
                 scroll = Mathf.Lerp(s0, target, e);
@@ -465,7 +500,9 @@ public class PachinkoOverlay : MonoBehaviour
         kanekiRect.gameObject.SetActive(true); kanekiImage.sprite = Spr("Scene/helpme"); kanekiImage.enabled = true; kanekiImage.color = Color.white;
         Place(kanekiPic, 960 - 440, 0, 880, 1080); kanekiPic.localScale = Vector3.one; kanekiPic.localRotation = Quaternion.identity;
         foreach (Transform sh in shardRoot) Destroy(sh.gameObject);
+        missImage.enabled = false; eyeGlow.color = new Color(1f, 0.1f, 0.1f, 0f);
         heartRed.color = new Color(0.8f, 0f, 0.05f, 0f); burstGlow.color = new Color(1f, 0.45f, 0.1f, 0f); heartbeat = true;
+        StopVideoNow();
         speedRect.gameObject.SetActive(false);
         machineRect.localScale = Vector3.one * 0.5f; machineRect.localRotation = Quaternion.Euler(0, 0, -6f);
         meterText.text = "期待度 –";
@@ -480,13 +517,13 @@ public class PachinkoOverlay : MonoBehaviour
 
     IEnumerator Sequence(PachinkoPlan p)
     {
-        float t0 = Time.unscaledTime;
+        float t0 = Now;
         Play(Slot.Open);
         // 등장
         float u = 0f;
         while (u < 0.5f)
         {
-            u += Time.unscaledDeltaTime;
+            u += Dt;
             float e = Mathf.Clamp01(u / 0.5f); e = 1f - Mathf.Pow(1f - e, 3f);
             machineRect.localScale = Vector3.one * Mathf.Lerp(0.5f, 1f, e);
             machineRect.localRotation = Quaternion.Euler(0, 0, Mathf.Lerp(-6f, 0f, e));
@@ -509,6 +546,7 @@ public class PachinkoOverlay : MonoBehaviour
         { int off = UnityEngine.Random.Range(0, 9); for (int ri = 0; ri < 3; ri++) reels[ri].scroll = off + ri * 3; }   // 시작 숫자도 칸마다 다르게
         foreach (Reel r in reels) r.spinning = true;
         Play(Slot.ReelSpin);
+        StartVideo();   // 룰렛이 돌기 시작하면 배경 영상 15초
         StartCoroutine(SpinLoop(speed));
         yield return Wait(0.03f);
         Coroutine leftStop = StartCoroutine(StopReel(0, p.left, 1.57f, spinSpeeds[0]));
@@ -569,7 +607,7 @@ public class PachinkoOverlay : MonoBehaviour
 
         // PUSH 창이 열리는 시각까지 맞춘다
         float target = t0 + p.PreludeSeconds();
-        while (Time.unscaledTime < target) yield return null;
+        while (Now < target) yield return null;
 
         // 7) PUSH — PushSeconds 동안
         yield return PushWindow();
@@ -577,11 +615,12 @@ public class PachinkoOverlay : MonoBehaviour
         {
             // 컨트롤러 알림을 기다린다(최대 4초). 시험용이면 바로 간다.
             float wait = standalone ? 0f : 4f;
-            while (pushedWho == int.MinValue && wait > 0f) { wait -= Time.unscaledDeltaTime; yield return null; }
+            while (pushedWho == int.MinValue && wait > 0f) { wait -= Dt; yield return null; }
             if (pushedWho == int.MinValue) pushedWho = -1;
         }
         pushGroup.gameObject.SetActive(false); dim.color = new Color(0, 0, 0, 0);
-        float resultStart = Time.unscaledTime;
+        float resultStart = Now;
+        videoStopRequested = true;   // 15초 전에 결과가 나면 결과 연출과 함께 페이드
 
         // 8) 가운데 줄 정지 — 숫자가 다시 큼직하게
         Stop(Slot.PushOpen); Stop(Slot.ReelSpin);
@@ -594,8 +633,7 @@ public class PachinkoOverlay : MonoBehaviour
         Play(Slot.ReelStop);
         if (p.revive)
         {
-            yield return Cracks(0.6f);                 // 꽝처럼 금이 가다가…
-            yield return Shatter(0.9f, true);          // …역재생처럼 도로 붙는다
+            yield return ShatterScreen(true, 1.3f);    // 꽝처럼 금이 가다가 멈추고, 역재생처럼 도로 붙는다
             yield return Wait(0.2f);
             bgTarget = new Color(0.45f, 0.3f, 0f, 0.92f);
             Play(Slot.Revive);
@@ -610,8 +648,8 @@ public class PachinkoOverlay : MonoBehaviour
         if (p.win)
         {
             if (!p.revive) StartCoroutine(WinPicture());
-            StartCoroutine(Flash(1f)); shakeUntil = Time.unscaledTime + 0.55f;
-            Play(p.jackpot ? Slot.PushVoice : Slot.WinVoice);   // 777 = 16 전체 대사(9.2초) · 일반 당첨 = 15(4.4초) — 당첨 확정 순간
+            StartCoroutine(Flash(1f)); shakeUntil = Now + 0.55f;
+            LoadDefaultSfx(); PlayLine(WinLines[Mathf.Clamp(p.center, 1, 9) - 1]);   // 숫자별 대사(111~999) — 당첨 확정 순간
             SetExpect(100);
             if (p.jackpot)
             {
@@ -632,19 +670,19 @@ public class PachinkoOverlay : MonoBehaviour
         }
         else
         {
-            Play(Slot.MissVoice);   // 「運なんて存在しない」(리제) — 그림이 깨지는 순간
-            Play(Slot.Zannen);
-            StartCoroutine(Shatter(1.0f, false));   // 꽝: 유리창 깨지듯 산산조각
+            LoadDefaultSfx(); PlayLine(MissLine);   // 「運なんて存在しない」(리제) — 그림이 깨지는 순간
+            StartCoroutine(ShatterScreen(false, 0.8f));   // 꽝: 지금 화면 전체가 유리창처럼 깨진다
             StartCoroutine(Pop(logoZannen, 4f, 3f, keep: true));
             ShowBand(p.reach ? "残念賞：希少の魂 ×1" : "残念賞：特別の魂 ×1");
         }
 
         // 컨트롤러가 정한 결과 시간만큼 보여 주고 닫는다
         float until = resultStart + p.ResultSeconds();
-        while (Time.unscaledTime < until) yield return null;
+        while (Now < until) yield return null;
         yield return Fade(0.25f);
         while (VoiceActive()) yield return null;   // 대사는 끝까지
         StopAllSfx();
+        StopVideoNow();
         duckTarget = 1f; GameBgm.Duck = 1f;
         root.gameObject.SetActive(false);
         running = null;
@@ -655,14 +693,14 @@ public class PachinkoOverlay : MonoBehaviour
     void Impact(Color tint, float shake = 0.35f, bool lines = true)
     {
         StartCoroutine(FlashColor(tint, 0.45f));
-        shakeUntil = Mathf.Max(shakeUntil, Time.unscaledTime + shake);
+        shakeUntil = Mathf.Max(shakeUntil, Now + shake);
         if (lines) StartCoroutine(SpeedBurst(0.6f));
     }
 
     IEnumerator FlashColor(Color c, float seconds)
     {
         float t = 0f;
-        while (t < seconds) { t += Time.unscaledDeltaTime; float a = 1f - t / seconds; flash.color = new Color(c.r, c.g, c.b, a * a * c.a); yield return null; }
+        while (t < seconds) { t += Dt; float a = 1f - t / seconds; flash.color = new Color(c.r, c.g, c.b, a * a * c.a); yield return null; }
         flash.color = new Color(1f, 1f, 1f, 0f);
     }
 
@@ -673,7 +711,7 @@ public class PachinkoOverlay : MonoBehaviour
         float t = 0f;
         while (t < seconds)
         {
-            t += Time.unscaledDeltaTime;
+            t += Dt;
             float u = t / seconds;
             speedRect.localScale = Vector3.one * Mathf.Lerp(0.4f, 1.5f, u);
             speedRect.localRotation = Quaternion.Euler(0, 0, t * 25f);
@@ -697,7 +735,7 @@ public class PachinkoOverlay : MonoBehaviour
         float t = 0f;
         while (t < seconds)
         {
-            t += Time.unscaledDeltaTime; float u = t / seconds; float off = Mathf.Lerp(34f, 0f, u);
+            t += Dt; float u = t / seconds; float off = Mathf.Lerp(34f, 0f, u);
             ghosts[0].rectTransform.anchoredPosition = logo.rectTransform.anchoredPosition + new Vector2(-off, 0f);
             ghosts[1].rectTransform.anchoredPosition = logo.rectTransform.anchoredPosition + new Vector2(off, 0f);
             ghosts[0].rectTransform.localScale = ghosts[1].rectTransform.localScale = logo.rectTransform.localScale * (1f + 0.05f * u);
@@ -713,7 +751,7 @@ public class PachinkoOverlay : MonoBehaviour
         var live = new List<(Image img, float x, float y, float vy, float sway, float phase)>();
         while (running != null && (bgPulse >= 1f || live.Count > 0))
         {
-            float dt = Time.unscaledDeltaTime;
+            float dt = Dt;
             if (bgPulse >= 1f)
                 for (int n = 0; n < 2; n++)
                 {
@@ -725,7 +763,7 @@ public class PachinkoOverlay : MonoBehaviour
             for (int i = live.Count - 1; i >= 0; i--)
             {
                 var p = live[i]; p.y -= p.vy * dt;
-                p.img.rectTransform.anchoredPosition = new Vector2(p.x + Mathf.Sin(Time.unscaledTime * 3f + p.phase) * p.sway, -p.y);
+                p.img.rectTransform.anchoredPosition = new Vector2(p.x + Mathf.Sin(Now * 3f + p.phase) * p.sway, -p.y);
                 Color c = p.img.color; c.a = Mathf.Clamp01(p.y / 700f); p.img.color = c;
                 if (p.y < -40f) { p.img.gameObject.SetActive(false); live.RemoveAt(i); } else live[i] = p;
             }
@@ -754,9 +792,9 @@ public class PachinkoOverlay : MonoBehaviour
         float t = 0f;
         while (t < seconds)
         {
-            t += Time.unscaledDeltaTime; float u = Mathf.Clamp01(t / seconds);
+            t += Dt; float u = Mathf.Clamp01(t / seconds);
             foreach (RectTransform r in lines) r.sizeDelta = new Vector2(r.sizeDelta.x, Mathf.Lerp(0f, 760f, 1f - Mathf.Pow(1f - u, 2f)));
-            shakeUntil = Time.unscaledTime + 0.05f;
+            shakeUntil = Now + 0.05f;
             yield return null;
         }
         foreach (RectTransform r in lines) Destroy(r.gameObject);
@@ -811,7 +849,7 @@ public class PachinkoOverlay : MonoBehaviour
         float t = 0f;
         while (t < seconds)
         {
-            t += Time.unscaledDeltaTime;
+            t += Dt;
             float u = Mathf.Clamp01(t / seconds);
             float f = reverse ? 1f - u : u;
             foreach (var sh in shards)
@@ -841,16 +879,153 @@ public class PachinkoOverlay : MonoBehaviour
         float t = 0f;
         while (t < 1.2f)
         {
-            t += Time.unscaledDeltaTime;
+            t += Dt;
             for (int i = 0; i < live.Count; i++)
             {
-                var p = live[i]; p.pos += p.vel * Time.unscaledDeltaTime; p.vel.y -= 900f * Time.unscaledDeltaTime; live[i] = p;
+                var p = live[i]; p.pos += p.vel * Dt; p.vel.y -= 900f * Dt; live[i] = p;
                 p.img.rectTransform.anchoredPosition = new Vector2(p.pos.x, -p.pos.y);
                 Color c = p.img.color; c.a = Mathf.Clamp01(1f - t / p.life); p.img.color = c;
             }
             yield return null;
         }
         foreach (var p in live) p.img.gameObject.SetActive(false);
+    }
+
+    /// <summary>꽝: 깨진 그림 뒤에서 kaneki_miss가 어둡게 시작해 밝아지고, 붉은 눈이 은은하게 빛난다.</summary>
+    /// <summary>지금 화면 전체를 캡처해 유리조각으로 깬다. reverse=false(꽝): 금 → 0.8초 안에 확 퍼지며 조각이 떨어지고 뒤에서 kaneki_miss가 드러난다.
+    /// reverse=true(부활): 금이 가다 멈추고 조각이 살짝 벌어졌다 도로 붙는다.</summary>
+    IEnumerator ShatterScreen(bool reverse, float seconds)
+    {
+        heartbeat = false;
+        yield return new WaitForEndOfFrame();
+        Texture2D cap = ScreenCapture.CaptureScreenshotAsTexture();
+        if (cap == null) { if (!reverse) StartCoroutine(MissReveal()); yield break; }
+        Rect rr = root.rect; float W = rr.width, H = rr.height;
+        const int cols = 12, rows = 7;
+        var grid = new Vector2[cols + 1, rows + 1];
+        for (int gy = 0; gy <= rows; gy++)
+            for (int gx = 0; gx <= cols; gx++)
+            {
+                float jx = (gx == 0 || gx == cols) ? 0f : UnityEngine.Random.Range(-0.38f, 0.38f), jy = (gy == 0 || gy == rows) ? 0f : UnityEngine.Random.Range(-0.38f, 0.38f);
+                grid[gx, gy] = new Vector2(((gx + jx) / cols - 0.5f) * W, ((gy + jy) / rows - 0.5f) * H);
+            }
+        var shards = new List<(RectTransform rt, Vector2 basePos, Vector2 vel, float spin, float delay, ShardGraphic g, float tint)>();
+        Vector2 impact = new Vector2(W * 0.03f, H * 0.08f);
+        for (int gy = 0; gy < rows; gy++)
+            for (int gx = 0; gx < cols; gx++)
+            {
+                Vector2 a = grid[gx, gy], b = grid[gx + 1, gy], c = grid[gx + 1, gy + 1], d = grid[gx, gy + 1];
+                Vector2[][] tris = UnityEngine.Random.value < 0.5f ? new[] { new[] { a, b, c }, new[] { a, c, d } } : new[] { new[] { a, b, d }, new[] { b, c, d } };
+                foreach (Vector2[] tri in tris)
+                {
+                    Vector2 cen = (tri[0] + tri[1] + tri[2]) / 3f;
+                    RectTransform rt = Rt("shard", shatterRoot);
+                    var sg = rt.gameObject.AddComponent<ShardGraphic>();
+                    sg.tex = cap; sg.raycastTarget = false;
+                    for (int i = 0; i < 3; i++) { sg.pts[i] = tri[i] - cen; sg.uvs[i] = new Vector2(tri[i].x / W + 0.5f, tri[i].y / H + 0.5f); }
+                    rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f); rt.sizeDelta = Vector2.zero; rt.anchoredPosition = cen;
+                    Vector2 dir = cen - impact; float dist = Mathf.Max(80f, dir.magnitude); dir /= dist;
+                    float speed = Mathf.Clamp(520000f / (dist + 200f), 500f, 1700f) * UnityEngine.Random.Range(0.7f, 1.3f);
+                    shards.Add((rt, cen, dir * speed, UnityEngine.Random.Range(-480f, 480f), dist / 5000f, sg, UnityEngine.Random.Range(0.86f, 1.12f)));
+                }
+            }
+        // 금(충격점에서 방사)
+        var lines = new List<RectTransform>();
+        for (int i = 0; i < 14; i++)
+        {
+            RectTransform r = Rt("crack", shatterRoot);
+            var im = r.gameObject.AddComponent<Image>(); im.color = new Color(1f, 1f, 1f, 0.95f); im.raycastTarget = false;
+            r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f); r.pivot = new Vector2(0.5f, 0f);
+            r.anchoredPosition = impact; r.sizeDelta = new Vector2(UnityEngine.Random.Range(3f, 6f), 0f);
+            r.localRotation = Quaternion.Euler(0, 0, i * (360f / 14f) + UnityEngine.Random.Range(-12f, 12f));
+            lines.Add(r);
+        }
+        Impact(new Color(1f, 1f, 1f, 0.5f), 0.4f, false);
+        float ct = 0f; const float crackSeconds = 0.22f;
+        while (ct < crackSeconds)
+        {
+            ct += Dt; float u = Mathf.Clamp01(ct / crackSeconds);
+            foreach (RectTransform r in lines) r.sizeDelta = new Vector2(r.sizeDelta.x, Mathf.Lerp(0f, Mathf.Max(W, H), u));
+            shakeUntil = Now + 0.05f;
+            yield return null;
+        }
+        if (!reverse)
+        {
+            // 쨍 — 섬광 · 흔들림 · 가루. 아래 층은 kaneki_miss로 바꿔 둔다(그림이 조각 뒤에서 드러난다).
+            StopVideoNow();
+            kanekiImage.enabled = false;
+            StartCoroutine(MissReveal());
+            Impact(new Color(1f, 1f, 1f, 0.95f), 0.7f, true);
+            StartCoroutine(GlassDust(shatterRoot, impact, 60));
+        }
+        foreach (RectTransform r in lines) Destroy(r.gameObject);
+        float t = 0f;
+        while (t < seconds)
+        {
+            t += Dt;
+            float u = Mathf.Clamp01(t / seconds);
+            float f = reverse ? 0.22f * Mathf.Sin(u * Mathf.PI) : u;
+            foreach (var sh in shards)
+            {
+                float tt = Mathf.Max(0f, f - sh.delay * 0.15f) * (reverse ? 1f : 0.9f);
+                sh.rt.anchoredPosition = sh.basePos + sh.vel * tt + new Vector2(0f, reverse ? 0f : -2600f * tt * tt);
+                sh.rt.localRotation = Quaternion.Euler(0, 0, sh.spin * tt * (reverse ? 0.5f : 1f));
+                float fade = reverse ? 0f : Mathf.SmoothStep(0.5f, 1f, f);
+                float b = reverse ? 1f : Mathf.Lerp(1f, sh.tint, 0.8f);   // 조각마다 빛 반사처럼 밝기가 다르다
+                sh.g.color = new Color(b, b, b, 1f - fade);
+            }
+            yield return null;
+        }
+        foreach (var sh in shards) if (sh.rt != null) Destroy(sh.rt.gameObject);
+        Destroy(cap);
+    }
+
+    IEnumerator GlassDust(Transform parent, Vector2 origin, int count)
+    {
+        var live = new List<(Image img, Vector2 pos, Vector2 vel, float life)>();
+        for (int i = 0; i < count; i++)
+        {
+            var go = new GameObject("dust", typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(parent, false);
+            var img = go.GetComponent<Image>(); img.raycastTarget = false;
+            img.color = UnityEngine.Random.value < 0.6f ? Color.white : new Color(0.8f, 0.95f, 1f);
+            float sz = UnityEngine.Random.Range(4f, 12f); img.rectTransform.sizeDelta = new Vector2(sz, sz);
+            img.rectTransform.anchorMin = img.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            float ang = UnityEngine.Random.Range(0f, Mathf.PI * 2f), sp = UnityEngine.Random.Range(300f, 1400f);
+            live.Add((img, origin, new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * sp, UnityEngine.Random.Range(0.4f, 1f)));
+        }
+        float t = 0f;
+        while (t < 1.1f)
+        {
+            t += Dt;
+            for (int i = 0; i < live.Count; i++)
+            {
+                var p = live[i]; p.pos += p.vel * Dt; p.vel.y -= 1200f * Dt; live[i] = p;
+                if (p.img == null) continue;
+                p.img.rectTransform.anchoredPosition = p.pos;
+                Color c = p.img.color; c.a = Mathf.Clamp01(1f - t / p.life); p.img.color = c;
+            }
+            yield return null;
+        }
+        foreach (var p in live) if (p.img != null) Destroy(p.img.gameObject);
+    }
+
+    IEnumerator MissReveal()
+    {
+        missImage.sprite = Spr("Scene/pachinko_miss");
+        if (missImage.sprite == null) yield break;
+        missImage.enabled = true;
+        videoShow = videoShowTarget = 0f;   // 영상은 끊고 아래 층을 드러낸다
+        float t = 0f;
+        while (true)
+        {
+            t += Dt;
+            float b = Mathf.Lerp(0.25f, 1f, Mathf.Clamp01(t / 1.4f));
+            missImage.color = new Color(b, b, b, 1f);
+            eyeGlow.color = new Color(1f, 0.12f, 0.1f, Mathf.Clamp01(t / 1.4f) * (0.28f + 0.2f * Mathf.Sin(t * 5f)));
+            yield return null;
+            if (running == null) yield break;
+        }
     }
 
     /// <summary>당첨: 섬광과 함께 win 그림으로 — 붉은 카구네 쪽에서 빛이 폭발한다.</summary>
@@ -866,7 +1041,7 @@ public class PachinkoOverlay : MonoBehaviour
         float t = 0f;
         while (t < 1.1f)
         {
-            t += Time.unscaledDeltaTime; float u = t / 1.1f;
+            t += Dt; float u = t / 1.1f;
             kanekiPic.localScale = Vector3.one * Mathf.Lerp(1.25f, 1f, 1f - Mathf.Pow(1f - Mathf.Clamp01(u * 2f), 3f));
             burstGlow.rectTransform.localScale = Vector3.one * Mathf.Lerp(0.3f, 7f, u);
             burstGlow.color = new Color(1f, 0.4f + 0.4f * u, 0.15f, (1f - u) * 0.85f);
@@ -875,7 +1050,49 @@ public class PachinkoOverlay : MonoBehaviour
         burstGlow.color = new Color(1f, 0.45f, 0.1f, 0f);
     }
 
-    IEnumerator Wait(float s) { float end = Time.unscaledTime + s; while (Time.unscaledTime < end) yield return null; }
+    // ───────── 룰렛 배경 영상 ─────────
+    void StartVideo()
+    {
+        if (videoCo != null) StopCoroutine(videoCo);
+        videoStopRequested = false;
+        videoCo = StartCoroutine(VideoRoutine());
+    }
+
+    IEnumerator VideoRoutine()
+    {
+        string path = System.IO.Path.Combine(Application.streamingAssetsPath, BgVideoFile);
+        if (!System.IO.File.Exists(path)) { Debug.LogWarning("[파칭코] 배경 영상 파일 없음: " + path); videoCo = null; yield break; }
+        videoPlayer.url = path;
+        if (RecordMode) videoPlayer.timeReference = UnityEngine.Video.VideoTimeReference.ExternalTime;
+        videoPlayer.Prepare();
+        float wait = 0f;
+        while (!videoPlayer.isPrepared && wait < 5f) { wait += Dt; yield return null; }
+        if (!videoPlayer.isPrepared) { Debug.LogWarning("[파칭코] 배경 영상 준비 실패"); videoCo = null; yield break; }
+        if (videoStopRequested) { videoCo = null; yield break; }
+        videoStartTime = Now;
+        videoPlayer.time = 0.0;
+        videoPlayer.Play();
+        videoShowTarget = 1f;
+        duckTarget = 0f;   // 영상 15초 동안 게임 배경음은 0
+        AudioEvent?.Invoke("bgvideo", videoStartTime, AudioPrefs.MusicVolume);
+        while (Now - videoStartTime < BgVideoSeconds && !videoStopRequested) yield return null;
+        videoShowTarget = 0f;
+        duckTarget = BgmDuck;
+        float t = 0f;
+        while (t < BgVideoFade) { t += Dt; yield return null; }
+        videoPlayer.Stop();
+        videoCo = null;
+    }
+
+    void StopVideoNow()
+    {
+        if (videoCo != null) { StopCoroutine(videoCo); videoCo = null; }
+        if (videoPlayer != null && (videoPlayer.isPlaying || videoPlayer.isPrepared)) videoPlayer.Stop();
+        videoShow = videoShowTarget = 0f;
+        videoStopRequested = false;
+    }
+
+    IEnumerator Wait(float s) { float end = Now + s; while (Now < end) yield return null; }
 
     Color HoldColor(PachinkoHold h) { switch (h) { case PachinkoHold.Blue: return BlueC; case PachinkoHold.Green: return GreenC; case PachinkoHold.Red: return RedC; case PachinkoHold.Gold: return Gold; default: return Color.white; } }
 
@@ -888,7 +1105,7 @@ public class PachinkoOverlay : MonoBehaviour
         while (any)
         {
             any = false;
-            elapsed += Time.unscaledDeltaTime;
+            elapsed += Dt;
             for (int i = 0; i < reels.Length; i++)
             {
                 Reel r = reels[i];
@@ -896,7 +1113,7 @@ public class PachinkoOverlay : MonoBehaviour
                 float v = spinSpeeds[i];
                 // 가운데는 오른쪽이 선 뒤(2.4초~) 서서히 느려지며 긴장한다(리치면 더 느리고 길게)
                 if (i == 1 && elapsed > 2.4f) v *= Mathf.Lerp(1f, curReach ? 0.16f : 0.3f, Mathf.Clamp01((elapsed - 2.4f) / (curReach ? 2.2f : 1.4f)));
-                r.scroll += v * Time.unscaledDeltaTime; r.Refresh(); any = true;
+                r.scroll += v * Dt; r.Refresh(); any = true;
             }
             if (reelsCenterHeld) any = true;
             yield return null;
@@ -928,7 +1145,7 @@ public class PachinkoOverlay : MonoBehaviour
         float t = 0f;
         while (t < seconds)
         {
-            t += Time.unscaledDeltaTime;
+            t += Dt;
             float u = Mathf.Clamp01(t / 0.25f);
             float s = Mathf.Lerp(overshoot, 1f, 1f - Mathf.Pow(1f - u, 3f));
             if (t > 0.25f) s = 1f + 0.04f * Mathf.Sin((t - 0.25f) * 14f);
@@ -967,7 +1184,7 @@ public class PachinkoOverlay : MonoBehaviour
         float t = 0f; const float total = 1.6f;
         while (t < total)
         {
-            t += Time.unscaledDeltaTime;
+            t += Dt;
             float u = t / total;
             float x = u < 0.2f ? Mathf.Lerp(-2400f, 0f, 1f - Mathf.Pow(1f - u / 0.2f, 3f)) : (u > 0.8f ? Mathf.Lerp(0f, 2400f, Mathf.Pow((u - 0.8f) / 0.2f, 2f)) : 0f);
             cutRect.anchoredPosition = new Vector2(960f - 160f + 1120f - 960f + x, cutRect.anchoredPosition.y);
@@ -986,14 +1203,15 @@ public class PachinkoOverlay : MonoBehaviour
         dim.color = new Color(0f, 0f, 0f, 0.6f);
         Play(Slot.PushOpen);
         float total = PachinkoSettings.PushSeconds;
-        float t0 = Time.unscaledTime;
+        float t0 = Now;
         int lastSec = -1;
         pushFlashing = true;
         while (true)
         {
-            float elapsed = Time.unscaledTime - t0;
+            float elapsed = Now - t0;
             float left = Mathf.Max(0f, total - elapsed);
-            gaugeFill.fillAmount = left / total;
+            gaugeFill.rectTransform.anchorMax = new Vector2(Mathf.Clamp01(left / total), 1f);   // 폭으로 줄인다(스프라이트 없는 Filled는 비율이 안 먹는다)
+            gaugeFill.color = left <= 1f ? (Mathf.Repeat(elapsed * 8f, 1f) < 0.5f ? new Color(1f, 0.1f, 0.1f) : new Color(1f, 0.55f, 0.5f)) : new Color(1f, 0.55f, 0.15f);   // 1초 이하 빨강 깜빡
             int sec = Mathf.CeilToInt(left);
             if (sec != lastSec) { lastSec = sec; pushCount.text = sec.ToString(); if (sec > 0) Play(Slot.PushTick); }
             float beat = 1f + 0.08f * Mathf.Sin(elapsed * 28f);
@@ -1038,14 +1256,14 @@ public class PachinkoOverlay : MonoBehaviour
         float t = 0f;
         while (t < 0.5f)
         {
-            t += Time.unscaledDeltaTime;
+            t += Dt;
             float u = Mathf.Clamp01(t / 0.4f);
             bandRect.localScale = Vector3.one * Mathf.Lerp(0.3f, 1f, 1f - Mathf.Pow(1f - u, 3f));
             yield return null;
         }
         while (bandRect.gameObject.activeInHierarchy)
         {
-            bandRect.anchoredPosition = new Vector2(bandRect.anchoredPosition.x, -(860f + 75f) + Mathf.Sin(Time.unscaledTime * 6f) * 6f);
+            bandRect.anchoredPosition = new Vector2(bandRect.anchoredPosition.x, -(860f + 75f) + Mathf.Sin(Now * 6f) * 6f);
             yield return null;
         }
     }
@@ -1055,7 +1273,7 @@ public class PachinkoOverlay : MonoBehaviour
         float t = 0f;
         while (t < seconds)
         {
-            t += Time.unscaledDeltaTime;
+            t += Dt;
             float u = t / seconds;
             flash.color = new Color(1f, u < 0.5f ? 0.85f : 0.4f, u < 0.5f ? 0.3f : 0.4f, 1f - u);
             yield return null;
@@ -1069,7 +1287,7 @@ public class PachinkoOverlay : MonoBehaviour
         CanvasGroup g = root.GetComponent<CanvasGroup>();
         if (g == null) g = root.gameObject.AddComponent<CanvasGroup>();
         g.alpha = 1f;
-        while (t < seconds) { t += Time.unscaledDeltaTime; g.alpha = 1f - t / seconds; yield return null; }
+        while (t < seconds) { t += Dt; g.alpha = 1f - t / seconds; yield return null; }
         g.alpha = 1f;
     }
 
@@ -1080,7 +1298,7 @@ public class PachinkoOverlay : MonoBehaviour
         float t = 0f, spawnAcc = 0f;
         while (t < seconds)
         {
-            float dt = Time.unscaledDeltaTime; t += dt; spawnAcc += dt * 70f;
+            float dt = Dt; t += dt; spawnAcc += dt * 70f;
             while (spawnAcc >= 1f && t < seconds - 1.5f)
             {
                 spawnAcc -= 1f;
@@ -1114,8 +1332,18 @@ public class PachinkoOverlay : MonoBehaviour
     }
 
     // ───────── 매 프레임: 배경 색·박동·흔들림·광선 ─────────
+    // 시계: 녹화 모드에선 프레임마다 정확히 1/30초(captureFramerate에서도 unscaledDeltaTime은 실시간이라 따로 센다).
+    static float clockNow;
+    static float Dt => RecordMode ? 1f / 30f : Time.unscaledDeltaTime;
+    static float Now => RecordMode ? clockNow : Time.unscaledTime;
+
+    /// <summary>녹화용: 매 프레임(플레이어 루프) 한 번 불린다.</summary>
+    public static Action FrameHook;
+
     void Update()
     {
+        if (RecordMode) clockNow += 1f / 30f;
+        FrameHook?.Invoke();
         if (!root.gameObject.activeSelf) return;
         // 무대 크기 맞추기
         Rect r = root.rect;
@@ -1124,34 +1352,42 @@ public class PachinkoOverlay : MonoBehaviour
             float s = Mathf.Min(r.width / 1920f, r.height / 1080f);
             stage.localScale = new Vector3(s, s, 1f);
         }
-        bgTint = Color.Lerp(bgTint, bgTarget, Time.unscaledDeltaTime * 6f);
-        float pulse = bgPulse >= 1f ? 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * (bgPulse >= 3f ? 18f : 8f)) : 0f;
-        backdrop.color = Color.Lerp(bgTint, Color.white * 0.2f + bgTint * 0.8f, pulse * 0.4f);
-        GameBgm.Duck = Mathf.MoveTowards(GameBgm.Duck, duckTarget, Time.unscaledDeltaTime * 2f);
+        bgTint = Color.Lerp(bgTint, bgTarget, Dt * 6f);
+        float bgA = 1f - videoShow;   // 영상이 깔리면 어두운 바탕을 걷는다
+        float pulse = bgPulse >= 1f ? 0.5f + 0.5f * Mathf.Sin(Now * (bgPulse >= 3f ? 18f : 8f)) : 0f;
+        Color bgc = Color.Lerp(bgTint, Color.white * 0.2f + bgTint * 0.8f, pulse * 0.4f); bgc.a *= bgA;
+        backdrop.color = bgc;
+        videoShow = Mathf.MoveTowards(videoShow, videoShowTarget, Dt / (videoShowTarget > videoShow ? 0.25f : BgVideoFade));
+        videoView.color = new Color(1f, 1f, 1f, videoShow);
+        videoDim.color = new Color(0f, 0f, 0f, 0.35f * videoShow);
+        if (kanekiGroup != null) kanekiGroup.alpha = 1f - videoShow;
+        if (videoAudio != null) videoAudio.volume = Mathf.Clamp01(AudioPrefs.MusicVolume * (VoiceActive() ? 0.4f : 1f) * Mathf.Clamp01(videoShow * 4f));
+        if (RecordMode && videoPlayer != null && videoPlayer.isPlaying) videoPlayer.externalReferenceTime = Now - videoStartTime;
+        GameBgm.Duck = Mathf.MoveTowards(GameBgm.Duck, duckTarget, Dt * 2f);
         if (kanekiRect.gameObject.activeSelf && heartbeat)
         {
-            float tb = Time.unscaledTime % 0.9f;
+            float tb = Now % 0.9f;
             float hb = Mathf.Exp(-tb * 16f) + (tb >= 0.2f ? Mathf.Exp(-(tb - 0.2f) * 16f) * 0.8f : 0f);   // 두-둥
             kanekiPic.localScale = Vector3.one * (1f + 0.08f * hb);
             heartRed.color = new Color(0.8f, 0f, 0.05f, 0.28f * hb);
             if (hb > 0.6f) kanekiPic.anchoredPosition = new Vector2(960f + UnityEngine.Random.Range(-4f, 4f), kanekiPic.anchoredPosition.y);
         }
         if (reels != null && numbersSmallT <= 0f) foreach (Reel rl in reels) if (!rl.spinning) rl.Refresh();   // 불꽃 프레임 순환
-        numbersSmallT = Mathf.MoveTowards(numbersSmallT, numbersSmallTarget, Time.unscaledDeltaTime * 3f);
+        numbersSmallT = Mathf.MoveTowards(numbersSmallT, numbersSmallTarget, Dt * 3f);
         if (reels != null) foreach (Reel rl in reels) rl.SetSmall(numbersSmallT);
-        if (raysRect.gameObject.activeSelf) raysRect.localRotation = Quaternion.Euler(0, 0, -Time.unscaledTime * 40f);
+        if (raysRect.gameObject.activeSelf) raysRect.localRotation = Quaternion.Euler(0, 0, -Now * 40f);
         if (tickerText != null)
         {
-            float x = -(Time.unscaledTime * 160f % 2300f);
+            float x = -(Now * 160f % 2300f);
             tickerText.rectTransform.anchoredPosition = new Vector2(x, 0f);
         }
-        if (Time.unscaledTime < shakeUntil) stage.localPosition = new Vector3(UnityEngine.Random.Range(-10f, 10f), UnityEngine.Random.Range(-8f, 8f), 0f);
+        if (Now < shakeUntil) stage.localPosition = new Vector3(UnityEngine.Random.Range(-10f, 10f), UnityEngine.Random.Range(-8f, 8f), 0f);
         else if (stage.localPosition != Vector3.zero) stage.localPosition = Vector3.zero;
         // 보류 구슬 박동
         if (holdOrbs != null)
-            foreach (Image o in holdOrbs) if (o.color == RedC || o.color == Gold) o.rectTransform.localScale = Vector3.one * (1f + 0.2f * Mathf.Sin(Time.unscaledTime * 20f));
+            foreach (Image o in holdOrbs) if (o.color == RedC || o.color == Gold) o.rectTransform.localScale = Vector3.one * (1f + 0.2f * Mathf.Sin(Now * 20f));
         // PUSH 버튼 번쩍
-        if (pushFlashing) pushBtnImage.color = Color.Lerp(Color.white, new Color(1f, 1f, 0.7f), Mathf.Abs(Mathf.Sin(Time.unscaledTime * 14f)));
+        if (pushFlashing) pushBtnImage.color = Color.Lerp(Color.white, new Color(1f, 1f, 0.7f), Mathf.Abs(Mathf.Sin(Now * 14f)));
         else pushBtnImage.color = Color.white;
     }
 
@@ -1167,14 +1403,32 @@ public class PachinkoOverlay : MonoBehaviour
     /// <summary>파칭코 중 게임 배경음을 줄이는 양(−12dB ≈ 0.25). 끝나면 복원.</summary>
     public static float BgmDuck = 0.25f;
 
+    /// <summary>숫자(1~9)별 당첨 대사 — 인덱스 0=111 … 8=999(당첨 확정 순간, 부활도 최종 숫자 기준). 인스펙터 대신 코드에서 바꾼다: PachinkoOverlay.WinLines[3] = clip.</summary>
+    public static readonly AudioClip[] WinLines = new AudioClip[9];
+    /// <summary>꽝·리치 꽝 대사(D09).</summary>
+    public static AudioClip MissLine;
     static bool sfxLoaded;
     static void LoadDefaultSfx()
     {
         if (sfxLoaded) return; sfxLoaded = true;
-        void Set(Slot s, string file) { if (Sfx[(int)s] == null) Sfx[(int)s] = Resources.Load<AudioClip>(Folder + "Sfx/" + file); }
-        Set(Slot.ReelSpin, "spin"); Set(Slot.Reach, "reach"); Set(Slot.SpStage, "strong"); Set(Slot.SpLoop, "sp_loop");
-        Set(Slot.Cutin, "cut_blue"); Set(Slot.CutinGold, "cut_red"); Set(Slot.PushOpen, "push");
-        Set(Slot.PushVoice, "voice_push"); Set(Slot.WinVoice, "voice_win"); Set(Slot.MissVoice, "line_miss_rize"); Set(Slot.Revive, "revive"); Set(Slot.Atari, "atari"); Set(Slot.Ooatari, "ooatari"); Set(Slot.Zannen, "zannen");
+        for (int i = 0; i < 9; i++) if (WinLines[i] == null) WinLines[i] = Resources.Load<AudioClip>(Folder + $"Sfx/line_win_{i + 1}");
+        if (MissLine == null) MissLine = Resources.Load<AudioClip>(Folder + "Sfx/line_miss");
+        // 효과음 슬롯(Sfx[])은 사장님 결정으로 전부 비워 둔다 — 나중에 파일만 꽂으면 된다.
+    }
+
+    AudioSource lineSource;
+    void PlayLine(AudioClip clip)
+    {
+        LoadDefaultSfx();
+        if (clip == null) return;
+        if (lineSource == null)
+        {
+            lineSource = host.AddComponent<AudioSource>();
+            lineSource.playOnAwake = false; lineSource.ignoreListenerPause = true; lineSource.spatialBlend = 0f;
+        }
+        lineSource.clip = clip; lineSource.volume = Mathf.Clamp01(AudioPrefs.SfxVolume);
+        lineSource.Play();
+        AudioEvent?.Invoke(clip.name, Now, lineSource.volume);
     }
 
     readonly Dictionary<Slot, AudioSource> slotSources = new Dictionary<Slot, AudioSource>();
@@ -1192,12 +1446,12 @@ public class PachinkoOverlay : MonoBehaviour
         }
         src.clip = clip; src.loop = SfxLoop[(int)slot];
         float vol = SfxGain[(int)slot] * AudioPrefs.SfxVolume;
-        if (slot != Slot.PushVoice && slot != Slot.WinVoice && slot != Slot.MissVoice && VoiceActive()) vol *= VoiceDuckOthers;   // 대사 우선
+        if (VoiceActive()) vol *= VoiceDuckOthers;   // 대사 우선
         src.volume = Mathf.Clamp01(vol);
         src.Play();
     }
 
-    bool VoiceActive() => slotSources.TryGetValue(Slot.PushVoice, out AudioSource v) && v != null && v.isPlaying || slotSources.TryGetValue(Slot.WinVoice, out AudioSource w) && w != null && w.isPlaying || slotSources.TryGetValue(Slot.MissVoice, out AudioSource m2) && m2 != null && m2.isPlaying;
+    bool VoiceActive() => lineSource != null && lineSource.isPlaying;
 
     void Stop(Slot slot) { if (slotSources.TryGetValue(slot, out AudioSource src) && src != null) src.Stop(); }
     void StopAllSfx() { foreach (AudioSource src in slotSources.Values) if (src != null) src.Stop(); }
