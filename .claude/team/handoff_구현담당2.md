@@ -1,3 +1,21 @@
+# 구현담당2 인수인계 — 2026-10-15 세션 교체 (파칭코 연출 개선·친구 피드백 0.3.20 뒤) ← 이 절이 최신
+
+## 끝낸 일 (커밋 제목으로 찾는다, 전부 main 병합)
+- **파칭코 연출 개선**(9b0a92a58·a0a2aee98·a2826419a): `PachinkoOverlay.cs`·`PachinkoPlan.cs`(MissResultSeconds 2.0). 정지 타격·가운데 줄 liftT·리치 강조(1.3배+잔상+빛 쓸기)·7 금 쓸기·미니 릴·당첨 섬광 표준·경고 스트로브·로고 쾅·집중선·SP 레터박스·결과 공백 메움·복귀 페이드. `PachinkoOverlay.ReduceFlash`(PlayerPrefs `pachinko_reduce_flash`) = 「번쩍임 줄이기」 토글(오버레이 왼쪽 아래; 설정 메뉴 노출은 PM에 알림). 리제로 불꽃 「1」 버그: `SymSpr`는 테마 세트에 없는 프레임을 도쿄구울 Symbols/로 폴백하지 않는다.
+- **친구 피드백(0.3.20)**: 구일외교관 @100 이펙트(`SkillVfx.MaxAreaDiameter=4*Unit`·`OriginalVfxPlayer.Restart` loop 끔, `SkillVfxSizeProbe`) · 원작 대응 표기 숨김(`GameVersion.BetaShowOriginalMatch=false`) · 획득 알림 같은 유닛 여러 줄(`UnitAcquireNotice` 꼬리 공백) · 리롤 → 오른쪽 아래 명령 카드 `FlexKind.Reroll`(`UniqueRerollAbility.IsRerollable`) · 스킬 이름 꼬리 괄호 제거(`PlayerFacingText.SkillName`). 실측 탐침 `FriendFixProbe`(Reroll1~5·Combine·Legend·Vfx1/2·Notice1/2). 창고 안 조합은 직접 못 시험(코드 읽기만).
+- 어색한 순간 목록 `~/GRD_pachinko_research/ingame_issues.md`, 프레임 시트 `~/GRD_pachinko_research/sheets/`, 녹화 도구 `PachinkoRecorder`(RecRzWin 등 → `~/GRD_pachinko_rec/`).
+
+## 남은 일
+- SP 리치 영상/그림 슬롯·컷인 얼굴 자료 대기(사장님/blender). 윈도 빌드 VideoPlayer H.264 mp4 실측 미확인. blender 연출 대본이 바뀌면 재반입→auto_check→LinkPassed. 스트로브는 광과민 위험 — 설정 메뉴에도 같은 키로 토글 노출(PM).
+- check_missing_assets 기존 없는 guid 43개(옛 스킨 재질 텍스처 수준).
+
+## 함정
+- w2 = worktree `/Users/sang/GitHub/GuilRandomDefense-w2`(브랜치 w2). 병합은 PM, 나는 `git merge --ff-only main`. 커밋은 `GIT_LITERAL_PATHSPECS=1 git add -A --pathspec-from-file=목록` + `git commit … --pathspec-from-file=목록`(경로에 `[ ]`). SampleScene.unity는 PM만 — 옛 씬으로 덮어쓰기 금지.
+- 새 .cs 추가 후 refresh → 60~70초 기다려야 `call`이 찾음. outbox 같은 이름 재사용 금지. PIL은 `/usr/bin/python3`만.
+- 작업트리 잔여(Art/Materials·Effects/Original·Fonts·UI/Skin .meta·`Resources/Pachinko/DelaGothicOne SDF.asset`)는 유니티 재직렬화 — 커밋 금지.
+- 도쿄구울엔 `_pink` 스프라이트 없음(폴백). 스트로브·섬광 수치는 시트 실측(검정1·흰7·페이드15프레임) 기준.
+
+---------- 아래는 10-14 저녁 인수인계 ----------
 # 구현담당2 인수인계 — 2026-10-14 저녁 (파칭코 오버레이 4차·리제로 테마·재반입 뒤)
 
 새 세션은 기억이 없다. 이 문서 → `.claude/NEXT_SESSION.md`. 작업 장소 worktree `../GuilRandomDefense-w2`(w2, 에디터는 내 것 — 무응답이면 껐다 켬: `nohup caffeinate -dimsu Unity -projectPath $PWD -logFile ~/GRD_w2_editorN.log &`). push 금지(PM 병합), SampleScene 수정 금지, 커밋은 `GIT_LITERAL_PATHSPECS=1 git add --pathspec-from-file=목록` (경로에 `[ ]` 있음), 병합 요청 전 `python3 Tools/check_missing_assets.py --tracked` 한 줄 같이.
