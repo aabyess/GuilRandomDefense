@@ -11,7 +11,11 @@ public class SkinClipHider : MonoBehaviour
 {
     [Serializable] public class Entry { public string clip; public string[] meshes = new string[0]; }
 
+    /// <summary>클립 도중 지오셋 알파가 바뀌는 메시(원작 계단 키): 시작엔 startVisible, times[i] 초부터 visible[i]. blender 클립중_알파변화.json에서 SkinSwapImporter가 채운다.</summary>
+    [Serializable] public class Timed { public string clip; public string mesh; public bool startVisible = true; public float[] times = new float[0]; public bool[] visible = new bool[0]; }
+
     public Entry[] entries = new Entry[0];
+    public Timed[] timed = new Timed[0];
     public string[] hiddenAlways = new string[0];
 
     Animator animator;
@@ -30,7 +34,7 @@ public class SkinClipHider : MonoBehaviour
             {
                 var tmp = new List<Renderer>();
                 foreach (Renderer r in GetComponentsInChildren<Renderer>(true))
-                    if (r.gameObject.name == n || (r is SkinnedMeshRenderer smr && smr.sharedMesh != null && smr.sharedMesh.name == n)) tmp.Add(r);
+                    if (string.Equals(r.gameObject.name, n, StringComparison.OrdinalIgnoreCase) || (r is SkinnedMeshRenderer smr && smr.sharedMesh != null && string.Equals(smr.sharedMesh.name, n, StringComparison.OrdinalIgnoreCase))) tmp.Add(r);
                 cache[n] = found = tmp.ToArray();
             }
             list.AddRange(found);
@@ -43,19 +47,40 @@ public class SkinClipHider : MonoBehaviour
         foreach (Renderer r in Find(hiddenAlways)) r.enabled = false;
     }
 
+    Renderer[] timedTouched = new Renderer[0];
+
     void LateUpdate()
     {
         if (animator == null || animator.runtimeAnimatorController == null) return;
-        string clip = null;
+        string clip = null; float clipLength = 0f;
         AnimatorClipInfo[] infos = animator.GetCurrentAnimatorClipInfo(0);
-        if (infos.Length > 0) clip = infos[0].clip.name;
-        if (clip == lastClip) return;
-        lastClip = clip;
-        foreach (Renderer r in lastHidden) if (r != null) r.enabled = true;
-        foreach (Renderer r in Find(hiddenAlways)) r.enabled = false;
-        lastHidden = new Renderer[0];
-        if (clip == null) return;
-        foreach (Entry e in entries)
-            if (e.clip == clip) { lastHidden = Find(e.meshes); foreach (Renderer r in lastHidden) r.enabled = false; break; }
+        if (infos.Length > 0) { clip = infos[0].clip.name; clipLength = infos[0].clip.length; }
+        if (clip != lastClip)
+        {
+            lastClip = clip;
+            foreach (Renderer r in lastHidden) if (r != null) r.enabled = true;
+            foreach (Renderer r in timedTouched) if (r != null) r.enabled = true;
+            timedTouched = new Renderer[0];
+            foreach (Renderer r in Find(hiddenAlways)) r.enabled = false;
+            lastHidden = new Renderer[0];
+            if (clip != null)
+                foreach (Entry e in entries)
+                    if (e.clip == clip) { lastHidden = Find(e.meshes); foreach (Renderer r in lastHidden) r.enabled = false; break; }
+        }
+        if (clip == null || timed.Length == 0) return;
+        // 클립 도중 알파 변화: 재생 시각(반복이면 나머지)을 보고 매 프레임 켜고 끈다
+        AnimatorStateInfo st = animator.GetCurrentAnimatorStateInfo(0);
+        float t = st.normalizedTime * clipLength;
+        if (st.loop) t = clipLength > 0.0001f ? Mathf.Repeat(t, clipLength) : 0f;
+        else t = Mathf.Clamp(t, 0f, clipLength);
+        List<Renderer> touched = null;
+        foreach (Timed tm in timed)
+        {
+            if (tm.clip != clip) continue;
+            bool vis = tm.startVisible;
+            for (int i = 0; i < tm.times.Length; i++) { if (tm.times[i] <= t) vis = tm.visible[i]; else break; }
+            foreach (Renderer r in Find(new[] { tm.mesh })) { r.enabled = vis; (touched ??= new List<Renderer>()).Add(r); }
+        }
+        if (touched != null) timedTouched = touched.ToArray();
     }
 }
