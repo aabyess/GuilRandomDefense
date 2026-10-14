@@ -25,7 +25,18 @@ public static class GamePause
     public static void SetCutinHold(bool hold)
     {
         if (IsNetworked && !GameAuthority.IsServer) return;
+        if (!hold && pachinkoHold) return;   // 파칭코 중엔 컷인 큐가 비어도 정지를 풀지 않는다
         ApplyCutinHold(hold);
+    }
+
+    static bool pachinkoHold;
+
+    /// <summary>30R 보스 파칭코(PachinkoController)의 정지 — 컷인 정지와 같은 길(전원 NetGameState.CutinHold)을 쓰되 컷인 큐가 대신 풀지 못한다.</summary>
+    public static void SetPachinkoHold(bool on)
+    {
+        if (IsNetworked && !GameAuthority.IsServer) return;
+        pachinkoHold = on;
+        ApplyCutinHold(on);
     }
 
     /// <summary>같이 하기 클라: 호스트가 정한 컷인 정지를 적용한다(매 프레임 불려도 바뀔 때만 일한다).</summary>
@@ -89,7 +100,7 @@ public static class GamePause
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void Install()
     {
-        Paused = false; CutinHold = false; PausedBy = -1;
+        Paused = false; CutinHold = false; PausedBy = -1; pachinkoHold = false;
         SceneManager.sceneLoaded -= OnSceneLoaded;
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
@@ -97,7 +108,7 @@ public static class GamePause
     // 씬이 바뀌면(처음 화면으로 등) 멈춤이 남지 않게 푼다.
     static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        CutinHold = false; PausedBy = -1;
+        CutinHold = false; PausedBy = -1; pachinkoHold = false;
         if (Paused) Set(false);
         else { Time.timeScale = 1f; AudioListener.pause = false; }
     }

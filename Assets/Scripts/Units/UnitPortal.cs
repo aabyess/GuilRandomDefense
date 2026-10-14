@@ -257,7 +257,7 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
             : RollReward(overrideRewardGrade ? rewardGrade : grade, ownerId, out isBonusReward);
 
         // 신세계 보상 위습(표식)은 솔·성탄·뻬꼼을 안 준다(사장님 10-14) — 같은 등급(히든) 안에서 다른 유닛이 나올 때까지 다시 뽑는다(전설/히든 반반은 그대로).
-        if (wisp.NewWorldReward && specificUnit == null && gachaTable != null)
+        if ((wisp.NewWorldReward || wisp.ExcludeRestrictedUnits) && specificUnit == null && gachaTable != null)
             for (int i = 0; i < 50 && reward != null && NewWorldExcluded.Contains(reward.unitName); i++)
                 reward = gachaTable.RollFromGrade(reward.grade);
 

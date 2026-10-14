@@ -227,6 +227,24 @@ public class NetGameState : NetworkBehaviour
         CutinOverlay.Play(unitAssetName.ToString());
     }
 
+    // 30R 보스 파칭코(10-14): 호스트가 정한 연출 길(PachinkoPlan.Pack)을 전원에게 — 각 PC가 PachinkoController.PlayHandler(오버레이)를 부른다. 정지는 CutinHold가 맡는다.
+    public void BroadcastPachinko(int packedPlan) { if (HasStateAuthority) RPC_Pachinko(packedPlan); }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.Proxies)]
+    public void RPC_Pachinko(int packedPlan)
+    {
+        PachinkoController.ReceivePlan(packedPlan);
+    }
+
+    // PUSH가 눌렸다(호스트가 받아 전원에게): slot = 누른 슬롯, -1 = 시간 끝 자동.
+    public void BroadcastPachinkoPushed(int slot) { if (HasStateAuthority) RPC_PachinkoPushed((sbyte)slot); }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.Proxies)]
+    public void RPC_PachinkoPushed(sbyte slot)
+    {
+        PachinkoController.ReceivePushed(slot);
+    }
+
     // 스킬 효과음(09-30) — 표 번호(SkillSfxTable.txt의 C줄 순서)·볼륨 배수·자리. 거리 감쇠는 받는 쪽 화면 기준으로 SkillSfx가 센다.
     // 놓쳐도 되는 것이라 이펙트와 같은 비신뢰 채널.
     void RouteSkillSfx(int clip, float volume, Vector3 position) => RPC_SkillSfx((short)clip, (byte)Mathf.RoundToInt(Mathf.Clamp01(volume) * 255f), position);

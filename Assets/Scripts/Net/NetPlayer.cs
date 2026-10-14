@@ -463,6 +463,13 @@ public class NetPlayer : NetworkBehaviour
         NetCommands.ExecutePause(this, pause);
     }
 
+    // 30R 보스 파칭코 PUSH(10-14): 클라가 Space를 눌렀다고 호스트에 알린다. 호스트가 창이 열려 있을 때만 받아 전원에게 눌림을 알린다.
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_PachinkoPush()
+    {
+        NetCommands.ExecutePachinkoPush(this);
+    }
+
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     public void RPC_Chat(string text)
     {

@@ -383,6 +383,7 @@ public class RewardDistributor : MonoBehaviour
 
     void GrantBossReward(PlayerContext context, int round, EnemyData boss)
     {
+        PachinkoController.OnBossKilled(round);   // 30R 보스 파칭코 — 판당 한 번, 서버만(안에서 거른다)
         if (!BossRewardByRound.TryGetValue(round, out (int gold, int wood) reward)) return;
 
         context.GoldWallet?.Add(reward.gold);
@@ -752,6 +753,24 @@ public class RewardDistributor : MonoBehaviour
         }
     }
 
+    /// <summary>30R 보스 파칭코 당첨 보상(사장님 10-14): 살아 있는 플레이어 전원에게 전설·히든 위습(신세계 보상과 같은 위습) — 솔·성탄·뻬꼼 제외, 풀카운트 감점 없음(NewWorldReward 표식을 안 건다).</summary>
+    public void GrantPachinkoWisps()
+    {
+        if (!GameAuthority.IsServer) return;
+        if (legendHiddenWisp == null) legendHiddenWisp = newWorldWisp;
+        if (legendHiddenWisp == null)
+            foreach (WispData data in Resources.FindObjectsOfTypeAll<WispData>())
+                if (data != null && data.targetGrade == UnitGrade.Legendary && !data.isPlayerChoice && data.prefab != null) { legendHiddenWisp = data; break; }
+        if (legendHiddenWisp == null) { Debug.LogWarning("RewardDistributor: 전설·히든 위습(WispData)을 못 찾아 파칭코 보상을 못 줍니다."); return; }
+        foreach (PlayerContext context in PlayerContext.Occupied)
+        {
+            if (context.IsDead) continue;
+            SpawnWisp(context, legendHiddenWisp, PachinkoSettings.WispCountPerPlayer, newWorldReward: false, excludeRestricted: true);
+            PlayerNotification.Show(context.PlayerId, "<color=#FFD700>大当たり! 전설·히든 위습을 받았습니다.</color>", 6f);
+            Debug.Log($"[파칭코보상] 슬롯 {context.PlayerId}에게 전설·히든 위습 {PachinkoSettings.WispCountPerPlayer}기(솔·성탄·뻬꼼 제외)");
+        }
+    }
+
     public void GrantWisps(PlayerContext context, List<WispReward> wispRewards)
     {
         // MP: 위습(실물)은 호스트만 만든다 — 클라에서 불리면 호스트가 모르는 위습이 생긴다(09-26 클라 G키 사고).
@@ -833,7 +852,7 @@ public class RewardDistributor : MonoBehaviour
             PlayerNotification.Show(context.PlayerId, "세이브회수에 따른 2차 보상이 지급됩니다.", 10f);
     }
 
-    void SpawnWisp(PlayerContext context, WispData wispData, int count, bool newWorldReward = false)
+    void SpawnWisp(PlayerContext context, WispData wispData, int count, bool newWorldReward = false, bool excludeRestricted = false)
     {
         if (wispData.prefab == null)
         {
@@ -880,6 +899,7 @@ public class RewardDistributor : MonoBehaviour
             }
             wisp.SetData(wispData);
             wisp.NewWorldReward = newWorldReward;
+            wisp.ExcludeRestrictedUnits = newWorldReward || excludeRestricted;
 
             if (!instance.TryGetComponent(out OwnedByPlayer owner))
             {

@@ -488,7 +488,7 @@ public class RtsCameraController : MonoBehaviour
         // 스페이스가 주 키이고, Home도 남겨둔다 — 에디터에서는 스페이스가 Game 뷰 최대화와
         // 겹쳐서 카메라만 확인하고 싶을 때 Home이 필요하다(빌드에서는 겹치지 않는다).
         if (Keyboard.current != null &&
-            (Keyboard.current.spaceKey.wasPressedThisFrame || Keyboard.current.homeKey.wasPressedThisFrame))
+            (!PachinkoController.Active && Keyboard.current.spaceKey.wasPressedThisFrame || Keyboard.current.homeKey.wasPressedThisFrame))
         {
             // 10-06 사장님(워크3 기능): 유닛을 고른 상태면 그 유닛(여럿이면 가운데)으로, 아니면 지금처럼 내 레인 가운데로.
             if (!FocusOnSelection()) FocusOnLocalLane();

@@ -417,6 +417,18 @@ public static class NetCommands
         NetPlayer.Local.RPC_Pause(pause);
     }
 
+    public static void RequestPachinkoPush()
+    {
+        if (NetPlayer.Local == null) return;
+        NetPlayer.Local.RPC_PachinkoPush();
+    }
+
+    public static void ExecutePachinkoPush(NetPlayer sender)
+    {
+        if (sender == null || sender.Runner == null || !sender.Runner.IsServer) return;
+        PachinkoController.ExecutePush(sender.Slot);
+    }
+
     public static void ExecutePause(NetPlayer sender, bool pause)
     {
         NetGameState state = NetGameState.Instance;
