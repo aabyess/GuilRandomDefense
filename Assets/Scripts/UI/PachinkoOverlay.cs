@@ -708,7 +708,12 @@ public class PachinkoOverlay : MonoBehaviour
             Refresh();
         }
         public Sprite CenterSprite => cells[1].sprite;
-        static Sprite SymSpr(string file) => Spr(activeSymbolDir + "/" + file) ?? Spr("Symbols/" + file);   // 테마별 심볼 세트(없으면 도쿄구울 v3로)
+        static Sprite SymSpr(string file)   // 테마별 심볼 세트. 세트가 있으면 없는 프레임(_f0 등)도 도쿄구울로 폴백하지 않는다
+        {
+            Sprite s = Spr(activeSymbolDir + "/" + file);
+            if (s != null || activeSymbolDir == "Symbols" || Spr(activeSymbolDir + "/symbol_1") != null) return s;
+            return Spr("Symbols/" + file);
+        }   // 테마별 심볼 세트(없으면 도쿄구울 v3로)
         public static int SymbolAt(int index) => ((index % 9) + 9) % 9 + 1;
         public void Refresh()
         {
@@ -719,7 +724,7 @@ public class PachinkoOverlay : MonoBehaviour
                 int idx = baseIndex + (k - 1);   // k=1이 가운데 칸
                 int sym = SymbolAt(idx);
                 int fi = (int)(Now * 12f) % 6;
-                bool fire = sym % 2 == 1;   // 홀수(7 금색 포함) = 불꽃 6프레임 / 짝수 = 크리스털(+별빛 2프레임)
+                bool fire = sym % 2 == 1 && SymSpr($"symbol_{sym}_f0") != null;   // 홀수(7 금색 포함) = 불꽃 6프레임 / 짝수 = 크리스털(+별빛 2프레임)
                 if (spinning) { cells[k].sprite = SymSpr($"symbol_{sym}_blur"); overlays[k].enabled = false; }
                 else if (pink && SymSpr($"symbol_{sym}_pink") != null) { cells[k].sprite = SymSpr($"symbol_{sym}_pink"); overlays[k].enabled = false; }
                 else if (fire) { cells[k].sprite = SymSpr($"symbol_{sym}_f{fi}") ?? SymSpr($"symbol_{sym}"); overlays[k].enabled = false; }
