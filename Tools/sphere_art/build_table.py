@@ -18,6 +18,8 @@ OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "Assets", "Resour
 EXTRA = os.path.join(HERE, "extra.tsv")
 
 GRADE_RULES = {("A07O", "초월"), ("A07N", "히든")}
+# 사장님 10-14 「영원 발밑에 초월 오라 빼」: 영원 로스터의 A07O(HandsAura2 = 초월 등급 오라)는 뺀다.
+SKIP_ROWS = {("영원_이지원", "handsaura2")}
 
 
 def art_key(name):
@@ -36,6 +38,8 @@ for r in csv.DictReader(open(SRC, encoding="utf-8")):
     for i, spot in enumerate(spots):
         art = arts[i] if i < len(arts) else arts[0]
         row = (roster, art_key(art), spot)
+        if (roster, row[1]) in SKIP_ROWS:
+            continue
         if row not in seen:
             seen.add(row)
             rows.append(row)
