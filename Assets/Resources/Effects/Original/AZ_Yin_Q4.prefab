@@ -68,6 +68,16 @@ MonoBehaviour:
     uvOffsets:
     - {x: 0, y: -0}
     - {x: 2, y: -2}
+    globalAlphaTimes:
+    - 0
+    - 0
+    - 0.05
+    - 1.5
+    globalAlphaValues:
+    - 0.35
+    - 1
+    - 0.2
+    - 0
   - renderer: {fileID: 6155923204528888948}
     staticAlpha: 1
     alphaTimes:
@@ -78,6 +88,12 @@ MonoBehaviour:
     - 0
     uvTimes: []
     uvOffsets: []
+    globalAlphaTimes:
+    - 0
+    - 1.5
+    globalAlphaValues:
+    - 1
+    - 0
   - renderer: {fileID: 2617685189303572607}
     staticAlpha: 1
     alphaTimes:
@@ -88,6 +104,12 @@ MonoBehaviour:
     - 0
     uvTimes: []
     uvOffsets: []
+    globalAlphaTimes:
+    - 0
+    - 1.5
+    globalAlphaValues:
+    - 1
+    - 0
   - renderer: {fileID: 8745719436536733629}
     staticAlpha: 1
     alphaTimes:
@@ -102,6 +124,16 @@ MonoBehaviour:
     - 0
     uvTimes: []
     uvOffsets: []
+    globalAlphaTimes:
+    - 0
+    - 0
+    - 1.5
+    - 1.5
+    globalAlphaValues:
+    - 0.5
+    - 1
+    - 0
+    - 0
   - renderer: {fileID: 4174230847412099803}
     staticAlpha: 1
     alphaTimes:
@@ -114,6 +146,14 @@ MonoBehaviour:
     - 0
     uvTimes: []
     uvOffsets: []
+    globalAlphaTimes:
+    - 0
+    - 1
+    - 1.5
+    globalAlphaValues:
+    - 1
+    - 0.78
+    - 0
   - renderer: {fileID: 2098655035695025935}
     staticAlpha: 1
     alphaTimes:
@@ -132,6 +172,16 @@ MonoBehaviour:
     uvOffsets:
     - {x: 0, y: -0}
     - {x: 2, y: -2}
+    globalAlphaTimes:
+    - 0
+    - 0
+    - 0.05
+    - 1.5
+    globalAlphaValues:
+    - 0.35
+    - 1
+    - 0.2
+    - 0
   - renderer: {fileID: 9207408136835234209}
     staticAlpha: 1
     alphaTimes:
@@ -142,6 +192,12 @@ MonoBehaviour:
     - 0
     uvTimes: []
     uvOffsets: []
+    globalAlphaTimes:
+    - 0
+    - 1.5
+    globalAlphaValues:
+    - 1
+    - 0
   - renderer: {fileID: 7121436816346211557}
     staticAlpha: 1
     alphaTimes:
@@ -152,6 +208,20 @@ MonoBehaviour:
     - 0
     uvTimes: []
     uvOffsets: []
+    globalAlphaTimes:
+    - 0
+    - 1.5
+    globalAlphaValues:
+    - 1
+    - 0
+  clips:
+  - name: s0_Birth
+    clip: {fileID: -6829376634537342324, guid: 1e87f2a8b027a493dba005f4a3b1e6f1, type: 3}
+    startSec: 0
+    lengthSec: 1.5
+    looping: 0
+  AlphaMultiplier: 1
+  Tint: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1001 &6060203601808468280
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -174,7 +244,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 484af8604e19447e19a94a6eedc490de, type: 2}
     - target: {fileID: -8679921383154817045, guid: 1e87f2a8b027a493dba005f4a3b1e6f1, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.02264576
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 1e87f2a8b027a493dba005f4a3b1e6f1, type: 3}
       propertyPath: m_LocalPosition.y
@@ -182,7 +252,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 1e87f2a8b027a493dba005f4a3b1e6f1, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -6.311637
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 1e87f2a8b027a493dba005f4a3b1e6f1, type: 3}
       propertyPath: m_LocalRotation.w
