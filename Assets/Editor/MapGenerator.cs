@@ -1323,8 +1323,9 @@ public static class MapGenerator
     static Vector3 LaneShopSlotAt(MapLayout.Island lane, int slot, int count)
     {
         MapLayout.Island strip = MapLayout.LaneShopStrip(lane);
-        float step = strip.size.x / (count + 1);
-        return new Vector3(strip.center.x - strip.size.x * 0.5f + step * (slot + 1),
+        // 10-14 사장님 「간격도 넓게(양옆이 잔디라 넓혀도 됨)」: 우리 줄 폭의 1.15배를 칸 수로 나눠 가운데 정렬(옛: 폭÷(칸+1), 양 끝 한 칸 비움).
+        float step = strip.size.x * 1.15f / count;
+        return new Vector3(strip.center.x + (slot - (count - 1) * 0.5f) * step,
                            MapLayout.IslandTop + 1.5f, strip.center.y);
     }
 
@@ -4710,6 +4711,33 @@ public static class MapGenerator
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
         UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
         return "다른세계강화소 삭제 Repair\n" + string.Join("\n", lines) + "\n" + nav;
+    }
+
+    /// <summary>10-14 상점 6채 크게·간격 넓게: 새 슬롯 간격으로 옮기고 모양을 새 배율로 다시 입힌다(클릭 상자 포함). call MapGenerator.RepairShopLayout</summary>
+    static string RepairShopLayout()
+    {
+        string[] suffixes = { "도박소", "유닛강화소", "영원함강화소", "도움소", "공격타입강화소", "항해일지" };
+        var lines = new List<string>();
+        GameObject anyShop = null;
+        foreach (MapLayout.Island lane in MapLayout.Lanes)
+        {
+            for (int slot = 0; slot < suffixes.Length; slot++)
+            {
+                GameObject body = GameObject.Find($"{lane.name}_{suffixes[slot]}");
+                if (body == null) { lines.Add($"  ⚠️ {lane.name}_{suffixes[slot]} 없음"); continue; }
+                anyShop = body;
+                GameObject oldModel = GameObject.Find($"{lane.name}_{suffixes[slot]}_모양");
+                if (oldModel != null) Object.DestroyImmediate(oldModel);
+                Vector3 at = LaneShopSlotAt(lane, slot, suffixes.Length);
+                body.transform.position = new Vector3(at.x, body.transform.position.y, at.z);
+                StructureDresser.DressLaneShop(body);
+            }
+        }
+        if (anyShop == null) return "⚠️ 상점을 하나도 못 찾음";
+        string nav = BuildNavMesh(anyShop.transform.parent.gameObject);
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(anyShop.scene);
+        UnityEditor.SceneManagement.EditorSceneManager.SaveScene(anyShop.scene);
+        return "상점 배치 Repair\n" + string.Join("\n", lines) + "\n" + nav;
     }
 
     // 부르기: call MapGenerator.RepairLaneShopModels — 레인 상점 건물 모양만 다시 입힌다(10-04 상점 7채 새 모양).
