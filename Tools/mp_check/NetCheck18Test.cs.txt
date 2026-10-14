@@ -1,0 +1,64 @@
+using System.Collections;
+using System.Linq;
+using UnityEngine;
+
+/// <summary>30R 보스 파칭코 두 창 확인(빌드 사본 전용, 훅 -mpTestCheck18 초). 로그 「[C18]」.
+/// 호스트: 훅 설치 → R30 보스 처치를 세 번(레인 셋 흉내) 알려 한 번만 발동하는지 → 당첨 계획 → 위습 슬롯별 수 전후.
+/// 클라: 플레이 훅 설치 → PUSH 창 열린 뒤 1초에 Space 대신 요청 RPC → 눌림·정지 풀림 로그.</summary>
+public class NetCheck18Test : MonoBehaviour
+{
+    public float startAt = 25f;
+    int plays, pushes;
+
+    int WispsOf(int slot) => Wisp.Active.Count(w => w != null && w.Data != null && (w.Data.name.Contains("전설히든") || w.Data.name.Contains("특별함") || w.Data.name.Contains("희귀함")) && w.TryGetComponent(out OwnedByPlayer o) && o.OwnerId == slot);
+    string State() => $"활성 {PachinkoController.Active} · CutinHold {GamePause.CutinHold} · Frozen {GamePause.Frozen} · timeScale {Time.timeScale}";
+
+    IEnumerator Start()
+    {
+        yield return new WaitForSecondsRealtime(startAt);
+        bool host = GameAuthority.IsServer; string side = host ? "호스트" : "클라";
+        PachinkoPlan seen = default;
+        PachinkoController.PlayHandler = plan => { plays++; seen = plan; Debug.Log($"[C18] {side} 재생 #{plays} {plan} · 준비 {plan.PreludeSeconds():F1}초 · {State()}"); if (!host) StartCoroutine(PushLater(plan.PreludeSeconds() + 1f)); };   // 호스트 슬롯은 안 눌러 자동으로 끝난다
+        PachinkoController.PushedHandler = who => { pushes++; Debug.Log($"[C18] {side} 눌림 #{pushes} who {who} · {State()}"); };
+
+        if (host)
+        {
+            yield return new WaitForSecondsRealtime(3f);
+            int w0 = WispsOf(0), w1 = WispsOf(1);
+            Debug.Log($"[C18] 호스트 시작 전 위습 슬롯0 {w0} 슬롯1 {w1} · 점유 {PlayerContext.OccupiedCount}");
+            // 사양 변경(10-14): 슬롯마다 따로 — 호스트=당첨, 클라=그냥 꽝. 보스 처치 알림을 세 번 흉내(레인 셋)해도 한 번만.
+            PachinkoController.Begin(new[] { "win", "miss" });
+            PachinkoController.OnBossKilled(30); PachinkoController.OnBossKilled(30);
+            Debug.Log($"[C18] 호스트 R30 처치 3회 알림 → 재생 {plays}회 · {State()}");
+            float t0 = Time.realtimeSinceStartup;
+            bool againLogged = false;
+            while (Time.realtimeSinceStartup - t0 < 60f)
+            {
+                yield return new WaitForSecondsRealtime(1f);
+                float t = Time.realtimeSinceStartup - t0;
+                if (!againLogged && t > 8f) { PachinkoController.OnBossKilled(30); againLogged = true; Debug.Log($"[C18] 호스트 정지 중 한 번 더 처치 알림 → 재생 {plays}회"); }
+                if (Mathf.RoundToInt(t) % 6 == 0) Debug.Log($"[C18] 호스트 +{t:F0}s {State()} · 위습 슬롯0 {WispsOf(0)} 슬롯1 {WispsOf(1)}");
+                if (!PachinkoController.Active && t > 5f && pushes > 0) break;
+            }
+            PachinkoController.OnBossKilled(30);
+            yield return new WaitForSecondsRealtime(2f);
+            Debug.Log($"[C18] 호스트 끝 — 재생 {plays}회 · 눌림 {pushes}회 · 위습 슬롯0 {w0}→{WispsOf(0)} 슬롯1 {w1}→{WispsOf(1)} · {State()}");
+        }
+        else
+        {
+            float t0 = Time.realtimeSinceStartup;
+            while (Time.realtimeSinceStartup - t0 < 60f)
+            {
+                yield return new WaitForSecondsRealtime(2f);
+                Debug.Log($"[C18] 클라 +{Time.realtimeSinceStartup - t0:F0}s {State()} · 재생 {plays} 눌림 {pushes}");
+            }
+        }
+    }
+
+    IEnumerator PushLater(float seconds)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        Debug.Log("[C18] 클라 PUSH 요청 RPC(Space 대신)");
+        NetCommands.RequestPachinkoPush();
+    }
+}
