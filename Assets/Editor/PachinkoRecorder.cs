@@ -18,17 +18,29 @@ static class PachinkoRecorder
     static string dir, recName;
     static readonly List<(string name, float time, float vol)> events = new List<(string, float, float)>();
 
-    static string Rec777() => Begin("777", PachinkoPlan.Roll("jackpot"));
+    static string Rec777() { PachinkoOverlay.Theme = 0; return Begin("777", PachinkoPlan.Roll("jackpot")); }
     static string Rec333()
     {
+        PachinkoOverlay.Theme = 0;
         PachinkoPlan p = PachinkoPlan.Roll("win");
         p.left = p.center = p.right = 3;
         return Begin("333", p);
     }
-    static string RecMiss() => Begin("miss", PachinkoPlan.Roll("miss"));
-    static string RecReach() => Begin("reachmiss", PachinkoPlan.Roll("reach"));
+    static string RecMiss() { PachinkoOverlay.Theme = 0; return Begin("miss", PachinkoPlan.Roll("miss")); }
+    static string RecReach() { PachinkoOverlay.Theme = 0; return Begin("reachmiss", PachinkoPlan.Roll("reach")); }
+    // Re:ゼロ 테마
+    static string RecRzMiss() { PachinkoOverlay.Theme = 1; return Begin("rz_miss", PachinkoPlan.Roll("miss")); }
+    static string RecRzWin()
+    {
+        PachinkoOverlay.Theme = 1;
+        PachinkoPlan p = PachinkoPlan.Roll("win");
+        p.left = p.center = p.right = 1;
+        return Begin("rz_win", p);
+    }
+    // 투표 화면(모의 10초 + 결과)
+    static string RecVote() => Begin("vote", default, true);
 
-    static string Begin(string name, PachinkoPlan plan)
+    static string Begin(string name, PachinkoPlan plan, bool vote = false)
     {
         if (!Application.isPlaying) return "❌ 플레이 중에만";
         if (recording) return "이미 녹화 중";
@@ -42,7 +54,7 @@ static class PachinkoRecorder
         Time.captureFramerate = 30;
         recording = true;
         PachinkoOverlay.FrameHook += Tick;
-        PachinkoOverlay.Preview(plan);
+        if (vote) PachinkoOverlay.PreviewVote(); else PachinkoOverlay.Preview(plan);
         return $"녹화 시작 {name}: {plan}";
     }
 
@@ -56,7 +68,7 @@ static class PachinkoRecorder
         lastFrame = Time.frameCount;
         ScreenCapture.CaptureScreenshot(Path.Combine(dir, $"f_{index:00000}.png"));
         index++;
-        if (!PachinkoOverlay.IsPlaying && index > 10) { idle++; if (idle > 20) Finish(); }
+        if (!PachinkoOverlay.IsPlaying && !PachinkoOverlay.IsVoting && index > 10) { idle++; if (idle > 20) Finish(); }
     }
 
     static void Finish()

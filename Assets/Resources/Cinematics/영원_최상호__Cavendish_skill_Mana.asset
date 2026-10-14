@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3184e6f55ca934891a8135d9eff5e47b, type: 3}
-  m_Name: "\uC601\uC6D0_\uCD5C\uC0C1\uD638__Cavendish_skill_Mana"
+  m_Name: 
   m_EditorClassIdentifier: 
   scriptId: "\uC601\uC6D0_\uCD5C\uC0C1\uD638__Cavendish_skill_Mana"
   title: "|CFFFFFA78\uD574\uC801\uC655\uC790-\uB86C\uBA5C\uC758 \uCE74\uB9C8\uC774\uD0C0\uCE58
@@ -20,41 +20,11 @@ MonoBehaviour:
   - t: 0
     op: 0
     id: u1
-    model: DevilSlam.mdx2
-    baseScale: 1
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1.24
-    deathSec: 0
-    anchor: 0
-    hasOffset: 1
-    offsetX: 0
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 0
-    op: 0
-    id: u2
     model: SuperBigExplosion
-    baseScale: 1
+    baseScale: 0.3
     scalePercent: 100
     flyHeight: 0
-    lifeSec: 1
+    lifeSec: 1.2
     deathSec: 0.1
     anchor: 1
     hasOffset: 1
@@ -79,7 +49,7 @@ MonoBehaviour:
     anchorShip: 
   - t: 0
     op: 0
-    id: u3
+    id: u2
     model: basicstrike
     baseScale: 4
     scalePercent: 100
@@ -87,6 +57,36 @@ MonoBehaviour:
     lifeSec: 1
     deathSec: 0.1
     anchor: 0
+    hasOffset: 1
+    offsetX: 0
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 1
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0
+    op: 0
+    id: u3
+    model: ice2
+    baseScale: 3
+    scalePercent: 100
+    flyHeight: 0
+    lifeSec: 1
+    deathSec: 0.1
+    anchor: 1
     hasOffset: 1
     offsetX: 0
     offsetY: 0
@@ -140,36 +140,6 @@ MonoBehaviour:
   - t: 0
     op: 0
     id: u5
-    model: ice2
-    baseScale: 3
-    scalePercent: 100
-    flyHeight: 0
-    lifeSec: 1
-    deathSec: 0.1
-    anchor: 1
-    hasOffset: 1
-    offsetX: 0
-    offsetY: 0
-    hasPolar: 0
-    polarRadius: 0
-    polarAngleDeg: 0
-    anim: 
-    timescale: 1
-    facingRandom: 0
-    hasMove: 0
-    moveAnchor: 0
-    moveSpeed: 0
-    rampTo: 0
-    rampRate: 0
-    shakeDuration: 0
-    shakeMagnitude: 0
-    vertexAlpha: 1
-    hasScaleSet: 0
-    hasTimescaleSet: 0
-    anchorShip: 
-  - t: 0
-    op: 0
-    id: u6
     model: FrostNova
     baseScale: 1.5
     scalePercent: 100
@@ -199,12 +169,12 @@ MonoBehaviour:
     anchorShip: 
   - t: 0.35
     op: 0
-    id: u7
+    id: u6
     model: SuperBigExplosion
-    baseScale: 1.2
+    baseScale: 0.3
     scalePercent: 100
     flyHeight: 0
-    lifeSec: 5
+    lifeSec: 1.2
     deathSec: 0.1
     anchor: 1
     hasOffset: 1
@@ -228,13 +198,6 @@ MonoBehaviour:
     hasTimescaleSet: 0
     anchorShip: 
   models:
-  - name: DevilSlam.mdx2
-    prefab: {fileID: 2615284679494647493, guid: 8d77e5f23446b4cd69e6c567dea7b385, type: 3}
-    substitute: 
-    tint: {r: 1, g: 1, b: 1, a: 1}
-    thickness: 1
-    substituteLengthWc3: 0
-    substituteNativeLength: 0
   - name: SuperBigExplosion
     prefab: {fileID: 6045027351094879457, guid: fc4d44bf80deb457aa3479e76b5dc58b, type: 3}
     substitute: 

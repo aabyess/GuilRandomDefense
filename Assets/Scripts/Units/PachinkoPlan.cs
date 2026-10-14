@@ -29,6 +29,10 @@ public static class PachinkoSettings
     public const float MissResultSeconds = 2.6f;
     /// <summary>오버레이가 없을 때(임시 경로) 로그만 찍고 결과까지 가는 시간.</summary>
     public const float NoOverlayDelay = 0.5f;
+    /// <summary>Re:ゼロ 테마(사장님 10-14): 룰렛 배경 영상 길이 — 꽝 35초 · 당첨 39.1초(마지막 「見事」 직후 당첨 표시). 영상 끝에서 결과.</summary>
+    public const float RzSpinMissSeconds = 35f, RzSpinWinSeconds = 39.1f;
+    /// <summary>Re:ゼロ 꽝: 화면 깨짐 0.8초 + 꽝 영상 6.8초 + 여유.</summary>
+    public const float RzMissResultSeconds = 0.8f + 6.8f + 1.0f;
 }
 
 [System.Serializable]
@@ -38,18 +42,19 @@ public struct PachinkoPlan
     public byte left, center, right;   // 1~9
     public PachinkoHold hold;
     public byte yokoku;                // 0~3 (継続 ×N+1)
+    public byte theme;                 // 0=東京喰種 1=Re:ゼロ(테마 투표 결과, PachinkoOverlay.Theme)
     public PachinkoBg bg;
     public PachinkoCut cut;
 
     /// <summary>네트워크용 25비트 포장.</summary>
     public int Pack() =>
-        (win ? 1 : 0) | (reach ? 2 : 0) | (revive ? 4 : 0) | (jackpot ? 1 << 25 : 0) |
+        (win ? 1 : 0) | (reach ? 2 : 0) | (revive ? 4 : 0) | (jackpot ? 1 << 25 : 0) | (theme & 1) << 26 |
         (left & 15) << 3 | (center & 15) << 7 | (right & 15) << 11 |
         ((int)hold & 7) << 15 | (yokoku & 3) << 18 | ((int)bg & 3) << 20 | ((int)cut & 7) << 22;
 
     public static PachinkoPlan Unpack(int v) => new PachinkoPlan
     {
-        win = (v & 1) != 0, reach = (v & 2) != 0, revive = (v & 4) != 0, jackpot = (v & (1 << 25)) != 0,
+        win = (v & 1) != 0, reach = (v & 2) != 0, revive = (v & 4) != 0, jackpot = (v & (1 << 25)) != 0, theme = (byte)((v >> 26) & 1),
         left = (byte)((v >> 3) & 15), center = (byte)((v >> 7) & 15), right = (byte)((v >> 11) & 15),
         hold = (PachinkoHold)((v >> 15) & 7), yokoku = (byte)((v >> 18) & 3), bg = (PachinkoBg)((v >> 20) & 3), cut = (PachinkoCut)((v >> 22) & 7),
     };
@@ -72,7 +77,7 @@ public struct PachinkoPlan
             reach = !jackpot && !win && r < PachinkoSettings.JackpotChance + PachinkoSettings.WinChance + PachinkoSettings.ReachMissChance;
         }
         else { jackpot = mode == "jackpot"; win = mode == "win" || mode == "revive"; reach = mode == "reach"; }
-        var p = new PachinkoPlan { jackpot = jackpot, win = win || jackpot, reach = reach || win || jackpot };
+        var p = new PachinkoPlan { jackpot = jackpot, win = win || jackpot, reach = reach || win || jackpot, theme = (byte)PachinkoOverlay.Theme };
 
         int n;
         if (jackpot) n = 7;
@@ -147,6 +152,7 @@ public struct PachinkoPlan
     /// </summary>
     public float PreludeSeconds()
     {
+        if (theme == 1) return (win ? PachinkoSettings.RzSpinWinSeconds : PachinkoSettings.RzSpinMissSeconds) - PachinkoSettings.PushSeconds;   // 영상 끝에서 PUSH 5초가 닫히고 결과
         float t = 0.9f + 2.4f;
         if (!reach) return t + 0.4f;
         t += 1.3f + yokoku * 1.05f;
@@ -160,5 +166,5 @@ public struct PachinkoPlan
     }
 
     /// <summary>PUSH 뒤(또는 시간 끝) 결과 화면이 떠 있는 시간.</summary>
-    public float ResultSeconds() => win ? PachinkoSettings.WinResultSeconds + (revive ? PachinkoSettings.ReviveExtraSeconds : 0f) + (jackpot ? PachinkoSettings.JackpotExtraSeconds : 0f) : PachinkoSettings.MissResultSeconds;
+    public float ResultSeconds() => theme == 1 && !win ? PachinkoSettings.RzMissResultSeconds : win ? PachinkoSettings.WinResultSeconds + (revive ? PachinkoSettings.ReviveExtraSeconds : 0f) + (jackpot ? PachinkoSettings.JackpotExtraSeconds : 0f) : PachinkoSettings.MissResultSeconds;
 }
