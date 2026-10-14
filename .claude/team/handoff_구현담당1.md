@@ -1,3 +1,33 @@
+# 구현담당1 인수인계 (10-15 교체, 0.3.20 배포 뒤)
+
+새 세션은 기억이 없다. 이 문서 → `.claude/NEXT_SESSION.md` → TEAM_RULES 순. 에디터(main)는 꺼져 있다. 이 문서 아래 「10-14 교체」 이하 묶음은 날개·텍스처 쪽이라 낡은 부분이 있다(날개 수정 3건·어림 텍스처 v2는 그 뒤 PM 확인 여부 NEXT_SESSION 대조).
+
+## 10-14~10-15 끝낸 일 (전부 main 커밋, 해시는 git log)
+- 파칭코 테마 투표 백엔드(2f923a66e): PachinkoController 훅 VoteOpen/Tally/Close·CastVote·VoteTheme, RPC NetGameState/NetPlayer/NetCommands. UI는 구현담당2(PachinkoOverlay). **MP 실측 미함**(v3 병합 뒤 두 창, 하네스 Tools/mp_check/NetCheck18Test.cs.txt, 빌드 사본 ../GuilRandomDefense-build).
+- 파칭코 확률은 PachinkoSettings 한 곳(PM이 0.3.20에서 777 5%·같은숫자 25%·리치꽝 40%·꽝 30%로 재확정). 보상 알림 한국어화.
+- 빌드 시험 인자 `-soloDifficulty easy|…|nightmare`(DifficultyManager.Awake), PachinkoController DontDestroyOnLoad. 빌드 실측 미함.
+- 초월·불멸 키 ×1.2(ArtBinder.TranscendImmortalExtraScale·HeightRebind.RunTranscendImmortal·StaleDollRepair.RebuildTranscendImmortal).
+- 판매 불가 UnitData.sellBlocked(안흔함_이호준·특별함_조도연), 상점 앞 클릭 수리(WorldPick·SelectionManager·ShopClickBoxes, ShopClickProbe). **도움소 클릭만 판정 불가**(줄 끝 화면 밖) — 다음 판에 카메라를 안으로.
+- 친구 피드백 0.3.20: 연합세력 문구(전설·히든 이상) · 전설 조합 33식 목재 3 · 희귀함 리롤(UnitSpawner.Spawn `combined` 인자, UniqueRerollAbility.DefaultData·IsRerollable; 실패 시 그 유닛 능력 회수는 사장님 확정으로 유지) · 희귀함 스킬 없는 9기 배정 · 조합 결과 위치(CombineSystem.ResultAtCasterUnit=true, 창고 안이면 필드 재료 곁) · 흔함 6기 원작 짝을 흔함(h002·h004·h006~h009)으로 정정(사거리 101.75, MASTER_UID_ROSTER_MAP 갱신).
+- 안흔함_이호준: 특별함 h00B 계승 끊고 안흔함 h00D 브룩 값·스킬(공 90·공속 1.3514·A04C), 커밋 b00fbb46b. 판매불가·좀비 스킨·자리 유지.
+
+## 남은 일
+1. 위 파칭코 투표 MP 두 창 실측(구현담당2 v3 병합 알림 뒤).
+2. 이번 변경 런타임 실측 전부 미함: 조합 결과 위치(창고·필드·선택 없음 세 경우) · 보상 희귀함 리롤 버튼 · 판매 불가 클릭 · 전설 조합 목재 부족 문구.
+3. 희귀함 9기(강보명·강재규·강주혁·고어진·구주호·김경현·김기연·김정래·박도진)는 임시 재사용 스킬 — 원작 미배정 희귀함 8종(바질호킨스 A0E0·마젤란 A04T·와이퍼 A0D9·슈가 A0IW·센토마루·페로나 A064·사보 A0PF·드레이크 A132/A133) 능력을 실제 구현하면 교체(사장님 판단).
+4. 안흔함_문필환·박민수가 h00E(110/1.0417) 값을 겹쳐 씀 — 원작 h00D 자리는 이제 이호준이 가짐. 정리할지 PM 확인.
+5. 도움소 클릭 판정(위), `-mpSolo -soloDifficulty easy -pachinkoTest win` 빌드 실측.
+
+## 함정 (이번에 걸린 것)
+- 🔴 프로세스 종료는 `ps -o command`로 projectPath 확인 후 PID 지정(pgrep만 믿고 w2 에디터를 죽인 사고). main=`…/GuilRandomDefense`, w2=`…-w2`.
+- 맥 NFD 폴더명: 초월_김경현_AP 등 한글 이름 비교는 NFC 정규화(Normalize FormC) 필수.
+- 로스터 YAML은 파이썬으로 고칠 때 `re.sub`에 문자열 치환 대신 람다 사용(한글 \u 이스케이프가 템플릿 오류), 값은 대문자 `\uXXXX`.
+- zsh 배열 `F=(…)` `"${F[@]}"`로 git add/commit(경로 없는 commit 금지, push는 PM). csc_check/compile_check는 `| grep -i error`.
+- 원작 PV: 희귀함 90·전설/히든 101·특수함 102·초월/영원 131~161·안흔함 70·특별함 80·흔함 1~9. 같은 등급 판정은 PV만으론 모호(영원 일부가 131).
+- 원작 짝 대응표: Docs/reference/MASTER_UID_ROSTER_MAP.csv, 능력 공유 규칙은 원작도 A0FJ·A04B처럼 여러 유닛 공유.
+
+---
+
 # 구현담당1 인수인계 (10-14 교체, 0.3.17 배포 뒤 · 날개 수정 도중)
 
 새 세션은 기억이 없다. 이 문서 → `.claude/NEXT_SESSION.md` → TEAM_RULES 순. 아래 「10-09~10-14」가 최신이고, 그 아래 10-08 구조 메모는 그대로 유효하다. 에디터는 비움(Play 끔).
