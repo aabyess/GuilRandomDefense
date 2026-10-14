@@ -148,6 +148,8 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
     // isBonus: 이 결과가 bonusChancePercent 확률(1% 상붕카 등)에서 나왔는지. 이름으로
     // "상붕카인지" 판단하지 않고(사장님이 유닛 이름을 자주 바꾼다) 어느 뽑기 경로를 탔는지로
     // 직접 표시한다 — 호출부가 이 값으로 자리(우리 vs 레인 한가운데)를 정한다.
+    static readonly System.Collections.Generic.HashSet<string> NewWorldExcluded = new System.Collections.Generic.HashSet<string> { "솔", "성탄", "뻬꼼" };
+
     UnitData RollReward(UnitGrade grade, int ownerId, out bool isBonus)
     {
         isBonus = false;
@@ -253,6 +255,11 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
         UnitData reward = specificUnit != null
             ? specificUnit
             : RollReward(overrideRewardGrade ? rewardGrade : grade, ownerId, out isBonusReward);
+
+        // 신세계 보상 위습(표식)은 솔·성탄·뻬꼼을 안 준다(사장님 10-14) — 같은 등급(히든) 안에서 다른 유닛이 나올 때까지 다시 뽑는다(전설/히든 반반은 그대로).
+        if (wisp.NewWorldReward && specificUnit == null && gachaTable != null)
+            for (int i = 0; i < 50 && reward != null && NewWorldExcluded.Contains(reward.unitName); i++)
+                reward = gachaTable.RollFromGrade(reward.grade);
 
         if (reward == null)
         {

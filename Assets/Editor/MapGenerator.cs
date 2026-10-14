@@ -6517,6 +6517,7 @@ public static class MapGenerator
         if (distributor == null) return;
         EnsureAssetRef(distributor, "saveRewardCommonChoiceWisp", AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_흔함선택.asset"));
         EnsureAssetRef(distributor, "saveRewardRandomWisp", AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_랜덤유닛.asset"));
+        EnsureAssetRef(distributor, "newWorldWisp", AssetDatabase.LoadAssetAtPath<WispData>("Assets/Data/Wisps/Wisp_전설히든.asset"));   // 10-14 솔플 신세계 보상
     }
 
     /// <summary>이미 물려 있던 참조 중 **남의 오브젝트를 가리키는 것**만 한 줄로. 없으면 빈 문자열.</summary>

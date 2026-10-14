@@ -53,6 +53,10 @@ public class RewardDistributor : MonoBehaviour
     // 41R 2차 세이브 보상(원작 Trig_SaveReward_2, j:5364-5372) — 흔함선택 위습(e018)·랜덤위습(e0IX). MapGenerator.RepairSaveRewardWisps가 채운다.
     [SerializeField] WispData saveRewardCommonChoiceWisp;
     [SerializeField] WispData saveRewardRandomWisp;
+    // 신세계 진입 보상(e015) 전설·히든 위습. MapGenerator.RepairSaveRewardWisps가 채운다.
+    // 🔴 10-14 사장님 「솔플은 신세계 보상을 안 준다」: 예전엔 Resources.FindObjectsOfTypeAll로만 찾았는데 Wisp_전설히든을 참조하는 게 멀티 NetCatalog뿐이라
+    //    솔플에선 메모리에 없어 조용히 건너뛰었다. 씬 참조를 먼저 쓴다(찾기는 예비).
+    [SerializeField] WispData newWorldWisp;
 
     // 우물 한가운데 뭉쳐 있게 둔다. 8로 벌리면 별 모양으로 흩어져서 다섯 덩어리로 보이는데,
     // 이건 한 사람 몫의 시작 자원이라 한 무더기로 읽혀야 한다.
@@ -730,6 +734,7 @@ public class RewardDistributor : MonoBehaviour
     public void GrantNewWorldWisps(DifficultyMode mode)
     {
         if (!GameAuthority.IsServer) return;
+        if (legendHiddenWisp == null) legendHiddenWisp = newWorldWisp;
         if (legendHiddenWisp == null)
             foreach (WispData data in Resources.FindObjectsOfTypeAll<WispData>())
                 if (data != null && data.targetGrade == UnitGrade.Legendary && !data.isPlayerChoice && data.prefab != null) { legendHiddenWisp = data; break; }
