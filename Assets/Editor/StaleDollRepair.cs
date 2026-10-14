@@ -27,6 +27,16 @@ public static class StaleDollRepair
         return stale;
     }
 
+    /// <summary>배치 촬영(ClaudeCommands shotobj) 앞에서 씬을 연다: call StaleDollRepair.Open</summary>
+    public static void Open() => EditorSceneManager.OpenScene(ScenePath);
+
+    public static void HideGiant()
+    {
+        EditorSceneManager.OpenScene(ScenePath);
+        GameObject g = GameObject.Find("불멸_거인");
+        foreach (Transform c in g.transform) if (c.name.StartsWith("불멸_")) c.gameObject.SetActive(false);
+    }
+
     public static void Check()
     {
         EditorSceneManager.OpenScene(ScenePath);
