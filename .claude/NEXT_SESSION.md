@@ -6,6 +6,12 @@
 
 ---
 
+## ⭐⭐⭐⭐ 0.3.20 배포 완료 (10-14 밤)
+- 빌드 사본 release/0.3.20(15990089f), 드라이브에 0.3.20 zip·안내문·패치노트, 0.3.19 삭제, 바탕화면 앱 0.3.20.
+- 파칭코 확률 재확정: 777 5% · 같은 숫자 25% · 리치 꽝 40% · 꽝 30%(PachinkoSettings). 연출 개선(타격·리치 강조·섬광·스탬프·집중선·레터박스·번쩍임 줄이기·리제로 보석 숫자).
+- 친구 피드백 9건 반영·실측 통과(FriendFixProbe): 흔함 6기 짝 흔함 원작으로 · 원작 짝 표기 숨김(GameVersion.BetaShowOriginalMatch=false, 스킬 이름 괄호도) · 획득 알림 여러 줄 · 연합세력 문구 · 조합 결과 누른 유닛 곁(ResultAtCasterUnit=true, 창고면 재료 곁) · 희귀함 9기 스킬(공용 데미지+스턴) · 전설 조합 목재 3 · 리롤 보상·도박 희귀함 전부(UniqueRerollAbility.IsRerollable, 명령 칸) · 원작 loop 이펙트 1회 재생·범위 이펙트 지름 상한.
+- 미시험: 창고 안 조합 위치(코드만 확인). 안흔함_이호준은 의도된 예외(특별함 계승) 유지.
+
 ## ⭐⭐⭐ PM 10 진행 (10-14 오후~저녁) — 0.3.19 배포 완료
 - **배포**: 0.3.19 드라이브 업로드 완료(0.3.18은 미배포로 합침). 빌드 사본 ../GuilRandomDefense-build release/0.3.19(a3859e795). 배포 전 관문 추가: `PinkMaterialProbe.FixAndRun`(재질 null·FBX 재임포트) · `StaleDollRepair.Check`(전시 인형 메시 끊김) · `Tools/check_missing_assets.py --tracked`(없는 guid 0) · 빌드 시험 `-mpSolo -soloDifficulty easy -pachinkoTest jackpot -mpShotAt …`.
 - **0.3.17 안 보이던 스킨 원인**: 맵 생성기가 씬에 구운 전시 인형(DollIdle, 프리팹 연결 없음)이 FBX 교체로 옛 메시 참조 끊김 → StaleDollRepair. FBX가 .mat보다 먼저 임포트되면 재질 null(조로 분홍) → PinkMaterialProbe.
