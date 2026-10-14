@@ -790,7 +790,7 @@ public class RewardDistributor : MonoBehaviour
                 Vector3 position = lane != null ? lane.TakeSpawnPosition(unit)
                                  : context.Warehouse != null ? context.Warehouse.transform.position : context.transform.position;
                 spawner.Spawn(unit, position, slot);
-                PlayerNotification.Show(slot, "<color=#FFD700>大当たり報酬：ランダムユニット ×1</color>", 8f);
+                PlayerNotification.Show(slot, "<color=#FFD700>大当たり 보상: 랜덤 유닛 ×1</color>", 8f);
                 Debug.Log($"[파칭코보상] 슬롯 {slot} 777 → 랜덤유닛 {unit.unitName}");
                 return;
             }
@@ -809,7 +809,7 @@ public class RewardDistributor : MonoBehaviour
         else { wisp = pachinkoMissWisp != null ? pachinkoMissWisp : (pachinkoMissWisp = FindWispByName("Wisp_특별함")); label = "특별함 위습"; }
         if (wisp == null) { Debug.LogWarning($"RewardDistributor: 파칭코 보상 위습({label})을 못 찾아 슬롯 {slot}에게 못 줍니다."); return; }
         SpawnWisp(context, wisp, count, newWorldReward: false, excludeRestricted: exclude);
-        PlayerNotification.Show(slot, plan.win ? $"<color=#FFD700>当たり報酬：伝説・ヒドゥンの魂 ×{count}</color>" : plan.reach ? $"残念賞：希少の魂 ×{count}" : $"残念賞：特別の魂 ×{count}", 6f);
+        PlayerNotification.Show(slot, plan.win ? $"<color=#FFD700>당첨 보상: 전설·히든 위습 ×{count}</color>" : plan.reach ? $"아쉬움 보상: 희귀함 위습 ×{count}" : $"아쉬움 보상: 특별함 위습 ×{count}", 6f);
         Debug.Log($"[파칭코보상] 슬롯 {slot} {plan} → {label} {count}기{(exclude ? "(솔·성탄·뻬꼼 제외)" : "")}");
     }
 

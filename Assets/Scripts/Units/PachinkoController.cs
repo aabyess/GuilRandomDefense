@@ -28,6 +28,8 @@ public class PachinkoController : MonoBehaviour
     public static Action<float> VoteOpenHandler;       // 투표 화면 열기(초)
     public static Action<int[], int> VoteTallyHandler; // (슬롯별 표 0=무투표 1=東京喰種 2=Re:ゼロ, 내 슬롯)
     public static Action<int> VoteCloseHandler;        // 마감 결과 theme 0/1 (PachinkoOverlay.Theme 세팅·화면 닫기)
+    /// <summary>마감으로 정해진 테마(0=東京喰種 1=Re:ゼロ, -1=아직 안 정함). 투표가 건너뛰어지면 -1.</summary>
+    public static int VoteTheme = -1;
     public const float VoteSeconds = 10f, VoteResultHold = 1.3f;
     const int MaxSlots = 16;
     static bool voting;
@@ -167,6 +169,7 @@ public class PachinkoController : MonoBehaviour
     public static void ReceiveVoteClose(int theme)
     {
         if (GameAuthority.IsServer) return;
+        VoteTheme = theme;
         VoteCloseHandler?.Invoke(theme);
     }
 
@@ -181,6 +184,7 @@ public class PachinkoController : MonoBehaviour
         float pB = a + b == 0 ? 0.5f : b / (float)(a + b);   // 표 비율 = 확률, 무투표·안 누른 사람은 표에서 빠짐
         int theme = UnityEngine.Random.value < pB ? 1 : 0;
         voteClosed = true;
+        VoteTheme = theme;
         voteLaunchAt = Time.unscaledTime + VoteResultHold;
         Debug.Log($"[파칭코] 투표 마감 — 東京喰種 {a} · Re:ゼロ {b} → 테마 {theme}");
         NetGameState s = NetGameState.Instance;
@@ -294,7 +298,7 @@ public class PachinkoController : MonoBehaviour
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    static void ResetStatics() { Instance = null; triggeredThisRun = false; PlayHandler = null; PushedHandler = null; VoteOpenHandler = null; VoteTallyHandler = null; VoteCloseHandler = null; voting = false; voteClosed = false; voteModes = null; }
+    static void ResetStatics() { Instance = null; triggeredThisRun = false; PlayHandler = null; PushedHandler = null; VoteOpenHandler = null; VoteTallyHandler = null; VoteCloseHandler = null; voting = false; voteClosed = false; voteModes = null; VoteTheme = -1; }
 
     // ───────── 개발 인자 ─────────
 
