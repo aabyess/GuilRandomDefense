@@ -37,6 +37,19 @@ public static class StaleDollRepair
         foreach (Transform c in g.transform) if (c.name.StartsWith("불멸_")) c.gameObject.SetActive(false);
     }
 
+    /// <summary>10-14 솔플 신세계 보상 위습(RewardDistributor.newWorldWisp) 배선을 씬에 기록·저장한다.</summary>
+    public static void WireNewWorldWisp()
+    {
+        EditorSceneManager.OpenScene(ScenePath);
+        typeof(MapGenerator).GetMethod("RepairSaveRewardWisps", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, null);
+        var d = Object.FindFirstObjectByType<RewardDistributor>(FindObjectsInactive.Include);
+        var w = new SerializedObject(d).FindProperty("newWorldWisp").objectReferenceValue;
+        Debug.Log($"[신세계보상 배선] newWorldWisp = {(w == null ? "NULL" : w.name)}");
+        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
+        if (Application.isBatchMode) EditorApplication.Exit(w == null ? 1 : 0);
+    }
+
     public static void Check()
     {
         EditorSceneManager.OpenScene(ScenePath);
