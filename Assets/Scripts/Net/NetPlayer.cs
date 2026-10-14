@@ -470,6 +470,13 @@ public class NetPlayer : NetworkBehaviour
         NetCommands.ExecutePachinkoPush(this);
     }
 
+    // 파칭코 테마 투표(10-14): 0=東京喰種 1=Re:ゼロ. 바꿔 누르기 = 같은 슬롯이 다시 보내면 덮어쓴다.
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_PachinkoVote(sbyte theme)
+    {
+        NetCommands.ExecutePachinkoVote(this, theme);
+    }
+
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     public void RPC_Chat(string text)
     {

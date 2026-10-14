@@ -24,6 +24,18 @@ public class PachinkoController : MonoBehaviour
     public static Action<PachinkoPlan> PlayHandler;
     public static Action<int> PushedHandler;
 
+    // 테마 투표(10-14, 구현담당2 오버레이가 붙는다). 훅이 비어 있으면 투표를 건너뛰고 바로 시작한다.
+    public static Action<float> VoteOpenHandler;       // 투표 화면 열기(초)
+    public static Action<int[], int> VoteTallyHandler; // (슬롯별 표 0=무투표 1=東京喰種 2=Re:ゼロ, 내 슬롯)
+    public static Action<int> VoteCloseHandler;        // 마감 결과 theme 0/1 (PachinkoOverlay.Theme 세팅·화면 닫기)
+    public const float VoteSeconds = 10f, VoteResultHold = 1.3f;
+    const int MaxSlots = 16;
+    static bool voting;
+    static float voteDeadline, voteLaunchAt;
+    static bool voteClosed;
+    static string[] voteModes;
+    static readonly int[] votes = new int[MaxSlots];
+
     public static PachinkoController Instance { get; private set; }
     /// <summary>이 PC에서 파칭코 연출이 진행 중인가(카메라·입력이 비켜야 할 때 본다).</summary>
     public static bool Active => Instance != null && Instance.Running;
@@ -63,8 +75,29 @@ public class PachinkoController : MonoBehaviour
     {
         if (!GameAuthority.IsServer) return;
         PachinkoController c = Ensure();
-        if (c.Running) return;
+        if (c.Running || voting) return;
         triggeredThisRun = true;
+        bool fixedResult = false;
+        if (modes != null) foreach (string m in modes) if (!string.IsNullOrEmpty(m) && m != "random") fixedResult = true;
+        if (!fixedResult && VoteOpenHandler != null)
+        {
+            c.authority = true;
+            voting = true; voteClosed = false; voteModes = modes;
+            Array.Clear(votes, 0, votes.Length);
+            voteDeadline = Time.unscaledTime + VoteSeconds;
+            GamePause.SetPachinkoHold(true);
+            NetGameState vs = NetGameState.Instance;
+            if (vs != null && GamePause.IsNetworked) vs.BroadcastPachinkoVoteOpen(VoteSeconds);
+            Debug.Log($"[파칭코] 테마 투표 시작 {VoteSeconds:F0}초");
+            VoteOpenHandler(VoteSeconds);
+            return;
+        }
+        c.Launch(modes);
+    }
+
+    void Launch(string[] modes)
+    {
+        PachinkoController c = this;
         c.authority = true;
         c.runs.Clear();
         int index = 0;
@@ -78,7 +111,7 @@ public class PachinkoController : MonoBehaviour
             slots.Add(context.PlayerId);
             index++;
         }
-        if (slots.Count == 0) return;
+        if (slots.Count == 0) { GamePause.SetPachinkoHold(false); return; }
         GamePause.SetPachinkoHold(true);
         NetGameState state = NetGameState.Instance;
         foreach (int slot in slots)
@@ -87,6 +120,72 @@ public class PachinkoController : MonoBehaviour
             c.Arm(slot, r, local: slot == GameAuthority.LocalPlayerId);
             if (state != null && GamePause.IsNetworked && slot != GameAuthority.LocalPlayerId) state.BroadcastPachinko(slot, r.plan.Pack());
         }
+    }
+
+    // ───────── 테마 투표 ─────────
+
+    /// <summary>오버레이가 내 표를 던졌다(PachinkoOverlay.LocalVoteCast에서 이 함수로). 바꿔 누르기 = 덮어쓰기.</summary>
+    public static void CastVote(int theme)
+    {
+        if (theme < 0 || theme > 1) return;
+        if (GameAuthority.IsServer) ReceiveVote(GameAuthority.LocalPlayerId, theme);
+        else NetCommands.RequestPachinkoVote(theme);
+    }
+
+    /// <summary>호스트: 슬롯의 표 수신(NetCommands). 투표 중일 때만.</summary>
+    public static void ReceiveVote(int slot, int theme)
+    {
+        if (!GameAuthority.IsServer || !voting || voteClosed || slot < 0 || slot >= MaxSlots || theme < 0 || theme > 1) return;
+        votes[slot] = theme + 1;
+        BroadcastTally();
+    }
+
+    static void BroadcastTally()
+    {
+        int packed = 0;
+        for (int i = 0; i < MaxSlots; i++) packed |= (votes[i] & 3) << (i * 2);
+        VoteTallyHandler?.Invoke((int[])votes.Clone(), GameAuthority.LocalPlayerId);
+        NetGameState s = NetGameState.Instance;
+        if (s != null && GamePause.IsNetworked) s.BroadcastPachinkoVoteTally(packed);
+    }
+
+    public static void ReceiveVoteOpen(float seconds)
+    {
+        if (GameAuthority.IsServer) return;
+        Ensure().authority = false;
+        VoteOpenHandler?.Invoke(seconds);
+    }
+
+    public static void ReceiveVoteTally(int packed)
+    {
+        if (GameAuthority.IsServer) return;
+        var by = new int[MaxSlots];
+        for (int i = 0; i < MaxSlots; i++) by[i] = (packed >> (i * 2)) & 3;
+        VoteTallyHandler?.Invoke(by, GameAuthority.LocalPlayerId);
+    }
+
+    public static void ReceiveVoteClose(int theme)
+    {
+        if (GameAuthority.IsServer) return;
+        VoteCloseHandler?.Invoke(theme);
+    }
+
+    void CloseVote()
+    {
+        int a = 0, b = 0;
+        foreach (PlayerContext context in PlayerContext.Occupied)
+        {
+            if (context.IsDead || context.PlayerId < 0 || context.PlayerId >= MaxSlots) continue;
+            if (votes[context.PlayerId] == 1) a++; else if (votes[context.PlayerId] == 2) b++;
+        }
+        float pB = a + b == 0 ? 0.5f : b / (float)(a + b);   // 표 비율 = 확률, 무투표·안 누른 사람은 표에서 빠짐
+        int theme = UnityEngine.Random.value < pB ? 1 : 0;
+        voteClosed = true;
+        voteLaunchAt = Time.unscaledTime + VoteResultHold;
+        Debug.Log($"[파칭코] 투표 마감 — 東京喰種 {a} · Re:ゼロ {b} → 테마 {theme}");
+        NetGameState s = NetGameState.Instance;
+        if (s != null && GamePause.IsNetworked) s.BroadcastPachinkoVoteClose(theme);
+        VoteCloseHandler?.Invoke(theme);
     }
 
     // ───────── 클라: 내 plan 수신 · 눌림 수신 ─────────
@@ -157,6 +256,12 @@ public class PachinkoController : MonoBehaviour
 
     void Update()
     {
+        if (voting && authority)
+        {
+            if (!voteClosed && Time.unscaledTime >= voteDeadline) CloseVote();
+            else if (voteClosed && Time.unscaledTime >= voteLaunchAt) { voting = false; string[] m = voteModes; voteModes = null; Launch(m); }
+            return;
+        }
         if (runs.Count == 0) return;
         float now = Time.unscaledTime;   // 게임 시간이 서 있으므로 실시간
         int me = GameAuthority.LocalPlayerId;
@@ -189,7 +294,7 @@ public class PachinkoController : MonoBehaviour
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    static void ResetStatics() { Instance = null; triggeredThisRun = false; PlayHandler = null; PushedHandler = null; }
+    static void ResetStatics() { Instance = null; triggeredThisRun = false; PlayHandler = null; PushedHandler = null; VoteOpenHandler = null; VoteTallyHandler = null; VoteCloseHandler = null; voting = false; voteClosed = false; voteModes = null; }
 
     // ───────── 개발 인자 ─────────
 
