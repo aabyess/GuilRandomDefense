@@ -223,6 +223,7 @@ public class GameHud : MonoBehaviour
     float activeLocalReadyAt;   // 멀티 클라: 호스트의 쿨을 모르니 누른 시각 + 쿨로 어림한 값(진짜 판정은 호스트)
     bool talentSlotsShown;   // 초월 박민수 「재능투자」 칸 4개(FlexKind.Talent) — 박민수 한 기를 골랐을 때만
     bool bombSlotShown;   // 초월 엄태웅 「폭탄제조(목재강화)」 칸(FlexKind.Bomb) — 엄태웅 중사(진) 한 기를 골랐을 때만
+    bool rerollSlotShown;   // 희귀함 리롤(10-14: 화면 가운데 떠 있던 버튼을 오른쪽 아래 명령 칸으로) — 리롤 가능한 희귀함 한 기를 골랐을 때만
     bool totoSlotShown;   // 초월 유재헌 「토토」 칸(FlexKind.Toto) — 유재헌 앰생파조장 한 기를 골랐을 때만
     bool enhanceSlotShown;   // 영원함 서민성 「강화」 칸(FlexKind.Enhance) — UnitData.enhanceMaxLevel > 0인 유닛 한 기를 골랐을 때만
     bool gambleBoostSlotShown;   // 초월 엄태웅 「웅교교주」 칸(FlexKind.GambleBoost) — 엄태웅 중사(진) 한 기를 골랐을 때만
@@ -235,10 +236,6 @@ public class GameHud : MonoBehaviour
     // 시점에 그 인스턴스에만 붙는다)의 유무로 뜬다 — 대상이 "가챠에서 나온 그 어떤 유닛"이라
     // 특정 자산에 고정할 수 없다(GamblingShop.TryRollUnit 참고). 05번 열이 0.60~0.95를 이미
     // 다 채워서, 그 바로 아래 빈 자리(0.54~0.59)에 둔다.
-    GameObject rerollButtonPanel;
-    TMP_Text rerollButtonText;
-    Button rerollButtonComponent;
-    UniqueRerollAbility lastRerollButtonAbility;
 
     // 항법(5택1, NAVIGATION_ROUTES_FULL.md) — 유닛 선택과 무관하게 항상 뜨는 진입점이라
     // (원작 H0C4가 게임 시작부터 즉시 배치, 라운드·퀘스트 게이트 없음) 위 세 버튼과 성격이
@@ -322,7 +319,7 @@ public class GameHud : MonoBehaviour
     const int FlexSlotFirst = 5;
     static readonly int[] FlexSlots = { 5, 6, 7, 8, 9, 10, 11 };   // 7(판매 칸)은 판매 안 되는 등급일 때만 유닛 스킬 칸으로 쓴다(SellSlotFree)
     static bool IsFlexSlot(int slot) => System.Array.IndexOf(FlexSlots, slot) >= 0;
-    enum FlexKind : byte { None, Trait, Active, Talent, Yoonseo, Recipe, GambleBoost, Bomb, Enhance, Toto, Passive }
+    enum FlexKind : byte { None, Trait, Active, Talent, Yoonseo, Recipe, GambleBoost, Bomb, Enhance, Toto, Passive, Reroll }
     readonly List<SkillData> flexPassiveOverflow = new List<SkillData>();   // 칸이 모자라 못 앉은 스킬 — 마지막 스킬 칸의 설명 끝에 이름만 적는다
     readonly List<SkillData> flexPassives = new List<SkillData>();   // 10-07 정보창 스킬 아이콘 줄 → 명령 카드로: 액티브 버튼·폭탄을 뺀 유닛 스킬(보기 전용 칸, 마우스를 올리면 설명)
     readonly FlexKind[] flexKind = new FlexKind[CommandSlotCount];
@@ -356,6 +353,7 @@ public class GameHud : MonoBehaviour
         flexPassiveOverflow.Clear();
         var skills = new List<(FlexKind kind, int arg)>();
         if (activeSlotShown) skills.Add((FlexKind.Active, 0));
+        if (rerollSlotShown) skills.Add((FlexKind.Reroll, 0));
         if (talentSlotsShown) for (int k = 0; k < UnitAttacker.TalentKindCount; k++) skills.Add((FlexKind.Talent, k));
         if (yoonseoSlotShown) skills.Add((FlexKind.Yoonseo, 0));
         if (totoSlotShown) skills.Add((FlexKind.Toto, 0));
@@ -906,7 +904,6 @@ public class GameHud : MonoBehaviour
         BuildTraitButton();
         BuildGambleButtons();
         BuildNavigationUI();
-        BuildRerollButton();
         BuildItemInventoryPanel();
         // 왼쪽 유닛 목록은 만들지 않는다. 화면 절반을 덮는데, 무엇을 들고 있는지는
         // 아래 명령 카드 그리드가 이미 보여준다. (F1 디버그 HUD에도 같은 목록이 있다.)
@@ -2454,7 +2451,7 @@ public class GameHud : MonoBehaviour
             pendingPointSkill = skill;
             pendingPointUnit = single;
             pendingPointStartFrame = Time.frameCount;
-            PlayerNotification.Show(LocalPlayer.LocalPlayerId, $"{skill.skillName.Split('—')[0].Trim()}: 이동할 땅을 클릭하세요. (우클릭 취소)", 4f);
+            PlayerNotification.Show(LocalPlayer.LocalPlayerId, $"{PlayerFacingText.SkillName(skill)}: 이동할 땅을 클릭하세요. (우클릭 취소)", 4f);
             return;
         }
         if (skill.levels != null && skill.levels.Count > 0 && skill.levels[0].needsAllyClick)
@@ -2463,7 +2460,7 @@ public class GameHud : MonoBehaviour
             pendingAllySkill = skill;
             pendingAllyUnit = single;
             pendingAllyStartFrame = Time.frameCount;
-            PlayerNotification.Show(LocalPlayer.LocalPlayerId, $"{skill.skillName.Split('—')[0].Trim()}: 아군 유닛을 클릭하세요. (우클릭 취소)", 4f);
+            PlayerNotification.Show(LocalPlayer.LocalPlayerId, $"{PlayerFacingText.SkillName(skill)}: 아군 유닛을 클릭하세요. (우클릭 취소)", 4f);
             return;
         }
         if (skill.levels != null && skill.levels.Count > 0 && skill.levels[0].needsTargetClick)
@@ -2471,7 +2468,7 @@ public class GameHud : MonoBehaviour
             pendingDockSkill = skill;
             pendingDockUnit = single;
             pendingDockStartFrame = Time.frameCount;
-            PlayerNotification.Show(LocalPlayer.LocalPlayerId, $"{skill.skillName.Split('—')[0].Trim()}: 대상 적을 클릭하세요. (우클릭 취소)", 4f);
+            PlayerNotification.Show(LocalPlayer.LocalPlayerId, $"{PlayerFacingText.SkillName(skill)}: 대상 적을 클릭하세요. (우클릭 취소)", 4f);
             return;
         }
         if (!GameAuthority.IsServer)
@@ -2719,56 +2716,49 @@ public class GameHud : MonoBehaviour
     // 아래)를 쓴다. 목재가 모자라거나 한도를 소진했어도 항상 눌리게 둔다(고대의 배 버튼과
     // 같은 이유 — "조건 미달"과 "실패"를 원작처럼 다른 문구로만 구분한다, interactable로
     // 미리 막지 않는다).
-    void BuildRerollButton()
+    // 오른쪽 아래 명령 칸(FlexKind.Reroll). 리롤 가능 판정은 UniqueRerollAbility.IsRerollable(희귀함 + 능력 + 주인 시도 횟수 남음, 목재는 안 봄)
+    // — 목재가 모자라도 눌러서 이유를 본다. 칸 배치는 ReflowFlexSlots, 내용은 매 프레임 여기서.
+    UniqueRerollAbility RerollCandidate(out OwnedByPlayer owner)
     {
-        RectTransform panel = CreatePanel(transform, "RerollButtonPanel", new Color(1f, 1f, 1f, 0.15f));
-        SetAnchors(panel, new Vector2(0.51f, 0.54f), new Vector2(0.70f, 0.59f));
-
-        Button button = panel.gameObject.AddComponent<Button>();
-        button.onClick.AddListener(OnRerollButtonClicked);
-
-        rerollButtonText = CreateLabel(panel, "RerollButtonText", "");
-        rerollButtonText.fontSize = 16;
-        rerollButtonText.raycastTarget = false;
-
-        rerollButtonPanel = panel.gameObject;
-        rerollButtonComponent = button;
-        rerollButtonPanel.SetActive(false);
+        owner = null;
+        SelectionManager selection = Selection;
+        if (selection == null || selection.Selected.Count != 1 || selection.Selected[0] == null) return null;
+        Selectable single = selection.Selected[0];
+        if (!single.TryGetComponent(out UniqueRerollAbility reroll) || !single.TryGetComponent(out owner)) return null;
+        return UniqueRerollAbility.IsRerollable(single.gameObject) ? reroll : null;
     }
 
-    // 단일 선택 + 그 인스턴스에 UniqueRerollAbility가 붙어 있을 때만 뜬다(UnitData 자산이
-    // 아니라 런타임 컴포넌트 — GamblingShop.TryRollUnit이 붙인다).
     void RefreshRerollButton()
     {
-        if (rerollButtonPanel == null) return;
-
-        SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1) { HideRerollButton(); return; }
-
-        Selectable single = selection.Selected[0];
-        if (single == null || !single.TryGetComponent(out UniqueRerollAbility reroll) ||
-            !single.TryGetComponent(out OwnedByPlayer owner) ||
-            !UniqueRerollAbility.IsRerollTarget(single.GetComponent<UnitIdentity>()?.Data))   // 희귀함만
-        { HideRerollButton(); return; }
-
-        rerollButtonPanel.SetActive(true);
-
-        if (reroll == lastRerollButtonAbility) return;
-        lastRerollButtonAbility = reroll;
-
-        UniqueRerollState state = PlayerContext.Get(owner.OwnerId)?.UniqueRerollState;
-        int used = state != null ? state.AttemptsUsed : 0;
-        int limit = state != null ? state.Limit : 0;
-        float failChance = state != null ? state.FailChancePercent : 0f;
-
-        rerollButtonText.text = $"희귀함 리롤\n(목재 {reroll.WoodCost} 소모, 실패확률 {failChance:F0}%, " +
-                                 $"남은 횟수 {Mathf.Max(0, limit - used)})";
+        UniqueRerollAbility reroll = currentShop as Object != null ? null : RerollCandidate(out OwnedByPlayer owner);
+        if (reroll == null) { rerollSlotShown = false; return; }   // 칸 비우기는 ReflowFlexSlots
+        rerollSlotShown = true;
+        int slot = FlexSlotOf(FlexKind.Reroll);
+        if (slot < 0) return;
+        RerollCandidate(out owner);
+        PlayerContext context = PlayerContext.Get(owner.OwnerId);
+        UniqueRerollState state = context != null ? context.UniqueRerollState : null;
+        int left = state != null ? Mathf.Max(0, state.Limit - state.AttemptsUsed) : 0;
+        int wood = context != null && context.ResourceWallet != null ? context.ResourceWallet.Get(ResourceType.Wood) : 0;
+        bool enough = wood >= reroll.WoodCost;
+        unitCommandSlotNames[slot].text = $"리롤\n목재 {reroll.WoodCost}";
+        unitCommandSlotHotkeys[slot].text = $"{left}회";
+        Color color = UnitCommandDefaultColor;
+        color.a = enough ? 1f : 0.35f;
+        SetCommandSlotColor(slot, color);
+        unitCommandSlotNames[slot].color = enough ? Color.white : new Color(1f, 1f, 1f, 0.4f);
+        unitCommandSlotButtons[slot].interactable = true;   // 못 할 때도 눌러서 이유를 본다
     }
 
-    void HideRerollButton()
+    string RerollTooltip()
     {
-        if (rerollButtonPanel != null && rerollButtonPanel.activeSelf) rerollButtonPanel.SetActive(false);
-        lastRerollButtonAbility = null;
+        UniqueRerollAbility reroll = RerollCandidate(out OwnedByPlayer owner);
+        if (reroll == null) return "희귀함 리롤";
+        PlayerContext context = PlayerContext.Get(owner.OwnerId);
+        UniqueRerollState state = context != null ? context.UniqueRerollState : null;
+        int left = state != null ? Mathf.Max(0, state.Limit - state.AttemptsUsed) : 0;
+        float fail = state != null ? state.FailChancePercent : 0f;
+        return $"희귀함 리롤\n목재 {reroll.WoodCost}개를 내고 이 희귀함을 다른 희귀함으로 바꿉니다. 실패 확률 {fail:F0}% · 남은 횟수 {left}회.";
     }
 
     // 원작 Trig_unique_rerole_Actions 대응 — 실패 메시지("목재가 부족합니다!"/"리롤회수를
@@ -4353,6 +4343,10 @@ public class GameHud : MonoBehaviour
             SkillLevel bombLevel = BombSkillOf(lastCommandUnitData)?.levels?[0];
             ShowTooltip($"폭탄제조 (목재강화)\n목재 {BombWoodCost}개를 내고 사거리 안 적이 가장 많이 모인 곳에 범위 폭탄 1발 — 반경 {(bombLevel != null ? bombLevel.range : 0f):F0}, 피해 {(bombLevel != null && bombLevel.effects.Count > 0 ? bombLevel.effects[0].multiplier : 0f):N0}(방어 무시, 보스 포함). 횟수 제한 없음(목재가 한계).", cardRect);
         }
+        else if (FlexKindAt(index) == FlexKind.Reroll && rerollSlotShown)
+        {
+            ShowTooltip(RerollTooltip(), cardRect);
+        }
         else if (FlexKindAt(index) == FlexKind.Toto && totoSlotShown)
         {
             ShowTooltip($"토토\n엔 {TotoCost:N0}을 내고 도박 — {TotoChance * 100f:F0}% 확률로 금화 {TotoGoldReward:N0}엔 / 목재 1 / 위습 1 중 하나(각 1/3). 실패하면 엔만 잃는다. 쿨 없음.", cardRect);
@@ -4773,6 +4767,7 @@ public class GameHud : MonoBehaviour
                 case FlexKind.GambleBoost: if (gambleBoostSlotShown) OnGambleBoostClicked(); return;
                 case FlexKind.Enhance: if (enhanceSlotShown) OnEnhanceClicked(); return;
                 case FlexKind.Toto: if (totoSlotShown) OnTotoClicked(); return;
+                case FlexKind.Reroll: if (rerollSlotShown) OnRerollButtonClicked(); return;
                 case FlexKind.Bomb: if (bombSlotShown) OnBombClicked(); return;
                 case FlexKind.Talent: if (talentSlotsShown) OnTalentClicked(flexArg[index]); return;
             }
