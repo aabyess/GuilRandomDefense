@@ -462,6 +462,8 @@ public class UnitData : ScriptableObject
     // (A0B8)·특별함(A0BA)·희귀함(A0B9)·해적선 전용(A0BB)이 전부 sellRewardWisp를 확률·
     // 개수까지 다르게 쓴다. 기존 h05X(A0OE) 등은 아래 셋 다 기본값(1/1/0/1)이라 완전히
     // 무영향(회귀 없음) — "위습이 항상 정확히 1개, 확정으로 나간다"는 예전 동작 그대로다.
+    [Tooltip("켜면 이 유닛은 어떤 경로로 얻어도 팔 수 없다(사장님 10-14: 안흔함_이호준 볼보이·특별함_조도연 메구밍). 판매 버튼은 숨겨진다.")]
+    public bool sellBlocked;
     public float sellRewardWispChance = 1f;  // 위습 지급 확률(0~1). 안흔함=0.5, 나머지 확정형은 1.
     public int sellRewardWispCount = 1;      // 위습 개수. 희귀함·해적선=2, 나머지 1.
     public int sellRewardWood;               // 목재 고정 지급량. 0(기본)이면 미지급.
@@ -628,7 +630,7 @@ public class UnitData : ScriptableObject
     public string originalMatchName;
 
     /// <summary>판매는 희귀함까지만(사장님 10-07, 원작 판매 능력 A0B8·A0BA·A0B9도 안흔함·특별함·희귀함까지) — 전설 이상·히든·랜덤유닛·다른세계 등은 판매 없음. 회유 유닛은 IsRecruit 예외(호출부).</summary>
-    public bool SellableGrade => grade.Tier() <= 3 && grade != UnitGrade.RandomUnit && grade != UnitGrade.OtherWorld;
+    public bool SellableGrade => !sellBlocked && grade.Tier() <= 3 && grade != UnitGrade.RandomUnit && grade != UnitGrade.OtherWorld;
 
     /// <summary>베타 표시용 「원작: 징베」 — 스위치가 꺼졌거나 대응이 없으면 빈 문자열.</summary>
     public string OriginalMatchLabel => GameVersion.BetaShowOriginalMatch && !string.IsNullOrEmpty(originalMatchName) ? $"원작: {originalMatchName}" : "";

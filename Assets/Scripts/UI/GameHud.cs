@@ -2609,6 +2609,11 @@ public class GameHud : MonoBehaviour
             (identity.Data.sellRewardWisp == null && identity.Data.sellRewardTraitPoints <= 0 &&
              identity.Data.sellRewardWood <= 0 && identity.Data.sellTriggersItemGamblePool == null &&
              identity.Data.sellRewardEveryNSells <= 0)) return;
+        if (identity.Data.sellBlocked)   // 지정 유닛 판매 불가(10-14) — 멀티 요청도 여기서 거절
+        {
+            if (single.TryGetComponent(out OwnedByPlayer blockedOwner)) PlayerNotification.Show(blockedOwner.OwnerId, "이 유닛은 팔 수 없습니다.", 3f);
+            return;
+        }
         if (!identity.IsRecruit && !identity.Data.SellableGrade) return;   // 10-07 판매는 희귀함까지만 — 멀티 요청도 여기서 거절
 
         if (!single.TryGetComponent(out OwnedByPlayer owner)) return;
