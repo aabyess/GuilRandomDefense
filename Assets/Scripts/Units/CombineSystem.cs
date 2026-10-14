@@ -331,7 +331,7 @@ public class CombineSystem : MonoBehaviour
             StartCoroutine(SpawnResultLater(recipe, ownerId));
             PlayerNotification.Show(ownerId, $"<color=#FFD54F>{recipe.result.unitName}이(가) {Mathf.CeilToInt(recipe.resultDelaySeconds)}초 뒤에 나타납니다.</color>", 8f);
         }
-        else { spawner.Spawn(recipe.result, resultPosition, ownerId); GrantAcquireGold(recipe, ownerId); }
+        else { spawner.Spawn(recipe.result, resultPosition, ownerId, combined: true); GrantAcquireGold(recipe, ownerId); }
         GameSound.PlayFor(ownerId, GameSoundId.Combine);   // 조합 성공음(10-06) — 조합한 사람에게만(멀티 친구면 NetGameState가 넘긴다)
         if (IsTransformRecipe(recipe)) OwnerContext?.TryConsumeTransformUse();   // 원작: 변화 성공 때 토큰 1기 제거
 
@@ -356,7 +356,7 @@ public class CombineSystem : MonoBehaviour
         yield return new WaitForSeconds(recipe.resultDelaySeconds);
         UnitSpawner spawner = Spawner;
         if (spawner == null || !GameAuthority.IsServer) yield break;
-        spawner.Spawn(recipe.result, ResolveResultPosition(null, recipe.result, ownerId), ownerId);
+        spawner.Spawn(recipe.result, ResolveResultPosition(null, recipe.result, ownerId), ownerId, combined: true);
         PlayerNotification.Show(ownerId, $"<color=#FFD54F>{recipe.result.unitName}이(가) 나타났습니다!</color>", 8f);
         GrantAcquireGold(recipe, ownerId);
     }

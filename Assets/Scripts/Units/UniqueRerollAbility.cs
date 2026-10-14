@@ -38,6 +38,20 @@ public class UniqueRerollAbility : MonoBehaviour
         return ability;
     }
 
+    /// <summary>10-14 친구 피드백 「보상·도박으로 얻은 희귀함은 전부 리롤 가능」 — UnitSpawner.Spawn이 직접 조합 아닌 경로의 희귀함에 이 수치를 붙인다.
+    /// GamblingShop.Awake가 씬 배선 값을 여기 올린다(스포너엔 씬 배선 슬롯이 없어 정적으로 둔다).</summary>
+    public static UniqueRerollAbilityData DefaultData;
+
+    /// <summary>UI용 리롤 가능 판정(구현담당2 — 버튼 표시): 희귀함이고 능력이 붙어 있으며 주인이 시도 횟수가 남았는가.
+    /// 목재는 따지지 않는다(부족하면 누를 때 「목재가 부족합니다!」). 버튼 문구용 수치는 WoodCost·UniqueRerollState.</summary>
+    public static bool IsRerollable(GameObject unit)
+    {
+        if (unit == null || !unit.TryGetComponent(out UniqueRerollAbility ability) || ability.data == null) return false;
+        if (!unit.TryGetComponent(out UnitIdentity id) || !IsRerollTarget(id.Data)) return false;
+        UniqueRerollState state = PlayerContext.Get(id.OwnerId)?.UniqueRerollState;
+        return state != null && state.HasAttemptsLeft;
+    }
+
     /// <summary>리롤 대상 등급 — 희귀함뿐. 버튼 표시·붙이기·실행(싱글·멀티 요청 공통)이 같은 검사를 쓴다.</summary>
     public static bool IsRerollTarget(UnitData unit) => unit != null && unit.grade == UnitGrade.Rare;
 

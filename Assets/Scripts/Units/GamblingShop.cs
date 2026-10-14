@@ -68,6 +68,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
                              "가 배선되지 않아 유닛 도박이 동작하지 않습니다.", this);
 
         owner = GetComponent<OwnedByPlayer>();
+        if (uniqueRerollAbilityData != null) UniqueRerollAbility.DefaultData = uniqueRerollAbilityData;   // UnitSpawner.Spawn이 보상·도박 희귀함에 붙인다(10-14)
     }
 
     void OnEnable()

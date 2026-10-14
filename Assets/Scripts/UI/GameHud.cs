@@ -1824,7 +1824,7 @@ public class GameHud : MonoBehaviour
         Vector3 spawnPosition = NavMesh.SamplePosition(targetPosition, out NavMeshHit hit, TransformSampleRadius, areaMask)
             ? hit.position
             : targetPosition;
-        spawner.Spawn(resultUnit, spawnPosition, owner.OwnerId);
+        spawner.Spawn(resultUnit, spawnPosition, owner.OwnerId, combined: true);
     }
 
     // "유닛 판매"(2026-09-06, PM 지시) — 09-29 사장님 지시로 떠 있던 버튼(상단 메뉴 왼쪽 아래 0.51~0.70 × 0.78~0.83)을
@@ -3474,7 +3474,7 @@ public class GameHud : MonoBehaviour
 
         oldIdentity.Consume();
 
-        GameObject newUnit = spawner.Spawn(trait.transformIntoUnit, spawnPosition, ownerId);
+        GameObject newUnit = spawner.Spawn(trait.transformIntoUnit, spawnPosition, ownerId, combined: true);
         if (newUnit != null)
         {
             if (oldAttacker != null && newUnit.TryGetComponent(out UnitAttacker newAttacker))

@@ -6,7 +6,8 @@ public class UnitSpawner : MonoBehaviour
     const string SeaAreaName = "Sea";
 
     // TODO(멀티): 이 메서드 내부를 서버 권위 호출로 교체하면 됨 — MULTIPLAYER_MIGRATION.md "전환 순서" 4번 참고.
-    public GameObject Spawn(UnitData data, Vector3 position, int ownerId, bool summoned = false)
+    /// <param name="combined">직접 조합(조합표·채팅 조합·변화)으로 나온 결과인가 — 아니면 희귀함에 리롤 능력을 붙인다(10-14 친구 피드백).</param>
+    public GameObject Spawn(UnitData data, Vector3 position, int ownerId, bool summoned = false, bool combined = false)
     {
         // MP: 플레이어 유닛은 호스트만 만든다(클라에서 만들면 호스트가 모르는 유닛이 생긴다). 지금 호출부는 전부
         //     가드돼 있지만 여기가 유일한 생성 지점이라 한 번 더 막는다. 싱글·호스트는 지나친다.
@@ -105,6 +106,9 @@ public class UnitSpawner : MonoBehaviour
             Debug.LogWarning($"UnitSpawner: 플레이어 {ownerId}의 UnitInventory를 찾지 못해 {data.unitName}을(를) 등록하지 못했습니다.", this);
         }
         identity.RegisterTo(inventory);
+
+        // 10-14 친구 피드백: 직접 조합이 아닌 경로(라운드 보상·위습·포탈·도박·리롤 결과 …)의 희귀함은 전부 리롤 가능.
+        if (!combined && data.grade == UnitGrade.Rare) UniqueRerollAbility.Attach(instance, UniqueRerollAbility.DefaultData, this);
 
         // 항법 "연합세력" — 원작 Trig_UnitJohabCounter_Actions 재현(RewardDistributor.
         // GrantUnionWispIfEligible 주석 참고). 여기가 유일한 플레이어 유닛 생성 지점이라
