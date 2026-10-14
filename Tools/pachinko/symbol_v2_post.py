@@ -32,11 +32,12 @@ for n in range(1, 10):
     raw = Image.open(f"{RAW}/symbol_{n}.png").convert("RGBA"); fin = sparkle(raw, n * 17)
     fin.save(f"{D}/symbol_{n}.png"); motion_blur(fin).save(f"{D}/symbol_{n}_blur.png"); ims[n] = fin
 F = ImageFont.truetype("/System/Library/Fonts/AppleSDGothicNeo.ttc", 26, index=0)
-def row(seq, h=300, gap=-40):
-    W = sum(int(h * 0.9) + gap for _ in seq) + 60; r = Image.new("RGBA", (W, h), (0, 0, 0, 0)); x = 20
-    for n in seq:
-        if n is None: x += int(h * 0.9) + gap; continue
-        t = ims[n].resize((h, h)); r.alpha_composite(t, (x - int(h * 0.05), 0)); x += int(h * 0.9) + gap
+def row(seq, h=230, adv=135):
+    r = Image.new("RGBA", (adv * len(seq) + h, h), (0, 0, 0, 0))
+    for i, n in enumerate(seq):
+        if n is None:
+            continue
+        r.alpha_composite(ims[n].resize((h, h)), (i * adv, 0))
     return r
 sheet = Image.new("RGB", (1800, 1500), (8, 8, 18)); d = ImageDraw.Draw(sheet)
 for bi, bg in enumerate(((8, 8, 18), (12, 40, 110))):
@@ -44,7 +45,7 @@ for bi, bg in enumerate(((8, 8, 18), (12, 40, 110))):
     for i, n in enumerate(range(1, 10)):
         t = ims[n].resize((190, 190)); sheet.paste(t, (20 + i * 195, y0 + 10), t)
     for r_i, (seq, label) in enumerate((([3, None, 3], "3 ▢ 3"), ([7, 7, 7], "7 7 7"), ([6, 1, 3], "6 1 3"))):
-        rw = row(seq, 330, -60); sheet.paste(rw, (20 + r_i * 590, y0 + 250), rw)
-        d.text((40 + r_i * 590, y0 + 235), label, font=F, fill=(255, 235, 170))
+        rw = row(seq); sheet.paste(rw, (30 + r_i * 600, y0 + 300), rw)
+        d.text((40 + r_i * 600, y0 + 255), label, font=F, fill=(255, 235, 170))
     d.text((20, y0 + 700), "symbol_1~9 (1024 투명) · 겹친 붓 스우시+획 결 · 홀수 불꽃(7 금) / 짝수 크롬(9 보라)", font=F, fill=(200, 210, 225))
 sheet.save(f"{D}/contact_sheet_v2.png"); print("done")
