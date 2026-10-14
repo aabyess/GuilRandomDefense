@@ -49,7 +49,7 @@ static class ShopClickProbe
             }
             if (unitHit) ok++;
             total++;
-            Object.Destroy(unit);
+            Object.DestroyImmediate(unit);
 
             // 흔함 칸 안 유닛(사장님 10-14 재제보): 상점 상자 밖 — 앞쪽 왼·가운데·오른쪽, 옆쪽 왼쪽 — 을 눌러도 건물이 아니라 유닛이어야 한다.
             string cells = "";
@@ -63,7 +63,7 @@ static class ShopClickProbe
                 GameObject cellUnit = Object.Instantiate(data.prefab, pos, Quaternion.identity);
                 Physics.SyncTransforms();
                 Collider cc = cellUnit.GetComponentInChildren<Collider>();
-                bool cellHit = false;
+                bool cellHit = false; string why = "";
                 if (cc != null)
                 {
                     // 실제 클릭 경로(SelectionManager.TrySelectAtCursor)와 같게: TryHit → 상점이면 커서 둘레 유닛 우선. 가운데와 몸 옆 18px 두 점 모두 유닛이어야 한다.
@@ -71,18 +71,18 @@ static class ShopClickProbe
                     foreach (Vector2 shift in new[] { Vector2.zero, new Vector2(-18f, 0f), new Vector2(18f, 0f) })
                     {
                         Vector2 click = (Vector2)cam.WorldToScreenPoint(cc.bounds.center) + shift;
-                        Selectable picked = null;
+                        Selectable picked = null; string firstName = "없음";
                         if (WorldPick.TryHit(cam, click, out RaycastHit hc))
                         {
-                            hc.collider.TryGetComponent(out picked);
+                            firstName = hc.collider.name; hc.collider.TryGetComponent(out picked);
                             if (picked != null && picked.TryGetComponent(out ILaneShop _)) { Selectable near = WorldPick.NearestUnitOnScreen(cam, click, 48f); if (near != null) picked = near; }
                         }
-                        if (picked == null || !picked.transform.IsChildOf(cellUnit.transform)) cellHit = false;
+                        if (picked == null || !picked.transform.IsChildOf(cellUnit.transform)) { cellHit = false; why = firstName; }
                     }
                 }
                 total++; if (cellHit) ok++;
-                cells += $" {label}{(cellHit ? "✅" : "❌")}";
-                Object.Destroy(cellUnit);
+                cells += $" {label}{(cellHit ? "✅" : "❌" + why)}";
+                Object.DestroyImmediate(cellUnit);
             }
             sb.AppendLine($"  └ 칸 안 유닛:{cells}");
             sb.AppendLine($"{b.name}: 유닛 클릭 → {(unitHit ? "유닛 ✅" : "❌ " + hitName)} · 건물 몸통 클릭 → {(shopHit ? "건물 ✅" : "❌ " + (h2.collider != null ? h2.collider.name : "없음"))} · 상자 {sb2.size.x:F0}×{sb2.size.y:F0}×{sb2.size.z:F0}");

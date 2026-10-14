@@ -25,11 +25,15 @@ static class ShopClickBoxes
             // 몸통 = 형제 오브젝트 「<상점 이름>_모양」의 렌더러 합. 높이는 몸통의 HeightKeep배(바닥 고정). 모양을 못 찾으면 기존 상자의 높이만 줄인다.
             Transform t = box.transform;
             Transform look = t.parent != null ? t.parent.Find(t.name + "_모양") : null;
-            Renderer[] rs = look != null ? look.GetComponentsInChildren<Renderer>() : null;
-            if (rs != null && rs.Length > 0)
+            bool any = false; Bounds w = default;
+            if (look != null)
+                foreach (Renderer r in look.GetComponentsInChildren<Renderer>())
+                {
+                    if (!(r is MeshRenderer) && !(r is SkinnedMeshRenderer)) continue;   // 굴뚝 연기·불 파티클은 건물 몸통이 아니다(상자가 1800으로 부풀었다)
+                    if (any) w.Encapsulate(r.bounds); else { w = r.bounds; any = true; }
+                }
+            if (any)
             {
-                Bounds w = rs[0].bounds;
-                for (int i = 1; i < rs.Length; i++) w.Encapsulate(rs[i].bounds);
                 float height = w.size.y * HeightKeep;
                 Vector3 worldCenter = new Vector3(w.center.x, w.min.y + height * 0.5f, w.center.z);
                 Vector3 ls = t.lossyScale;
