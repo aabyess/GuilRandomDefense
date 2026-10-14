@@ -25,6 +25,8 @@
 - 배포 절차: GameVersion → 빌드 사본 checkout -B release/0.3.18 main → BuildBeta.Mac/Windows 배치 → zip -r -y -X(비ASCII 0·testzip) → 맥 실행 확인 → **교체 유닛이 보이는지 빌드에서 확인(이번 사고)** → 패치노트 html 새 섹션+render → 안내문 → rclone 업로드·옛 zip 삭제.
 ### 3) 오늘 함정
 - BLP JPEG 알파(blp-jpeg-alpha-trap) · S2와 구버전은 같은 ID가 다른 모델(H09F 조로) — 「신작」 줄은 S2 경로만 · 원작 회전 키는 쿼터니언 연속 굽기 · 산출물은 /tmp 금지(Docs/ARCHIVE_INDEX.md).
+- 10-14 PM 9 마감: w2 병합 ba7b161ff(크레딧 E·클립 중간 알파·연출 진행분) push 완료·w2 ff. csc_check_editor가 SkinClipHider.Timed 없음 3건을 냈지만 **가짜**(편집기 검사는 Library의 옛 런타임 DLL을 참조 — 유니티가 다시 컴파일하면 사라짐, HEAD엔 정의 있음). 팀원 셋 --fresh 완료(10-14).
+- w2 병합 때 main 작업트리의 같은 재질(.mat)·.meta 로컬 변경이 충돌하면 w2 쪽이 정본(구현담당2 담당) — 로컬 것을 버리고 병합.
 - 「에디터에서 보임」은 배포판 보장이 아니다 — 큰 에셋 교체 뒤엔 빌드로 한 번 띄워 볼 것.
 
 ## ⭐ PM 9 진행 (10-09 밤)
