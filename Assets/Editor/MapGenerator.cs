@@ -3933,7 +3933,7 @@ public static class MapGenerator
         // 둘을 같은 값으로 두면 위습이 거부당하거나 랜덤유닛 등급에서 뽑힌다.
         ConfigurePortal(unitRandom, UnitGrade.RandomUnit, null, table, spawner,
                         rewardGrade: UnitGrade.Common);
-        ApplyBonusUnit(unitRandom, "해적선", RandomShipBonusChance);
+        ApplyBonusUnit(unitRandom, "흔함_상붕카", RandomShipBonusChance);   // 사장님 10-07·10-14: 해적선 → 상붕카(맵 재생성 때 해적선이 되살아났던 것)
         AddPortalLabel(parent, unitRandom, "유닛 랜덤", false);
 
         // 동: 금화 랜덤 — 원작 그대로 "15 + 라운드×12~35"(2026-09-04, ORD11.089.w3x 확인).
