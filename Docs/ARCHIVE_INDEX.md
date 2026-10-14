@@ -45,3 +45,4 @@
 - 원작 BLP(JPEG) 알파는 PIL로 열면 검게 나온다 → 반드시 `blp_decode.py`(10-09 이전 추출본은 audit으로 고쳐 둠).
 - 원작 모델 회전 키는 쿼터니언 부호 연속으로 다시 구워야 유니티 보간이 안 튄다(`swap_refix_b3.py`).
 - 파칭코 이펙트 그림 재료(카구네 촉수·붓 획·빛줄기·집중선·시계 문양·나비·불똥): ~/GRD_pachinko_art/fx/ — 재생성 `/usr/bin/python3 Tools/pachinko/fx_art.py`
+- 리제로 보석 숫자 1~9(+반짝임·블러·분홍): ~/GRD_pachinko_art/symbols_rz/ — 재생성 `/usr/bin/python3 Tools/pachinko/symbol_rz.py`
