@@ -29,8 +29,11 @@ public static class SkinSwapImporter
 
     public static string RelinkAll() => SwapAll(true);
 
+    /// <summary>프리팹을 다시 지은 뒤(키 맞추기 등) 사라진 SkinClipHider(숨김 메시 + 클립 도중 알파)를 clip_map·클립중_알파변화.json에서 다시 채운다. call SkinSwapImporter.RehideAll</summary>
+    public static string RehideAll() => SwapAll(false, true) + ApplyTimedAlpha();
+
     /// <summary>relinkOnly: FBX·프리팹은 그대로 두고 slot_textures.json만 다시 쓰고 텍스처·재질(알파 컷)을 다시 연결한다.</summary>
-    public static string SwapAll(bool relinkOnly = false)
+    public static string SwapAll(bool relinkOnly = false, bool rehideOnly = false)
     {
         var sb = new StringBuilder();
         string listFile = Path.Combine(PackRoot, "교체목록.csv");
@@ -52,7 +55,90 @@ public static class SkinSwapImporter
                 string oid = root.TryGetValue("originalId", out object o) ? (o as string ?? "").ToUpperInvariant() : "";
                 if (ids.Contains(oid)) { pack = dir; break; }
             }
-            sb.AppendLine(pack == null ? $"❌ {roster}: 교체 폴더 못 찾음({c[4]})" : relinkOnly ? Relink(roster, pack) : Swap(roster, pack));
+            sb.AppendLine(pack == null ? $"❌ {roster}: 교체 폴더 못 찾음({c[4]})" : rehideOnly ? Rehide(roster, pack) : relinkOnly ? Relink(roster, pack) : Swap(roster, pack));
+        }
+        return sb.ToString();
+    }
+
+    static string Rehide(string roster, string packDir)
+    {
+        var clipMap = (Dictionary<string, object>)MiniJson.Parse(File.ReadAllText(Path.Combine(packDir, "clip_map.json")));
+        var hiddenByClip = new Dictionary<string, string[]>();
+        var used = new HashSet<string>();
+        foreach (object co in (List<object>)clipMap["clips"])
+        {
+            var c = (Dictionary<string, object>)co;
+            string ourClip = (c["ourClip"] as string ?? "").Trim();
+            if (ourClip.Length == 0 || ourClip.Contains("(") || ourClip.Contains("필요") || !used.Add(ourClip)) continue;
+            if (c.TryGetValue("hiddenMeshes", out object ho) && ho is List<object> hl && hl.Count > 0) hiddenByClip[ourClip] = hl.Select(x => x as string).ToArray();
+        }
+        var unit = AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{roster}.asset");
+        string prefabPath = unit != null && unit.prefab != null ? AssetDatabase.GetAssetPath(unit.prefab) : null;
+        if (prefabPath == null) return $"❌ {roster}: 프리팹 없음";
+        GameObject contents = PrefabUtility.LoadPrefabContents(prefabPath);
+        try
+        {
+            var hider = contents.GetComponent<SkinClipHider>();
+            if (hiddenByClip.Count == 0) { if (hider != null) Object.DestroyImmediate(hider); }
+            else
+            {
+                if (hider == null) hider = contents.AddComponent<SkinClipHider>();
+                hider.entries = hiddenByClip.Select(kv => new SkinClipHider.Entry { clip = kv.Key, meshes = kv.Value }).ToArray();
+            }
+            PrefabUtility.SaveAsPrefabAsset(contents, prefabPath);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(contents); }
+        return $"✅ {roster} 숨김 {hiddenByClip.Count}클립\n";
+    }
+
+    /// <summary>blender 클립중_알파변화.json → 프리팹 SkinClipHider.timed. 시퀀스 이름(attack 2)은 clip_map.json의 originalName → ourClip(임포트 클립 이름)으로 바꾼다. call SkinSwapImporter.ApplyTimedAlpha</summary>
+    public static string ApplyTimedAlpha()
+    {
+        string jsonPath = Path.Combine(PackRoot, "클립중_알파변화.json");
+        var all = (Dictionary<string, object>)MiniJson.Parse(File.ReadAllText(jsonPath));
+        var sb = new StringBuilder();
+        foreach (var unitKv in all)
+        {
+            string roster = unitKv.Key; var ud = (Dictionary<string, object>)unitKv.Value;
+            string pack = Path.Combine(PackRoot, (string)ud["pack"]);
+            var clipMap = (Dictionary<string, object>)MiniJson.Parse(File.ReadAllText(Path.Combine(pack, "clip_map.json")));
+            var seqToClip = new Dictionary<string, string>();
+            foreach (object co in (List<object>)clipMap["clips"])
+            {
+                var c = (Dictionary<string, object>)co;
+                string our = (c["ourClip"] as string ?? "").Trim();
+                if (our.Length == 0 || our.Contains("(") || our.Contains("필요")) continue;
+                seqToClip[((string)c["originalName"]).ToLowerInvariant()] = our;
+            }
+            var timed = new List<SkinClipHider.Timed>();
+            foreach (var meshKv in (Dictionary<string, object>)ud["meshes"])
+            {
+                var geoset = (Dictionary<string, object>)((Dictionary<string, object>)meshKv.Value)["geoset"];
+                foreach (var seqKv in geoset)
+                {
+                    if (!seqToClip.TryGetValue(seqKv.Key.ToLowerInvariant(), out string ourClip)) { sb.AppendLine($"  ⚠️ {roster} {meshKv.Key}: 시퀀스 「{seqKv.Key}」는 임포트 클립이 아님(건너뜀)"); continue; }
+                    var sd = (Dictionary<string, object>)seqKv.Value;
+                    var changes = ((List<object>)sd["changes"]).Cast<Dictionary<string, object>>().OrderBy(x => System.Convert.ToSingle(x["t"])).ToList();
+                    timed.Add(new SkinClipHider.Timed
+                    {
+                        clip = ourClip, mesh = meshKv.Key, startVisible = System.Convert.ToSingle(sd["startAlpha"]) > 0.5f,
+                        times = changes.Select(x => System.Convert.ToSingle(x["t"])).ToArray(),
+                        visible = changes.Select(x => System.Convert.ToSingle(x["alpha"]) > 0.5f).ToArray(),
+                    });
+                }
+            }
+            var unit = AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{roster}.asset");
+            string prefabPath = unit != null && unit.prefab != null ? AssetDatabase.GetAssetPath(unit.prefab) : null;
+            if (prefabPath == null) { sb.AppendLine($"❌ {roster}: 프리팹 없음"); continue; }
+            GameObject contents = PrefabUtility.LoadPrefabContents(prefabPath);
+            try
+            {
+                var hider = contents.GetComponent<SkinClipHider>() ?? contents.AddComponent<SkinClipHider>();
+                hider.timed = timed.ToArray();
+                PrefabUtility.SaveAsPrefabAsset(contents, prefabPath);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(contents); }
+            sb.AppendLine($"✅ {roster}: 시각 변화 {timed.Count}건");
         }
         return sb.ToString();
     }
@@ -162,6 +248,7 @@ public static class SkinSwapImporter
             finally { PrefabUtility.UnloadPrefabContents(contents); }
         }
 
+        if (File.Exists(Path.Combine(PackRoot, "클립중_알파변화.json")) && File.ReadAllText(Path.Combine(PackRoot, "클립중_알파변화.json")).Contains($"\"{roster}\"")) report.Append("\n   클립 도중 알파: ApplyTimedAlpha로 따로 채운다");
         // ⑥ 연출 대본
         string scripts = ImportScripts(roster, packDir, report);
         return $"✅ {roster} ← {Path.GetFileName(packDir)} · 클립 {string.Join("/", chosen.Select(c => c.name))}{report}\n   {bind}\n   {scripts}";

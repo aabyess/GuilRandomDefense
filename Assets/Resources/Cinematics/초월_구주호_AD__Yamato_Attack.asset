@@ -1,0 +1,763 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3184e6f55ca934891a8135d9eff5e47b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scriptId: "\uCD08\uC6D4_\uAD6C\uC8FC\uD638_AD__Yamato_Attack"
+  title: "\uC624\uB2C8\uD788\uBA54 \uC778\uC218\uD654 \u2014 Yamato_Attack"
+  duration: 2.34
+  events:
+  - t: 0
+    op: 0
+    id: u1
+    model: SuperBigExplosion
+    baseScale: 1.01
+    scalePercent: 100
+    flyHeight: 30
+    lifeSec: 1
+    deathSec: 0.1
+    anchor: 0
+    hasOffset: 1
+    offsetX: 0
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 1
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0
+    op: 0
+    id: u23
+    model: SuperBigExplosion
+    baseScale: 1.2
+    scalePercent: 100
+    flyHeight: 75
+    lifeSec: 1
+    deathSec: 0.1
+    anchor: 0
+    hasOffset: 1
+    offsetX: 0
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 1
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0.04
+    op: 0
+    id: u2
+    model: shockblastblue
+    baseScale: 2
+    scalePercent: 100
+    flyHeight: 125
+    lifeSec: 1
+    deathSec: 0.8
+    anchor: 0
+    hasOffset: 1
+    offsetX: 0
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 1
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0.2
+    op: 0
+    id: u14
+    model: AZ_Zeusking_Impact-black
+    baseScale: 2.25
+    scalePercent: 100
+    flyHeight: 75
+    lifeSec: 1
+    deathSec: 0.1
+    anchor: 1
+    hasOffset: 1
+    offsetX: 0
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 1
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0.2
+    op: 0
+    id: u15
+    model: AZ_Zeusking_Impact-black
+    baseScale: 2.25
+    scalePercent: 100
+    flyHeight: 75
+    lifeSec: 1
+    deathSec: 0.1
+    anchor: 1
+    hasOffset: 1
+    offsetX: 0
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 1
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0.2
+    op: 0
+    id: u16
+    model: EffectFuzzystompBlue
+    baseScale: 1
+    scalePercent: 100
+    flyHeight: 0
+    lifeSec: 0.833
+    deathSec: 0
+    anchor: 1
+    hasOffset: 1
+    offsetX: 0
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 1
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0.2
+    op: 0
+    id: u17
+    model: EffectAncientExplode(Blue)Light2
+    baseScale: 1
+    scalePercent: 100
+    flyHeight: 0
+    lifeSec: 15
+    deathSec: 0
+    anchor: 1
+    hasOffset: 1
+    offsetX: 0
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 1
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0.2
+    op: 0
+    id: u18
+    model: az_axe
+    baseScale: 0.8
+    scalePercent: 100
+    flyHeight: 75
+    lifeSec: 1
+    deathSec: 0.1
+    anchor: 0
+    hasOffset: 1
+    offsetX: 0
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 1
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0.2
+    op: 0
+    id: u19
+    model: eff_yamato1
+    baseScale: 0.6
+    scalePercent: 100
+    flyHeight: 75
+    lifeSec: 1
+    deathSec: 0.1
+    anchor: 1
+    hasOffset: 1
+    offsetX: 0
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 1
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0.2
+    op: 0
+    id: u21
+    model: BY_Wood_Effect_Order_DanGe_DaoGuang_BaoZha_1_2_2
+    baseScale: 1
+    scalePercent: 100
+    flyHeight: 0
+    lifeSec: 2.6
+    deathSec: 0
+    anchor: 1
+    hasOffset: 1
+    offsetX: 0
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 1
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0.2
+    op: 0
+    id: u22
+    model: BY_Wood_BaShenAn_JuQi_5 Pink2
+    baseScale: 1
+    scalePercent: 100
+    flyHeight: 0
+    lifeSec: 3
+    deathSec: 0
+    anchor: 1
+    hasOffset: 1
+    offsetX: 0
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 1
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0.42
+    op: 0
+    id: u3
+    model: tx-11
+    baseScale: 4.7
+    scalePercent: 100
+    flyHeight: 100
+    lifeSec: 1
+    deathSec: 0.1
+    anchor: 0
+    hasOffset: 1
+    offsetX: -61
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 1
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0.42
+    op: 0
+    id: u4
+    model: beam_yamato
+    baseScale: 0.35
+    scalePercent: 100
+    flyHeight: 135
+    lifeSec: 1
+    deathSec: 0.6
+    anchor: 0
+    hasOffset: 1
+    offsetX: -61
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1.35
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 1
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0.42
+    op: 0
+    id: u5
+    model: beam_yamato
+    baseScale: 0.35
+    scalePercent: 175
+    flyHeight: 135
+    lifeSec: 1
+    deathSec: 0.6
+    anchor: 0
+    hasOffset: 1
+    offsetX: 45
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 1
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0.46
+    op: 0
+    id: u6
+    model: Franky_sunnny2_eff
+    baseScale: 3.5
+    scalePercent: 100
+    flyHeight: 125
+    lifeSec: 1
+    deathSec: 0.1
+    anchor: 0
+    hasOffset: 1
+    offsetX: 45
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 0.5
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0.57
+    op: 0
+    id: u7
+    model: Franky_sunnny2_eff
+    baseScale: 3.5
+    scalePercent: 100
+    flyHeight: 125
+    lifeSec: 1
+    deathSec: 0.1
+    anchor: 0
+    hasOffset: 1
+    offsetX: 45
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 0.5
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0.68
+    op: 0
+    id: u8
+    model: Franky_sunnny2_eff
+    baseScale: 3.5
+    scalePercent: 100
+    flyHeight: 125
+    lifeSec: 1
+    deathSec: 0.1
+    anchor: 0
+    hasOffset: 1
+    offsetX: 45
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 0.5
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0.79
+    op: 0
+    id: u9
+    model: Franky_sunnny2_eff
+    baseScale: 3.5
+    scalePercent: 100
+    flyHeight: 125
+    lifeSec: 1
+    deathSec: 0.1
+    anchor: 0
+    hasOffset: 1
+    offsetX: 45
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 0.5
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 0.9
+    op: 0
+    id: u10
+    model: Franky_sunnny2_eff
+    baseScale: 3.5
+    scalePercent: 100
+    flyHeight: 125
+    lifeSec: 1
+    deathSec: 0.1
+    anchor: 0
+    hasOffset: 1
+    offsetX: 45
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 0.5
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 1.01
+    op: 0
+    id: u11
+    model: Franky_sunnny2_eff
+    baseScale: 3.5
+    scalePercent: 100
+    flyHeight: 125
+    lifeSec: 1
+    deathSec: 0.1
+    anchor: 0
+    hasOffset: 1
+    offsetX: 45
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 0.5
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 1.12
+    op: 0
+    id: u12
+    model: Franky_sunnny2_eff
+    baseScale: 3.5
+    scalePercent: 100
+    flyHeight: 125
+    lifeSec: 1
+    deathSec: 0.1
+    anchor: 0
+    hasOffset: 1
+    offsetX: 45
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 0.5
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  - t: 1.23
+    op: 0
+    id: u13
+    model: Franky_sunnny2_eff
+    baseScale: 3.5
+    scalePercent: 100
+    flyHeight: 125
+    lifeSec: 1
+    deathSec: 0.1
+    anchor: 0
+    hasOffset: 1
+    offsetX: 45
+    offsetY: 0
+    hasPolar: 0
+    polarRadius: 0
+    polarAngleDeg: 0
+    anim: 
+    timescale: 1
+    facingRandom: 0
+    hasMove: 0
+    moveAnchor: 0
+    moveSpeed: 0
+    rampTo: 0
+    rampRate: 0
+    shakeDuration: 0
+    shakeMagnitude: 0
+    vertexAlpha: 0.5
+    hasScaleSet: 0
+    hasTimescaleSet: 0
+    anchorShip: 
+  models:
+  - name: SuperBigExplosion
+    prefab: {fileID: 6045027351094879457, guid: fc4d44bf80deb457aa3479e76b5dc58b, type: 3}
+    substitute: 
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    thickness: 1
+    substituteLengthWc3: 0
+    substituteNativeLength: 0
+  - name: shockblastblue
+    prefab: {fileID: 7383832061456489242, guid: 00090ee12123e406fa8a13c9d4c56f4b, type: 3}
+    substitute: 
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    thickness: 1
+    substituteLengthWc3: 0
+    substituteNativeLength: 0
+  - name: AZ_Zeusking_Impact-black
+    prefab: {fileID: 5343935380373998699, guid: afea0513942c04a3a97bc6a1419d301e, type: 3}
+    substitute: 
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    thickness: 1
+    substituteLengthWc3: 0
+    substituteNativeLength: 0
+  - name: EffectFuzzystompBlue
+    prefab: {fileID: 6294171809482522672, guid: 7bdfecfeb738549948fef6bcf279959c, type: 3}
+    substitute: 
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    thickness: 1
+    substituteLengthWc3: 0
+    substituteNativeLength: 0
+  - name: EffectAncientExplode(Blue)Light2
+    prefab: {fileID: 365675900664487091, guid: 7ab5d0d8301de40839e05b410358ee4c, type: 3}
+    substitute: 
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    thickness: 1
+    substituteLengthWc3: 0
+    substituteNativeLength: 0
+  - name: az_axe
+    prefab: {fileID: 818403971258872051, guid: 03cbed6c2c8664a08aba4eeb28173e2e, type: 3}
+    substitute: 
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    thickness: 1
+    substituteLengthWc3: 0
+    substituteNativeLength: 0
+  - name: eff_yamato1
+    prefab: {fileID: 5029680035408623509, guid: dbd88bcbc892c4010ab5e0858513d8df, type: 3}
+    substitute: 
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    thickness: 1
+    substituteLengthWc3: 0
+    substituteNativeLength: 0
+  - name: BY_Wood_Effect_Order_DanGe_DaoGuang_BaoZha_1_2_2
+    prefab: {fileID: 8653341049944136119, guid: aaf3cc7c6007d47bdab48f3167f66291, type: 3}
+    substitute: 
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    thickness: 1
+    substituteLengthWc3: 0
+    substituteNativeLength: 0
+  - name: BY_Wood_BaShenAn_JuQi_5 Pink2
+    prefab: {fileID: 2734027287490801293, guid: faf8cecd022d545219c8673bbd4ec7f9, type: 3}
+    substitute: 
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    thickness: 1
+    substituteLengthWc3: 0
+    substituteNativeLength: 0
+  - name: tx-11
+    prefab: {fileID: 1651057159561415310, guid: 0b7b0317262a7407b884d72fcb1d52b3, type: 3}
+    substitute: 
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    thickness: 1
+    substituteLengthWc3: 0
+    substituteNativeLength: 0
+  - name: beam_yamato
+    prefab: {fileID: 1143190122133288651, guid: 983b670cd391649459a76dde9ccc9e1f, type: 3}
+    substitute: 
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    thickness: 1
+    substituteLengthWc3: 0
+    substituteNativeLength: 0
+  - name: Franky_sunnny2_eff
+    prefab: {fileID: 1678187958338367315, guid: cda26baf44f7a49cabdfbe937cc60819, type: 3}
+    substitute: 
+    tint: {r: 1, g: 1, b: 1, a: 1}
+    thickness: 1
+    substituteLengthWc3: 0
+    substituteNativeLength: 0

@@ -135,6 +135,7 @@ public class PlayerNotificationHud : MonoBehaviour
 
     void OnGUI()
     {
+        if (CreditsSplash.Active) return;   // 제작진 화면 위에 알림이 겹치지 않게(사장님 10-09)
         if (!queues.TryGetValue(LocalPlayer.LocalPlayerId, out List<Entry> list) || list.Count == 0) return;
 
         // 만료된 항목은 Repaint 때만 걷어낸다 — OnGUI가 프레임당 Layout·Repaint 두 번

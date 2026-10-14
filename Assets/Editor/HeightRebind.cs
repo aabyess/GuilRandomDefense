@@ -9,6 +9,7 @@ static class HeightRebind
     {
         var sb = new StringBuilder();
         foreach (string unit in ArtBinder.TierHeightUnits) sb.AppendLine(ArtBinder.BindOneUnit(unit));
+        sb.AppendLine(SkinSwapImporter.RehideAll());   // BindOneUnit이 프리팹을 새로 지으면 SkinClipHider가 사라진다
         return sb.ToString();
     }
 }

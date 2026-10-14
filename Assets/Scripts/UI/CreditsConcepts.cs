@@ -126,11 +126,11 @@ public class CreditsConcepts
         for (int i = 0; i < dots.Length; i++)
         {
             float f = i / (dots.Length - 1f);
-            Vector2 p = new Vector2(Mathf.Lerp(-470f, 430f, f), -250f + Mathf.Sin(f * 5.2f) * 40f + f * 40f);
+            Vector2 p = new Vector2(Mathf.Lerp(-470f, 250f, f), -250f + Mathf.Sin(f * 5.2f) * 40f + f * 40f);
             dots[i] = Rect("Dot" + i, paper, Vector2.one * .5f, Vector2.one * 8f, p, disc, new Color(0.35f, 0.2f, 0.08f, 0f));
         }
-        var xa = Rect("X1", paper, Vector2.one * .5f, new Vector2(46, 7), new Vector2(430, -210), null, new Color(0.62f, 0.1f, 0.06f, 0)); xa.localRotation = Quaternion.Euler(0, 0, 45);
-        var xb = Rect("X2", paper, Vector2.one * .5f, new Vector2(46, 7), new Vector2(430, -210), null, new Color(0.62f, 0.1f, 0.06f, 0)); xb.localRotation = Quaternion.Euler(0, 0, -45);
+        var xa = Rect("X1", paper, Vector2.one * .5f, new Vector2(46, 7), new Vector2(250, -230), null, new Color(0.62f, 0.1f, 0.06f, 0)); xa.localRotation = Quaternion.Euler(0, 0, 45);
+        var xb = Rect("X2", paper, Vector2.one * .5f, new Vector2(46, 7), new Vector2(250, -230), null, new Color(0.62f, 0.1f, 0.06f, 0)); xb.localRotation = Quaternion.Euler(0, 0, -45);
         var compass = Rect("Compass", paper, Vector2.one * .5f, Vector2.one * 150f, new Vector2(-480, 250), ring, new Color(0.3f, 0.18f, 0.07f, 0));
         var spikes = new RectTransform[4];
         for (int i = 0; i < 4; i++)
@@ -138,8 +138,7 @@ public class CreditsConcepts
             spikes[i] = Rect("Spike" + i, compass, Vector2.one * .5f, new Vector2(14, 120), Vector2.zero, Poly(16, 128, new[] { new Vector2(.5f, 1f), new Vector2(1f, .5f), new Vector2(.5f, 0f), new Vector2(0f, .5f) }), new Color(0.3f, 0.18f, 0.07f, 0));
             spikes[i].localRotation = Quaternion.Euler(0, 0, i * 90f);
         }
-        var cornerR = Rect("CornerR", paper, Vector2.one * .5f, Vector2.one * 130f, new Vector2(500, 290), ring, new Color(0.3f, 0.18f, 0.07f, 0));
-        // 글자: 잉크가 번지듯 자간이 좁아지며 짙어진다
+                // 글자: 잉크가 번지듯 자간이 좁아지며 짙어진다
         var title = Text("Title", paper, gothic, 108f, new Color(0.24f, 0.13f, 0.05f, 0), "G.R.D", new Vector2(900, 150), new Vector2(0, 250));
         var line = Rect("Line", paper, Vector2.one * .5f, new Vector2(0, 3), new Vector2(0, 160), null, new Color(0.3f, 0.17f, 0.07f, 0f));
         var roleT = new TMP_Text[5]; var nameT = new TMP_Text[5];
@@ -176,7 +175,7 @@ public class CreditsConcepts
             for (int i = 0; i < dots.Length; i++) SetAlpha(dots[i].GetComponent<Image>(), Mathf.Clamp01(Seg(t, 1.3f, 3.0f) * dots.Length - i) * 0.7f);
             Color xc = new Color(0.62f, 0.1f, 0.06f, Ease(Seg(t, 2.9f, 3.2f))); xa.GetComponent<Image>().color = xc; xb.GetComponent<Image>().color = xc;
             var oc = new Color(0.3f, 0.18f, 0.07f, ornament * 0.8f);
-            compass.GetComponent<Image>().color = oc; cornerR.GetComponent<Image>().color = oc;
+            compass.GetComponent<Image>().color = oc;
             foreach (var s in spikes) s.GetComponent<Image>().color = oc;
             compass.localRotation = Quaternion.Euler(0, 0, -25f * (1f - ornament) + Mathf.Sin(t * 1.5f) * 2f);
             float ta = Ease(Seg(t, 1.5f, 2.2f));
@@ -277,28 +276,28 @@ public class CreditsConcepts
         const float PW = 820f, PH = 1010f;
         var holder = new GameObject("Poster", typeof(RectTransform)); holder.transform.SetParent(root, false);
         var hr = (RectTransform)holder.transform; hr.anchorMin = hr.anchorMax = new Vector2(.5f, .5f); hr.pivot = new Vector2(.5f, 1f); hr.sizeDelta = new Vector2(PW, PH); hr.anchoredPosition = new Vector2(0, 520);
-        var paper = Rect("Paper", hr, new Vector2(.5f, .5f), new Vector2(PW, PH), new Vector2(0, -PH * .5f), Parchment(256, 316, true), new Color(1f, 0.97f, 0.88f));
+        var paper = Rect("Paper", hr, new Vector2(.5f, .5f), new Vector2(PW, PH), Vector2.zero, Parchment(256, 316, true), new Color(1f, 0.97f, 0.88f));
         var pr = paper;
         Color ink = new Color(0.20f, 0.11f, 0.05f);
-        var wanted = Text("Wanted", pr, serif, 150f, ink, "WANTED", new Vector2(760, 190), new Vector2(0, 380));
-        var photoBack = Rect("Photo", pr, Vector2.one * .5f, new Vector2(560, 400), new Vector2(0, 110), null, new Color(0.18f, 0.12f, 0.07f));
-        var photoIn = Rect("PhotoIn", pr, Vector2.one * .5f, new Vector2(530, 370), new Vector2(0, 110), Radial(new Color(0.84f, 0.70f, 0.46f), new Color(0.58f, 0.43f, 0.24f)));
-        var logo = Text("Logo", pr, gothic, 130f, ink, "G.R.D", new Vector2(520, 170), new Vector2(0, 118));
-        var doa = Text("DOA", pr, serif, 52f, ink, "<cspace=6>DEAD OR ALIVE</cspace>", new Vector2(760, 70), new Vector2(0, -130));
+        var wanted = Text("Wanted", pr, serif, 150f, ink, "WANTED", new Vector2(760, 190), new Vector2(0, 400));
+        var photoBack = Rect("Photo", pr, Vector2.one * .5f, new Vector2(520, 300), new Vector2(0, 175), null, new Color(0.18f, 0.12f, 0.07f));
+        var photoIn = Rect("PhotoIn", pr, Vector2.one * .5f, new Vector2(492, 272), new Vector2(0, 175), Radial(new Color(0.84f, 0.70f, 0.46f), new Color(0.58f, 0.43f, 0.24f)));
+        var logo = Text("Logo", pr, gothic, 130f, ink, "G.R.D", new Vector2(520, 170), new Vector2(0, 182));
+        var doa = Text("DOA", pr, serif, 52f, ink, "<cspace=6>DEAD OR ALIVE</cspace>", new Vector2(760, 70), new Vector2(0, -2));
         var rows = new RectTransform[5]; var rowGroup = new CanvasGroup[5];
         for (int i = 0; i < 5; i++)
         {
-            float y = -218f - i * 88f;
+            float y = -90f - i * 80f;
             var row = new GameObject("Bounty" + i, typeof(RectTransform), typeof(CanvasGroup)); row.transform.SetParent(pr, false);
-            var rr = (RectTransform)row.transform; rr.anchorMin = rr.anchorMax = Vector2.one * .5f; rr.sizeDelta = new Vector2(740, 80); rr.anchoredPosition = new Vector2(0, y);
-            Text("Role", rr, sans, 24f, new Color(0.38f, 0.24f, 0.12f), Roles[i], new Vector2(250, 40), new Vector2(-250, 0), TextAlignmentOptions.Left);
+            var rr = (RectTransform)row.transform; rr.anchorMin = rr.anchorMax = Vector2.one * .5f; rr.sizeDelta = new Vector2(740, 74); rr.anchoredPosition = new Vector2(0, y);
+            Text("Role", rr, sans, 24f, new Color(0.38f, 0.24f, 0.12f), Roles[i], new Vector2(250, 40), new Vector2(-232, 0), TextAlignmentOptions.Left);
             Text("Name", rr, serif, 44f, ink, Names[i], new Vector2(380, 60), new Vector2(10, 0), TextAlignmentOptions.Center);
-            Text("Reward", rr, serif, 34f, new Color(0.55f, 0.1f, 0.06f), "∞ 베리", new Vector2(200, 50), new Vector2(300, -2), TextAlignmentOptions.Right);
+            Text("Reward", rr, serif, 34f, new Color(0.55f, 0.1f, 0.06f), "∞ 베리", new Vector2(200, 50), new Vector2(238, -2), TextAlignmentOptions.Right);
             rows[i] = rr; rowGroup[i] = row.GetComponent<CanvasGroup>();
             Rect("Rule", rr, Vector2.one * .5f, new Vector2(700, 2), new Vector2(0, -38), null, new Color(ink.r, ink.g, ink.b, 0.35f));
         }
         var nail = Rect("Nail", root, Vector2.one * .5f, Vector2.one * 28f, new Vector2(0, 520 - 6), Disc(32, 0.8f), new Color(0.2f, 0.18f, 0.16f));
-        var stamp = Text("Stamp", pr, serif, 60f, new Color(0.65f, 0.08f, 0.05f, 0), "<cspace=4>제 작 진</cspace>", new Vector2(420, 80), new Vector2(210, -660));
+        var stamp = Text("Stamp", pr, serif, 60f, new Color(0.65f, 0.08f, 0.05f, 0), "<cspace=4>제 작 진</cspace>", new Vector2(420, 80), new Vector2(200, 60));
         apply = t =>
         {
             float drop = Ease(Seg(t, 0f, 0.55f));

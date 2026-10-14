@@ -28,7 +28,9 @@ public class CreditsSplash : MonoBehaviour
     const int TitleSceneIndex = 0;   // NetBoot — 배포판 첫 씬
 
     static bool shown;
-    public static int Variant;          // 시안(0 남색 · 1 갈색) — 미리보기가 바꾼다
+    public static int Variant = 4;      // 시안: 4 = 현상수배(사장님 확정 10-09, 기본) · 0 남색 · 1 갈색 · 2 보물지도 · 3 엔딩 크레딧 — 미리보기 메뉴만 나머지를 부른다
+    static CreditsSplash current;
+    public static bool Active => current != null;          // 제작진 화면이 떠 있는 동안 true(알림 숨김용)
     public static bool PreviewMode;     // 미리보기: 씬·한 번만 검사 무시, 끝나도 다시 띄울 수 있게
 
     CanvasGroup group;
@@ -64,6 +66,7 @@ public class CreditsSplash : MonoBehaviour
 
     void Awake()
     {
+        current = this;
         bool navy = Variant == 0;
         gold = navy ? new Color(0.88f, 0.78f, 0.52f) : new Color(0.95f, 0.78f, 0.45f);
         goldDim = navy ? new Color(0.60f, 0.55f, 0.42f, 0.9f) : new Color(0.72f, 0.58f, 0.40f, 0.9f);
@@ -314,6 +317,8 @@ public class CreditsSplash : MonoBehaviour
             logo.UpdateGeometry(info.meshInfo[m].mesh, m);
         }
     }
+
+    void OnDestroy() { if (current == this) current = null; }
 
     void Update()
     {
