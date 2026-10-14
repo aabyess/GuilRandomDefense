@@ -109,7 +109,9 @@ static class WingBuilder
             var wm = root.AddComponent<WingModel>();
             wm.restSpan = any ? Mathf.Max(b.size.x, b.size.y, b.size.z) : 3.7f;
             // 유니티로 들어온 날개 축: 폭=Z(±1.86) · 위아래=X · 앞뒤 두께=Y(+가 등쪽) → 유닛 로컬로 돌린다: X→위(Y) · Y→뒤(-Z) · Z→옆(-X). 폭은 좌우 대칭이라 부호 무관.
-            wm.localEuler = Quaternion.LookRotation(new Vector3(-1f, 0f, 0f), new Vector3(0f, 0f, -1f)).eulerAngles;
+            // 원작 모양은 뿌리가 위, 깃이 아래로 처진다. 사장님·PM: 위·뒤로 솟게 → 앞뒤 축(유닛 Z)으로 180° 뒤집고(깃이 위로, 좌우 대칭이라 무방) 뒤로 20° 눕힌다. 뿌리는 등 쪽으로 살짝.
+            wm.localEuler = (Quaternion.Euler(-20f, 0f, 0f) * Quaternion.Euler(0f, 0f, 180f) * Quaternion.LookRotation(new Vector3(-1f, 0f, 0f), new Vector3(0f, 0f, -1f))).eulerAngles;
+            wm.chestOffset = new Vector3(0f, 0f, -0.15f);
             PrefabUtility.SaveAsPrefabAsset(root, $"Assets/Resources/Wings/{name}.prefab");
             sb.AppendLine($"✅ {name} · 렌더러 {model.GetComponentsInChildren<Renderer>(true).Length} · 클립 {(clip != null ? clip.name : "없음")} · 휴식 크기 {(any ? b.size.ToString("F2") : "?")} 폭 {wm.restSpan:F2}");
             Object.DestroyImmediate(root);

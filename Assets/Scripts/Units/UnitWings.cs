@@ -20,7 +20,7 @@ public static class UnitWings
     };
 
     public const float SpanPerHeight = 2.2f;     // 날개 폭 ÷ 유닛 키
-    public const float ChestHeightRatio = 0.68f; // 가슴 높이 ÷ 유닛 키
+    public const float ChestHeightRatio = 0.80f; // 날개 뿌리(어깻죽지) 높이 ÷ 유닛 키(10-09 PM: 0.68은 허리라 낮다)
     public const string ChildName = "[날개]";
 
     public static string WingNameFor(UnitGrade grade) => Table.TryGetValue(grade, out string n) ? n : null;
@@ -57,7 +57,20 @@ public static class UnitWings
         wing.transform.localScale = new Vector3(worldScale / Mathf.Max(0.0001f, parentScale.x), worldScale / Mathf.Max(0.0001f, parentScale.y), worldScale / Mathf.Max(0.0001f, parentScale.z));
         wing.transform.position = chest + unit.transform.rotation * (model != null ? model.chestOffset * worldScale : Vector3.zero);
         wing.transform.localRotation = Quaternion.Euler(model != null ? model.localEuler : Vector3.zero);
+        // 뼈가 있으면 그 뼈를 따라 움직이게(동작할 때 몸과 같이) — 월드 위치·회전·크기는 그대로 둔 채 부모만 옮긴다. 이름이 안 맞으면 루트에 둔다.
+        Transform bone = FindChestBone(unit.transform);
+        if (bone != null) wing.transform.SetParent(bone, true);
         return wing;
+    }
+
+    static readonly string[] BoneNames = { "upperchest", "spine2", "chest", "spine1" };
+    static Transform FindChestBone(Transform root)
+    {
+        Transform[] all = root.GetComponentsInChildren<Transform>(true);
+        foreach (string key in BoneNames)
+            foreach (Transform t in all)
+                if (t != root && t.name.ToLowerInvariant().Contains(key) && !t.name.Contains("날개") && t.GetComponent<Renderer>() == null) return t;
+        return null;
     }
 }
 

@@ -1,4 +1,36 @@
-# 구현담당1 인수인계 (10-08 밤 마감, 0.3.16 배포 직전)
+# 구현담당1 인수인계 (10-14 교체, 0.3.17 배포 뒤 · 날개 수정 도중)
+
+새 세션은 기억이 없다. 이 문서 → `.claude/NEXT_SESSION.md` → TEAM_RULES 순. 아래 「10-09~10-14」가 최신이고, 그 아래 10-08 구조 메모는 그대로 유효하다. 에디터는 비움(Play 끔).
+
+## 10-09~10-14 끝낸 일 (해시는 git log)
+- 신세계 사이드보스 실모델(e420af3a2): Enemy_SideBoss62/66/71 prefab = R10 주영호·R20 박은석·R30 김만경 보스 프리팹, 스폰 때 ×1.2 + QuestMobLook 붉은 틴트(팔레트 8번 「신세계사이드보스」, MP는 QuestMobTint 복제). 근접 사진·프리팹 경로 로그로 확인(Mob_주영호, 크기 1.92).
+- 상점 풀림 MP 확인(NetCheck17, Tools/mp_check): 클라 창 연타 100·300회 풀림 0 → 클라 동기는 원인 아님. (함정: 남의 레인 상점은 SelectOnly가 거절 → 하네스가 내 레인 것만 골라야 한다.)
+- 짝 검수 6기(~/GRD_skin_swap/*/pairing.csv 덮어씀): 연결 해제 3·파일 오기 2·모양 불일치 표시.
+- 초월 스킬 모션 영상: `SkillMotionProbe`(Assets/Editor, captureFramerate 20, 결과 ~/GRD_skill_motion/frames/<유닛>/). 옵션 `유닛@far@close@dump@south`. 결과: 공용 컨트롤러 「Character」 유닛은 Spell 없음(이펙트만), 원작 스킨 교체 유닛은 자체 컨트롤러에 Spell 있음.
+- 가프(불멸_박은석) 머리 사라짐: Spell 중 몸 숙일 때 머리 정점이 사라짐(f0021·f0042 등). 숨김 메시·스케일0 뼈 아님. blender가 회전 키 재구움 → 구현담당2가 재반입 예정(내 몫 아님).
+- 이펙트 텍스처 223개 알파 재반입(081b1ea6d): 옛 알파 전부 255 → 새 투명 있음, 재질 381개 전부 알파 반영 모드(불투명 0).
+- **날개**(54948c32f 이후 진행): 등급 자동 부착. `UnitWings.Table`(초월=Dashboard_YH2 · 불멸=Dashboard_Wings_enthusiasm2 · 영원=DashBoard_Wing3_FIre; 검·물·왜곡은 프리팹만). 호스트 UnitSpawner·클라 NetReplicaBuilder가 `WingAttacher`(첫 프레임 Start)를 달아 `UnitWings.Attach` — 몸 렌더러 키로 폭=키×2.2, 뿌리 높이 비율 0.80, 뼈(spine2/chest 이름 포함)가 있으면 그 뼈 아래로 옮겨 따라감. 프리팹은 `WingBuilder`(Assets/Editor: Copy → refresh → Settings → refresh → Build)로 Assets/Resources/Wings/에 만든다. 점검 `WingProbe`(Setup front|back / Solo 이름,이름 / Report; ClaudeBridge/g1n_wing.txt).
+
+## 남은 일 (우선순위)
+1. **날개 수정 3건(PM 10-09 지적, 마지막 커밋에 「된 데까지」만 반영, 눈으로 확인 못 함)**: ① 높이 0.68→0.80 + 뼈 따라가기 = 코드 반영함(미확인). ② 방향: 원작 모양은 뿌리 위·깃이 아래로 처짐 → WingBuilder에서 앞뒤 축 180° 뒤집고 뒤로 20° 눕힘(미확인; 뒤집으면 깃이 위로 솟는 V). ③ 불 날개 한쪽 쏠림: 단독 촬영(WingProbe.Solo)에선 뿌리가 한쪽 끝인 초승달 모양 — 대칭 중심이 아님. 불 날개만 chestOffset을 쪽으로 보정하거나 좌우 두 장(미러)으로 쓰는 안 필요. 확인은 WingProbe.Setup(front/back, 영원 컷인이 화면을 덮으니 wait:14 이상 + 컷인 끝난 뒤)로 세 기체 정면·뒤. 날개 높이·방향이 맞으면 PM에게 사진 보고.
+2. **어림 텍스처 v2 반입**: ~/GRD_blp_audit/placeholder_v2/{Art,Resources}/ 248개를 Assets에 덮어 복사(.meta 건드리지 말 것, `_원본이름/` 폴더 제외 — 이미 find로 248개 전부 Assets에 존재 확인) → refresh·재임포트 → 대표 스킬 4개 게임 촬영(아카이누 Akainu_02=초월_김만경_AD · 빅맘 Bigmam_hp=불멸_정준영 · 임채민 Tichi_skill_4=초월_임채민_AP · 조로 Zoro_samchun1=초월_강주혁_AP). 「전」 프레임은 이미 ~/GRD_skill_motion/frames_before_v2/<유닛>/에 있음 → 복사 뒤 SkillMotionProbe로 「후」 촬영, 시트로 비교해 ~/GRD_skill_motion/에 두고 PM 보고 → 커밋.
+3. **사장님 요청(새 일)**: 도박소·유닛강화소·영원함강화소·도움소·공격타입강화소·항해일지 건물을 더 **크게**, **클릭 범위를 넓게**, **간격도 넓게**(양옆이 잔디라 넓혀도 됨). 위치: 레인 앞치마 상점 건물 배치(StructureDresser·MapGenerator 쪽, 씬 수정은 main 에디터에서만, 씬 전체 커밋 금지·URP 라이팅 블록 제외). 클릭 범위는 Selectable/콜라이더·WorldPick 확인.
+4. 날개 지오셋 알파 키·UV 이동 미적용(정지 알파 1) — 필요하면 wing.json의 geosetAlphaKeys 참고.
+
+## 함정 (이번에 걸린 것)
+- 🔴 MonoBehaviour는 **파일 이름 = 클래스 이름**이어야 프리팹에서 안 깨진다(WingModel을 UnitWings.cs에 같이 두면 「referenced script missing」, 한 파일 한 클래스로 분리해 해결).
+- refresh 직후 바로 gameshot을 시작하면 컴파일 도메인 리로드가 끼어 촬영이 「오염」으로 실패한다 → refresh 뒤 60~80초 기다린 뒤 시작(csc_check는 컴파일 대용 아님).
+- `sleep N`만 단독으로 길게 쓰면 막힌다 → `t0=$(date +%s); until [ $(( $(date +%s) - t0 )) -ge N ]; do sleep 3; done`.
+- 신 난이도·영원 유닛을 세우면 **획득 컷인**이 화면을 덮는다(찍기 전 14초 기다리거나 SkillMotionProbe처럼 120프레임 선행 대기).
+- 유닛 시작 유닛(왕승환 등)이 레인 가운데에 서 있어 촬영에 겹친다 → 다른 UnitAttacker를 SetActive(false).
+- 사람 마우스가 화면 가장자리에 있으면 카메라가 흘러간다 → `rts.enabled=false`로 얼린다(SkillMotionProbe).
+- ffmpeg에 drawtext 필터 없음. 촬영 산출물은 /tmp가 아니라 ~/GRD_skill_motion/에(PM 공지), 큰 산출물은 Docs/ARCHIVE_INDEX.md에 한 줄.
+- "없다"고 하기 전에 동의어로 grep(사이드보스/개인 보스/SideBoss) — 「개인 신세계 보스 없음」을 잘못 단언했다 교정함.
+- zsh에서 `F="a b"; git add $F`는 분리가 안 된다 → 배열 `F=(a b); "${F[@]}"`.
+
+---
+
+# (이전) 구현담당1 인수인계 (10-08 밤 마감, 0.3.16 배포 직전)
 
 새 세션은 기억이 없다. 이 문서 → `.claude/NEXT_SESSION.md` → TEAM_RULES 순으로 읽는다. 전부 main에 커밋됨(푸시는 PM). 에디터는 비웠고, 빌드 사본(`../GuilRandomDefense-build`)은 main과 같은 clean 체크아웃(분리 HEAD)이다 — PM이 0.3.16 빌드에 쓴다.
 

@@ -28,8 +28,25 @@ static class WingProbe
             go.transform.rotation = Quaternion.Euler(0f, front ? 180f : 0f, 0f);
             sb.AppendLine($"{names[i]} 등급 {d.grade} 날개 {UnitWings.WingNameFor(d.grade)}");
         }
-        rts.FlyTo(c, 100f);
+        rts.FlyTo(c, 170f);
         return sb.ToString();
+    }
+
+    // 날개만 단독으로(유닛 없이) — 모양·좌우 대칭·축을 본다. 위(Y)·옆(X)로 펼쳐 놓는다.
+    static string Solo()
+    {
+        var rts = Object.FindFirstObjectByType<RtsCameraController>();
+        Vector3 c = LaneMarker.Get(0).LaneCenter;
+        foreach (var other in Object.FindObjectsByType<UnitAttacker>(FindObjectsSortMode.None)) other.gameObject.SetActive(false);
+        string[] names = File.ReadAllText("ClaudeBridge/g1n_wing.txt").Trim().Split(',');
+        for (int i = 0; i < names.Length; i++)
+        {
+            var w = Object.Instantiate(Resources.Load<GameObject>("Wings/" + names[i]), c + new Vector3(i * 60f, 10f, 0f), Quaternion.identity);
+            w.transform.localScale = Vector3.one * 16f;
+            w.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
+        }
+        rts.FlyTo(c + new Vector3(30f, 0f, 0f), 120f);
+        return "단독";
     }
 
     static string Report()

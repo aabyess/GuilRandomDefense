@@ -45,7 +45,7 @@ static class SkillMotionProbe
             string name = spec.Split('@')[0]; bool far = spec.Contains("@far"), close = spec.Contains("@close"), dump = spec.Contains("@dump");
             UnitData data = AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{name}.asset");
             if (data == null) { log.AppendLine("❌ 없음 " + name); continue; }
-            string dir = $"/tmp/g1n_motion/{name}"; Directory.CreateDirectory(dir);
+            string dir = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "GRD_skill_motion", "frames", name); Directory.CreateDirectory(dir);
             foreach (string old in Directory.GetFiles(dir, "f*.png")) File.Delete(old);
             Vector3 c = lane.LaneCenter;   // 한 유닛씩 차례로(끝나면 치운다) — 레인 밖은 NavMesh가 없어 유닛이 안 선다
             GameObject go = spawner.Spawn(data, c, 0);
