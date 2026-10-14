@@ -123,7 +123,7 @@ def streak_mat(kind, seed, shift=0.0):
     """kind: flame(빨강→주황→노랑 결, 불사조 깃털) / chrome(은·하늘·연보라·흰 반투명 유리 결). U=폭 방향, V=획 방향."""
     m = bpy.data.materials.new(f"{kind}{seed}"); m.use_nodes = True; nt = m.node_tree; nt.nodes.clear()
     out = node(nt, "ShaderNodeOutputMaterial"); bsdf = node(nt, "ShaderNodeBsdfPrincipled")
-    uv = node(nt, "ShaderNodeUVMap"); mp = node(nt, "ShaderNodeMapping"); mp.inputs["Scale"].default_value = (14.0, 1.6, 1.0); mp.inputs["Location"].default_value = (seed * 3.1, seed * 1.7, 0)
+    uv = node(nt, "ShaderNodeUVMap"); mp = node(nt, "ShaderNodeMapping"); mp.inputs["Scale"].default_value = (30.0, 1.2, 1.0); mp.inputs["Location"].default_value = (seed * 3.1, seed * 1.7, 0)
     nz = node(nt, "ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 1.0; nz.inputs["Detail"].default_value = 3.0; nz.inputs["Roughness"].default_value = 0.55
     nt.links.new(uv.outputs[0], mp.inputs[0]); nt.links.new(mp.outputs[0], nz.inputs["Vector"])
     sep = node(nt, "ShaderNodeSeparateXYZ"); uv2 = node(nt, "ShaderNodeUVMap"); nt.links.new(uv2.outputs[0], sep.inputs[0])
@@ -134,15 +134,23 @@ def streak_mat(kind, seed, shift=0.0):
     mixf = node(nt, "ShaderNodeMix"); mixf.data_type = "FLOAT"; mixf.inputs[0].default_value = 0.5
     nt.links.new(nz.outputs["Fac"], mixf.inputs[2]); nt.links.new(inv.outputs[0], mixf.inputs[3])
     sh = node(nt, "ShaderNodeMath"); sh.operation = "ADD"; sh.inputs[1].default_value = shift; nt.links.new(mixf.outputs[0], sh.inputs[0])
-    if kind == "flame":
-        st = [(0.0, (0.55, 0.0, 0.0, 1)), (0.3, (0.95, 0.06, 0.01, 1)), (0.55, (1.0, 0.4, 0.03, 1)), (0.78, (1.0, 0.82, 0.2, 1)), (1.0, (1.0, 0.98, 0.7, 1))]
-    else:
-        st = [(0.0, (0.03, 0.06, 0.25, 1)), (0.3, (0.35, 0.55, 0.95, 1)), (0.5, (0.93, 0.96, 1.0, 1)), (0.72, (0.72, 0.66, 0.98, 1)), (1.0, (0.62, 0.92, 1.0, 1))]
+    if kind == "flame":   # 바깥 진홍(거의 크림슨) 비중 크게 + 안쪽에 가는 노랑·흰 결 여러 줄
+        st = [(0.0, (0.28, 0.0, 0.02, 1)), (0.3, (0.6, 0.0, 0.04, 1)), (0.55, (0.88, 0.03, 0.04, 1)), (0.7, (1.0, 0.3, 0.03, 1)), (0.82, (1.0, 0.78, 0.15, 1)), (0.92, (1.0, 0.96, 0.6, 1)), (1.0, (1.0, 1.0, 0.95, 1))]
+    elif kind == "purple":
+        st = [(0.0, (0.1, 0.02, 0.28, 1)), (0.3, (0.45, 0.2, 0.85, 1)), (0.5, (0.95, 0.9, 1.0, 1)), (0.72, (0.8, 0.45, 0.98, 1)), (1.0, (0.55, 0.85, 1.0, 1))]
+    elif kind == "gold":
+        st = [(0.0, (0.6, 0.02, 0.0, 1)), (0.25, (1.0, 0.1, 0.02, 1)), (0.5, (1.0, 0.55, 0.05, 1)), (0.72, (1.0, 0.82, 0.12, 1)), (1.0, (1.0, 0.99, 0.75, 1))]
+    else:   # 청록·하늘 진하게 + 은 하이라이트 얇은 선
+        st = [(0.0, (0.0, 0.04, 0.3, 1)), (0.22, (0.0, 0.35, 0.85, 1)), (0.4, (0.0, 0.78, 0.82, 1)), (0.55, (0.3, 0.8, 1.0, 1)), (0.7, (0.55, 0.45, 0.95, 1)), (0.88, (0.9, 0.97, 1.0, 1)), (1.0, (1.0, 1.0, 1.0, 1))]
     cr = ramp(nt, st); nt.links.new(sh.outputs[0], cr.inputs[0])
-    nt.links.new(cr.outputs[0], bsdf.inputs["Base Color"])
-    if kind == "flame":
+    lwr = node(nt, "ShaderNodeLayerWeight"); lwr.inputs["Blend"].default_value = 0.5
+    rim = node(nt, "ShaderNodeMath"); rim.operation = "MULTIPLY_ADD"; nt.links.new(lwr.outputs["Facing"], rim.inputs[0]); rim.inputs[1].default_value = 3.0; rim.inputs[2].default_value = -2.0
+    rimc = node(nt, "ShaderNodeClamp"); nt.links.new(rim.outputs[0], rimc.inputs[0])
+    mixc = node(nt, "ShaderNodeMix"); mixc.data_type = "RGBA"; rimk = node(nt, "ShaderNodeMath"); rimk.operation = "MULTIPLY"; rimk.inputs[1].default_value = 0.45 if kind in ("flame", "gold") else 0.9; nt.links.new(rimc.outputs[0], rimk.inputs[0]); nt.links.new(rimk.outputs[0], mixc.inputs[0]); nt.links.new(cr.outputs[0], mixc.inputs[6]); mixc.inputs[7].default_value = (1, 1, 1, 1)
+    nt.links.new(mixc.outputs[2], bsdf.inputs["Base Color"])
+    if kind in ("flame", "gold"):
         bsdf.inputs["Roughness"].default_value = 0.22; bsdf.inputs["Metallic"].default_value = 0.0
-        nt.links.new(cr.outputs[0], bsdf.inputs["Emission Color"]); bsdf.inputs["Emission Strength"].default_value = 0.4
+        nt.links.new(mixc.outputs[2], bsdf.inputs["Emission Color"]); bsdf.inputs["Emission Strength"].default_value = 0.9 if kind == "flame" else 0.5
         try: bsdf.inputs["Coat Weight"].default_value = 0.6
         except Exception: pass
     else:
@@ -151,8 +159,8 @@ def streak_mat(kind, seed, shift=0.0):
         except Exception: pass
     # 반투명(유리 느낌): 가장자리·결 사이로 비침
     tr = node(nt, "ShaderNodeBsdfTransparent"); mix = node(nt, "ShaderNodeMixShader")
-    op = node(nt, "ShaderNodeMath"); op.operation = "MULTIPLY_ADD"; nt.links.new(sh.outputs[0], op.inputs[0]); op.inputs[1].default_value = 0.35 if kind == "chrome" else 0.2; op.inputs[2].default_value = 0.62 if kind == "chrome" else 0.8
-    clamp = node(nt, "ShaderNodeClamp"); nt.links.new(op.outputs[0], clamp.inputs[0])
+    op = node(nt, "ShaderNodeMath"); op.operation = "MULTIPLY_ADD"; nt.links.new(sh.outputs[0], op.inputs[0]); op.inputs[1].default_value = 0.3; op.inputs[2].default_value = 0.52 if kind in ("chrome", "purple") else 0.62
+    clamp = node(nt, "ShaderNodeClamp"); clamp.inputs[2].default_value = 0.9; nt.links.new(op.outputs[0], clamp.inputs[0])
     nt.links.new(clamp.outputs[0], mix.inputs[0]); nt.links.new(tr.outputs[0], mix.inputs[1]); nt.links.new(bsdf.outputs[0], mix.inputs[2]); nt.links.new(mix.outputs[0], out.inputs[0])
     return m
 def swoosh(ctrl, mat, width=0.6, lift=0.0, asym=0.35, per=14, height=0.12):
@@ -160,28 +168,61 @@ def swoosh(ctrl, mat, width=0.6, lift=0.0, asym=0.35, per=14, height=0.12):
     pts = catmull2([(x, y, 0.0) for x, y in ctrl], per); n = len(pts); out = []
     for i, (x, y, _) in enumerate(pts):
         t = i / (n - 1); prof = (math.sin(math.pi * t ** (1 - asym)) ** 0.9) ; out.append((x, y, prof * 1.0))
-    return ribbon(out, mat, width=width * 1.15, height=height, per=1, flat_z=lift)
-SW = {  # (중심선, 폭, 높이띄움, 재질 스트리크 shift, seed) — 겹쳐서 숫자 꼴
- 3: [([(-0.85, 0.7), (-0.4, 1.12), (0.25, 1.2), (0.72, 0.9), (0.62, 0.45), (0.1, 0.12)], 0.62, 0.00, 0.0, 1),
-     ([(0.05, 0.22), (0.7, 0.0), (0.88, -0.5), (0.6, -1.0), (-0.1, -1.18), (-0.88, -0.78)], 0.7, 0.05, 0.0, 2),
-     ([(-0.35, 1.18), (0.35, 1.28), (0.95, 0.95), (0.9, 0.35), (0.35, 0.1)], 0.42, 0.10, 0.18, 3),
-     ([(0.15, -0.25), (0.58, -0.4), (0.55, -0.8), (0.1, -1.0)], 0.34, 0.14, 0.25, 4),
-     ([(0.55, 0.95), (0.85, 1.25), (1.1, 1.35), (1.05, 1.1)], 0.3, 0.18, 0.3, 5)],
- 6: [([(1.0, 1.28), (0.35, 0.95), (-0.35, 0.45), (-0.68, -0.25), (-0.5, -0.95), (0.1, -1.2), (0.68, -0.9)], 0.72, 0.00, 0.0, 1),
-     ([(-0.5, -0.75), (-0.05, -1.12), (0.62, -0.95), (0.8, -0.3), (0.4, 0.1), (-0.12, 0.0), (-0.3, -0.4)], 0.6, 0.06, 0.0, 2),
-     ([(0.2, 1.0), (0.6, 1.3), (1.0, 1.28), (1.12, 1.05)], 0.28, 0.14, 0.2, 3),
-     ([(-0.62, 0.1), (-0.78, -0.6), (-0.4, -1.15)], 0.3, 0.12, 0.25, 4)],
+    return ribbon(out, mat, width=width * 0.98, height=height, per=1, flat_z=lift)
+SW = {  # (중심선, 폭, 높이띄움, 스트리크 shift, seed) — 겹쳐서 숫자 꼴. 아래·끝 꼬리는 크게 말려 날린다
+ 1: [([(-0.7, 0.45), (-0.25, 0.95), (0.25, 1.32), (0.7, 1.2)], 0.58, 0.00, 0.0, 1),
+     ([(0.28, 1.2), (0.16, 0.4), (0.04, -0.4), (-0.2, -1.05), (-0.65, -1.45)], 0.62, 0.04, 0.0, 2),
+     ([(0.42, 0.95), (0.34, 0.2), (0.22, -0.55)], 0.3, 0.10, 0.2, 3),
+     ([(-0.25, -1.0), (0.35, -1.25), (0.95, -1.05), (1.2, -0.55)], 0.4, 0.08, 0.1, 4),
+     ([(0.5, 1.2), (0.95, 1.38), (1.2, 1.15)], 0.28, 0.14, 0.28, 5)],
+ 2: [([(-0.8, 0.6), (-0.4, 1.15), (0.3, 1.28), (0.82, 0.88), (0.6, 0.3)], 0.6, 0.00, 0.0, 1),
+     ([(0.65, 0.4), (0.05, -0.35), (-0.55, -0.9), (-0.95, -1.2)], 0.62, 0.04, 0.0, 2),
+     ([(-0.85, -1.05), (0.0, -1.18), (0.85, -1.05), (1.25, -0.6), (1.15, -0.2)], 0.5, 0.08, 0.1, 3),
+     ([(0.2, 1.08), (0.78, 0.95), (0.9, 0.5)], 0.3, 0.14, 0.25, 4)],
+ 3: [([(-0.95, 0.72), (-0.45, 1.15), (0.25, 1.25), (0.75, 0.92), (0.62, 0.45), (0.1, 0.12)], 0.58, 0.00, 0.0, 1),
+     ([(0.05, 0.22), (0.72, 0.0), (0.92, -0.5), (0.6, -1.02), (-0.15, -1.22), (-0.95, -1.0), (-1.55, -0.55), (-1.7, 0.1), (-1.45, 0.55)], 0.64, 0.05, 0.0, 2),
+     ([(0.4, -1.1), (0.0, -1.38), (-0.8, -1.45), (-1.6, -1.1), (-1.85, -0.5)], 0.16, 0.12, 0.2, 6),
+     ([(0.95, 0.95), (1.35, 1.35), (1.7, 1.6), (1.95, 1.4)], 0.14, 0.16, 0.2, 7),
+     ([(-0.35, 1.22), (0.4, 1.35), (1.0, 1.0), (0.95, 0.38), (0.38, 0.1)], 0.36, 0.10, 0.18, 3),
+     ([(0.15, -0.25), (0.6, -0.42), (0.58, -0.85), (0.1, -1.05)], 0.3, 0.14, 0.25, 4),
+     ([(0.55, 1.0), (0.9, 1.3), (1.2, 1.38), (1.2, 1.1)], 0.28, 0.18, 0.3, 5)],
+ 4: [([(0.4, 1.35), (-0.3, 0.6), (-0.85, -0.12), (-0.5, -0.3)], 0.55, 0.00, 0.0, 1),
+     ([(-0.85, -0.28), (0.0, -0.42), (0.75, -0.42), (1.2, -0.1), (1.1, 0.25)], 0.5, 0.05, 0.1, 2),
+     ([(0.45, 1.15), (0.4, 0.3), (0.3, -0.6), (0.1, -1.3), (-0.3, -1.5)], 0.6, 0.02, 0.0, 3),
+     ([(0.1, 0.7), (-0.25, 0.15)], 0.26, 0.12, 0.25, 4)],
+ 5: [([(0.95, 1.2), (0.25, 1.17), (-0.45, 1.1)], 0.46, 0.00, 0.0, 1),
+     ([(-0.4, 1.12), (-0.52, 0.5), (-0.38, 0.1)], 0.5, 0.04, 0.0, 2),
+     ([(-0.4, 0.28), (0.3, 0.42), (0.85, 0.0), (0.8, -0.62), (0.2, -1.12), (-0.55, -1.12), (-1.0, -0.72), (-1.1, -0.3)], 0.62, 0.06, 0.0, 3),
+     ([(0.1, 0.15), (0.62, 0.05), (0.68, -0.42)], 0.3, 0.14, 0.25, 4)],
+ 6: [([(1.5, 1.7), (0.8, 1.2), (0.2, 0.8), (-0.4, 0.35), (-0.7, -0.25), (-0.52, -0.95), (0.1, -1.22), (0.72, -0.92)], 0.66, 0.00, 0.0, 1),
+     ([(0.9, 1.0), (1.45, 1.1), (1.9, 0.8)], 0.14, 0.2, 0.2, 5),
+     ([(-0.5, -0.75), (-0.05, -1.14), (0.64, -0.96), (0.82, -0.3), (0.42, 0.12), (-0.12, 0.02), (-0.32, -0.42), (-0.05, -0.62), (0.18, -0.4)], 0.56, 0.06, 0.0, 2),
+     ([(0.2, 1.02), (0.62, 1.32), (1.05, 1.32), (1.2, 1.08)], 0.26, 0.14, 0.2, 3),
+     ([(-0.64, 0.1), (-0.8, -0.62), (-0.42, -1.18), (0.25, -1.38), (0.85, -1.2)], 0.3, 0.12, 0.25, 4)],
+ 7: [([(-0.95, 1.12), (-0.2, 1.22), (0.65, 1.24), (1.05, 1.08)], 0.5, 0.00, 0.0, 1),
+     ([(0.9, 1.15), (0.45, 0.2), (0.08, -0.62), (-0.28, -1.2), (-0.7, -1.5)], 0.62, 0.04, 0.0, 2),
+     ([(0.58, 1.3), (0.98, 1.45), (1.25, 1.2)], 0.32, 0.12, 0.2, 3),
+     ([(0.6, 0.9), (0.25, 0.1), (-0.05, -0.6)], 0.32, 0.10, 0.28, 4),
+     ([(-0.4, 1.02), (0.3, 1.1), (0.85, 0.95)], 0.26, 0.16, 0.32, 5)],
+ 8: [([(0.3, 0.15), (-0.42, 0.5), (-0.42, 1.08), (0.15, 1.28), (0.68, 0.98), (0.32, 0.36), (-0.35, -0.25)], 0.52, 0.00, 0.0, 1),
+     ([(-0.38, -0.2), (-0.85, -0.65), (-0.48, -1.18), (0.25, -1.24), (0.85, -0.78), (0.38, -0.14), (-0.2, 0.14)], 0.56, 0.05, 0.0, 2),
+     ([(0.5, 1.18), (0.95, 1.08), (1.05, 0.62)], 0.26, 0.12, 0.25, 3),
+     ([(0.42, -1.12), (0.95, -1.25), (1.3, -0.92), (1.2, -0.5)], 0.34, 0.1, 0.1, 4)],
+ 9: [([(0.6, -0.95), (0.85, -0.2), (0.65, 0.72), (0.0, 1.22), (-0.68, 0.92), (-0.62, 0.2), (0.0, -0.06), (0.52, 0.26)], 0.56, 0.00, 0.0, 1),
+     ([(0.72, 0.55), (0.66, -0.4), (0.4, -1.02), (-0.15, -1.32), (-0.8, -1.25), (-1.15, -0.9)], 0.58, 0.05, 0.0, 2),
+     ([(-0.3, 1.12), (0.3, 1.25), (0.78, 0.82)], 0.28, 0.12, 0.25, 3),
+     ([(0.1, -1.2), (0.72, -1.42), (1.15, -1.18)], 0.3, 0.1, 0.1, 4)],
 }
-STYLE = {d: ("flame" if d % 2 else "chrome") for d in range(1, 10)}
+STYLE = {d: ("flame" if d % 2 else "chrome") for d in range(1, 10)}; STYLE[7] = "gold"; STYLE[9] = "purple"
 def build(digit):
-    sc = reset(); style = STYLE[digit]; world_env(sc, "chrome" if style == "chrome" else "flame")
+    sc = reset(); style = STYLE[digit]; world_env(sc, "chrome" if style in ("chrome", "purple") else "flame")
     objs = []
     for ctrl, w, lift, shift, seed in SW[digit]:
         objs.append(swoosh(ctrl, streak_mat(style, seed + digit * 10, shift - (0.26 if style == 'flame' else 0.0)), width=w, lift=lift))
     root = bpy.data.objects.new("root", None); bpy.context.collection.objects.link(root)
     for o in objs: o.parent = root
     root.rotation_euler = (math.radians(6), math.radians(-5), math.radians(-8))
-    cam = bpy.data.cameras.new("c"); cam.type = "ORTHO"; cam.ortho_scale = 4.2
+    cam = bpy.data.cameras.new("c"); cam.type = "ORTHO"; cam.ortho_scale = 4.8
     co = bpy.data.objects.new("c", cam); bpy.context.collection.objects.link(co); sc.camera = co; co.location = (0.05, 0.05, 8)
     for loc, size, energy in (((-3, 3, 5), 3.0, 500), ((3.2, -2.5, 4), 2.0, 250)):
         li = bpy.data.lights.new("a", "AREA"); li.size = size; li.energy = energy; lo = bpy.data.objects.new("a", li); bpy.context.collection.objects.link(lo); lo.location = loc
