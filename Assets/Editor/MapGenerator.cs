@@ -2938,7 +2938,7 @@ public static class MapGenerator
     /// <summary>모델 이름(프리팹에서 Unit_을 뗀 것) → 조합판·부스·전시 인형의 키 배수. ArtBinder.ModelAdjustments에서 키를 줄인 모델만 적는다.</summary>
     static readonly Dictionary<string, float> DollHeightMultiplier = new Dictionary<string, float>
     {
-        { "흔함_강재규", 0.5f },   // 쵸파 — 프리팹 0.85→0.425(절반)와 같은 비
+        { "흔함_강재규", 0.8f },   // 쵸파 — 프리팹 0.85→0.68(0.8배)과 같은 비(10-14, 옛 0.5)
     };
 
     // 유닛 프리팹에서 보이는 부분만 떼어 세운다. 프리팹을 통째로 놓으면 조합표 위에

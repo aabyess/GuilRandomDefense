@@ -15,11 +15,21 @@ public static class StaleDollRepair
 {
     const string ScenePath = "Assets/Scenes/SampleScene.unity";
 
+    static string onlyModel;   // 지정하면 메시 끊김과 무관하게 그 모델(자식 이름)의 인형만 다시 세운다(키 배수 바뀐 뒤)
+
+    /// <summary>흔함_강재규(쵸파) 키 배수 변경(10-14) 뒤: 씬의 쵸파 인형을 새 배수로 다시 세운다.</summary>
+    public static void RebuildChopper() { onlyModel = "흔함_강재규"; Run(); }
+
     static List<DollIdle> FindStale()
     {
         var stale = new List<DollIdle>();
         foreach (DollIdle doll in Object.FindObjectsByType<DollIdle>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
+            if (onlyModel != null)
+            {
+                foreach (Transform c in doll.transform) if (c.name == onlyModel) { stale.Add(doll); break; }
+                continue;
+            }
             bool broken = doll.GetComponentsInChildren<SkinnedMeshRenderer>(true).Any(s => s.sharedMesh == null)
                        || doll.GetComponentsInChildren<MeshFilter>(true).Any(f => f.sharedMesh == null);
             if (broken) stale.Add(doll);
@@ -99,6 +109,7 @@ public static class StaleDollRepair
         }
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
+        onlyModel = null;
         int left = FindStale().Count;
         Debug.Log($"[인형 수리] 다시 세움 {fixedCount}기 · 실패 {failed.Count}" + (failed.Count > 0 ? " " + string.Join(", ", failed) : "") + $" · 남은 끊김 {left}");
         if (Application.isBatchMode) EditorApplication.Exit(left == 0 && failed.Count == 0 ? 0 : 1);

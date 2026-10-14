@@ -97,8 +97,8 @@ public static class ArtBinder
     // 맞추면 탈것이나 짐승은 어색해진다. 모델 파일을 고치는 대신 여기서 조정한다.
     static readonly (string model, Vector3 euler, float heightScale)[] ModelAdjustments =
     {
-        // 흔함_강재규(쵸파) — 사장님 10-04 「좀 큰 것 같다, 반으로」. 흔함 기본 0.85의 절반. 회전 0이라 AutoUpright는 그대로 돈다.
-        ("흔함_강재규", Vector3.zero, 0.425f),
+        // 흔함_강재규(쵸파) — 사장님 10-04 「반으로」(0.425) → 10-14 「너무 작다」 흔함 0.85의 0.8배(0.68). 회전 0이라 AutoUpright는 그대로 돈다.
+        ("흔함_강재규", Vector3.zero, 0.68f),
 
         // 사장님 10-08 「많이 키워」(PM 임시값) — 최종 화면 키 = 지금의 1.6배(카이도 1.7배). 전설 이상은 아래 UpperGradeHeightScale(×1.2)이 한 번 더 곱해지므로 개별 값은 그만큼 나눠 둔다.
         ("히든_석성례", Vector3.zero, 1.6f),                 // 히든은 등급 배율 없음 → 1.0 × 1.6
