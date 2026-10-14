@@ -55,11 +55,10 @@ def page(n, frame=0, pink=False):
         ext += f"<g transform='translate({i * 0.95:.1f} {i * 1.3:.1f})'><text x='0' y='0' transform='translate(300 430) skewX(-12)' text-anchor='middle' font-family=\"{fam}\" font-weight='{wt}' font-size='350' fill='{col}' stroke='{col}' stroke-width='{30 + INF}' stroke-linejoin='round'>{n}</text></g>"
     kanji = ""
     if n == 7:
-        kanji = ("<g transform='translate(430 232) rotate(8)'>"
-                 "<text x='0' y='0' text-anchor='middle' font-family=\"Dela Gothic One\" font-size='135' fill='#3a0a00' stroke='#3a0a00' stroke-width='26' stroke-linejoin='round'>強</text>"
-                 "<text x='0' y='0' text-anchor='middle' font-family=\"Dela Gothic One\" font-size='135' fill='url(#silver)' stroke='url(#silver)' stroke-width='16' stroke-linejoin='round'>強</text>"
-                 "<text x='0' y='0' text-anchor='middle' font-family=\"Dela Gothic One\" font-size='135' fill='url(#gold)' stroke='#5a1000' stroke-width='5' paint-order='stroke' stroke-linejoin='round'>強</text>"
-                 "<text x='0' y='0' text-anchor='middle' font-family=\"Dela Gothic One\" font-size='135' fill='none' stroke='#fff6c8' stroke-width='1.6'>強</text></g>")
+        K = "text-anchor='middle' font-family=\"Dela Gothic One\" font-size='172'"
+        kanji = ("<g transform='translate(432 245) rotate(8)'>"
+                 f"<text x='0' y='0' {K} fill='#2a0600' stroke='#2a0600' stroke-width='11' stroke-linejoin='round'>強</text>"
+                 f"<text x='0' y='0' {K} fill='#ffd83a' stroke='#fff3b0' stroke-width='3' paint-order='stroke' stroke-linejoin='round'>強</text></g>")
     stars = "".join(star(x, y, r) for x, y, r in SPARK[frame % 2]) if frame >= 0 else ""
     return f"""<!doctype html><meta charset=utf8><style>
 @font-face{{font-family:'Bodoni Moda';src:url('file://{OUT}/fonts/BodoniModa.ttf');font-weight:400 900}}
