@@ -4,11 +4,11 @@ using UnityEngine.SceneManagement;
 
 // 상점 건물 클릭 판정 키우기(사장님 09-29 「건물 클릭하는 히트박스 조금만 더 키워줄래」).
 // 기본 카메라에서 건물이 작아 누르기 어려웠다. 맵 재생성 없이 판이 열릴 때 각 상점의 BoxCollider를 키운다:
-// 가로 최대 1.5배(옆 건물과의 간격 48%를 넘지 않게) · 높이 1.3배(바닥은 그대로, 위로만).
+// 가로 최대 1.5배(옆 건물과의 간격 48%를 넘지 않게). 10-14: 높이·앞뒤는 키우지 않는다 — 앞에 선 흔함 유닛을 상자가 가렸다(높이는 오히려 절반쯤으로, 바닥 고정).
 static class ShopClickBoxes
 {
     const float MaxWiden = 1.5f;
-    const float Taller = 1.3f;
+    const float HeightKeep = 0.55f;   // 상자 높이를 이 비율로(바닥 고정)
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Hook()
@@ -42,8 +42,8 @@ static class ShopClickBoxes
             Vector3 size = box.size;
             Vector3 center = box.center;
             float oldY = size.y;
-            size.x *= widen; size.z *= widen; size.y *= Taller;
-            center.y += (size.y - oldY) * 0.5f;   // 바닥 고정, 위로만 늘린다
+            size.x *= widen; size.y *= HeightKeep;   // 앞뒤(z)는 안 넓힌다 — 카메라 쪽으로 튀어나온 상자가 유닛을 가렸다
+            center.y += (size.y - oldY) * 0.5f;   // 바닥 고정
             box.size = size;
             box.center = center;
         }

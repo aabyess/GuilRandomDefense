@@ -50,7 +50,26 @@ public static class WorldPick
         hit = default;
         if (cam == null) return false;
 
-        return Physics.Raycast(cam.ScreenPointToRay(screenPosition), out hit, Mathf.Infinity);
+        if (!Physics.Raycast(cam.ScreenPointToRay(screenPosition), out hit, Mathf.Infinity)) return false;
+
+        // 레인 상점 건물의 클릭 상자(건물보다 넉넉한 여유)가 앞에 선 흔함 유닛을 가렸다(사장님 10-14 제보) —
+        // 첫 적중이 상점 상자인데 그 상자 안쪽에 서 있는 유닛(선택 가능·상점 아님)이 같은 광선에 맞으면 유닛을 우선한다.
+        if (hit.collider.TryGetComponent(out ILaneShop _) && hit.collider is BoxCollider shopBox)
+        {
+            Bounds shopBounds = shopBox.bounds;
+            int count = Physics.RaycastNonAlloc(cam.ScreenPointToRay(screenPosition), hits, hit.distance + shopBounds.size.magnitude, ~0, QueryTriggerInteraction.Collide);
+            float bestDistance = float.MaxValue;
+            for (int i = 0; i < count; i++)
+            {
+                Collider c = hits[i].collider;
+                if (c == shopBox || c.TryGetComponent(out ILaneShop _) || !c.TryGetComponent(out Selectable unit)) continue;
+                if (!shopBounds.Contains(c.bounds.center) && !shopBounds.Contains(hits[i].point)) continue;
+                if (hits[i].distance >= bestDistance) continue;
+                bestDistance = hits[i].distance;
+                hit = hits[i];
+            }
+        }
+        return true;
     }
 
     /// <summary>
