@@ -1,16 +1,19 @@
-using System.IO;
 using UnityEngine;
 
-/// <summary>파칭코 흐름 점검(10-14): gameshot … call:PachinkoProbe.Start wait:10 — ClaudeBridge/g1n_pachinko.txt = win|revive|reach|miss|random. 결과는 Game 뷰 로그([파칭코] …)로 본다.</summary>
+/// <summary>파칭코 오버레이 촬영용(플레이 중 call): gameshot `call:PachinkoProbe.Jackpot wait:… snap:…`. 컨트롤러 없이 Preview로 한 판을 돈다(PUSH는 5초 뒤 자동).</summary>
 static class PachinkoProbe
 {
-    static string Start()
+    static string Go(string mode)
     {
         if (!Application.isPlaying) return "❌ 플레이 중에만";
-        string mode = File.ReadAllText("ClaudeBridge/g1n_pachinko.txt").Trim();
-        PachinkoController.Begin(mode.Split(','));
-        return $"발동 {mode} · 정지 {GamePause.CutinHold}";
+        PachinkoPlan p = PachinkoPlan.Roll(mode);
+        PachinkoOverlay.Preview(p);
+        return $"{mode}: {p} · 보류 {p.PreludeSeconds():F1}초 후 PUSH · 결과 {p.ResultSeconds():F1}초";
     }
-
-    static string State() => $"활성 {PachinkoController.Active} · 컷인정지 {GamePause.CutinHold} · timeScale {Time.timeScale} · 위습 {Wisp.Active.Count}";
+    static string Jackpot() => Go("jackpot");
+    static string Win() => Go("win");
+    static string Revive() => Go("revive");
+    static string Reach() => Go("reach");
+    static string Miss() => Go("miss");
+    static string Random() => Go(null);
 }

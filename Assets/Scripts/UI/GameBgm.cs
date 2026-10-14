@@ -49,6 +49,8 @@ public class GameBgm : MonoBehaviour
     const float FadeSeconds = 1.75f;
     const bool BgmOn = true;
 
+    /// <summary>파칭코 등 연출 중 배경음을 줄이는 배율(1 = 그대로). PachinkoOverlay가 −12dB쯤으로 낮췄다가 되돌린다.</summary>
+    public static float Duck = 1f;
     static GameBgm instance;
     AudioSource source;
     readonly AudioClip[] clips = new AudioClip[Cues.Length];
@@ -175,13 +177,13 @@ public class GameBgm : MonoBehaviour
             Debug.Log($"[소리] 배경음악 시작 {Cues[want].Track} · 씬 {SceneManager.GetActiveScene().buildIndex} · 라운드 {effective}");
             current = want;
             source.clip = clips[want];
-            source.volume = Cues[want].Volume * AudioPrefs.MusicVolume;
+            source.volume = Cues[want].Volume * AudioPrefs.MusicVolume * Duck;
             source.time = 0f;
             lastTime = 0f;
             pendingSeek = Cues[want].Resume ? savedTime[want] : -1f;
         }
         if (current < 0) return;
-        if (!fading) source.volume = Cues[current].Volume * AudioPrefs.MusicVolume;   // 설정의 배경음악 크기(10-06)
+        if (!fading) source.volume = Cues[current].Volume * AudioPrefs.MusicVolume * Duck;   // 설정의 배경음악 크기(10-06)
 
         bool on = GameSound.Enabled;
         source.loop = !Cues[current].Once;
