@@ -1014,18 +1014,21 @@ public class EnemyDummy : MonoBehaviour
         //  (고정 피해는 TakeDamage 앞에서 이 함수를 건너뛴다.) 물리는 마저항 배율을 곱하지 않는다 — AP 평타(isAbilityDamage=false)도 물리다.
         bool bypassPhysicalArmor = isAbilityDamage && type == DamageType.AP;
 
-        if (!bypassPhysicalArmor)
+        if (explosive)
+        {
+            // 폭발형(사장님 정의 10-15): damageType·방무 값과 무관하게 방어력을 안 받는다 — 마저항(난이도 기본값)만. 폭뎀증폭은 호출 쪽에서 곱한다.
+            amount *= BaseMagicResistMultiplier;
+        }
+        else if (!bypassPhysicalArmor)
         {
             // 물리: 방어 수치 자체를 (1−방무비율)·armorScale로 줄여 계수에 넣는다. 음수 방어(방깎으로 0 아래)도 같은 비율로 줄어든다(비율 1이면 방어 0 = 무시).
             float keep = (1f - Mathf.Clamp01(armorIgnoreRatio)) * Mathf.Max(0f, armorScale);
             amount *= ArmorMultiplier(EffectiveArmor * keep);
-            // 폭발형 플래그가 붙은 AD 효과(사장님 사양 스킬 다수)는 옛 동작 유지 — 마저항(난이도 기본값)만 곱한다. 일반 물리는 마저항 배율을 안 곱한다.
-            if (explosive) amount *= BaseMagicResistMultiplier;
         }
         else if (isAbilityDamage)
         {
-            // 마법(능력 AP): 방어력은 무시, 마저항·마깎·마뎀증폭을 받는다(사장님 10-08). 폭발형은 마저항만.
-            amount *= explosive ? BaseMagicResistMultiplier : EffectiveMagicMultiplier;
+            // 마법(능력 AP): 방어력은 무시, 마저항·마깎·마뎀증폭을 받는다(사장님 10-08).
+            amount *= EffectiveMagicMultiplier;
         }
 
         // 상성표는 **방어 무시 여부와 무관하게 항상 탄다** — 원작이 그렇다(공격타입과
