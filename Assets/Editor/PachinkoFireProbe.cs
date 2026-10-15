@@ -39,6 +39,16 @@ public static class PachinkoFireProbe
     public static string Skip0() { PachinkoSettings.DebugSkipSeconds = 0f; return "skip 0"; }
     public static string SlimeSuccessFx() { PachinkoOverlay.DebugSlimeSuccessFx(); return "성공 효과"; }
     public static string AutoPush() { PachinkoController.AutoPushForTest = true; return "자동 누름"; }
+    public static string TokyoWin() => Start("win", 0);
+    public static string TokyoMiss() => Start("miss", 0);
+    public static string RezeroWin() => Start("win", 1);
+    public static string RezeroMiss() => Start("miss", 1);
+    public static string CompressSlime()
+    {
+        VideoThemeSpec v = PachinkoSettings.VideoTheme(3);
+        v.rouletteStart = 4f; v.rouletteStop = 8f; v.pushAt = 14f; v.videoEnd = 19f;
+        return "전생슬 시각 압축";
+    }
     public static string Vote() { PachinkoController.Begin(null); return "투표 시작"; }
     // 모니터 사진용: 가짜 원격 슬롯 둘
     public static string FakeMonitor()

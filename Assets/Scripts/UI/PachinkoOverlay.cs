@@ -1625,6 +1625,7 @@ public class PachinkoOverlay : MonoBehaviour
             StartCoroutine(WinGlints(p.ResultSeconds()));
             StartCoroutine(LineFlare(470f, curTheme == 1 ? new Color(0.8f, 0.9f, 1f, 0.9f) : new Color(1f, 0.85f, 0.7f, 0.9f)));
             StartCoroutine(curTheme == 1 ? RzWinFx() : KagureWinFx());
+            if (curTheme == 1) StartCoroutine(Later(0.7f, RzTitleCard(p.jackpot)));   // 실기 노트: 당첨 정렬 → 검정 바탕 흰 붓글씨 제목 → 「強欲 BONUS」 금빛 글자
             SetExpect(100);
             LoadRzLines();
             AudioClip line = RzWinLines[Mathf.Clamp(p.center, 1, 9) - 1];
@@ -1887,6 +1888,42 @@ public class PachinkoOverlay : MonoBehaviour
 
     IEnumerator WaitUntilVideo(float t0, float videoSeconds) { while (VideoClock(t0) < videoSeconds) yield return null; }
 
+    // ───────── Re:ゼロ 당첨 제목 카드(rezero_ref/NOTES.md 2-9: 같은 숫자 정렬 → 흑배경 흰 붓글씨 「復讐から始まり」 → 「強欲 BONUS」 금빛 입체 글자) ─────────
+    TMP_Text rzTitle, rzBonus; Image rzTitleBg;
+    IEnumerator RzTitleCard(bool jackpot)
+    {
+        if (rzTitle == null)
+        {
+            rzTitleBg = Img("rzTitleBg", stage, null, new Color(0f, 0f, 0f, 0f)); Place(rzTitleBg.rectTransform, -200, 300, 2320, 420); rzTitleBg.raycastTarget = false;
+            rzTitle = Label("rzTitle", stage, "復讐から始まり", 130f, Color.white, TextAlignmentOptions.Center, 0.12f); Place(rzTitle.rectTransform, 160, 410, 1600, 200);
+            rzBonus = Label("rzBonus", stage, "強欲 BONUS", 150f, new Color(1f, 0.82f, 0.25f), TextAlignmentOptions.Center, 0.3f); Place(rzBonus.rectTransform, 160, 180, 1600, 220);
+            rzTitleBg.gameObject.SetActive(false); rzTitle.gameObject.SetActive(false); rzBonus.gameObject.SetActive(false);
+        }
+        rzTitle.text = "復讐から始まり";
+        rzBonus.text = jackpot ? "超強欲 BONUS" : "強欲 BONUS";
+        rzTitleBg.gameObject.SetActive(true); rzTitle.gameObject.SetActive(true);
+        float t = 0f;
+        while (t < 1.3f)
+        {
+            t += Dt;
+            float a = Mathf.Clamp01(t / 0.2f) * (t > 1.0f ? Mathf.Clamp01((1.3f - t) / 0.3f) : 1f);
+            rzTitleBg.color = new Color(0f, 0f, 0f, 0.88f * a); rzTitle.alpha = a;
+            yield return null;
+        }
+        rzTitleBg.gameObject.SetActive(false); rzTitle.gameObject.SetActive(false);
+        rzBonus.gameObject.SetActive(true);
+        t = 0f;
+        while (t < 2.2f)
+        {
+            t += Dt;
+            float pop = 1f + 0.3f * Mathf.Exp(-t * 7f) * Mathf.Cos(t * 15f);
+            rzBonus.rectTransform.localScale = Vector3.one * pop;
+            rzBonus.alpha = t > 1.8f ? Mathf.Clamp01((2.2f - t) / 0.4f) : 1f;
+            yield return null;
+        }
+        rzBonus.gameObject.SetActive(false);
+    }
+
     // ───────── 불꽃 소방대 연출(실기 아닌 PV 학습 노트 적용, 사장님 10-16) ─────────
     Image fireDisk, fireBtnDome, fireBtnRing;
     TMP_Text fireOseL, fireOseR, fireBtnText;
@@ -2089,6 +2126,7 @@ public class PachinkoOverlay : MonoBehaviour
     void HideSlimeWidgets()
     {
         HideFireStyleWidgets();
+        if (rzTitle != null) { rzTitleBg.gameObject.SetActive(false); rzTitle.gameObject.SetActive(false); rzBonus.gameObject.SetActive(false); }
         if (slimeCard == null) return;
         slimeCard.gameObject.SetActive(false); slimeDialog.gameObject.SetActive(false); slimeSplash.gameObject.SetActive(false);
         foreach (TMP_Text b in slimeBangs) if (b != null) b.gameObject.SetActive(false);
