@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: "SkillData_사장님_초월_노태현_AP_돌발행동"
   m_EditorClassIdentifier: 
   skillName: "돌발행동 — 체력스킬(게이지 100)"
-  description: "[돌발행동]\n체력 스킬, 최대 체력(100)일 때 발동. 노태현 주변 범위에 현재 체력 15% 마법 피해 (소리 지르기). 보스는 비례 대신 고정 30만 [임시값, 사장님이 나중에 정함]. 쓰면 체력 게이지 0. 재생 1/초 · 기본 공격 시 +1 [임시값]."
+  description: "[돌발행동]\n체력 스킬, 최대 체력(100)일 때 발동. 노태현 주변 범위에 현재 체력 15% 마법 피해 (소리 지르기). 쓰면 체력 게이지 0. 재생 1/초 · 기본 공격 시 +1 [임시값, 사장님이 나중에 정함]."
   triggerType: 3
   levels:
   - cooldown: 0
@@ -43,8 +43,8 @@ MonoBehaviour:
       buffHitCharges: 0
       requiredTargetBuffId: 
       forbiddenTargetBuffId: 
-      targetCondition: 1
-      targetConditionValue: 200
+      targetCondition: 0
+      targetConditionValue: 0
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
       triggerDamageAbove: 0
@@ -76,58 +76,7 @@ MonoBehaviour:
       attackSpeedScaleCap: 0
       formSelfAttackSpeed: 0
       bossBerserkDamageScale: 0
-      explosive: 1
-    - kind: 0
-      basis: 0
-      target: 2
-      damageType: 2
-      attackType: 6
-      multiplier: 300000
-      bonus: 0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
-      buffId: 
-      randMin: 1
-      randMax: 1
-      buffHitCharges: 0
-      requiredTargetBuffId: 
-      forbiddenTargetBuffId: 
-      targetCondition: 3
-      targetConditionValue: 200
-      cascadeGroup: 0
-      skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0
-      heroDuration: 0
-      maxTargets: 0
-      chainDamageStep: 0
-      zoneTickInterval: 0
-      zoneRadius: 0
-      zoneSpacing: 0
-      zoneAtCaster: 0
-      lineLength: 0
-      lineStartRadius: 0
-      lineEndRadius: 0
-      perHighGradeUnitBonus: 0
-      perHighGradeUnitBonusCap: 0
-      summonUnits: []
-      summonLifetime: 20
-      summonFanDegrees: 35
-      summonRadius: 70
-      grantSkill: {fileID: 0}
-      minAllyTier: 5
-      armorIgnoreRatio: 0
-      armorIgnoreRequiresBuff: 
-      talentStunScaled: 0
-      stackPerHit: 0.01
-      stackCap: 1
-      stackResetSeconds: 3
-      attackSpeedScale: 0
-      attackSpeedScaleCap: 0
-      formSelfAttackSpeed: 0
-      bossBerserkDamageScale: 0
-      explosive: 1
+      explosive: 0
     requiredTargetBuffId: 
     forbiddenTargetBuffId: 
     hitCountFloor: 0
