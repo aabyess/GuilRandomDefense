@@ -17,7 +17,7 @@ using UnityEngine.InputSystem;
 /// 오버레이 연결(구현담당2): PachinkoController.PlayHandler = plan => …(내 plan 연출 시작, PUSH는 plan.PreludeSeconds() 뒤 PachinkoSettings.PushSeconds 동안),
 ///   PachinkoController.PushedHandler = who => …(내 줄 가운데 정지 — who ≥ 0 = 내가 눌렀다, -1 = 시간 끝 자동). Space 입력은 이 컨트롤러가 받는다.
 ///   클릭으로도 누르려면 PachinkoController.RequestPush()를 부른다. 훅이 비어 있으면 로그만 찍고 바로 결과로 간다(임시 경로).
-/// 개발 인자: -pachinkoTest jackpot|win|revive|reach|miss|random  (게임 씬 진입 8초 뒤 모든 슬롯에 그 결과 — 쉼표로 슬롯별 지정 가능 「win,miss」)
+/// 개발 인자: -pachinkoTest jackpot|win|revive|reach|miss|random [-pachinkoTheme tokyo|rezero]  (게임 씬 진입 8초 뒤 모든 슬롯에 그 결과 — 쉼표로 슬롯별 지정 가능 「win,miss」)
 /// </summary>
 public class PachinkoController : MonoBehaviour
 {
@@ -321,6 +321,10 @@ public class PachinkoController : MonoBehaviour
         float until = Time.unscaledTime + 8f;
         while (Time.unscaledTime < until || RewardDistributor.Instance == null) yield return null;
         Debug.Log($"[파칭코] 개발 인자로 발동: {string.Join(",", modes)}");
+        // -pachinkoTheme tokyo|rezero — 결과를 고정하면 투표를 건너뛰므로 테마도 인자로 고른다(10-16 사장님 리제로 확인).
+        string[] args = Environment.GetCommandLineArgs();
+        int ti = Array.IndexOf(args, "-pachinkoTheme");
+        if (ti >= 0 && ti + 1 < args.Length) PachinkoOverlay.Theme = args[ti + 1].ToLowerInvariant().StartsWith("re") ? 1 : 0;
         Begin(modes);
     }
 }
