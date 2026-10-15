@@ -868,7 +868,7 @@ public class PachinkoOverlay : MonoBehaviour
             // 3) リーチ — 1.3초
             Play(Slot.Reach);
             Tentacles(2);   // 카구네 촉수
-            StartCoroutine(ReachEmphasis()); SharpRays(true);
+            StartCoroutine(ReachEmphasis());   // 회전 집중선(SharpRays)은 일장기처럼 보여 뺐다(사장님 10-16, 두 테마 모두)
             yield return Pop(logoReach, 1.3f, 3f);
             SetExpect(Mathf.Max(expect, 10));
             if (p.yokoku > 0 || p.bg != PachinkoBg.None || p.cut != PachinkoCut.None) numbersSmallTarget = 1f;   // 연출이 화면을 쓰는 동안 숫자는 작게 오른쪽 위로
@@ -1500,7 +1500,7 @@ public class PachinkoOverlay : MonoBehaviour
             yield return WaitUntilTime(t0 + P * 0.52f + 2.0f);
             reels[1].Highlight(new Color(1f, 0.78f, 0.8f));
             StartCoroutine(GearFx(0.5f));   // 사망 귀환 — 시계 톱니
-            StartCoroutine(ReachEmphasis()); SharpRays(true);
+            StartCoroutine(ReachEmphasis());   // 회전 집중선(SharpRays)은 일장기처럼 보여 뺐다(사장님 10-16, 두 테마 모두)
             StartCoroutine(Pop(logoReach, 1.3f, 3f));
             SetExpect(Mathf.Max(expect, 10));
             float next = t0 + P * 0.52f + 3.6f;
