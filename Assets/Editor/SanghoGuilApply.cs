@@ -15,7 +15,7 @@ static class SanghoGuilApply
     const string SkillFolder = "Assets/Data/UnitSkills";
     const string UnitPath = "Assets/Data/Units/Roster/초월_최상호_AD.asset";
     const string RecipePath = "Assets/Data/Recipes/초월_최상호_AD.asset";
-    const string Title = "구일에서가장자유로운남자";
+    const string Title = "킹카가될뻔했던사나이";
 
     static SkillData MakeSkill(string suffix, string skillName, string description, SkillTriggerType trigger, float range, float chance, float cooldown, params SkillEffect[] effects)
     {
