@@ -358,10 +358,10 @@ public class PachinkoOverlay : MonoBehaviour
         // 영상 위에서도 숫자가 읽히게 릴마다 부드러운 어두운 받침(릴과 함께 움직인다)
         for (int i = 0; i < 3; i++)
         {
-            reelShadow[i] = Img("reelShadow" + i, machineRect, circle, new Color(0f, 0f, 0f, 0.5f));
+            reelShadow[i] = Img("reelShadow" + i, machineRect, circle, new Color(0f, 0f, 0f, 0.2f));   // 0.5는 밝은 배경 위에서 회색 원판처럼 보였다(시트 확인)
             reelShadow[i].raycastTarget = false;
             reelShadow[i].rectTransform.anchorMin = reelShadow[i].rectTransform.anchorMax = new Vector2(0f, 1f);
-            reelShadow[i].rectTransform.sizeDelta = new Vector2(760f, 640f);
+            reelShadow[i].rectTransform.sizeDelta = new Vector2(620f, 560f);
             reelShadow[i].transform.SetAsFirstSibling();
         }
 
@@ -1894,19 +1894,19 @@ public class PachinkoOverlay : MonoBehaviour
     {
         if (rzTitle == null)
         {
-            rzTitleBg = Img("rzTitleBg", stage, null, new Color(0f, 0f, 0f, 0f)); Place(rzTitleBg.rectTransform, -200, 300, 2320, 420); rzTitleBg.raycastTarget = false;
-            rzTitle = Label("rzTitle", stage, "復讐から始まり", 130f, Color.white, TextAlignmentOptions.Center, 0.12f); Place(rzTitle.rectTransform, 160, 410, 1600, 200);
-            rzBonus = Label("rzBonus", stage, "強欲 BONUS", 150f, new Color(1f, 0.82f, 0.25f), TextAlignmentOptions.Center, 0.3f); Place(rzBonus.rectTransform, 160, 180, 1600, 220);
+            rzTitleBg = Img("rzTitleBg", stage, null, new Color(0f, 0f, 0f, 0f)); Place(rzTitleBg.rectTransform, -200, 330, 2320, 420); rzTitleBg.raycastTarget = false;
+            rzTitle = Label("rzTitle", stage, "復讐から始まり", 150f, Color.white, TextAlignmentOptions.Center, 0.14f); Place(rzTitle.rectTransform, 60, 440, 1800, 220);
+            rzBonus = Label("rzBonus", stage, "強欲 BONUS", 170f, new Color(1f, 0.82f, 0.25f), TextAlignmentOptions.Center, 0.35f); Place(rzBonus.rectTransform, 60, 420, 1800, 240);   // 위쪽 大当たり 로고와 겹치지 않게 가운데
             rzTitleBg.gameObject.SetActive(false); rzTitle.gameObject.SetActive(false); rzBonus.gameObject.SetActive(false);
         }
         rzTitle.text = "復讐から始まり";
         rzBonus.text = jackpot ? "超強欲 BONUS" : "強欲 BONUS";
         rzTitleBg.gameObject.SetActive(true); rzTitle.gameObject.SetActive(true);
         float t = 0f;
-        while (t < 1.3f)
+        while (t < 1.9f)
         {
             t += Dt;
-            float a = Mathf.Clamp01(t / 0.2f) * (t > 1.0f ? Mathf.Clamp01((1.3f - t) / 0.3f) : 1f);
+            float a = Mathf.Clamp01(t / 0.2f) * (t > 1.6f ? Mathf.Clamp01((1.9f - t) / 0.3f) : 1f);
             rzTitleBg.color = new Color(0f, 0f, 0f, 0.88f * a); rzTitle.alpha = a;
             yield return null;
         }
