@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC548\uD754\uD568_\uBB38\uD544\uD658"
+  m_Name: SkillData_원작능력_안흔함_문필환
   m_EditorClassIdentifier: 
-  skillName: "A04C !\uC7A0\uC758 \uB178\uB798 \uD504\uB78C"
-  description: "\uC6D0\uC791 \uB2A5\uB825\uD45C(ORIGINAL_UNIT_ABILITIES.csv) DPS
-    \uC21C\uC704 \uBC30\uC815 \u2014 \uC6D0\uC791 \uD754\uD568 \uBE0C\uB8E9 - \uC548\uD754\uD568(h00D)\uC758
-    \uBC1C\uB3D9\uD655\uB960\xB7\uD53C\uD574\uBC30\uC218\xB7\uCD94\uAC00\uD53C\uD574\uB97C
+  skillName: "A03M !\uC2DC\uAD6C\uB808"
+  description: 원작 안흔함 H00E 타시기의 uabi A03M 값(발동확률·추가피해·스턴)을 그대로 옮겼다. 능력치를 원작 H00E 타시기에서 가져온 로스터에 붙임(사장님 10-15 「스킬은 능력치 원작 것으로」, 순위 배정 폐기). 2026-10-15 구현담당1.
+    \uC21C\uC704 \uBC30\uC815 \u2014 \uC6D0\uC791 \uD754\uD568 \uD0C0\uC2DC\uAE30
+    - \uC548\uD754\uD568(h00E)\uC758 \uBC1C\uB3D9\uD655\uB960\xB7\uD53C\uD574\uBC30\uC218\xB7\uCD94\uAC00\uD53C\uD574\uB97C
     \uADF8\uB300\uB85C \uC62E\uACBC\uB2E4. \uAC1C\uBCC4 \uB300\uC751 \uC544\uB2D8(\uC774\uB984\uB9E4\uD551
     \uBD88\uAC00, \uC21C\uC704 \uBC30\uC815\uC73C\uB85C \uC6B0\uD68C) \u2014 \uB4F1\uAE09
     \uC548\uC5D0\uC11C \uC6D0\uC791\uC740 uid \uADF8\uB8F9 \uCD1D\uC810(\uB2A5\uB825
@@ -31,7 +31,7 @@ MonoBehaviour:
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.1
+    triggerChance: 0.2
     range: 0
     hitCountThreshold: 0
     resetTo: 0
@@ -44,9 +44,9 @@ MonoBehaviour:
       basis: 3
       target: 3
       damageType: 1
-      attackType: 2
+      attackType: 1
       multiplier: 0
-      bonus: 0
+      bonus: 200
       chance: 1
       hitCount: 1
       duration: 0
@@ -97,7 +97,7 @@ MonoBehaviour:
       bonus: 0
       chance: 1
       hitCount: 1
-      duration: 0.2
+      duration: 0.7
       casterBuffCountFactor: 0
       buffId: 
       randMin: 1
@@ -110,7 +110,7 @@ MonoBehaviour:
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
       triggerDamageAbove: 0
-      heroDuration: 0.1
+      heroDuration: 0.35
       maxTargets: 0
       chainDamageStep: 0
       zoneTickInterval: 0
@@ -148,4 +148,4 @@ MonoBehaviour:
     enterRange: 0
     requireNormalEnemyInRange: 0
     needsTargetClick: 0
-  icon: {fileID: 21300000, guid: d7fad0a5285634b01a16293cd8909b6b, type: 3}
+  icon: {fileID: 21300000, guid: bb94de91373734f989fab36f0315b303, type: 3}
