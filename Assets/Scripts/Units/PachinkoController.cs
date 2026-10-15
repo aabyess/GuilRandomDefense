@@ -223,7 +223,7 @@ public class PachinkoController : MonoBehaviour
     public static void ReceivePlan(int slot, int packed)
     {
         if (GameAuthority.IsServer) return;
-        if (slot != GameAuthority.LocalPlayerId) { PachinkoPlan other = PachinkoPlan.Unpack(packed); Debug.Log($"[파칭코] 관전 plan 수신 슬롯 {slot} — {other} (t={Time.unscaledTime:F1})"); MonitorPlanHandler?.Invoke(slot, other); return; }   // 남의 슬롯 = 관전 모니터용
+        if (slot != GameAuthority.LocalPlayerId) { PachinkoPlan other = PachinkoPlan.Unpack(packed); Debug.Log($"[파칭코] 관전 plan 수신 슬롯 {slot} — {other} (t={Time.unscaledTime:F1} · 벽시계 {DateTime.Now:HH:mm:ss.fff})"); MonitorPlanHandler?.Invoke(slot, other); return; }   // 남의 슬롯 = 관전 모니터용
         PachinkoController c = Ensure();
         c.authority = false;
         var run = new Run { plan = PachinkoPlan.Unpack(packed) };
@@ -235,7 +235,7 @@ public class PachinkoController : MonoBehaviour
     public static void ReceivePushed(int slot, int who)
     {
         if (GameAuthority.IsServer) return;
-        if (slot != GameAuthority.LocalPlayerId) { Debug.Log($"[파칭코] 관전 눌림 수신 슬롯 {slot} — {(who < 0 ? "시간 끝" : "누름")} (t={Time.unscaledTime:F1})"); MonitorPushedHandler?.Invoke(slot, who); return; }
+        if (slot != GameAuthority.LocalPlayerId) { Debug.Log($"[파칭코] 관전 눌림 수신 슬롯 {slot} — {(who < 0 ? "시간 끝" : "누름")} (t={Time.unscaledTime:F1} · 벽시계 {DateTime.Now:HH:mm:ss.fff})"); MonitorPushedHandler?.Invoke(slot, who); return; }
         MonitorPushedHandler?.Invoke(slot, who);
         if (Instance == null || !Instance.runs.TryGetValue(slot, out Run r) || r.phase == Phase.Result || r.phase == Phase.Done) return;
         Instance.EnterResult(slot, r, who, broadcast: false);
@@ -271,7 +271,7 @@ public class PachinkoController : MonoBehaviour
         r.openAt = now + (local && !overlay ? PachinkoSettings.NoOverlayDelay : prelude);
         r.closeAt = r.openAt + (local && !overlay ? 0f : r.plan.PushSeconds());
         r.phase = Phase.Prelude;
-        Debug.Log($"[파칭코] 시작({(authority ? "호스트" : "클라")}) 슬롯 {slot} — {r.plan} · {(local ? (overlay ? "오버레이" : "연출 없음(임시 경로)") : "원격 슬롯")} · PUSH 창 {r.openAt - now:F1}~{r.closeAt - now:F1}초");
+        Debug.Log($"[파칭코] 시작({(authority ? "호스트" : "클라")}) 슬롯 {slot} — {r.plan} · {(local ? (overlay ? "오버레이" : "연출 없음(임시 경로)") : "원격 슬롯")} · PUSH 창 {r.openAt - now:F1}~{r.closeAt - now:F1}초 · 벽시계 {DateTime.Now:HH:mm:ss.fff}");
         MonitorPlanHandler?.Invoke(slot, r.plan);   // 내 슬롯·호스트가 아는 원격 슬롯 모두(관전 모니터)
         if (local) PlayHandler?.Invoke(r.plan);
         if (local && testAutoPushDelay >= 0f) StartCoroutine(TestAutoPush(testAutoPushDelay + r.plan.PreludeSeconds() - (PachinkoSettings.VideoTheme(r.plan.theme) != null ? PachinkoSettings.DebugSkipSeconds : 0f)));
@@ -305,7 +305,7 @@ public class PachinkoController : MonoBehaviour
         bool local = slot == GameAuthority.LocalPlayerId;
         r.endAt = Time.unscaledTime + ((local && PlayHandler == null) ? 0.2f : r.plan.ResultSeconds(r.pushedOk));
         MonitorPushedHandler?.Invoke(slot, who);
-        Debug.Log($"[파칭코] PUSH 슬롯 {slot} — {(who < 0 ? "시간 끝(자동)" : "누름")} → 가운데 정지 · {r.plan}");
+        Debug.Log($"[파칭코] PUSH 슬롯 {slot} — {(who < 0 ? "시간 끝(자동)" : "누름")} → 가운데 정지 · {r.plan} · 벽시계 {DateTime.Now:HH:mm:ss.fff}");
         if (broadcast)
         {
             NetGameState state = NetGameState.Instance;
