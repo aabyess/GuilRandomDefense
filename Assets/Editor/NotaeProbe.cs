@@ -153,6 +153,32 @@ static class NotaeProbe
         return sb.ToString();
     }
 
+    // 반사회적인격 Lv.2(최윤서 강화) 전환 — 실제 레벨 선택(CurrentSkillLevel)으로 강화 전·후 피해와 하체부실 아군 감속을 잰다.
+    static string Lv2()
+    {
+        if (nt == null) return "❌ Setup 먼저";
+        var sb = new StringBuilder();
+        var allEs = new[] { e1, e2, eFar, boss };
+        MethodInfo cur = typeof(UnitAttacker).GetMethod("CurrentSkillLevel", NP);
+        MethodInfo cast = typeof(UnitAttacker).GetMethod("CastSkillLevel", NP);
+        var agent = allyGo.GetComponent<UnityEngine.AI.NavMeshAgent>();
+        foreach (bool enhanced in new[] { false, true })
+        {
+            if (enhanced) nt.SetYoonseoEnhanced();
+            var lv = (SkillLevel)cur.Invoke(nt, new object[] { data.skills[0] });
+            Refill_(allEs);
+            cast.Invoke(nt, new object[] { lv, lv.WorldRange, e1, nt.AttackDamage });
+            sb.Append($"\n강화 {(enhanced ? "후" : "전")} · 반사회적인격 효과 {lv.effects.Count}개 · e1 피해 {Drop(e1):N0} · e2(20 떨어짐) {Drop(e2):N0} · 멀리 {Drop(eFar):N0}");
+        }
+        return sb.ToString();
+    }
+
+    static string AllySlow()
+    {
+        var agent = allyGo.GetComponent<UnityEngine.AI.NavMeshAgent>();
+        return $"강화 {(nt.YoonseoEnhanced ? "후" : "전")} · 아군 속도 {(agent != null ? agent.speed : -1f):F2} / 기본 {allyBaseSpeed:F2} · 적 e1 이속 배율 {e1.EffectiveSlowMultiplier:F2}";
+    }
+
     static string LiveStart() { liveStart = Time.time; SkillTelemetry.Reset(); SkillTelemetry.Enabled = true; return "실제 평타 시작"; }
 
     static string Live()

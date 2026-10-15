@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: "SkillData_사장님_초월_노태현_AP_돌발행동"
   m_EditorClassIdentifier: 
   skillName: "돌발행동 — 체력스킬(게이지 100)"
-  description: "사장님 10-08 · 체력 게이지(최대 100). 재생 +1/초 · 평타 +1 [임시값, 사장님이 나중에 정함]. 가득 차면 공격 대상 주위(300)의 적마다 그 적 현재 체력의 15% 마법 피해. 보스(PV≥200)는 비례 대신 고정 300,000(원작 도플라밍고 규칙). 쓰면 게이지 0."
+  description: "[돌발행동]\n체력 스킬, 최대 체력(100)일 때 발동. 노태현 주변 범위에 현재 체력 15% 마법 피해 (소리 지르기). 보스는 비례 대신 고정 30만 [임시값, 사장님이 나중에 정함]. 쓰면 체력 게이지 0. 재생 1/초 · 기본 공격 시 +1 [임시값]."
   triggerType: 3
   levels:
   - cooldown: 0
@@ -29,7 +29,7 @@ MonoBehaviour:
     - kind: 0
       basis: 2
       target: 2
-      damageType: 1
+      damageType: 2
       attackType: 6
       multiplier: 0.15
       bonus: 0
@@ -66,8 +66,8 @@ MonoBehaviour:
       summonRadius: 70
       grantSkill: {fileID: 0}
       minAllyTier: 5
-      armorIgnoreRatio: 1
-      armorIgnoreRequiresBuff: YOONSEO_ENHANCED
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
       talentStunScaled: 0
       stackPerHit: 0.01
       stackCap: 1
@@ -80,7 +80,7 @@ MonoBehaviour:
     - kind: 0
       basis: 0
       target: 2
-      damageType: 1
+      damageType: 2
       attackType: 6
       multiplier: 300000
       bonus: 0
@@ -117,8 +117,8 @@ MonoBehaviour:
       summonRadius: 70
       grantSkill: {fileID: 0}
       minAllyTier: 5
-      armorIgnoreRatio: 1
-      armorIgnoreRequiresBuff: YOONSEO_ENHANCED
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
       talentStunScaled: 0
       stackPerHit: 0.01
       stackCap: 1
@@ -132,7 +132,7 @@ MonoBehaviour:
     forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
-    aoeCenter: 0
+    aoeCenter: 1
     targetArmorBreakAbove: 0
     primaryTargetCondition: 0
     primaryTargetConditionValue: 0

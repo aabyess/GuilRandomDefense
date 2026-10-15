@@ -13,14 +13,7 @@ MonoBehaviour:
   m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uB178\uD0DC\uD604_AP_\uC2DC\uB108\uC9C0\uD3ED\uBC1C"
   m_EditorClassIdentifier: 
   skillName: "\uC2DC\uB108\uC9C0\uD3ED\uBC1C \u2014 \uD3ED\uC99D 15% + \uD3ED\uBC1C"
-  description: "\uC0AC\uC7A5\uB2D8 10-08. \u2460 \uC0C1\uC2DC \uC624\uB77C(\uD3ED\uC99D):
-    \uB0B4 \uB77C\uC778\uC758 \uC801 \uC804\uBD80\uAC00 \uBC1B\uB294 \uD3ED\uBC1C\uD615
-    \uD53C\uD574 +15%(A11S +3\uB808\uBCA8, 1\uB808\uBCA8 = 5%) \u2014 \uC774 \uC720\uB2DB\uC774
-    \uC788\uB294 \uB3D9\uC548. \u2461 \uD3C9\uD0C0 10% \uD655\uB960\uB85C \uACF5\uACA9
-    \uB300\uC0C1 \uC8FC\uC704(300)\uC5D0 \u300C300,000\u300D \uB9C8\uBC95 + \u300C700,000\u300D
-    \uD3ED\uBC1C\uD615 \uD53C\uD574(70\uB9CC\uB9CC \uD3ED\uBC1C\uD615 \u2014 \uD3ED\uC99D\xB7\uD3ED\uB380\uC99D\uD3ED\uC744
-    \uBC1B\uACE0 \uB9C8\uAE4E\xB7\uB9C8\uB380\uC99D\uD3ED\uC740 \uC548 \uBC1B\uC74C).
-    (\uC61B \uD3ED\uBC1C\uC99D\uD3ED \xD71.5\xB7\uBC94\uC704 +15%\uB294 \uC5C6\uC570)"
+  description: "[시너지폭발]\n스킬1: 기본 공격 시 10% 확률, 대상 범위에 30만 마법 피해 + 70만 폭발형 피해.\n스킬2: 자기 라인 존의 적이 받는 폭발형 피해 15% 증가 (상시 오라)"
   triggerType: 0
   levels:
   - cooldown: 0
@@ -98,7 +91,7 @@ MonoBehaviour:
     - kind: 0
       basis: 0
       target: 2
-      damageType: 1
+      damageType: 2
       attackType: 6
       multiplier: 300000
       bonus: 0
@@ -135,8 +128,8 @@ MonoBehaviour:
       summonRadius: 70
       grantSkill: {fileID: 0}
       minAllyTier: 5
-      armorIgnoreRatio: 1
-      armorIgnoreRequiresBuff: YOONSEO_ENHANCED
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
       talentStunScaled: 0
       stackPerHit: 0.01
       stackCap: 1
@@ -160,7 +153,7 @@ MonoBehaviour:
     - kind: 0
       basis: 0
       target: 2
-      damageType: 1
+      damageType: 2
       attackType: 6
       multiplier: 700000
       bonus: 0
@@ -197,8 +190,8 @@ MonoBehaviour:
       summonRadius: 70
       grantSkill: {fileID: 0}
       minAllyTier: 5
-      armorIgnoreRatio: 1
-      armorIgnoreRequiresBuff: YOONSEO_ENHANCED
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
       talentStunScaled: 0
       stackPerHit: 0.01
       stackCap: 1

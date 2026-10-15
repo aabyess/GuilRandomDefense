@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: "SkillData_사장님_초월_노태현_AP_반사회적인격"
   m_EditorClassIdentifier: 
   skillName: "반사회적인격 — 평타마다 범위 마법 피해"
-  description: "사장님 10-08. 평타 때마다 공격 대상 주위 범위(평타 광역과 같은 300)의 적 모두에게 「공격력×30%」 마법 피해 + 「300,000」 마법 피해. 「최윤서 강화」면 방어 무시. (옛 아군 이속 감소는 「하체부실」로 옮김)"
+  description: "[반사회적인격]\n기본 공격 시 공격 대상 범위에 공격력 30% 마법 피해 + 공격 대상 범위에 30만 마법 피해 (스플래시 평타)"
   triggerType: 0
   levels:
   - cooldown: 0
@@ -29,7 +29,7 @@ MonoBehaviour:
     - kind: 0
       basis: 3
       target: 2
-      damageType: 1
+      damageType: 2
       attackType: 6
       multiplier: 0.3
       bonus: 0
@@ -66,8 +66,8 @@ MonoBehaviour:
       summonRadius: 70
       grantSkill: {fileID: 0}
       minAllyTier: 5
-      armorIgnoreRatio: 1
-      armorIgnoreRequiresBuff: YOONSEO_ENHANCED
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
       talentStunScaled: 0
       stackPerHit: 0.01
       stackCap: 1
@@ -79,7 +79,7 @@ MonoBehaviour:
     - kind: 0
       basis: 0
       target: 2
-      damageType: 1
+      damageType: 2
       attackType: 6
       multiplier: 300000
       bonus: 0
@@ -116,8 +116,8 @@ MonoBehaviour:
       summonRadius: 70
       grantSkill: {fileID: 0}
       minAllyTier: 5
-      armorIgnoreRatio: 1
-      armorIgnoreRequiresBuff: YOONSEO_ENHANCED
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
       talentStunScaled: 0
       stackPerHit: 0.01
       stackCap: 1
@@ -155,7 +155,7 @@ MonoBehaviour:
     - kind: 0
       basis: 3
       target: 2
-      damageType: 1
+      damageType: 2
       attackType: 6
       multiplier: 0.3
       bonus: 0
@@ -192,8 +192,8 @@ MonoBehaviour:
       summonRadius: 70
       grantSkill: {fileID: 0}
       minAllyTier: 5
-      armorIgnoreRatio: 1
-      armorIgnoreRequiresBuff: YOONSEO_ENHANCED
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
       talentStunScaled: 0
       stackPerHit: 0.01
       stackCap: 1
@@ -205,7 +205,7 @@ MonoBehaviour:
     - kind: 0
       basis: 0
       target: 2
-      damageType: 1
+      damageType: 2
       attackType: 6
       multiplier: 300000
       bonus: 0
@@ -242,8 +242,8 @@ MonoBehaviour:
       summonRadius: 70
       grantSkill: {fileID: 0}
       minAllyTier: 5
-      armorIgnoreRatio: 1
-      armorIgnoreRequiresBuff: YOONSEO_ENHANCED
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
       talentStunScaled: 0
       stackPerHit: 0.01
       stackCap: 1
@@ -255,9 +255,9 @@ MonoBehaviour:
     - kind: 0
       basis: 0
       target: 2
-      damageType: 1
+      damageType: 2
       attackType: 6
-      multiplier: 150000
+      multiplier: 20000
       bonus: 0
       chance: 1
       hitCount: 1
@@ -322,4 +322,4 @@ MonoBehaviour:
     ownLaneOnly: 0
   icon: {fileID: 21300000, guid: 2df3a85281be64db6a4cf38e22b1cfc5, type: 3}
   levelUpBuffId: YOONSEO_ENHANCED
-  levelUpDescription: "Lv.2 (최윤서 강화): 평타마다 공격 대상 주위 범위 300의 적 모두에게 고정 피해 150,000을 더한다(방어·마법저항·피해 증감 무관, 체력을 그대로 깎음)."
+  levelUpDescription: "Lv.2 (최윤서 강화): 기존 + 매 기본 공격 시 대상 범위 2만 고정 피해 (방어·마법저항·피해 증감 무관). 하체부실의 「아군 이동속도 감소」는 삭제된다."

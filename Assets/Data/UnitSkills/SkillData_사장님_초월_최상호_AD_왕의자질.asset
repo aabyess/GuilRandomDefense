@@ -10,21 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uCD5C\uC0C1\uD638_AD_\uC655\uC758\uC790\uC9C8"
+  m_Name: "SkillData_사장님_초월_최상호_AD_왕의자질"
   m_EditorClassIdentifier: 
-  skillName: "\uC655\uC758\uC790\uC9C8 \u2014 \uBCF4\uC7A1(\uBCF4\uC2A4 \uC0C1\uB300
-    \uD53C\uD574 \uC99D\uAC00)"
-  description: "\uC0AC\uC7A5\uB2D8 10-06 \u300C\uBCF4\uC7A1\u300D = \uBCF4\uC2A4
-    \uC7A1\uAE30. \uBCF4\uC2A4 \uC0C1\uB300 \uD3C9\uD0C0\xB7\uC2A4\uD0AC \uCD5C\uC885
-    \uD53C\uD574 \xD71.3. \uC6D0\uC791\uC5D0 \uBCF4\uC2A4 \uC804\uC6A9 \uD53C\uD574
-    \uC99D\uAC00 \uB2A5\uB825\uC774 \uC5C6\uC5B4(\uBCF4\uC2A4 \uBD84\uAE30\uB294
-    \uCCB4\uB825 \uBE44\uB840 \uC2A4\uD0AC\uC758 \uACE0\uC815\uAC12 \uBD84\uAE30\uBFD0)
-    \uC6D0\uC791 \uADFC\uAC70 \uC5C6\uC74C \u2014 \uC81C\uC548\uAC12."
+  skillName: "왕의 자질 — 전설·히든 이상 1기당 공격력 오라 +5%"
+  description: "[왕의 자질]\n최상호 초월을 만든 플레이어의 필드에 있는 전설·히든 이상 유닛(전설·히든·영원·초월·불멸·제한·다른세계) 1기당 [상호파의 수장]의 공격력 오라 +5%"
   triggerType: 2
   levels:
   - cooldown: 0
     triggerChance: 1
-    range: 0
+    range: 850
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
@@ -32,18 +26,18 @@ MonoBehaviour:
     forbiddenBuffId: 
     selfBuffId: 
     effects:
-    - kind: 18
+    - kind: 14
       basis: 0
       target: 0
       damageType: 1
       attackType: 0
-      multiplier: 1.3
+      multiplier: 0
       bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
-      buffId: 
+      buffId: SANGHO_KING_AURA
       randMin: 1
       randMax: 1
       buffHitCharges: 0
@@ -64,7 +58,7 @@ MonoBehaviour:
       lineLength: 0
       lineStartRadius: 0
       lineEndRadius: 0
-      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonus: 0.05
       perHighGradeUnitBonusCap: 0
       summonUnits: []
       summonLifetime: 20
@@ -94,6 +88,70 @@ MonoBehaviour:
       bossBerserkDamageScale: 0
       explosive: 0
       fixedDamage: 0
+      countKingGrades: 1
+    - kind: 14
+      basis: 0
+      target: 1
+      damageType: 1
+      attackType: 0
+      multiplier: 0
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: SANGHO_KING_AURA
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0.05
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+      rewardWisp: {fileID: 0}
+      bossBerserkDamageScale: 0
+      explosive: 0
+      fixedDamage: 0
+      countKingGrades: 1
     requiredTargetBuffId: 
     forbiddenTargetBuffId: 
     hitCountFloor: 0
