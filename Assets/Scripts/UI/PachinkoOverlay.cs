@@ -804,13 +804,16 @@ public class PachinkoOverlay : MonoBehaviour
         pushedWho = int.MinValue;
         win = plan.win;
         curTheme = plan.theme; Theme = plan.theme;
-        activeSymbolDir = plan.theme == 1 ? "SymbolsRz" : "Symbols";
+        // 리제로·영상형 테마는 보석 숫자(사장님 10-16 「이런 숫자 느낌으로」). 테마 색 보석(SymbolsFire·SymbolsSlime)이 있으면 그것, 없으면 리제로 보석.
+        activeSymbolDir = plan.theme == 0 ? "Symbols" : plan.theme == 1 ? "SymbolsRz" : SymbolDirOr(plan.theme == 2 ? "SymbolsFire" : "SymbolsSlime", "SymbolsRz");
         if (PachinkoSettings.VideoTheme(plan.theme) == null) { UseFireVideo(false); SetFireChrome(true); }
         root.gameObject.SetActive(true);
         ResetVisuals();
         duckTarget = BgmDuck;
         running = StartCoroutine(PachinkoSettings.VideoTheme(plan.theme) != null ? SequenceVideo(plan, PachinkoSettings.VideoTheme(plan.theme)) : plan.theme == 1 ? SequenceRz(plan) : Sequence(plan));
     }
+
+    static string SymbolDirOr(string dir, string fallback) => Spr(dir + "/symbol_1") != null ? dir : fallback;
 
     void ResetVisuals()
     {
