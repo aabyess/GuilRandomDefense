@@ -2637,6 +2637,12 @@ public class UnitAttacker : MonoBehaviour
         if (!GameAuthority.IsServer || effect.summonUnits == null || effect.summonUnits.Count == 0 || owner == null) return;
         UnitSpawner spawner = FindFirstObjectByType<UnitSpawner>();
         if (spawner == null) return;
+        if (effect.summonBlockWhileAlive)
+        {
+            // 소환 중 재소환 불가 — 이 시전자가 이 목록에서 부른 소환수가 하나라도 살아 있으면 통째로 건너뛴다(파괴된 참조는 == null).
+            foreach (UnitData alive in effect.summonUnits)
+                if (alive != null && summonedByKind.TryGetValue(alive, out GameObject live) && live != null) return;
+        }
 
         Vector3 forward = transform.forward; forward.y = 0f;
         forward = forward.sqrMagnitude > 0.0001f ? forward.normalized : Vector3.forward;
@@ -2679,7 +2685,7 @@ public class UnitAttacker : MonoBehaviour
     float ScaledAuraValue(SkillEffect effect)
     {
         if (effect.perHighGradeUnitBonus <= 0f) return effect.multiplier;
-        float extra = effect.perHighGradeUnitBonus * CountHighGradeUnits();
+        float extra = effect.perHighGradeUnitBonus * (effect.countKingGrades ? CountKingGradeUnits() : CountHighGradeUnits());
         if (effect.perHighGradeUnitBonusCap > 0f) extra = Mathf.Min(extra, effect.perHighGradeUnitBonusCap);
         return effect.multiplier + extra;
     }
@@ -2694,6 +2700,24 @@ public class UnitAttacker : MonoBehaviour
             if (unit == null || unit.IsSummon || unit.Data == null || unit.OwnerId != ownerId) continue;
             if (unit.Data.grade == UnitGrade.TranscendentWisp || unit.Data.grade.Tier() < 5) continue;
             count++;
+        }
+        return count;
+    }
+
+    // 「왕의 자질」(초월 최상호) 기준 — 주인의 전설·히든·영원·초월·불멸·제한·다른세계 유닛 수(소환수·초월위습 제외). 랜덤유닛·변화됨·특수함은 안 센다.
+    int CountKingGradeUnits()
+    {
+        int ownerId = owner != null ? owner.OwnerId : -1;
+        int count = 0;
+        foreach (UnitIdentity unit in UnitIdentity.Active)
+        {
+            if (unit == null || unit.IsSummon || unit.Data == null || unit.OwnerId != ownerId) continue;
+            switch (unit.Data.grade)
+            {
+                case UnitGrade.Legendary: case UnitGrade.Hidden: case UnitGrade.Eternal: case UnitGrade.Transcendent:
+                case UnitGrade.Immortal: case UnitGrade.Limited: case UnitGrade.OtherWorld:
+                    count++; break;
+            }
         }
         return count;
     }

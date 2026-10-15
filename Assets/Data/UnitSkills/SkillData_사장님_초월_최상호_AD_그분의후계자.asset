@@ -10,17 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uCD5C\uC0C1\uD638_AD_\uADF8\uBD84\uC758\uD6C4\uACC4\uC790"
+  m_Name: "SkillData_사장님_초월_최상호_AD_그분의후계자"
   m_EditorClassIdentifier: 
-  skillName: "\uADF8\uBD84\uC758\uD6C4\uACC4\uC790 \u2014 \uC544\uBA38\uBE0C\uB808\uC774\uD06C(\uBC1C\uB3D9)"
-  description: "\uC0AC\uC7A5\uB2D8 10-06. \uD3C9\uD0C0 10% \uD655\uB960\uB85C \uB300\uC0C1
-    \uBC29\uC5B4 \u22125(\uBC94\uC704 550 \uC548 \uC801 \uD55C \uAE30 \u2014 \uC6D0\uC791
-    \uD0C0\uC2DC\uAE30 Tasigi_02 \uD3C9\uD0C0 9%\xB7AId1 +5\xB7\uBC94\uC704 550 \uAE30\uC900)."
+  skillName: "그분의 후계자 스킬1 — 범위 물리 피해 + 아머브레이크"
+  description: "[그분의 후계자] 스킬1\n기본 공격 시 15% 확률. 공격 대상 범위에 125만 물리 피해 + 아머브레이크 1(방어력 1 깎기, 최대 75까지 누적)"
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.1
-    range: 550
+    triggerChance: 0.15
+    range: 300
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
@@ -28,12 +26,74 @@ MonoBehaviour:
     forbiddenBuffId: 
     selfBuffId: 
     effects:
-    - kind: 2
+    - kind: 0
       basis: 0
-      target: 3
+      target: 2
       damageType: 1
       attackType: 0
-      multiplier: 5
+      multiplier: 1250000
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+      rewardWisp: {fileID: 0}
+      bossBerserkDamageScale: 0
+      explosive: 0
+      fixedDamage: 0
+    - kind: 2
+      basis: 0
+      target: 2
+      damageType: 1
+      attackType: 0
+      multiplier: 1
       bonus: 0
       chance: 1
       hitCount: 1

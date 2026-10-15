@@ -10,21 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uCD5C\uC0C1\uD638_AD_\uADF8\uBD84\uC758\uD6C4\uACC4\uC790_\uBD80\uC5EC"
+  m_Name: "SkillData_사장님_초월_최상호_AD_그분의후계자_스킬2"
   m_EditorClassIdentifier: 
-  skillName: "\uADF8\uBD84\uC758\uD6C4\uACC4\uC790 \u2014 \uC804\uC124 \uC774\uC0C1
-    \uC544\uAD70\uC5D0\uAC8C \uC544\uBA38\uBE0C\uB808\uC774\uD06C \uBD80\uC5EC"
-  description: "\uC0AC\uC7A5\uB2D8 10-06 \u300C\uC804\uC124\uC774\uC0C1\uC0C1\uC704\uC720\uB2DB\uC5D0\uAC8C
-    \uC544\uBA38\uBE0C\uB808\uC774\uD06C(\uBC1C\uB3D9)\uB2A5\uB825\uBD80\uC5EC\u300D.
-    \uC624\uB77C \uBC94\uC704 850 \uC548 \uC544\uAD70 \uC911 \uB4F1\uAE09 \uC11C\uC5F4
-    \u22655(\uC804\uC124 \uC774\uC0C1)\uC5D0\uAC8C \uC704 \uBC1C\uB3D9 \uC2A4\uD0AC\uC744
-    \uBE4C\uB824\uC900\uB2E4(\uBC94\uC704\uB97C \uBC97\uC5B4\uB098\uBA74 \uD68C\uC218).
-    \uC18C\uD658\uC218 \uC81C\uC678."
-  triggerType: 2
+  skillName: "그분의 후계자 스킬2 — 단일 물리 피해 + 현재 체력 11%"
+  description: "[그분의 후계자] 스킬2\n기본 공격 시 18% 확률. 공격 대상 단일에 15만 물리 피해 + 적 현재 체력 11% 물리 피해"
+  triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 1
-    range: 850
+    triggerChance: 0.18
+    range: 0
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
@@ -32,12 +26,12 @@ MonoBehaviour:
     forbiddenBuffId: 
     selfBuffId: 
     effects:
-    - kind: 17
+    - kind: 0
       basis: 0
-      target: 1
+      target: 3
       damageType: 1
       attackType: 0
-      multiplier: 0
+      multiplier: 150000
       bonus: 0
       chance: 1
       hitCount: 1
@@ -70,7 +64,69 @@ MonoBehaviour:
       summonLifetime: 20
       summonFanDegrees: 35
       summonRadius: 70
-      grantSkill: {fileID: 11400000, guid: a77c339b8c3384f698faf199ff9b94cd, type: 2}
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+      rewardWisp: {fileID: 0}
+      bossBerserkDamageScale: 0
+      explosive: 0
+      fixedDamage: 0
+    - kind: 0
+      basis: 2
+      target: 3
+      damageType: 1
+      attackType: 0
+      multiplier: 0.11
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 0
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
       minAllyTier: 5
       armorIgnoreRatio: 0
       armorIgnoreRequiresBuff: 

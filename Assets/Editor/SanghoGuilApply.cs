@@ -39,6 +39,9 @@ static class SanghoGuilApply
 
     static string Apply()
     {
+        // 10-15 사장님 새 사양(킹카가될뻔했던사나이)으로 에셋을 직접 갈아 끼웠다 — 이 도구는 옛 사양(보잡·아군 부여)이라 돌리면 새 사양을 덮는다.
+        return "❌ 폐기: 초월 최상호 AD는 10-15 새 사양(수장·후계자 스킬1~3·집결·왕의자질)이다. 이 도구를 돌리지 말 것.";
+#pragma warning disable CS0162
         var unit = AssetDatabase.LoadAssetAtPath<UnitData>(UnitPath);
         var recipe = AssetDatabase.LoadAssetAtPath<CombineRecipe>(RecipePath);
         if (unit == null || recipe == null) return "❌ 초월_최상호_AD 유닛·조합식 에셋 없음";
@@ -98,3 +101,4 @@ static class SanghoGuilApply
         return $"최상호 구일 적용: 스킬 {old.Count}개({string.Join(",", old)}) 제거 → 5개 · 칭호 「{unit.unitName}」 · 재료 {recipe.ingredients.Count}종" + (missing.Length > 0 ? $" · ⚠️ 빈 재료 {missing}" : "");
     }
 }
+#pragma warning restore CS0162

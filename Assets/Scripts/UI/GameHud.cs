@@ -2523,7 +2523,7 @@ public class GameHud : MonoBehaviour
         string name = best.Data.unitName;
         best.Consume();
         attacker.SetYoonseoEnhanced();
-        PlayerNotification.Show(playerId, $"<color=#FFD700>노윤서 강화!</color> {name} 1기가 사라지고 방어 무시 피해가 켜졌으며 아군 이속 감소가 없어집니다.", 6f);
+        PlayerNotification.Show(playerId, $"<color=#FFD700>노윤서 강화!</color> {name} 1기가 사라지고 매 기본 공격 범위 2만 고정 피해가 켜졌으며 아군 이속 감소가 없어집니다.", 6f);
     }
 
     // 한 기를 골랐고 판매 대상 등급이 아니면 판매 칸(7)은 비어 있다 → 유닛 스킬 칸이 쓴다. RefreshSellButton의 판정과 같은 식.

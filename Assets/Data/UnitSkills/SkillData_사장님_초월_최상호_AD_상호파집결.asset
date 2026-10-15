@@ -10,21 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uCD5C\uC0C1\uD638_AD_\uC0C1\uD638\uD30C\uC9D1\uACB0"
+  m_Name: "SkillData_사장님_초월_최상호_AD_상호파집결"
   m_EditorClassIdentifier: 
-  skillName: "\uC0C1\uD638\uD30C\uC9D1\uACB0 \u2014 \uC18C\uD658\uC218(\uB178\uD0DC\uD604\xB7\uC591\uC7AC\uBAA8\xB7\uBC15\uBBFC\uC11D
-    \uC804\uC124) \uC18C\uD658(\uBC1C\uB3D9)"
-  description: "\uC0AC\uC7A5\uB2D8 10-06. \uD3C9\uD0C0 10% \uD655\uB960(\uC6D0\uC791
-    \uCD08\uC6D4 \uC0AC\uBCF4 1/10 \uAE30\uC900) \xB7 \uCFE8\uB2E4\uC6B4 10\uCD08
-    \xB7 \uC804\uC124 \uB178\uD0DC\uD604\xB7\uC591\uC7AC\uBAA8\xB7\uBC15\uBBFC\uC11D\uC744
-    \uC885\uB958\uB9C8\uB2E4 \uB3D9\uC2DC 1\uAE30, 20\uCD08 \uB3D9\uC548 \uCD5C\uC0C1\uD638
-    \uC55E \uBD80\uCC44\uAF34(\u221235\xB0\xB70\xB0\xB7+35\xB0, \uBC18\uC9C0\uB984
-    70)\uC5D0. \uC774\uBBF8 \uC788\uC73C\uBA74 \uB0A8\uC740 \uC2DC\uAC04\uC744 20\uCD08\uB85C
-    \uB418\uB3CC\uB9B0\uB2E4. \uC18C\uD658\uC218\uB294 \uC720\uB2DB \uC218\xB7\uD310\uB9E4\xB7\uC870\uD569
-    \uC7AC\uB8CC\xB7\uC804\uC124 \uAC1C\uC218\uC5D0\uC11C \uC81C\uC678."
+  skillName: "상호파 집결 — 전설 셋 5초 소환"
+  description: "[상호파 집결]\n기본 공격 시 10% 확률로 노태현 전설·양재모 전설·박민석 전설을 5초 동안 소환. 셋이 한 번에 나왔다 한 번에 사라지고, 소환 중엔 다시 소환되지 않음"
   triggerType: 0
   levels:
-  - cooldown: 10
+  - cooldown: 0
     triggerChance: 0.1
     range: 0
     hitCountThreshold: 0
@@ -72,7 +64,7 @@ MonoBehaviour:
       - {fileID: 11400000, guid: db97ce4c3b1e4506b8a14df5f7a6254e, type: 2}
       - {fileID: 11400000, guid: f244fef4b3fb47da98c2b6c17312bf6d, type: 2}
       - {fileID: 11400000, guid: 5adaa00531a64a97b2eac8fa4a7fc432, type: 2}
-      summonLifetime: 20
+      summonLifetime: 5
       summonFanDegrees: 35
       summonRadius: 70
       grantSkill: {fileID: 0}
@@ -85,6 +77,21 @@ MonoBehaviour:
       stackResetSeconds: 3
       attackSpeedScale: 0
       attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+      rewardWisp: {fileID: 0}
+      bossBerserkDamageScale: 0
+      explosive: 0
+      fixedDamage: 0
+      summonBlockWhileAlive: 1
     requiredTargetBuffId: 
     forbiddenTargetBuffId: 
     hitCountFloor: 0
@@ -97,4 +104,10 @@ MonoBehaviour:
     enterRange: 0
     requireNormalEnemyInRange: 0
     needsTargetClick: 0
+    toggleMode: 0
+    laneCountWindow: 0
+    needsAllyClick: 0
+    needsPointClick: 0
+    requiredEnhanceLevel: 0
+    ownLaneOnly: 0
   icon: {fileID: 21300000, guid: 216cbe0d3cf544476bc379be3f4cb882, type: 3}
