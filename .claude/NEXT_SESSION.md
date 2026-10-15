@@ -6,6 +6,17 @@
 
 ---
 
+## ⭐⭐⭐⭐⭐⭐⭐ PM 12 → 13 교체 (10-16 새벽) — 🔴 파칭코 4테마 밤샘 작업 중
+- **팀원은 그대로(10-15 새벽에 띄운 세션)** — `--fresh` 금지. ListAgents로 셋 확인 후 「PM 바뀜」 알리기.
+- 🔴 **사장님 지시(10-16 새벽): 「오늘 밤 밤새 계속 작업, 파칭코 총 4개」 + 「디자인·연출·이펙트 계속 개선」.** 아침에 테마별 전후 캡처로 보고.
+  - 구현담당2(w2): 4테마 연출 개선 목록 진행 중 — ① 전생슬 끝(93f615ca8) ② 불꽃(크리티컬 순간 암전→흰 섬광→하늘색 반전→주황·CRITICAL BONUS 배너·초록 버섯 PUSH+押セ) ③ 도쿄구울·리제로 ~/GRD_pachinko_research/ingame_issues.md 남은 것 ④ 공통 번쩍임 줄이기. + 시험 인자 -pachinkoPush success면 PUSH 자동 누름(지금은 안 누르면 실패라 빌드로 성공 경로를 못 봄). 항목마다 병합 요청 → PM이 main merge --no-ff → csc·check_prefab_refs → push → w2 ff.
+  - 구현담당1(main): 멀티 2인 실측(관전 모니터·보상·투표 4택·PUSH RPC·끊김 안전장치) · Plan 확률 10만 회 · **빌드 화면 검증**(빌드 사본 ../GuilRandomDefense-build 브랜치 test/pachinko = main ff, `NetSetup.BuildMac -mpOut ~/GRD_pachinko_test/<이름>.app`, 게임 안 캡처로 테마별 시트).
+  - blender: 그림 요청 대기(구현담당2가 직접 요청 가능).
+  - ⚠️ PM은 screencapture 금지 — macOS 「Orca 화면 녹화」 권한 창이 사장님 화면에 떴다(10-16). 빌드 확인은 게임 안 캡처로.
+- **파칭코 사양(메모리 pachinko-reference-video에 전부)**: 4테마 투표(도쿄구울·리제로·불꽃 소방대·전생슬). 영상형(불꽃 youtu.be/dyEh7wz1Xrk 1:30~1:46 룰렛, 3:40 PUSH, 3:45 끝 / 전생슬 jCWZuFgaPFI 1:10~1:20, 끝 5초 전 PUSH) · 같은 숫자 셋 = 크리티컬(30%) · PUSH 성공 51%(안 누르면 실패) · 성공=777 보상(랜덤유닛) · 실패=전설·히든 위습 + 깨짐·흑백 · 꽝=기존. 1:30 전에는 영상만(룰렛 UI 전부 숨김) · 자막 가림 띠 없음 · 숫자는 보석(SymbolsFire·SymbolsSlime, 리제로 SymbolsRz). 학습 노트 ~/GRD_pachinko_art/{fireforce_ref,tensura_ref}/NOTES.md. 시험 인자 -pachinkoTheme tokyo|rezero|fire|slime · -pachinkoTest win|miss|jackpot · -pachinkoPush success|fail · -pachinkoSkipTo <초>.
+- **10-16 끝난 일(전부 push)**: 특수함 6기 원작 짝(장명자=요정 공 16 사장님 확정) · 성탄·솔·뻬꼼 판매 · 공격 모션 공속 맞춤 · 상붕카 비행 · 노태현 초월 돌발행동 범위 700 · 강화 원작 대조(유닛 전용 연구 13트랙·랜덤/다른세계 가산 버킷·다른세계 가제 트랙 정리) · attackType 64기 원작대로(사장님) · R70 라인몹 ×0.6(visualScaleAffectsSkin)·보스 ×1.5 · 파칭코 회전 방사선 제거 · 소개 레포 github.com/aabyess/GuRandi-AI-Dev(공개, 사장님 이력서용).
+- **사장님 답 대기**: 로딩 이미지 교체 — 사장님이 채팅에 사진(치이카와 인형 진열대)을 붙였는데 파일이 디스크에 없어 못 넣음 → 파일 경로를 받아 Resources/UI/LoadingScreen 교체(LoadingScreen.cs ImagePath). 스토리 입구 크기·드라이브 휴지통(10-15 질문) 그대로.
+
 ## ⭐⭐⭐⭐⭐⭐ PM 12 진행 (10-15 저녁) — 0.3.24 배포 완료
 - **0.3.24 배포**: 빌드 사본 release/0.3.24 = e93fca6dd, 맥·윈도우 zip 219·비ASCII 0·testzip OK, 맥 실행 0.3.24v·예외 0, 바탕화면 앱·안내문·패치노트(1_0.3.24) · 드라이브 업로드, 0.3.23 영구 삭제. ⚠️ **드라이브 15GB 중 휴지통 10.8GB** — 용량 초과로 맥 zip 첫 업로드 실패. 옛 zip은 `--drive-use-trash=false`로 지울 것. 휴지통 비우기는 사장님 답 대기.
 - 조합 검색 필터(SkillTypeTags) 추가. 스토리존 입구: 우리 원 지름 ≈260(원작 단위) vs 원작 Go_story 384×256 직사각형 — 원작대로 바꿀지 사장님 답 대기.
