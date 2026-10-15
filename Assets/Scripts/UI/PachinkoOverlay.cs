@@ -74,14 +74,16 @@ public class PachinkoOverlay : MonoBehaviour
 
     // 테마 투표 화면
     RectTransform voteRoot, voteStage;
-    TMP_Text voteTimer, voteBarTg, voteBarRz, votePick, votePickSub;
-    TMP_Text[] voteBadges = new TMP_Text[2];
-    RectTransform[] voteFill = new RectTransform[2];
-    Image[] voteCardImg = new Image[2];
-    Image voteBarTgImg, voteBarRzImg, votePickBg;
-    readonly VoteCard[] voteCards = new VoteCard[2];
+    TMP_Text voteTimer, votePick, votePickSub;
+    readonly TMP_Text[] voteBarTxt = new TMP_Text[4];
+    readonly Image[] voteBarImg = new Image[4];
+    TMP_Text[] voteBadges = new TMP_Text[4];
+    RectTransform[] voteFill = new RectTransform[4];
+    Image[] voteCardImg = new Image[4];
+    Image votePickBg;
+    readonly VoteCard[] voteCards = new VoteCard[4];
     readonly int[] voteBy = new int[16];
-    int voteLocalSlot, voteMine;   // voteMine: 0 무투표 1 東京 2 Re:ゼロ
+    int voteLocalSlot, voteMine;   // voteMine: 0 무투표 1 東京 2 Re:ゼロ 3 불꽃 소방대 4 전생슬
     float voteEndTime;
     bool voteStandalone, voteOpen;
     static string activeSymbolDir = "Symbols";
@@ -130,10 +132,13 @@ public class PachinkoOverlay : MonoBehaviour
         PachinkoController.VoteOpenHandler = secs => Ensure().OpenVoteUi(secs, false);
         PachinkoController.VoteTallyHandler = (by, local) => { if (instance != null) instance.SetTally(by, local); };
         PachinkoController.VoteCloseHandler = th => CloseVote(th);
+        PachinkoController.MonitorPlanHandler = (slot, plan) => Ensure().MonitorPlan(slot, plan);
+        PachinkoController.MonitorPushedHandler = (slot, who) => { if (instance != null) instance.MonitorPushed(slot, who); };
+        PachinkoController.MonitorClearHandler = () => { if (instance != null) instance.MonitorClear(); };
     }
 
     // ───────── 테마 투표(사장님 10-14): 30R 보스 처치 직후 「パチンコ モード 選択」 — 東京喰種 / Re:ゼロ, 꾹 누르기 1초 ─────────
-    /// <summary>투표 결과 테마(0=東京喰種 · 1=Re:ゼロ). PachinkoPlan.Roll이 plan.theme에 넣는다.</summary>
+    /// <summary>투표 결과 테마(0=東京喰種 · 1=Re:ゼロ · 2=불꽃 소방대). PachinkoPlan.Roll이 plan.theme에 넣는다.</summary>
     public static int Theme;
     public static void OpenVote(float seconds) => Ensure().OpenVoteUi(seconds, false);
     public static void SetVoteTally(int[] bySlot, int localSlot) { if (instance != null) instance.SetTally(bySlot, localSlot); }
@@ -445,39 +450,41 @@ public class PachinkoOverlay : MonoBehaviour
         Place(sub.rectTransform, 260, 280, 1400, 60);
         voteTimer = Label("voteTimer", voteStage, "10", 96f, Color.white, TextAlignmentOptions.MidlineRight, 0.2f);
         Place(voteTimer.rectTransform, 1560, 40, 300, 130);
-        string[] names = { "東京喰種", "Re:ゼロ" }, arts = { "喰種", "Re:0" }, descs = { "불꽃·수정 숫자 · 유리가 깨진다", "보석 숫자 · 사망 귀환" };
-        Color[] cols = { new Color(0.45f, 0.04f, 0.1f, 0.95f), new Color(0.16f, 0.1f, 0.42f, 0.95f) };
-        Color[] fills = { new Color(1f, 0.45f, 0.1f, 0.55f), new Color(0.3f, 0.9f, 0.85f, 0.55f) };
-        for (int i = 0; i < 2; i++)
+        // 카드 4장: 0 東京喰種 · 1 Re:ゼロ · 2~ 영상형 테마(PachinkoSettings.VideoThemes 순서)
+        var names = new List<string> { "東京喰種", "Re:ゼロ" }; var arts = new List<string> { "喰種", "Re:0" }; var descs = new List<string> { "불꽃·수정 숫자 · 유리가 깨진다", "보석 숫자 · 사망 귀환" };
+        var cols = new List<Color> { new Color(0.45f, 0.04f, 0.1f, 0.95f), new Color(0.16f, 0.1f, 0.42f, 0.95f) };
+        var fills = new List<Color> { new Color(1f, 0.45f, 0.1f, 0.55f), new Color(0.3f, 0.9f, 0.85f, 0.55f) };
+        var bars = new List<Color> { new Color(0.95f, 0.3f, 0.12f), new Color(0.35f, 0.3f, 0.95f) };
+        foreach (VideoThemeSpec v in PachinkoSettings.VideoThemes) { names.Add(v.title); arts.Add(v.art); descs.Add(v.voteDesc); cols.Add(v.cardColor); fills.Add(v.fillColor); bars.Add(v.barColor); }
+        const float cardW = 450f, gap = 26f;
+        for (int i = 0; i < 4; i++)
         {
-            float x = i == 0 ? 130f : 1010f;
-            RectTransform card = Rt("card" + i, voteStage); Place(card, x, 360, 780, 450);
+            float x = 40f + i * (cardW + gap);
+            RectTransform card = Rt("card" + i, voteStage); Place(card, x, 360, cardW, 450);
             voteCardImg[i] = card.gameObject.AddComponent<Image>(); voteCardImg[i].color = cols[i]; voteCardImg[i].raycastTarget = true;
             var outline = card.gameObject.AddComponent<Outline>(); outline.effectColor = new Color(1f, 1f, 1f, 0.25f); outline.effectDistance = new Vector2(4f, -4f);
             voteCards[i] = card.gameObject.AddComponent<VoteCard>();
             RectTransform fill = Rt("fill", card); fill.anchorMin = Vector2.zero; fill.anchorMax = new Vector2(0f, 1f); fill.offsetMin = fill.offsetMax = Vector2.zero; fill.sizeDelta = new Vector2(0f, 0f);
             var fi = fill.gameObject.AddComponent<Image>(); fi.color = fills[i]; fi.raycastTarget = false;
             voteFill[i] = fill;
-            var art = Label("art", card, arts[i], 260f, new Color(1f, 1f, 1f, 0.16f), TextAlignmentOptions.Center);
+            var art = Label("art", card, arts[i], arts[i].Length > 3 ? 120f : 190f, new Color(1f, 1f, 1f, 0.16f), TextAlignmentOptions.Center);
             Stretch(art.rectTransform);
-            var nm = Label("name", card, names[i], 84f, Color.white, TextAlignmentOptions.BottomLeft, 0.2f);
+            var nm = Label("name", card, names[i], names[i].Length > 8 ? 36f : 56f, Color.white, TextAlignmentOptions.BottomLeft, 0.2f);
             nm.rectTransform.anchorMin = new Vector2(0f, 0f); nm.rectTransform.anchorMax = new Vector2(1f, 0f); nm.rectTransform.pivot = new Vector2(0.5f, 0f);
-            nm.rectTransform.anchoredPosition = new Vector2(0f, 70f); nm.rectTransform.sizeDelta = new Vector2(-60f, 120f);
-            var ds = Label("desc", card, descs[i], 34f, new Color(1f, 1f, 1f, 0.75f), TextAlignmentOptions.BottomLeft);
+            nm.rectTransform.anchoredPosition = new Vector2(0f, 80f); nm.rectTransform.sizeDelta = new Vector2(-40f, 100f);
+            var ds = Label("desc", card, descs[i], 26f, new Color(1f, 1f, 1f, 0.75f), TextAlignmentOptions.BottomLeft);
             ds.rectTransform.anchorMin = new Vector2(0f, 0f); ds.rectTransform.anchorMax = new Vector2(1f, 0f); ds.rectTransform.pivot = new Vector2(0.5f, 0f);
-            ds.rectTransform.anchoredPosition = new Vector2(0f, 20f); ds.rectTransform.sizeDelta = new Vector2(-60f, 50f);
-            var hint = Label("hint", card, "클릭해서 투표", 34f, new Color(1f, 1f, 1f, 0.9f), TextAlignmentOptions.TopLeft, 0.15f);
+            ds.rectTransform.anchoredPosition = new Vector2(0f, 20f); ds.rectTransform.sizeDelta = new Vector2(-30f, 56f);
+            var hint = Label("hint", card, "클릭해서 투표 · " + (i + 1), 30f, new Color(1f, 1f, 1f, 0.9f), TextAlignmentOptions.TopLeft, 0.15f);
             hint.rectTransform.anchorMin = new Vector2(0f, 1f); hint.rectTransform.anchorMax = new Vector2(1f, 1f); hint.rectTransform.pivot = new Vector2(0.5f, 1f);
-            hint.rectTransform.anchoredPosition = new Vector2(0f, -20f); hint.rectTransform.sizeDelta = new Vector2(-60f, 50f);
-            voteBadges[i] = Label("badges", card, "", 40f, new Color(1f, 0.95f, 0.5f), TextAlignmentOptions.TopRight, 0.2f);
+            hint.rectTransform.anchoredPosition = new Vector2(0f, -20f); hint.rectTransform.sizeDelta = new Vector2(-40f, 46f);
+            voteBadges[i] = Label("badges", card, "", 36f, new Color(1f, 0.95f, 0.5f), TextAlignmentOptions.TopRight, 0.2f);
             voteBadges[i].rectTransform.anchorMin = new Vector2(0f, 1f); voteBadges[i].rectTransform.anchorMax = new Vector2(1f, 1f); voteBadges[i].rectTransform.pivot = new Vector2(0.5f, 1f);
-            voteBadges[i].rectTransform.anchoredPosition = new Vector2(0f, -20f); voteBadges[i].rectTransform.sizeDelta = new Vector2(-60f, 60f);
+            voteBadges[i].rectTransform.anchoredPosition = new Vector2(0f, -66f); voteBadges[i].rectTransform.sizeDelta = new Vector2(-40f, 56f);
+            // 비율 막대(너비는 RefreshVoteBars가 표 비율로 정한다)
+            voteBarImg[i] = Img("bar" + i, voteStage, null, bars[i]); Place(voteBarImg[i].rectTransform, 40 + i * 470, 860, 470, 70);
+            voteBarTxt[i] = Label("barT" + i, voteStage, "", 34f, Color.white, TextAlignmentOptions.Center, 0.15f); Place(voteBarTxt[i].rectTransform, 40 + i * 470, 860, 470, 70);
         }
-        // 비율 막대
-        voteBarTgImg = Img("barTg", voteStage, null, new Color(0.95f, 0.3f, 0.12f)); Place(voteBarTgImg.rectTransform, 130, 860, 830, 70);
-        voteBarRzImg = Img("barRz", voteStage, null, new Color(0.35f, 0.3f, 0.95f)); Place(voteBarRzImg.rectTransform, 960, 860, 830, 70);
-        voteBarTg = Label("barTgT", voteStage, "도쿄구울 50%", 40f, Color.white, TextAlignmentOptions.Center, 0.15f); Place(voteBarTg.rectTransform, 130, 860, 830, 70);
-        voteBarRz = Label("barRzT", voteStage, "리제로 50%", 40f, Color.white, TextAlignmentOptions.Center, 0.15f); Place(voteBarRz.rectTransform, 960, 860, 830, 70);
         // 결과
         votePickBg = Img("pickBg", voteStage, null, new Color(0f, 0f, 0f, 0f)); Place(votePickBg.rectTransform, -200, -200, 2320, 1480);
         votePick = Label("pick", voteStage, "", 130f, Color.white, TextAlignmentOptions.Center, 0.25f); Place(votePick.rectTransform, 160, 380, 1600, 200);
@@ -501,14 +508,14 @@ public class PachinkoOverlay : MonoBehaviour
 
     IEnumerator VoteBots(float seconds)
     {
-        int[] choices = { UnityEngine.Random.Range(1, 3), UnityEngine.Random.Range(1, 3), UnityEngine.Random.Range(1, 3) };
+        int[] choices = { UnityEngine.Random.Range(1, 5), UnityEngine.Random.Range(1, 5), UnityEngine.Random.Range(1, 5) };
         for (int b = 0; b < 3; b++)
         {
             yield return Wait(seconds * UnityEngine.Random.Range(0.12f, 0.28f));
             if (!voteOpen) yield break;
             voteBy[b + 1] = choices[b];
             RefreshVoteBars();
-            if (b == 0) voteCards[UnityEngine.Random.Range(0, 2)].clicked = true;   // 시험: 내 클릭도 한 번 보여 준다
+            if (b == 0) voteCards[UnityEngine.Random.Range(0, 4)].clicked = true;   // 시험: 내 클릭도 한 번 보여 준다
         }
     }
 
@@ -520,7 +527,7 @@ public class PachinkoOverlay : MonoBehaviour
         RefreshVoteBars();
     }
 
-    void CastLocal(int theme)   // 0 東京 · 1 Re:ゼロ
+    void CastLocal(int theme)   // 0 東京 · 1 Re:ゼロ · 2 불꽃 · 3 전생슬
     {
         voteMine = theme + 1; voteBy[Mathf.Clamp(voteLocalSlot, 0, voteBy.Length - 1)] = voteMine;
         RefreshVoteBars();
@@ -528,27 +535,34 @@ public class PachinkoOverlay : MonoBehaviour
         Play(Slot.Hold);
     }
 
+    string VoteShortName(int k) => k == 0 ? "도쿄구울" : k == 1 ? "리제로" : PachinkoSettings.VideoThemes[k - 2].voteName;
+
     void RefreshVoteBars()
     {
-        int tg = 0, rz = 0; var b0 = new StringBuilder(); var b1 = new StringBuilder();
+        var cnt = new int[4]; var badge = new[] { new StringBuilder(), new StringBuilder(), new StringBuilder(), new StringBuilder() };
         for (int i = 0; i < voteBy.Length; i++)
+            if (voteBy[i] >= 1 && voteBy[i] <= 4) { cnt[voteBy[i] - 1]++; badge[voteBy[i] - 1].Append("P").Append(i + 1).Append(' '); }
+        for (int k = 0; k < 4; k++) voteBadges[k].text = badge[k].ToString();
+        int total = cnt[0] + cnt[1] + cnt[2] + cnt[3];
+        float[] w = new float[4];
+        const float whole = 1840f, minW = 90f;
+        for (int k = 0; k < 4; k++) w[k] = total > 0 ? Mathf.Max(minW, whole * cnt[k] / total) : whole / 4f;
+        float sum = w[0] + w[1] + w[2] + w[3]; for (int k = 0; k < 4; k++) w[k] *= whole / sum;
+        float x = 40f;
+        for (int k = 0; k < 4; k++)
         {
-            if (voteBy[i] == 1) { tg++; b0.Append("P").Append(i + 1).Append(' '); }
-            else if (voteBy[i] == 2) { rz++; b1.Append("P").Append(i + 1).Append(' '); }
+            voteBarImg[k].rectTransform.anchoredPosition = new Vector2(x + w[k] * 0.5f, -(860f + 35f)); voteBarImg[k].rectTransform.sizeDelta = new Vector2(w[k], 70f);
+            voteBarTxt[k].rectTransform.anchoredPosition = voteBarImg[k].rectTransform.anchoredPosition; voteBarTxt[k].rectTransform.sizeDelta = new Vector2(w[k], 70f);
+            float pct = total > 0 ? 100f * cnt[k] / total : 25f;
+            voteBarTxt[k].text = w[k] > 190f ? $"{VoteShortName(k)} {Mathf.RoundToInt(pct)}%" : "";
+            x += w[k];
         }
-        voteBadges[0].text = b0.ToString(); voteBadges[1].text = b1.ToString();
-        float pt = tg + rz > 0 ? (float)tg / (tg + rz) : 0.5f;
-        float total = 1660f, wT = Mathf.Max(60f, total * pt), wR = Mathf.Max(60f, total - wT);
-        voteBarTgImg.rectTransform.anchoredPosition = new Vector2(130f + wT * 0.5f, -(860f + 35f)); voteBarTgImg.rectTransform.sizeDelta = new Vector2(wT, 70f);
-        voteBarRzImg.rectTransform.anchoredPosition = new Vector2(130f + wT + wR * 0.5f, -(860f + 35f)); voteBarRzImg.rectTransform.sizeDelta = new Vector2(wR, 70f);
-        voteBarTg.rectTransform.anchoredPosition = voteBarTgImg.rectTransform.anchoredPosition; voteBarTg.rectTransform.sizeDelta = new Vector2(wT, 70f);
-        voteBarRz.rectTransform.anchoredPosition = voteBarRzImg.rectTransform.anchoredPosition; voteBarRz.rectTransform.sizeDelta = new Vector2(wR, 70f);
-        voteBarTg.text = wT > 240f ? $"도쿄구울 {Mathf.RoundToInt(pt * 100f)}%" : ""; voteBarRz.text = wR > 240f ? $"리제로 {Mathf.RoundToInt((1f - pt) * 100f)}%" : "";
         Color chosen = new Color(1f, 0.85f, 0.25f, 1f);
-        voteCardImg[0].GetComponent<Outline>().effectColor = voteMine == 1 ? chosen : new Color(1f, 1f, 1f, 0.25f);
-        voteCardImg[1].GetComponent<Outline>().effectColor = voteMine == 2 ? chosen : new Color(1f, 1f, 1f, 0.25f);
-        voteCardImg[0].GetComponent<Outline>().effectDistance = voteMine == 1 ? new Vector2(10f, -10f) : new Vector2(4f, -4f);
-        voteCardImg[1].GetComponent<Outline>().effectDistance = voteMine == 2 ? new Vector2(10f, -10f) : new Vector2(4f, -4f);
+        for (int k = 0; k < 4; k++)
+        {
+            voteCardImg[k].GetComponent<Outline>().effectColor = voteMine == k + 1 ? chosen : new Color(1f, 1f, 1f, 0.25f);
+            voteCardImg[k].GetComponent<Outline>().effectDistance = voteMine == k + 1 ? new Vector2(10f, -10f) : new Vector2(4f, -4f);
+        }
     }
 
     void VoteUpdate()
@@ -561,10 +575,10 @@ public class PachinkoOverlay : MonoBehaviour
         voteTimer.text = Mathf.CeilToInt(left).ToString();
         voteTimer.color = left <= 3f ? new Color(1f, 0.3f, 0.25f) : Color.white;
         var kb = UnityEngine.InputSystem.Keyboard.current;
-        for (int i = 0; i < 2; i++)
+        for (int i = 0; i < 4; i++)
         {
             VoteCard c = voteCards[i];
-            bool keyed = kb != null && (i == 0 ? kb.digit1Key.wasPressedThisFrame : kb.digit2Key.wasPressedThisFrame);
+            bool keyed = kb != null && (i == 0 ? kb.digit1Key.wasPressedThisFrame : i == 1 ? kb.digit2Key.wasPressedThisFrame : i == 2 ? kb.digit3Key.wasPressedThisFrame : kb.digit4Key.wasPressedThisFrame);
             if (c.clicked || keyed) { c.clicked = false; c.pressT = 0f; CastLocal(i); }
             c.pressT = Mathf.Min(1f, c.pressT + Dt / 0.22f);
             // 눌리듯 들어갔다 나오는 짧은 반응(0.93까지 눌렸다가 선택 카드는 1.03으로 튀어나온다)
@@ -575,20 +589,33 @@ public class PachinkoOverlay : MonoBehaviour
         if (voteStandalone && left <= 0f)
         {
             voteOpen = false;
-            int tg = 0, rz = 0; for (int i = 0; i < voteBy.Length; i++) { if (voteBy[i] == 1) tg++; else if (voteBy[i] == 2) rz++; }
-            float pt = tg + rz > 0 ? (float)tg / (tg + rz) : 0.5f;
-            CloseVote(UnityEngine.Random.value < pt ? 0 : 1);
+            CloseVote(PickThemeByVotes());
         }
+    }
+
+    int PickThemeByVotes()
+    {
+        var cnt = new int[4];
+        for (int i = 0; i < voteBy.Length; i++) if (voteBy[i] >= 1 && voteBy[i] <= 4) cnt[voteBy[i] - 1]++;
+        int total = cnt[0] + cnt[1] + cnt[2] + cnt[3];
+        if (total == 0) return UnityEngine.Random.Range(0, 4);
+        float r = UnityEngine.Random.value * total;
+        for (int k = 0; k < 4; k++) { r -= cnt[k]; if (r <= 0f) return k; }
+        return 0;
     }
 
     IEnumerator VoteResult(int theme)
     {
         voteOpen = false;
-        int tg = 0, rz = 0; for (int i = 0; i < voteBy.Length; i++) { if (voteBy[i] == 1) tg++; else if (voteBy[i] == 2) rz++; }
-        float pt = tg + rz > 0 ? (float)tg / (tg + rz) : 0.5f;
-        votePick.text = theme == 0 ? "도쿄구울 모드 선택!" : "리제로 모드 선택!";
-        votePick.color = theme == 0 ? new Color(1f, 0.55f, 0.2f) : new Color(0.5f, 0.92f, 1f);
-        votePickSub.text = $"도쿄구울 {Mathf.RoundToInt(pt * 100f)}% · 리제로 {Mathf.RoundToInt((1f - pt) * 100f)}% 중에서 뽑혔습니다";
+        var cnt = new int[4];
+        for (int i = 0; i < voteBy.Length; i++) if (voteBy[i] >= 1 && voteBy[i] <= 4) cnt[voteBy[i] - 1]++;
+        int sum = cnt[0] + cnt[1] + cnt[2] + cnt[3];
+        int total = Mathf.Max(1, sum);
+        votePick.text = theme == 0 ? "도쿄구울 모드 선택!" : theme == 1 ? "리제로 모드 선택!" : $"{VoteShortName(theme)} 모드 선택!";
+        VideoThemeSpec vsp = PachinkoSettings.VideoTheme(theme);
+        votePick.color = theme == 0 ? new Color(1f, 0.55f, 0.2f) : theme == 1 ? new Color(0.5f, 0.92f, 1f) : (vsp != null ? vsp.pickColor : Color.white);
+        votePickSub.text = sum == 0 ? "표가 없어 무작위로 뽑혔습니다"
+            : $"도쿄구울 {Mathf.RoundToInt(100f * cnt[0] / total)}% · 리제로 {Mathf.RoundToInt(100f * cnt[1] / total)}% · 불꽃 {Mathf.RoundToInt(100f * cnt[2] / total)}% · 전생슬 {Mathf.RoundToInt(100f * cnt[3] / total)}% 중에서 뽑혔습니다";
         votePick.gameObject.SetActive(true); votePickSub.gameObject.SetActive(true);
         float t = 0f;
         while (t < 1.2f)
@@ -776,10 +803,11 @@ public class PachinkoOverlay : MonoBehaviour
         win = plan.win;
         curTheme = plan.theme; Theme = plan.theme;
         activeSymbolDir = plan.theme == 1 ? "SymbolsRz" : "Symbols";
+        if (PachinkoSettings.VideoTheme(plan.theme) == null) { UseFireVideo(false); SetFireChrome(true); }
         root.gameObject.SetActive(true);
         ResetVisuals();
         duckTarget = BgmDuck;
-        running = StartCoroutine(plan.theme == 1 ? SequenceRz(plan) : Sequence(plan));
+        running = StartCoroutine(PachinkoSettings.VideoTheme(plan.theme) != null ? SequenceVideo(plan, PachinkoSettings.VideoTheme(plan.theme)) : plan.theme == 1 ? SequenceRz(plan) : Sequence(plan));
     }
 
     void ResetVisuals()
@@ -1281,11 +1309,31 @@ public class PachinkoOverlay : MonoBehaviour
     /// <summary>꽝: 깨진 그림 뒤에서 kaneki_miss가 어둡게 시작해 밝아지고, 붉은 눈이 은은하게 빛난다.</summary>
     /// <summary>지금 화면 전체를 캡처해 유리조각으로 깬다. reverse=false(꽝): 금 → 0.8초 안에 확 퍼지며 조각이 떨어지고 뒤에서 kaneki_miss가 드러난다.
     /// reverse=true(부활): 금이 가다 멈추고 조각이 살짝 벌어졌다 도로 붙는다.</summary>
-    IEnumerator ShatterScreen(bool reverse, float seconds)
+    IEnumerator ShatterScreen(bool reverse, float seconds, bool gray = false, bool noReveal = false)
     {
         heartbeat = false;
         yield return new WaitForEndOfFrame();
         Texture2D cap = ScreenCapture.CaptureScreenshotAsTexture();
+        if (cap != null && gray)
+        {
+            // 채도가 빠르게(0.4초) 0으로: 컬러 캡처 위에 흑백 캡처를 서서히 덮는다 — 그 뒤 흑백 화면이 깨진다
+            Texture2D colorCap = cap;
+            cap = new Texture2D(colorCap.width, colorCap.height, TextureFormat.RGBA32, false);
+            Color32[] px = colorCap.GetPixels32();
+            for (int i = 0; i < px.Length; i++)
+            {
+                byte g = (byte)Mathf.Clamp(Mathf.RoundToInt(px[i].r * 0.299f + px[i].g * 0.587f + px[i].b * 0.114f), 0, 255);
+                px[i] = new Color32(g, g, g, 255);
+            }
+            cap.SetPixels32(px); cap.Apply(false);
+            RectTransform lc = Rt("grayFadeC", shatterRoot); Stretch(lc);
+            var colorLayer = lc.gameObject.AddComponent<RawImage>(); colorLayer.texture = colorCap; colorLayer.raycastTarget = false;
+            RectTransform lg = Rt("grayFadeG", shatterRoot); Stretch(lg);
+            var grayLayer = lg.gameObject.AddComponent<RawImage>(); grayLayer.texture = cap; grayLayer.raycastTarget = false; grayLayer.color = new Color(1f, 1f, 1f, 0f);
+            float gt = 0f;
+            while (gt < 0.4f) { gt += Dt; grayLayer.color = new Color(1f, 1f, 1f, Mathf.Clamp01(gt / 0.4f)); yield return null; }
+            Destroy(lc.gameObject); Destroy(lg.gameObject); Destroy(colorCap);
+        }
         if (cap == null) { if (!reverse) { if (curTheme == 1) StartCoroutine(PlayResultVideo()); else StartCoroutine(MissReveal()); } yield break; }
         Rect rr = root.rect; float W = rr.width, H = rr.height;
         const int cols = 12, rows = 7;
@@ -1339,9 +1387,12 @@ public class PachinkoOverlay : MonoBehaviour
         if (!reverse)
         {
             // 쨍 — 섬광 · 흔들림 · 가루. 아래 층은 kaneki_miss로 바꿔 둔다(그림이 조각 뒤에서 드러난다).
-            StopVideoNow();
-            kanekiImage.enabled = false;
-            if (curTheme == 1) StartCoroutine(PlayResultVideo()); else StartCoroutine(MissReveal());
+            if (!noReveal)
+            {
+                StopVideoNow();
+                kanekiImage.enabled = false;
+                if (curTheme == 1) StartCoroutine(PlayResultVideo()); else StartCoroutine(MissReveal());
+            }
             Impact(new Color(1f, 1f, 1f, 0.95f), 0.7f, true);
             StartCoroutine(GlassDust(shatterRoot, impact, 60));
         }
@@ -1580,6 +1631,365 @@ public class PachinkoOverlay : MonoBehaviour
         root.gameObject.SetActive(false);
         StartCoroutine(ReturnFadeOut());
         running = null;
+    }
+
+
+    // ───────── 불꽃 소방대(theme 2, 사장님 10-16): 영상 한 편 위에 룰렛 — 1:30 회전 → 1:46 판정 → (크리티컬) 3:40 PUSH → 3:45 끝 ─────────
+    RenderTexture fireRT;
+    bool fireVideoTarget, fireChromeHidden;
+    TMP_Text fireBanner, fireBadge;
+    Image fireSubtitleCover;
+
+    /// <summary>16:9 영상용 렌더 텍스처로 바꾼다(리제로 영상은 1920×820 가로로 긴 판이라 RT가 다르다). off면 원래대로.</summary>
+    void UseFireVideo(bool on)
+    {
+        if (on == fireVideoTarget || videoPlayer == null) return;
+        fireVideoTarget = on;
+        if (on && fireRT == null)
+            fireRT = new RenderTexture(1280, 720, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB) { name = "PachinkoFireVideo", filterMode = FilterMode.Bilinear, useMipMap = false, autoGenerateMips = false };
+        RenderTexture rt = on ? fireRT : videoRT;
+        if (videoPlayer.isPlaying || videoPlayer.isPrepared) videoPlayer.Stop();
+        videoPlayer.targetTexture = rt;
+        videoView.texture = rt; ghostR.texture = rt; ghostC.texture = rt;
+        Vector2 size = on ? new Vector2(1920f, 1080f) : new Vector2(1080f * 1920f / 820f, 1080f);
+        videoView.rectTransform.sizeDelta = size; ghostR.rectTransform.sizeDelta = size; ghostC.rectTransform.sizeDelta = size;
+    }
+
+    /// <summary>룰렛 기계·보류 구슬·전광판을 접는다/펼친다(영상만 보이는 0:00~1:30 구간).</summary>
+    void SetFireChrome(bool visible)
+    {
+        fireChromeHidden = !visible;
+        if (machineRect != null) machineRect.gameObject.SetActive(visible);
+        if (holdsRect != null) holdsRect.gameObject.SetActive(visible);
+        if (ticker != null) ticker.gameObject.SetActive(visible);
+        if (meterText != null) meterText.gameObject.SetActive(visible);
+        if (pauseText != null) pauseText.gameObject.SetActive(visible);
+        if (fireBadge != null) fireBadge.gameObject.SetActive(!visible);   // 영상만 보이는 동안 G.R.D 배지
+    }
+
+    IEnumerator FireVideoRoutine(float t0, VideoThemeSpec spec)
+    {
+        string path = System.IO.Path.Combine(Application.streamingAssetsPath, spec.videoFile);
+        if (!System.IO.File.Exists(path)) { Debug.LogWarning("[파칭코] 불꽃 영상 파일 없음: " + path); videoCo = null; yield break; }
+        videoPlayer.url = path;
+        if (RecordMode) videoPlayer.timeReference = UnityEngine.Video.VideoTimeReference.ExternalTime;
+        videoPlayer.Prepare();
+        float wait = 0f;
+        while (!videoPlayer.isPrepared && wait < 8f) { wait += Dt; yield return null; }
+        if (!videoPlayer.isPrepared) { Debug.LogWarning("[파칭코] 불꽃 영상 준비 실패"); videoCo = null; yield break; }
+        if (videoStopRequested) { videoCo = null; yield break; }
+        videoStartTime = t0;   // 영상 0초 = 연출 시작 시각 — 준비가 늦었으면 그만큼 건너뛰어 컨트롤러 시계(PUSH 창)와 맞춘다
+        videoPlayer.time = Mathf.Max(0f, Now - t0);
+        videoPlayer.Play();
+        videoShowTarget = 1f;
+        AudioEvent?.Invoke("video:" + spec.videoFile, t0, AudioPrefs.MusicVolume);
+        while (!videoStopRequested) yield return null;
+        videoCo = null;
+    }
+
+    void EnsureFireWidgets()
+    {
+        if (fireBanner == null)
+        {
+            fireBanner = Label("fireBanner", stage, "クリティカル ボーナス", 118f, new Color(1f, 0.82f, 0.25f), TextAlignmentOptions.Center, 0.3f);
+            Place(fireBanner.rectTransform, 160, 120, 1600, 180);
+            fireBanner.gameObject.SetActive(false);
+        }
+        if (fireBadge == null)
+        {   // 영상 워터마크 자리를 가리는 G.R.D 배지
+            fireBadge = Label("fireBadge", stage, "G.R.D", 40f, new Color(1f, 0.82f, 0.25f), TextAlignmentOptions.Center, 0.3f);
+            Place(fireBadge.rectTransform, 20, 18, 220, 60);
+            fireBadge.gameObject.SetActive(false);
+        }
+        if (fireSubtitleCover == null)
+        {   // 영상에 구워진 가사 자막(아래 가운데)이 룰렛 숫자와 겹치지 않게 어두운 띠를 깐다(룰렛이 위)
+            fireSubtitleCover = Img("fireSubCover", stage, null, new Color(0f, 0f, 0f, 0.97f));
+            Place(fireSubtitleCover.rectTransform, 0, 735, 1920, 175);
+            // 한 겹으론 자막이 비쳐 보여(스테이지 알파 적용 실측) 같은 띠를 한 겹 더 덮는다
+            Image second = Img("fireSubCover2", fireSubtitleCover.transform, null, new Color(0f, 0f, 0f, 1f));
+            Stretch(second.rectTransform);
+            fireSubtitleCover.transform.SetAsFirstSibling();
+            fireSubtitleCover.gameObject.SetActive(false);
+        }
+    }
+
+    IEnumerator SequenceVideo(PachinkoPlan p, VideoThemeSpec spec)
+    {
+        EnsureFireWidgets();
+        float t0 = Now - PachinkoSettings.DebugSkipSeconds;   // -pachinkoSkipTo(시험용, 평소 0)
+        kanekiRect.gameObject.SetActive(false); heartbeat = false;
+        SetFireChrome(false);
+        fireSubtitleCover.gameObject.SetActive(spec.coverSubtitles);
+        UseFireVideo(true);
+        videoNatural = true;
+        videoStopRequested = false;
+        if (videoCo != null) StopCoroutine(videoCo);
+        videoCo = StartCoroutine(FireVideoRoutine(t0, spec));
+
+        // 1:30 룰렛 회전 시작 — 기계가 튀어나온다
+        yield return WaitUntilVideo(t0, spec.rouletteStart);
+        SetFireChrome(true);
+        fireBadge.gameObject.SetActive(true);
+        ticker.gameObject.SetActive(false); holdsRect.gameObject.SetActive(false);   // 영상 위라 전광판·구슬은 뺀다
+        fireSubtitleCover.gameObject.SetActive(spec.coverSubtitles);
+        Play(Slot.Open);
+        float u = 0f;
+        while (u < 0.4f)
+        {
+            u += Dt; float e = Mathf.Clamp01(u / 0.4f); e = 1f - Mathf.Pow(1f - e, 3f);
+            machineRect.localScale = Vector3.one * Mathf.Lerp(0.5f, 1f, e);
+            machineRect.localRotation = Quaternion.Euler(0, 0, Mathf.Lerp(-6f, 0f, e));
+            yield return null;
+        }
+        machineRect.localScale = Vector3.one; machineRect.localRotation = Quaternion.identity;
+        curReach = p.reach; reelsCenterHeld = true;
+        { int off = UnityEngine.Random.Range(0, 9); for (int ri = 0; ri < 3; ri++) reels[ri].scroll = off + ri * 3; }
+        foreach (Reel r in reels) r.spinning = true;
+        reels[1].liftT = 1f;
+        StartCoroutine(SpinLoop(9f));
+
+        // 정지: 왼쪽 → 오른쪽 → 가운데(1:46에 딱 멈춘다)
+        float stopAt = t0 + spec.rouletteStop;
+        float span = spec.rouletteStop - spec.rouletteStart;
+        yield return WaitUntilVideo(t0, spec.rouletteStart + span * 0.45f);
+        StartCoroutine(StopReel(0, p.left, 1.5f, spinSpeeds[0]));
+        yield return WaitUntilVideo(t0, spec.rouletteStart + span * 0.7f);
+        StartCoroutine(StopReel(2, p.right, 1.9f, spinSpeeds[2]));
+        float centerDur = p.reach ? 2.6f : 1.4f;
+        yield return WaitUntilVideo(t0, spec.rouletteStop - centerDur);
+        if (p.reach) reels[1].Highlight(new Color(1f, 0.78f, 0.6f));
+        StopAllSpin();
+        yield return StopReel(1, p.center, centerDur, spinSpeeds[1] * 0.5f);
+        reels[1].Highlight(Color.white);
+        yield return WaitUntilVideo(t0, spec.rouletteStop);   // 판정
+
+        float resultStart;
+        if (!p.win)
+        {
+            // 꽝: 영상을 멈추고 결과(리치꽝 보상 / 꽝 보상)
+            if (videoPlayer.isPlaying) videoPlayer.Pause();
+            dim.color = new Color(0f, 0f, 0f, 0.55f);
+            resultStart = Now;
+            StartCoroutine(Pop(logoZannen, p.ResultSeconds(false), 3f, keep: true));
+            ShowBand(p.reach ? "아쉬움 보상: 희귀함 위습 ×1" : "아쉬움 보상: 특별함 위습 ×1");
+            yield return FireFinish(resultStart + p.ResultSeconds(false));
+            yield break;
+        }
+
+        // 같은 숫자 셋 = 크리티컬 보너스
+        if (!ReduceFlash) StartCoroutine(WinFlashStandard());
+        shakeUntil = Now + 0.4f;
+        fireBanner.text = p.center == 7 && p.left == 7 ? "7 7 7  クリティカル ボーナス!!" : "クリティカル ボーナス!";
+        fireBanner.gameObject.SetActive(true);
+        StartCoroutine(PopLabel(fireBanner, 3.2f));
+        Play(Slot.Hold);
+        yield return Wait(1.6f);
+        // 룰렛 패널은 접고 영상만 — PUSH 때 다시 등장한다
+        { float fu = 0f; while (fu < 0.3f) { fu += Dt; machineRect.localScale = Vector3.one * Mathf.Lerp(1f, 0.6f, fu / 0.3f); yield return null; } }
+        SetFireChrome(false);
+        fireSubtitleCover.gameObject.SetActive(spec.coverSubtitles);
+        machineRect.localScale = Vector3.one;
+
+        // 3:40 PUSH(5초) — 영상은 3:45까지
+        yield return WaitUntilVideo(t0, spec.pushAt);
+        yield return PushWindow();
+        if (pushedWho == int.MinValue)
+        {
+            float wait = standalone ? 0f : 4f;
+            while (pushedWho == int.MinValue && wait > 0f) { wait -= Dt; yield return null; }
+            if (pushedWho == int.MinValue) pushedWho = -1;
+        }
+        pushGroup.gameObject.SetActive(false); dim.color = new Color(0, 0, 0, 0);
+        bool pushed = pushedWho >= 0 && p.pushWin;   // 눌렀어도 51%(plan.pushWin)에 안 들면 실패
+        // 영상 마지막 구간(3:45)까지 마저 흘려 보낸다 — PUSH 5초가 3:40~3:45
+        if (videoPlayer.isPlaying && VideoClock(t0) < spec.videoEnd) yield return WaitUntilVideo(t0, spec.videoEnd);
+        if (videoPlayer.isPlaying) videoPlayer.Pause();
+        SetFireChrome(true); fireBadge.gameObject.SetActive(false);   // 결과 화면에서 숫자·로고를 다시 보인다
+        fireSubtitleCover.gameObject.SetActive(false);
+        if (!pushed)
+        {
+            // 실패: 화면이 금이 가며 흑백으로 빠지고 조각이 떨어진다(「번쩍임 줄이기」와 무관하게 흑백 유지, 섬광만 끈다)
+            yield return ShatterScreen(false, 0.9f, gray: true, noReveal: true);
+            if (videoPlayer.isPlaying) videoPlayer.Pause();
+            dim.color = new Color(0f, 0f, 0f, 0.6f);
+        }
+        resultStart = Now;
+        float resSecs = p.ResultSeconds(pushed);
+        if (pushed && !ReduceFlash) { StartCoroutine(WinFlashStandard()); shakeUntil = Now + 0.4f; }
+        bool top = PachinkoSettings.VideoSuccessIsTopReward || p.jackpot;   // PUSH 성공 = 제일 좋은 보상(랜덤유닛)
+        if (pushed)
+        {
+            StartCoroutine(Confetti(Mathf.Max(5.5f, resSecs - 0.4f)));
+            StartCoroutine(Fireworks(top, spec.theme));
+            StartCoroutine(Pop(top ? logoOoatari : logoAtari, resSecs + 0.5f, 1.2f, keep: true));
+            ShowBand(top ? "大当たり 보상: 랜덤 유닛 ×1" : "当たり 보상: 전설·히든 위습 ×1");
+        }
+        else
+        {
+            bool failWin = PachinkoSettings.VideoSuccessIsTopReward;   // PUSH 실패 = 당첨 보상(전설·히든 위습)
+            StartCoroutine(Pop(failWin ? logoAtari : logoZannen, resSecs, 3f, keep: true));
+            ShowBand(failWin ? "PUSH 실패… 当たり 보상: 전설·히든 위습 ×1" : "PUSH 실패… 아쉬움 보상: 희귀함 위습 ×1");
+        }
+        yield return FireFinish(resultStart + resSecs);
+    }
+
+    /// <summary>영상형 테마의 「영상 시각」(초). 영상이 돌고 있으면 VideoPlayer.time(지연·시크 오차를 따른다), 아니면 연출 시작 기준 실시간.
+    /// 시작이 늦어진 영상이 컨트롤러 시계(PUSH 창)보다 뒤처지면 실시간을 따라 PUSH를 놓치지 않는다.</summary>
+    float VideoClock(float t0)
+    {
+        float wall = Now - t0;
+        if (videoPlayer != null && videoPlayer.isPlaying && !RecordMode) return Mathf.Max((float)videoPlayer.time, wall);
+        return wall;
+    }
+
+    IEnumerator WaitUntilVideo(float t0, float videoSeconds) { while (VideoClock(t0) < videoSeconds) yield return null; }
+
+    IEnumerator FireFinish(float until)
+    {
+        while (Now < until) yield return null;
+        yield return ReturnFade();
+        StopAllSfx();
+        StopVideoNow();
+        UseFireVideo(false);
+        SetFireChrome(true);
+        if (fireSubtitleCover != null) fireSubtitleCover.gameObject.SetActive(false);
+        if (fireBanner != null) fireBanner.gameObject.SetActive(false);
+        duckTarget = 1f; GameBgm.Duck = 1f;
+        root.gameObject.SetActive(false);
+        StartCoroutine(ReturnFadeOut());
+        running = null;
+    }
+
+    IEnumerator PopLabel(TMP_Text label, float seconds)
+    {
+        float t = 0f;
+        while (t < seconds)
+        {
+            t += Dt;
+            float pop = 1f + 0.35f * Mathf.Exp(-t * 7f) * Mathf.Cos(t * 16f);
+            label.rectTransform.localScale = Vector3.one * pop;
+            float a = t > seconds - 0.4f ? Mathf.Clamp01((seconds - t) / 0.4f) : 1f;
+            label.alpha = a;
+            yield return null;
+        }
+        label.gameObject.SetActive(false); label.alpha = 1f;
+    }
+
+    // ───────── 관전 모니터(사장님 10-16) — 모든 PC가 전원 plan을 받으므로 슬롯별 시계로 재현한다(새 네트워크 메시지 없음) ─────────
+    class MonEntry { public int slot; public PachinkoPlan plan; public float t0; public int who = int.MinValue; public float pushT; }
+    readonly Dictionary<int, MonEntry> mon = new Dictionary<int, MonEntry>();
+    RectTransform monitorRoot; Image monitorBg; TMP_Text monitorText;
+    float monitorHideAt;
+
+    /// <summary>시험·사진용: 가짜 슬롯 하나를 모니터에 올린다(gameshot call).</summary>
+    public static void DebugAddMonitor(int slot, PachinkoPlan plan) { Ensure().MonitorPlan(slot, plan); }
+
+    void MonitorClear() { mon.Clear(); if (monitorRoot != null) monitorRoot.gameObject.SetActive(false); }
+
+    void MonitorPlan(int slot, PachinkoPlan plan)
+    {
+        mon[slot] = new MonEntry { slot = slot, plan = plan, t0 = Now - (PachinkoSettings.VideoTheme(plan.theme) != null ? PachinkoSettings.DebugSkipSeconds : 0f) };
+    }
+
+    void MonitorPushed(int slot, int who)
+    {
+        if (mon.TryGetValue(slot, out MonEntry e) && e.who == int.MinValue) { e.who = who; e.pushT = Now; }
+    }
+
+    string MonitorResultText(MonEntry e)
+    {
+        PachinkoPlan p = e.plan; bool ok = e.who >= 0 && p.pushWin;
+        if (PachinkoSettings.VideoTheme(p.theme) != null)
+        {
+            if (p.win)
+            {
+                bool top = PachinkoSettings.VideoSuccessIsTopReward || p.jackpot;
+                if (ok) return top ? "<color=#FFD54A>PUSH 성공! 랜덤 유닛</color>" : "<color=#FFD54A>PUSH 성공! 전설·히든 위습</color>";
+                return PachinkoSettings.VideoSuccessIsTopReward ? "<color=#FF8A65>PUSH 실패 · 전설·히든 위습</color>" : "<color=#FF8A65>PUSH 실패 · 희귀함 위습</color>";
+            }
+            return p.reach ? "리치 꽝 · 희귀함 위습" : "꽝 · 특별함 위습";
+        }
+        return p.jackpot ? "<color=#FFD54A>777 대당첨! 랜덤 유닛</color>" : p.win ? "<color=#FFD54A>당첨! 전설·히든 위습</color>" : p.reach ? "리치 꽝 · 희귀함 위습" : "꽝 · 특별함 위습";
+    }
+
+    string MonitorLine(MonEntry e, out bool finished)
+    {
+        PachinkoPlan p = e.plan;
+        float el = Now - e.t0, P = p.PreludeSeconds(), push = p.PushSeconds();
+        string name = PlayerDisplayName.Of(e.slot);
+        string d1 = "?", d2 = "?", d3 = "?";
+        VideoThemeSpec spec = PachinkoSettings.VideoTheme(p.theme);
+        bool fire = spec != null;
+        float L = fire ? spec.rouletteStart + (spec.rouletteStop - spec.rouletteStart) * 0.45f + 1.5f : P;
+        float R = fire ? spec.rouletteStart + (spec.rouletteStop - spec.rouletteStart) * 0.7f + 1.9f : P;
+        float C = fire ? spec.rouletteStop : P;
+        if (el >= L) d1 = p.left.ToString();
+        if (el >= R) d2 = p.right.ToString();
+        if (el >= C) d3 = p.center.ToString();
+        string digits = $"[{d1} {d2} {d3}]";
+        finished = false;
+        if (e.who != int.MinValue)
+        {
+            float rs = p.ResultSeconds(e.who >= 0 && p.pushWin);
+            finished = Now - e.pushT > rs;
+            return $"{name}  {digits}  {MonitorResultText(e)}";
+        }
+        string phase;
+        if (el < P)
+        {
+            int total = Mathf.RoundToInt(P);
+            int bar = Mathf.Clamp(Mathf.RoundToInt(10f * el / Mathf.Max(1f, P)), 0, 10);
+            string status = fire && el >= spec.rouletteStart ? (el < spec.rouletteStop ? "룰렛 회전" : "크리티컬 보너스!") : "영상 재생";
+            if (fire && p.win && el >= spec.rouletteStop) status = "<color=#FFD54A>크리티컬 보너스!</color>";
+            phase = $"{new string('#', bar)}{new string('-', 10 - bar)} {FmtT(el)}/{FmtT(total)} {status}";
+        }
+        else if (el < P + push + 0.5f && push > 0f) phase = "<color=#FFD54A>PUSH 대기 중</color>";
+        else phase = "결과 대기";
+        return $"{name}  {digits}  {phase}";
+    }
+
+    static string FmtT(float s) { int t = Mathf.Max(0, Mathf.RoundToInt(s)); return $"{t / 60}:{t % 60:D2}"; }
+
+    void MonitorUpdate()
+    {
+        if (mon.Count == 0) { if (monitorRoot != null && monitorRoot.gameObject.activeSelf) monitorRoot.gameObject.SetActive(false); return; }
+        if (monitorRoot == null)
+        {
+            monitorRoot = Rt("monitor", transform);
+            monitorRoot.anchorMin = monitorRoot.anchorMax = new Vector2(1f, 1f); monitorRoot.pivot = new Vector2(1f, 1f);
+            monitorBg = monitorRoot.gameObject.AddComponent<Image>(); monitorBg.color = new Color(0.02f, 0.02f, 0.05f, 0.78f); monitorBg.raycastTarget = false;
+            monitorText = Label("monitorText", monitorRoot, "", 26f, Color.white, TextAlignmentOptions.TopLeft, 0.1f);
+            monitorText.rectTransform.anchorMin = Vector2.zero; monitorText.rectTransform.anchorMax = Vector2.one;
+            monitorText.rectTransform.offsetMin = new Vector2(14f, 10f); monitorText.rectTransform.offsetMax = new Vector2(-14f, -10f);
+            monitorText.raycastTarget = false; monitorText.richText = true; monitorText.enableWordWrapping = false;
+        }
+        var sb = new StringBuilder();
+        bool anyRunning = false;
+        var ordered = new List<MonEntry>(mon.Values); ordered.Sort((a, b) => a.slot.CompareTo(b.slot));
+        foreach (MonEntry e in ordered)
+        {
+            string line = MonitorLine(e, out bool fin);
+            if (!fin) anyRunning = true;
+            sb.AppendLine((e.slot == GameAuthority.LocalPlayerId ? "▶ " : "   ") + line);
+        }
+        if (!anyRunning)
+        {
+            if (monitorHideAt <= 0f) monitorHideAt = Now + 2f;
+            if (Now > monitorHideAt) { MonitorClear(); monitorHideAt = 0f; return; }
+        }
+        else monitorHideAt = 0f;
+        // 내 연출이 돌아가는 동안은 구석에 작게, 내 것이 끝났으면 가운데에 크게(남을 기다리는 사람이 보게)
+        bool myScreen = root != null && root.gameObject.activeSelf;
+        monitorRoot.gameObject.SetActive(true);
+        monitorRoot.SetAsLastSibling();
+        monitorText.text = (myScreen ? "<size=22><color=#A0A8C0>다른 플레이어</color></size>\n" : "<size=34><color=#FFD54A>다른 플레이어 진행 중 — 전원이 끝나면 게임이 재개됩니다</color></size>\n") + sb;
+        monitorText.fontSize = myScreen ? 24f : 32f;
+        int lines = mon.Count + 1;
+        Vector2 size = myScreen ? new Vector2(780f, 40f + lines * 34f) : new Vector2(1500f, 90f + lines * 46f);
+        monitorRoot.sizeDelta = size;
+        Vector2 anchor = myScreen ? new Vector2(1f, 1f) : new Vector2(0.5f, 0.5f);
+        monitorRoot.anchorMin = monitorRoot.anchorMax = monitorRoot.pivot = anchor;
+        monitorRoot.anchoredPosition = myScreen ? new Vector2(-12f, -12f) : Vector2.zero;
     }
 
     static void LoadRzLines()
@@ -2665,6 +3075,7 @@ public class PachinkoOverlay : MonoBehaviour
         if (RecordMode) clockNow += 1f / 30f;
         FrameHook?.Invoke();
         VoteUpdate();
+        MonitorUpdate();
         UpdateMusic();
         ProcessImpacts();
         if (!root.gameObject.activeSelf) return;

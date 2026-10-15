@@ -9,6 +9,15 @@ public enum PachinkoBg : byte { None, Green, Red, Gold }
 public enum PachinkoCut : byte { None, Blue, Red, Gold }
 
 /// <summary>사장님이 정할 값(사장님 10-14 재확정: 777 5% · 세 같은 숫자 25% · 리치 꽝 40% · 꽝 30%, 플레이어마다 따로 뽑는다). 바꿀 땐 여기만.</summary>
+/// <summary>영상형 파칭코 테마 하나의 값(PachinkoSettings.VideoThemes). 영상 시각은 모두 영상 안의 초.</summary>
+public sealed class VideoThemeSpec
+{
+    public int theme; public string key, title, voteName, voteDesc, art, videoFile;
+    public float rouletteStart, rouletteStop, pushAt, videoEnd;
+    public bool coverSubtitles;   // 영상에 구워진 자막이 아래에 있어 룰렛 뒤에 어두운 띠를 깐다
+    public Color cardColor, fillColor, barColor, pickColor;
+}
+
 public static class PachinkoSettings
 {
     /// <summary>이 라운드 보스를 잡는 순간 한 번(판당 1회).</summary>
@@ -33,6 +42,53 @@ public static class PachinkoSettings
     public const float RzSpinMissSeconds = 35f, RzSpinWinSeconds = 39.1f;
     /// <summary>Re:ゼロ 꽝: 화면 깨짐 0.8초 + 꽝 영상 6.8초 + 여유.</summary>
     public const float RzMissResultSeconds = 0.8f + 6.8f + 1.0f;
+
+    // ───── 영상형 테마(사장님 10-16): 영상 한 편을 처음부터 재생하고 그 위에 룰렛을 얹는다. 테마별 값은 VideoThemeSpec 한 덩어리(아래 VideoThemes). ─────
+    // 흐름: 영상 0:00 → rouletteStart 룰렛 회전 → rouletteStop 숫자 정지·판정 → (같은 숫자 셋 = 크리티컬 보너스) 영상 계속 → pushAt PUSH(PushSeconds) → videoEnd 영상 끝. 꽝이면 rouletteStop에서 끝.
+    /// <summary>
+    /// 보상(사장님 10-16 확정, 같은 숫자 셋 = 크리티컬 · 777 포함): PUSH 성공 = 제일 좋은 보상(777 보상, 랜덤유닛) · PUSH 실패 = 당첨 보상(전설·히든 위습).
+    /// 꽝은 기존대로(리치 꽝 = 희귀함 위습 · 그냥 꽝 = 특별함 위습). 확률표(같은 숫자 30%)는 그대로라 PUSH 성공 시 대당첨이 30%가 된다.
+    /// false로 두면 옛 방식(777만 랜덤유닛, 그 밖의 같은 숫자는 당첨, PUSH 실패는 한 단계 낮은 리치꽝 보상)이다.
+    /// </summary>
+    public const bool VideoSuccessIsTopReward = true;
+    /// <summary>영상형 테마 PUSH 성공 확률(사장님 10-16: 5초 안에 눌러도 51%만 성공, 안 누르면 무조건 실패). 호스트가 plan을 굴릴 때 미리 정해 plan.pushWin에 넣어 전원이 같은 결과를 본다.</summary>
+    public const float VideoPushSuccessChance = 0.51f;
+    /// <summary>시험용(-pachinkoSkipTo &lt;초&gt;): 영상형 테마 연출을 이 초만큼 건너뛴 지점에서 시작한다. 평소 0 — 실게임엔 영향 없다.</summary>
+    public static float DebugSkipSeconds;
+    /// <summary>영상형 테마 결과 화면이 떠 있는 시간(크리티컬 PUSH 성공 / 실패 · 꽝).</summary>
+    public const float VideoSuccessResultSeconds = 5.5f, VideoFailResultSeconds = 3.0f, VideoMissResultSeconds = 3.0f;
+    /// <summary>한 슬롯의 파칭코가 이 값(초)보다 더 지체되면 호스트가 그 슬롯을 강제로 끝낸다(끊김·멈춤으로 전원 정지가 길어지는 것 방지).</summary>
+    public const float StallSafetySeconds = 25f;
+
+    /// <summary>theme 값(2~)에 대응하는 영상형 테마. 영상형이 아니면 null.</summary>
+    public static VideoThemeSpec VideoTheme(int theme)
+    {
+        foreach (VideoThemeSpec v in VideoThemes) if (v.theme == theme) return v;
+        return null;
+    }
+    public static VideoThemeSpec VideoThemeByKey(string key)
+    {
+        if (string.IsNullOrEmpty(key)) return null;
+        key = key.ToLowerInvariant();
+        foreach (VideoThemeSpec v in VideoThemes) if (key.StartsWith(v.key.Substring(0, 2))) return v;
+        return null;
+    }
+
+    public static readonly VideoThemeSpec[] VideoThemes =
+    {
+        new VideoThemeSpec
+        {
+            theme = 2, key = "fire", title = "炎炎ノ消防隊", voteName = "불꽃", voteDesc = "영상 룰렛 · 같은 숫자면 크리티컬 · PUSH", art = "炎",
+            videoFile = "fireforce_play.mp4", rouletteStart = 90f, rouletteStop = 106f, pushAt = 220f, videoEnd = 225f, coverSubtitles = true,
+            cardColor = new Color(0.5f, 0.2f, 0.02f, 0.95f), fillColor = new Color(1f, 0.8f, 0.2f, 0.55f), barColor = new Color(1f, 0.6f, 0.1f), pickColor = new Color(1f, 0.75f, 0.25f),
+        },
+        new VideoThemeSpec
+        {
+            theme = 3, key = "slime", title = "転生したらスライムだった件", voteName = "전생슬", voteDesc = "영상 룰렛 · 같은 숫자면 크리티컬 · PUSH", art = "スライム",
+            videoFile = "tensura_play.mp4", rouletteStart = 70f, rouletteStop = 80f, pushAt = 221.19f - 5f, videoEnd = 221.19f, coverSubtitles = false,
+            cardColor = new Color(0.04f, 0.3f, 0.5f, 0.95f), fillColor = new Color(0.4f, 0.85f, 1f, 0.55f), barColor = new Color(0.2f, 0.7f, 0.95f), pickColor = new Color(0.55f, 0.88f, 1f),
+        },
+    };
 }
 
 [System.Serializable]
@@ -42,19 +98,20 @@ public struct PachinkoPlan
     public byte left, center, right;   // 1~9
     public PachinkoHold hold;
     public byte yokoku;                // 0~3 (継続 ×N+1)
-    public byte theme;                 // 0=東京喰種 1=Re:ゼロ(테마 투표 결과, PachinkoOverlay.Theme)
+    public bool pushWin;               // 영상형 테마: 크리티컬일 때 PUSH를 누르면 성공하는 판인가(호스트가 미리 정함, 안 누르면 어차피 실패)
+    public byte theme;                 // 0=東京喰種 1=Re:ゼロ 2=불꽃 소방대 3=전생슬(테마 투표 결과, PachinkoOverlay.Theme)
     public PachinkoBg bg;
     public PachinkoCut cut;
 
     /// <summary>네트워크용 25비트 포장.</summary>
     public int Pack() =>
-        (win ? 1 : 0) | (reach ? 2 : 0) | (revive ? 4 : 0) | (jackpot ? 1 << 25 : 0) | (theme & 1) << 26 |
+        (win ? 1 : 0) | (reach ? 2 : 0) | (revive ? 4 : 0) | (jackpot ? 1 << 25 : 0) | (pushWin ? 1 << 28 : 0) | (theme & 3) << 26 |
         (left & 15) << 3 | (center & 15) << 7 | (right & 15) << 11 |
         ((int)hold & 7) << 15 | (yokoku & 3) << 18 | ((int)bg & 3) << 20 | ((int)cut & 7) << 22;
 
     public static PachinkoPlan Unpack(int v) => new PachinkoPlan
     {
-        win = (v & 1) != 0, reach = (v & 2) != 0, revive = (v & 4) != 0, jackpot = (v & (1 << 25)) != 0, theme = (byte)((v >> 26) & 1),
+        win = (v & 1) != 0, reach = (v & 2) != 0, revive = (v & 4) != 0, jackpot = (v & (1 << 25)) != 0, pushWin = (v & (1 << 28)) != 0, theme = (byte)((v >> 26) & 3),
         left = (byte)((v >> 3) & 15), center = (byte)((v >> 7) & 15), right = (byte)((v >> 11) & 15),
         hold = (PachinkoHold)((v >> 15) & 7), yokoku = (byte)((v >> 18) & 3), bg = (PachinkoBg)((v >> 20) & 3), cut = (PachinkoCut)((v >> 22) & 7),
     };
@@ -66,6 +123,9 @@ public struct PachinkoPlan
     /// 시안 plan()의 C# 이식(10-14 사양: 777 / 세 같은 숫자(7 제외) / 리치 꽝 / 그냥 꽝 네 결과).
     /// mode: null=확률 그대로, "jackpot"=777, "win"=당첨(강한 금 길), "revive"=꽝인 척 부활 당첨, "reach"=리치 꽝(빨강까지 갔다가), "miss"=그냥 꽝.
     /// </summary>
+    /// <summary>개발·시험용: -pachinkoPush success|fail로 PUSH 성공/실패를 고정한다(null이면 확률).</summary>
+    public static bool? ForcePush;
+
     public static PachinkoPlan Roll(string mode = null)
     {
         bool jackpot, win, reach;
@@ -78,6 +138,7 @@ public struct PachinkoPlan
         }
         else { jackpot = mode == "jackpot"; win = mode == "win" || mode == "revive"; reach = mode == "reach"; }
         var p = new PachinkoPlan { jackpot = jackpot, win = win || jackpot, reach = reach || win || jackpot, theme = (byte)PachinkoOverlay.Theme };
+        p.pushWin = ForcePush ?? (Random.value < PachinkoSettings.VideoPushSuccessChance);
 
         int n;
         if (jackpot) n = 7;
@@ -152,6 +213,8 @@ public struct PachinkoPlan
     /// </summary>
     public float PreludeSeconds()
     {
+        VideoThemeSpec vt = PachinkoSettings.VideoTheme(theme);
+        if (vt != null) return win ? vt.pushAt : vt.rouletteStop;   // 꽝은 판정 시각에 끝(PUSH 없음)
         if (theme == 1) return (win ? PachinkoSettings.RzSpinWinSeconds : PachinkoSettings.RzSpinMissSeconds) - PachinkoSettings.PushSeconds;   // 영상 끝에서 PUSH 5초가 닫히고 결과
         float t = 0.9f + 2.4f;
         if (!reach) return t + 0.4f;
@@ -165,6 +228,9 @@ public struct PachinkoPlan
         return t;
     }
 
+    /// <summary>이 plan의 PUSH 창 길이(초). 불꽃 꽝은 PUSH가 없다.</summary>
+    public float PushSeconds() => PachinkoSettings.VideoTheme(theme) != null && !win ? 0f : PachinkoSettings.PushSeconds;
+
     /// <summary>PUSH 뒤(또는 시간 끝) 결과 화면이 떠 있는 시간.</summary>
-    public float ResultSeconds() => theme == 1 && !win ? PachinkoSettings.RzMissResultSeconds : win ? PachinkoSettings.WinResultSeconds + (revive ? PachinkoSettings.ReviveExtraSeconds : 0f) + (jackpot ? PachinkoSettings.JackpotExtraSeconds : 0f) : PachinkoSettings.MissResultSeconds;
+    public float ResultSeconds(bool pushed = true) => PachinkoSettings.VideoTheme(theme) != null ? (win ? (pushed ? PachinkoSettings.VideoSuccessResultSeconds : PachinkoSettings.VideoFailResultSeconds) : PachinkoSettings.VideoMissResultSeconds) : theme == 1 && !win ? PachinkoSettings.RzMissResultSeconds : win ? PachinkoSettings.WinResultSeconds + (revive ? PachinkoSettings.ReviveExtraSeconds : 0f) + (jackpot ? PachinkoSettings.JackpotExtraSeconds : 0f) : PachinkoSettings.MissResultSeconds;
 }
