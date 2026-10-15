@@ -1294,6 +1294,8 @@ public static class ClaudeCommands
         public int midPlayReloads;  // 플레이 도중 도메인 리로드 횟수(아래 NoteMidPlayReload)
         public bool visitSupport, visitPirate;   // 10-02 PM: support — 도움소(능력치 증가·마나포션) 방문 · pirate — 해적단상점(퇴치 퀘스트) 방문. 기본 끔(기준선 일관성), 켠 판은 「실제 플레이 편향 보정」 비교 판
         public bool noCombine, noShop, bossAway;   // autoloop에서 조합·상점을 뺀다 — 일부러 약한 판(보스 제한 패배 확인용)
+        public string filmLate; public bool filmLateStarted, filmCam;   // filmwait:<초>:<fps> — 클릭·spawn이 끝난 뒤(waiting 단계) 시작하는 film
+        public string scenePath, restoreScenePath;   // scene:<이름> — Assets/Scenes/<이름>.unity를 열고 찍은 뒤 원래 씬으로(첫 화면 NetBoot 촬영, 2026-10-15)
         public bool askMode;             // askmode — 난이도를 자동으로 안 고른다(원작 대화상자를 그대로 본다, 10-03)
         public int mode = (int)DifficultyMode.Normal;   // mode:<난이도> — 기본 보통(09-25 PM 지시: 기억값이 쉬움이라 판 B~F가 전부 쉬움이었다)
         public int prevSavedMode = int.MinValue;         // 사장님 기억값 — 판이 끝나면 되돌린다(MinValue = 원래 없었음)
@@ -1353,6 +1355,14 @@ public static class ClaudeCommands
                 if (!Enum.TryParse(token.Substring(4), true, out Key kk) || kk == Key.None) return $"❌ key: 뒤엔 키 이름(Q·W·Space …): {token}";
                 job.clicks.Add("@key:" + kk);
             }
+            else if (token.StartsWith("filmbg:"))   // 안 막고 시작 — autoloop처럼 다른 동작이 도는 동안 찍는다
+            {
+                string[] bp = token.Substring(7).Split(':');
+                if (bp.Length != 2) return $"❌ filmbg: 뒤엔 <초>:<fps>: {token}";
+                job.clicks.Add("@filmbg:" + token.Substring(7));
+            }
+            else if (token == "filmcam") job.filmCam = true;   // filmwait 시작 직전 ShowcaseCalls.CamFight(소환 뒤 전투 중심으로)
+            else if (token.StartsWith("filmwait:")) job.filmLate = token.Substring(9);
             else if (token.StartsWith("film:"))
             {
                 // film:<초>:<fps> — 그 구간 매 프레임을 ~/GRD_showcase/frames/<판이름>/f_%05d.png로 저장(Time.captureFramerate 고정)
@@ -1378,6 +1388,11 @@ public static class ClaudeCommands
             else if (token == "sell") job.sellSpare = true;
             else if (token == "keeppen") job.keepPen = true;
             else if (token == "askmode") job.askMode = true;
+            else if (token.StartsWith("scene:"))
+            {
+                job.scenePath = "Assets/Scenes/" + token.Substring(6) + ".unity";
+                if (!File.Exists(job.scenePath)) return $"❌ 씬이 없다: {job.scenePath}";
+            }
             else if (token == "oldbottleneck") job.oldBottleneck = true;
             else if (token == "combineall") job.combineAll = true;
             else if (token == "storyplus") job.storyPlus = true;
@@ -1498,6 +1513,12 @@ public static class ClaudeCommands
         if (!job.askMode) PlayerPrefs.SetInt(DifficultyManager.ToolAutoPickKey, 1);   // 2026-10-03: 사람 플레이는 매번 대화상자 — 도구만 기억값으로 건너뛴다(한 판짜리 신호)
         PlayerPrefs.Save();
         SaveGameShot(job);
+        if (!string.IsNullOrEmpty(job.scenePath))
+        {
+            job.restoreScenePath = SceneManager.GetActiveScene().path;
+            EditorSceneManager.OpenScene(job.scenePath, OpenSceneMode.Single);
+            SaveGameShot(job);
+        }
         EditorApplication.isPlaying = true;   // 이 update가 끝난 뒤에 들어간다
 
         string clicks = job.clicks.Count > 0 ? $" · 누를 버튼 {string.Join(" → ", job.clicks)}" : "";
@@ -1511,6 +1532,21 @@ public static class ClaudeCommands
     static bool filmRunning;
     static int filmFrames, filmFps, filmDone, filmLastFrame = -1;
     static string filmDir;
+    static void StartFilm(GameShotJob job, string secs, string fps)
+    {
+        filmFps = int.Parse(fps);
+        filmFrames = Mathf.CeilToInt(float.Parse(secs, System.Globalization.CultureInfo.InvariantCulture) * filmFps);
+        string baseName = Path.GetFileNameWithoutExtension(job.file ?? "film");
+        filmDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "GRD_showcase", "frames", baseName);
+        if (Directory.Exists(filmDir)) Directory.Delete(filmDir, true);
+        Directory.CreateDirectory(filmDir);
+        filmLastFrame = -1;
+        filmDone = 0;
+        Time.captureFramerate = filmFps;   // 에디터가 느려도 게임 시간은 프레임당 1/fps
+        filmRunning = true;
+        EditorApplication.update += FilmUpdate;
+    }
+
     static void FilmUpdate()
     {
         if (!filmRunning || !EditorApplication.isPlaying) { filmRunning = false; EditorApplication.update -= FilmUpdate; Time.captureFramerate = 0; return; }
@@ -1648,22 +1684,22 @@ public static class ClaudeCommands
                     Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
                     break;
                 }
+                if (target.StartsWith("@filmbg:"))
+                {
+                    string[] bp = target.Substring(8).Split(':');
+                    StartFilm(job, bp[0], bp[1]);
+                    job.report += $"   🎞 filmbg 시작 {bp[0]}초 @{bp[1]}fps → {filmDir}\n";
+                    job.clickIndex++;
+                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
+                    break;
+                }
                 if (target.StartsWith("@film:"))
                 {
                     // Tick은 0.25초마다라 프레임 단위 캡처를 못 한다 — 별도 update 훅(FilmUpdate)이 게임 프레임마다 찍고, 여기선 끝나길 기다린다.
                     string[] fp = target.Substring(6).Split(':');
                     if (!filmRunning && filmDone == 0)
                     {
-                        filmFps = int.Parse(fp[1]);
-                        filmFrames = Mathf.CeilToInt(float.Parse(fp[0], System.Globalization.CultureInfo.InvariantCulture) * filmFps);
-                        string baseName = Path.GetFileNameWithoutExtension(job.file ?? "film");
-                        filmDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "GRD_showcase", "frames", baseName);
-                        if (Directory.Exists(filmDir)) Directory.Delete(filmDir, true);
-                        Directory.CreateDirectory(filmDir);
-                        filmLastFrame = -1;
-                        Time.captureFramerate = filmFps;   // 에디터가 느려도 게임 시간은 프레임당 1/fps
-                        filmRunning = true;
-                        EditorApplication.update += FilmUpdate;
+                        StartFilm(job, fp[0], fp[1]);
                         break;
                     }
                     if (filmRunning) break;
@@ -1813,6 +1849,20 @@ public static class ClaudeCommands
 
             case "waiting":
                 if (job.spawns.Count + job.combines.Count > 0) WatchLaneHits();
+                if (!string.IsNullOrEmpty(job.filmLate))
+                {
+                    if (!job.filmLateStarted)
+                    {
+                        string[] lf = job.filmLate.Split(':');
+                        if (job.filmCam) job.report += "   🎥 " + ShowcaseCalls.CamFight() + "\n";
+                        StartFilm(job, lf[0], lf[1]);
+                        job.filmLateStarted = true;
+                        SaveGameShot(job);
+                        break;
+                    }
+                    if (filmRunning) break;
+                    if (filmDone > 0) { job.report += $"   🎞 film: {filmDone}프레임 @{filmFps}fps → {filmDir}\n"; filmDone = 0; SaveGameShot(job); }
+                }
                 if (job.watchRounds > 0 ? job.finishNow : inStage >= job.seconds)
                 {
                     if (job.clicks.Any(c => c.StartsWith("@")))
@@ -4180,6 +4230,8 @@ public static class ClaudeCommands
         else PlayerPrefs.SetInt(DifficultyManager.SavedModeKey, job.prevSavedMode);
         PlayerPrefs.Save();
         SessionState.EraseString(GameShotKey);
+        if (!string.IsNullOrEmpty(job.restoreScenePath) && !EditorApplication.isPlayingOrWillChangePlaymode)
+            EditorSceneManager.OpenScene(job.restoreScenePath, OpenSceneMode.Single);
         StringBuilder text = new StringBuilder(job.prefix);
         string tainted = job.midPlayReloads > 0 ? $" (⚠️ 오염 — 플레이 도중 도메인 리로드 {job.midPlayReloads}번)" : "";
         text.AppendLine((job.failed ? "▶ gameshot 결과: ❌ 실패" : "▶ gameshot 결과: ✅") + tainted);
