@@ -5,7 +5,10 @@
 import os, sys, math, random, subprocess
 import numpy as np
 from PIL import Image, ImageFilter
-OUT = os.path.expanduser("~/GRD_pachinko_art/symbols_rz"); os.makedirs(OUT + "/_html", exist_ok=True)
+THEME = os.environ.get("SYM_THEME", "rz")   # rz(리제로 루비/사파이어) · fire(불꽃 소방대 화염 보석) · slime(전생슬 슬라임 크리스털)
+OUT = os.path.expanduser("~/GRD_pachinko_art/" + {"rz": "symbols_rz", "fire": "symbols_fire", "slime": "symbols_slime"}[THEME]); os.makedirs(OUT + "/_html", exist_ok=True)
+if not os.path.exists(OUT + "/fonts"):
+    import shutil; shutil.copytree(os.path.expanduser("~/GRD_pachinko_art/symbols_rz/fonts"), OUT + "/fonts")
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 PAL = {  # 어두움 → 밝음
     "ruby": ["#5a0010", "#9a0a1c", "#d6122a", "#ff3a3a", "#ff7a6a", "#ffd0c8"],
@@ -13,6 +16,18 @@ PAL = {  # 어두움 → 밝음
     "pink": ["#4a0036", "#9a0f78", "#e0309e", "#ff5cbc", "#ff9ed8", "#ffe4f4"],
     "gold": ["#6a3d00", "#a8680a", "#e0a020", "#ffd54a", "#fff0a0", "#fffbe8"],
 }
+if THEME == "fire":
+    PAL.update({  # 홀수 = 진홍→주황 파이어 오팔 · 짝수 = 호박색 · 7 = 금+백열
+        "ruby": ["#3c0006", "#8a0a10", "#d8281a", "#ff5a18", "#ffa23c", "#ffe8b8"],
+        "sapphire": ["#4a2000", "#9a5000", "#e08410", "#ffb52a", "#ffd870", "#fff4cc"],
+        "gold": ["#7a4400", "#d08a10", "#ffbe20", "#ffe45a", "#fff6a8", "#ffffff"]})
+elif THEME == "slime":
+    PAL.update({  # 홀수 = 하늘 아쿠아마린(#9ed0fe) · 짝수 = 군청 사파이어 · 7 = 금
+        "ruby": ["#063a5a", "#0e7a9a", "#2ab8c8", "#5fe0d8", "#9ed0fe", "#eafcff"],
+        "sapphire": ["#040c44", "#0a2688", "#1446c4", "#3a78f0", "#7fb4ff", "#e4f0ff"]})
+BEVEL = {"rz": None, "fire": ("#fff2d0", "#c07030", "#ffe2a0", "#8a3a10", "#ffc070", "#fff8e8"),
+         "slime": ("#e8f8ff", "#5a9ac8", "#cfeaff", "#2a5a98", "#9ed0fe", "#f4fcff")}[THEME]
+RZ_FIT = 0.89   # 리제로 기본판 글자 크기(505×609 @5)에 맞춘 배율
 INF = 30   # 글자 윤곽 부풀림(보도니의 가는 획이 보석 면을 못 담아서)
 def hx(c): return tuple(int(c[i:i + 2], 16) for i in (1, 3, 5))
 def ramp(pal, t):
@@ -40,21 +55,25 @@ def star(x, y, r, op=1):
             f'<circle cx="{x}" cy="{y}" r="{r*.22}" fill="#fff" opacity="{op}"/>')
 SPARK = {0: [(215, 215, 30), (400, 300, 18), (300, 420, 14)], 1: [(430, 205, 28), (200, 340, 17), (320, 250, 12)]}
 SIDE = {"ruby": ("#3a0008", "#8a1020"), "sapphire": ("#06103e", "#1a3a96"), "gold": ("#4a2a00", "#a8680a"), "pink": ("#3a0028", "#9a1a78")}
+if THEME == "fire": SIDE.update({"ruby": ("#2a0004", "#9a2410"), "sapphire": ("#2a1000", "#a05a08"), "gold": ("#4a2a00", "#d09020")})
+if THEME == "slime": SIDE.update({"ruby": ("#03243a", "#1a7a9a"), "sapphire": ("#030a30", "#1a3aa8")})
 def page(n, frame=0, pink=False):
     kind = "pink" if pink else ("gold" if n == 7 else ("ruby" if n % 2 else "sapphire")); pal = PAL[kind]
     fam = "Abril Fatface, Bodoni Moda, serif" if n == 7 else "Bodoni Moda, Didot, serif"
     wt = 400 if n == 7 else 900
     sk = SIDE[kind]
+    BV = BEVEL or ("#d8e4ff", "#5f7fc4", "#c4d4f8", "#33508f", "#8fa8e0", "#eef4ff")
+    inner = "#c0101c" if (THEME == "slime" and n == 7) else "#0b1030"     # 슬라임 7: 금 + 빨강 테두리
     G = "transform='translate(300 430) skewX(-12)' text-anchor='middle' font-family=\"%s\" font-weight='%d' font-size='350'" % (fam, wt)
     T = lambda extra="": f"<text x='0' y='0' {G} {extra}>{n}</text>"
     ext = ""; DEP = 44
     for i in range(DEP, 0, -1):                    # 눌린 두께: 보석색 어두운 톤(오른쪽 아래), 맨 끝은 은 테 반사
         t = i / DEP; c0, c1 = hx(sk[0]), hx(sk[1])
         col = "#%02x%02x%02x" % tuple(int(c1[k] + (c0[k] - c1[k]) * t) for k in range(3))
-        if i == DEP: col = "#c9d8f5"
+        if i == DEP: col = "#c9d8f5" if THEME == "rz" else BEVEL[0]
         ext += f"<g transform='translate({i * 0.95:.1f} {i * 1.3:.1f})'><text x='0' y='0' transform='translate(300 430) skewX(-12)' text-anchor='middle' font-family=\"{fam}\" font-weight='{wt}' font-size='350' fill='{col}' stroke='{col}' stroke-width='{30 + INF}' stroke-linejoin='round'>{n}</text></g>"
     kanji = ""
-    if n == 7:
+    if n == 7 and THEME == "rz":
         K = "text-anchor='middle' font-family=\"Dela Gothic One\" font-size='172'"
         kanji = ("<g transform='translate(432 245) rotate(8)'>"
                  f"<text x='0' y='0' {K} fill='#2a0600' stroke='#2a0600' stroke-width='11' stroke-linejoin='round'>強</text>"
@@ -66,13 +85,13 @@ def page(n, frame=0, pink=False):
 @font-face{{font-family:'Dela Gothic One';src:url('file://{OUT}/fonts/DelaGothicOne-Regular.ttf')}}
 html,body{{margin:0;background:transparent}}</style>
 <svg xmlns='http://www.w3.org/2000/svg' width='1024' height='1024' viewBox='0 0 600 600'><defs>
-<linearGradient id='silver' x1='0' y1='90' x2='0' y2='500' gradientUnits='userSpaceOnUse'><stop offset='0' stop-color='#d8e4ff'/><stop offset='.18' stop-color='#5f7fc4'/><stop offset='.4' stop-color='#c4d4f8'/><stop offset='.62' stop-color='#33508f'/><stop offset='.82' stop-color='#8fa8e0'/><stop offset='1' stop-color='#eef4ff'/></linearGradient>
+<linearGradient id='silver' x1='0' y1='90' x2='0' y2='500' gradientUnits='userSpaceOnUse'><stop offset='0' stop-color='{BV[0]}'/><stop offset='.18' stop-color='{BV[1]}'/><stop offset='.4' stop-color='{BV[2]}'/><stop offset='.62' stop-color='{BV[3]}'/><stop offset='.82' stop-color='{BV[4]}'/><stop offset='1' stop-color='{BV[5]}'/></linearGradient>
 <linearGradient id='gold' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#fff6c0'/><stop offset='.5' stop-color='#f0b020'/><stop offset='1' stop-color='#a85a00'/></linearGradient>
 <linearGradient id='hi' x1='60' y1='60' x2='560' y2='520' gradientUnits='userSpaceOnUse'><stop offset='0' stop-color='#fff'/><stop offset='.35' stop-color='#fff' stop-opacity='0'/><stop offset='.7' stop-color='#fff' stop-opacity='0'/><stop offset='1' stop-color='#fff' stop-opacity='.85'/></linearGradient><clipPath id='face'>{T("stroke='#000' stroke-width='%d' stroke-linejoin='round'" % INF)}</clipPath></defs>
 {ext}
 {T("fill='url(#silver)' stroke='url(#silver)' stroke-width='%d' stroke-linejoin='round'" % (30 + INF))}
 {T("fill='none' stroke='url(#hi)' stroke-width='%d' stroke-linejoin='round'" % (30 + INF - 14))}
-{T("fill='#0b1030' stroke='#0b1030' stroke-width='%d' stroke-linejoin='round'" % (10 + INF))}
+{T("fill='%s' stroke='%s' stroke-width='%d' stroke-linejoin='round'" % (inner, inner, 10 + INF))}
 {T("fill='%s' stroke='%s' stroke-width='%d' stroke-linejoin='round'" % (pal[2], pal[2], INF))}
 <g clip-path='url(#face)'>{facets(pal, n * 17 + 3)}
 <path d='M60,90 L560,90 L560,200 L60,270Z' fill='#fff' opacity='.10'/></g>
@@ -112,6 +131,11 @@ def make(ns, pink=False):
             for f in (0, 1): render(n, f, f"{base}_s{f}", pink); fr.append(f"{OUT}/{base}_s{f}.png")
         files[n] = fr
     sc = fit_all(files)
+    if THEME != "rz":                  # 리제로는 「強」이 7을 밀어 전체가 0.88배 — 같은 크기·여백으로 맞춘다
+        for fs in files.values():
+            for f in fs:
+                im = Image.open(f).convert("RGBA"); k = int(1024 * RZ_FIT); o = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
+                o.paste(im.resize((k, k), Image.LANCZOS), ((1024 - k) // 2, (1024 - k) // 2)); o.save(f)
     for n in ns:
         f0 = files[n][0]; im = Image.open(f0).convert("RGBA"); bb = im.getchannel("A").getbbox()
         if not pink: motion_blur(im).save(f"{OUT}/symbol_{n}_blur.png")
