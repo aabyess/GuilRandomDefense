@@ -110,6 +110,29 @@ public static class SkillTypeTags
         return t;
     }
 
+    /// <summary>특성강화(UnitData.trait)가 주는 방깎·마깎·이속↓·스턴 + 능력교체 스킬. 플레이어 눈엔 스킬이든 특성이든 「방깎 유닛」이다(사장님 10-15).
+    /// 특성은 구매해야 켜지지만 표시·검색은 「가질 수 있는가」 기준이다.</summary>
+    public static SkillTypeTag OfTrait(UnitTraitData trait)
+    {
+        SkillTypeTag t = SkillTypeTag.None;
+        if (trait == null) return t;
+        if (trait.effects != null)
+            foreach (TraitEffect e in trait.effects)
+            {
+                if (e == null) continue;
+                switch (e.kind)
+                {
+                    case TraitEffectKind.ArmorShred: t |= SkillTypeTag.ArmorBreak; break;
+                    case TraitEffectKind.MagicArmorShred: t |= SkillTypeTag.MagicArmorBreak; break;
+                    case TraitEffectKind.SlowOnHit: t |= SkillTypeTag.Slow; break;
+                    case TraitEffectKind.StatusAilment: t |= SkillTypeTag.Stun; break;
+                }
+            }
+        SkillTypeTag replaced = SkillTypeTag.None;
+        if (trait.replacementSkill != null) Collect(trait.replacementSkill, ref replaced, 0);
+        return t | replaced;
+    }
+
     static readonly Dictionary<UnitData, SkillTypeTag> cache = new Dictionary<UnitData, SkillTypeTag>();
 
     /// <summary>유닛의 태그(스킬 목록 + 평타 방무뎀). 에셋은 실행 중 안 바뀌니 캐시한다.</summary>
@@ -122,6 +145,7 @@ public static class SkillTypeTags
             foreach (SkillData s in unit.skills) Collect(s, ref tags, 0);
         else Collect(unit.skill, ref tags, 0);
         if (unit.attackArmorIgnoreRatio > 0f) tags |= SkillTypeTag.ArmorIgnore;
+        tags |= OfTrait(unit.trait);
         cache[unit] = tags;
         return tags;
     }

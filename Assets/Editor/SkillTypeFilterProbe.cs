@@ -60,6 +60,36 @@ static class SkillTypeFilterProbe
         return $"표본을 ~/GRD_skilltype_samples.txt에 썼다({sb.Length}자)";
     }
 
+    // 특성 반영 전후 비교 + 특성 자산 현황: call SkillTypeFilterProbe.TraitDelta
+    static string TraitDelta()
+    {
+        var all = AllUnits();
+        var results = new HashSet<UnitData>();
+        foreach (string g in AssetDatabase.FindAssets("t:CombineRecipe", new[] { "Assets/Data/Recipes" }))
+        {
+            var r = AssetDatabase.LoadAssetAtPath<CombineRecipe>(AssetDatabase.GUIDToAssetPath(g));
+            if (r != null && r.result != null) results.Add(r.result);
+        }
+        var sb = new StringBuilder();
+        int withTrait = all.Count(u => u.trait != null);
+        var traitAssets = AssetDatabase.FindAssets("t:UnitTraitData").Select(g => AssetDatabase.LoadAssetAtPath<UnitTraitData>(AssetDatabase.GUIDToAssetPath(g))).Where(t => t != null).ToList();
+        int unlinked = traitAssets.Count(t => t.targetUnit != null && t.targetUnit.trait != t);
+        sb.Append($"특성 자산 {traitAssets.Count}개 · 유닛에 연결된 trait {withTrait}기 · targetUnit과 UnitData.trait이 다른 자산 {unlinked}개\n");
+        var kinds = traitAssets.SelectMany(t => t.effects ?? new List<TraitEffect>()).GroupBy(e => e.kind).Select(g => $"{g.Key} {g.Count()}");
+        sb.Append("특성 효과 종류: " + string.Join(", ", kinds) + $" · replacementSkill {traitAssets.Count(t => t.replacementSkill != null)}개\n");
+        sb.Append($"{"칩",-18}{"스킬만(로스터)",12}{"특성 포함(로스터)",14}{"결과유닛 포함",12}\n");
+        foreach (SkillTypeTag t in new[] { SkillTypeTag.ArmorBreak, SkillTypeTag.MagicArmorBreak, SkillTypeTag.Slow, SkillTypeTag.Stun, SkillTypeTag.Physical, SkillTypeTag.Magic, SkillTypeTag.Explosive, SkillTypeTag.Fixed, SkillTypeTag.ArmorIgnore, SkillTypeTag.Finisher, SkillTypeTag.MagicAmp, SkillTypeTag.ExplosiveAmp })
+        {
+            int withTr = all.Count(u => (SkillTypeTags.Of(u) & t) != 0);
+            // 스킬만 = 특성 기여 없이 스킬 목록(+평타 방무뎀)만으로 계산
+            int skillOnly = all.Count(u => ((((u.skills != null && u.skills.Count > 0) ? u.skills : new List<SkillData> { u.skill }).Any(sk => sk != null && (SkillTypeTags.Of(sk) & t) != 0))) || (t == SkillTypeTag.ArmorIgnore && u.attackArmorIgnoreRatio > 0f));
+            int resWith = results.Count(u => (SkillTypeTags.Of(u) & t) != 0);
+            sb.Append($"{t,-18}{skillOnly,12}{withTr,14}{resWith,12}\n");
+        }
+        File.WriteAllText(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "GRD_skilltype_traitdelta.txt"), sb.ToString());
+        return "\n" + sb;
+    }
+
     static string Open()
     {
         var d = Object.FindFirstObjectByType<RecipeSearchDrawer>();
