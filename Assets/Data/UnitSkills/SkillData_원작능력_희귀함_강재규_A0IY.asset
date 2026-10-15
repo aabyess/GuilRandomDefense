@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
   m_Name: SkillData_원작능력_희귀함_강재규_A0IY
   m_EditorClassIdentifier:
-  skillName: A0IY !하비하비열매 — 1/12 장난감 인형 450범위 10000(물리)
-  description: 원작 슈가 h027 Trig_Unique13(GetRandomInt(1,12)==3 → h06O 장난감 3.5초 소환 → selfdestruct → e0AW A0PK 폭발 aare 450). 피해는 A0IY 툴팁 10000 물리(A0PK Eim1은 3000/0.7초 — 둘이 다르다, 툴팁 쪽을 따름). 2026-10-15 구현담당1.
+  skillName: A0IY !하비하비열매 — 1/12 장난감 인형 폭발 지대 450범위 3000(0.7초 간격·1초)
+  description: '원작 슈가 h027 Trig_Unique13(GetRandomInt(1,12)==3 → h06O 장난감희귀함 3.5초 소환 → selfdestruct, A0J6 Aspt가 죽을 때 e0AW 1기 소환) → e0AW(uhpm 1·uhpr −1 = 수명 약 1초)의 A0PK(ANpi, Eim1 3000 · adur 0.7초 간격 · aare 450). 주기 피해 지대(SkillDamageZone): 3000을 0.7초 간격, 수명 1초라 한 번(처음 틱이 간격 뒤). 피해 유형은 ANpi 지대 선례(A0DG·A0KB)대로 AP/Spells. 툴팁 A0IY의 「10000 물리」는 데이터와 달라 데이터 우선(사장님·PM 10-15). 2026-10-15 구현담당1.'
   triggerType: 0
   levels:
   - cooldown: 0
@@ -29,13 +29,13 @@ MonoBehaviour:
     - kind: 0
       basis: 0
       target: 2
-      damageType: 1
-      attackType: 1
-      multiplier: 10000
+      damageType: 2
+      attackType: 7
+      multiplier: 3000
       bonus: 0.0
       chance: 1
       hitCount: 1
-      duration: 0.0
+      duration: 1.0
       casterBuffCountFactor: 0.0
       buffId:
       randMin: 1.0
@@ -51,8 +51,8 @@ MonoBehaviour:
       heroDuration: 0.0
       maxTargets: 0
       chainDamageStep: 0.0
-      zoneTickInterval: 0.0
-      zoneRadius: 0.0
+      zoneTickInterval: 0.7
+      zoneRadius: 450.0
       zoneSpacing: 0.0
       zoneAtCaster: 0
       lineLength: 0.0
