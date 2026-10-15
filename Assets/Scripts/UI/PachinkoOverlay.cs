@@ -798,6 +798,7 @@ public class PachinkoOverlay : MonoBehaviour
     void Begin(PachinkoPlan plan, bool isStandalone)
     {
         if (running != null) StopCoroutine(running);
+        ClearGrayHold();
         standalone = isStandalone;
         pushedWho = int.MinValue;
         win = plan.win;
@@ -1415,7 +1416,24 @@ public class PachinkoOverlay : MonoBehaviour
             yield return null;
         }
         foreach (var sh in shards) if (sh.rt != null) Destroy(sh.rt.gameObject);
-        Destroy(cap);
+        if (gray && noReveal)
+        {
+            // 조각이 떨어진 뒤에도 아래 층(영상·오버레이)이 흑백으로 남게 흑백 캡처를 영상 위·결과 UI 아래에 붙잡아 둔다
+            ClearGrayHold();
+            RectTransform gh = Rt("grayHold", root); Stretch(gh);
+            grayHold = gh.gameObject.AddComponent<RawImage>(); grayHold.texture = cap; grayHold.raycastTarget = false;
+            gh.SetSiblingIndex(Mathf.Min(root.childCount - 1, ghostC.transform.GetSiblingIndex() + 1));
+            grayHoldTex = cap;
+        }
+        else Destroy(cap);
+    }
+
+    RawImage grayHold; Texture2D grayHoldTex;
+    void ClearGrayHold()
+    {
+        if (grayHold != null) Destroy(grayHold.gameObject);
+        if (grayHoldTex != null) Destroy(grayHoldTex);
+        grayHold = null; grayHoldTex = null;
     }
 
     IEnumerator GlassDust(Transform parent, Vector2 origin, int count)
@@ -1848,6 +1866,7 @@ public class PachinkoOverlay : MonoBehaviour
     {
         while (Now < until) yield return null;
         yield return ReturnFade();
+        ClearGrayHold();
         StopAllSfx();
         StopVideoNow();
         UseFireVideo(false);
