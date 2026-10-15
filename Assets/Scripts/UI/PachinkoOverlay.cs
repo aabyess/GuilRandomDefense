@@ -50,6 +50,7 @@ public class PachinkoOverlay : MonoBehaviour
     Image holdRing;
     Image logoReach, logoKeizoku, logoGekiatsu, logoFukkatsu, logoOoatari, logoAtari, logoZannen;
     Reel[] reels;
+    readonly Image[] reelShadow = new Image[3];
     readonly List<Image> particlePool = new List<Image>();
     TMP_FontAsset font;
     Sprite circle;
@@ -354,6 +355,15 @@ public class PachinkoOverlay : MonoBehaviour
         Place(holdOrbs[0].rectTransform, 960 - 38, 1000 - 38, 76, 76);
         reels = new Reel[3];
         for (int i = 0; i < 3; i++) reels[i] = new Reel(this, machineRect, i);
+        // 영상 위에서도 숫자가 읽히게 릴마다 부드러운 어두운 받침(릴과 함께 움직인다)
+        for (int i = 0; i < 3; i++)
+        {
+            reelShadow[i] = Img("reelShadow" + i, machineRect, circle, new Color(0f, 0f, 0f, 0.5f));
+            reelShadow[i].raycastTarget = false;
+            reelShadow[i].rectTransform.anchorMin = reelShadow[i].rectTransform.anchorMax = new Vector2(0f, 1f);
+            reelShadow[i].rectTransform.sizeDelta = new Vector2(760f, 640f);
+            reelShadow[i].transform.SetAsFirstSibling();
+        }
 
         // 연출 글자 그림(logos)
         logoReach = Logo("logo_reach", 960, 210, 1000); logoKeizoku = Logo("logo_keizoku", 960, 420, 900); logoGekiatsu = Logo("logo_gekiatsu", 960, 800, 900);
@@ -2734,8 +2744,9 @@ public class PachinkoOverlay : MonoBehaviour
     IEnumerator ImpactFx(float strength, bool both)
     {
         // ① 흰 섬광 α 0.25~0.6 · 0.12초
-        StartCoroutine(FlashColor(new Color(1f, 1f, 1f, Mathf.Lerp(0.25f, 0.5f, strength)), 0.06f));
-        float shake = Mathf.Lerp(4f, 14f, strength), pulse = Mathf.Lerp(0.04f, 0.08f, strength);
+        float calm = ReduceFlash ? 0.4f : 1f;   // 번쩍임 줄이기: 연속 임팩트의 섬광·흔들림·색수차를 크게 줄인다
+        StartCoroutine(FlashColor(new Color(1f, 1f, 1f, Mathf.Lerp(0.25f, 0.5f, strength) * calm), 0.06f));
+        float shake = Mathf.Lerp(4f, 14f, strength) * calm, pulse = Mathf.Lerp(0.04f, 0.08f, strength);
         RectTransform vr = videoView.rectTransform;
         float t = 0f;
         while (t < 0.25f)
@@ -2745,7 +2756,7 @@ public class PachinkoOverlay : MonoBehaviour
             float sc = 1f + pulse * Mathf.Sin(u * Mathf.PI);   // ③ 1.0 → 1.04~1.08 → 1.0 「두둥」
             Vector2 off = t < 0.2f ? new Vector2(UnityEngine.Random.Range(-shake, shake), UnityEngine.Random.Range(-shake, shake)) * k : Vector2.zero;   // ② 4~14px · 0.2초
             vr.localScale = Vector3.one * sc; vr.anchoredPosition = off;
-            if (both)   // ④ 색수차
+            if (both && !ReduceFlash)   // ④ 색수차
             {
                 float d = 18f * strength * k;
                 ghostR.rectTransform.localScale = ghostC.rectTransform.localScale = Vector3.one * sc;
@@ -3417,6 +3428,13 @@ public class PachinkoOverlay : MonoBehaviour
         if (reels != null && reels.Length == 3) reels[1].group.alpha = (curReach && numbersSmallT > 0.6f && reels[1].spinning) ? 0.35f + 0.65f * Mathf.Abs(Mathf.Sin(Now * 8f)) : 1f;   // 리치면 미니 릴 가운데 칸 깜빡
         if (sharpRays != null && sharpRays.gameObject.activeSelf) sharpRays.localRotation = Quaternion.Euler(0f, 0f, -Now * 6f);
         if (reels != null) foreach (Reel rl in reels) rl.SetSmall(numbersSmallT);
+        if (reelShadow[0] != null)
+            for (int i = 0; i < 3; i++)
+            {
+                float st = Mathf.Clamp01(numbersSmallT);
+                reelShadow[i].rectTransform.anchoredPosition = new Vector2(Mathf.Lerp(BigX[i], SmallX[i], st), -Mathf.Lerp(BigY, SmallY, st));
+                reelShadow[i].rectTransform.localScale = Vector3.one * Mathf.Lerp(1f, SmallScale, st);
+            }
         if (tickerText != null)
         {
             float x = -(Now * 160f % 2300f);
