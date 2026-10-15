@@ -98,7 +98,8 @@ public class PachinkoController : MonoBehaviour
             GamePause.SetPachinkoHold(true);
             NetGameState vs = NetGameState.Instance;
             if (vs != null && GamePause.IsNetworked) vs.BroadcastPachinkoVoteOpen(VoteSeconds);
-            Debug.Log($"[파칭코] 테마 투표 시작 {VoteSeconds:F0}초");
+            voteOpenSeen = true;
+            Debug.Log($"[파칭코] 테마 투표 시작 {VoteSeconds:F0}초 (t={Time.unscaledTime:F1})");
             VoteOpenHandler(VoteSeconds);
             return;
         }
@@ -129,7 +130,8 @@ public class PachinkoController : MonoBehaviour
         {
             Run r = c.runs[slot];
             c.Arm(slot, r, local: slot == GameAuthority.LocalPlayerId);
-            if (state != null && GamePause.IsNetworked && slot != GameAuthority.LocalPlayerId) state.BroadcastPachinko(slot, r.plan.Pack());
+            // 호스트 자기 슬롯도 보낸다(10-16 g1: 예전엔 slot != Local만 보내 클라 관전 모니터에 호스트 줄이 안 떴다). 클라는 자기 슬롯이 아니면 모니터로만 받는다.
+            if (state != null && GamePause.IsNetworked) state.BroadcastPachinko(slot, r.plan.Pack());
         }
     }
 
@@ -164,6 +166,8 @@ public class PachinkoController : MonoBehaviour
     {
         if (GameAuthority.IsServer) return;
         Ensure().authority = false;
+        voteOpenSeen = true;
+        Debug.Log($"[파칭코] 투표 열림 수신 {seconds:F0}초 (t={Time.unscaledTime:F1})");
         VoteOpenHandler?.Invoke(seconds);
     }
 
@@ -204,7 +208,7 @@ public class PachinkoController : MonoBehaviour
         voteClosed = true;
         VoteTheme = theme;
         voteLaunchAt = Time.unscaledTime + VoteResultHold;
-        Debug.Log($"[파칭코] 투표 마감 — 東京喰種 {a} · Re:ゼロ {b} · 불꽃 {count[2]} · 전생슬 {count[3]} → 테마 {theme}");
+        Debug.Log($"[파칭코] 투표 마감 — 東京喰種 {a} · Re:ゼロ {b} · 불꽃 {count[2]} · 전생슬 {count[3]} → 테마 {theme} (t={Time.unscaledTime:F1})");
         NetGameState s = NetGameState.Instance;
         if (s != null && GamePause.IsNetworked) s.BroadcastPachinkoVoteClose(theme);
         VoteCloseHandler?.Invoke(theme);
@@ -215,7 +219,7 @@ public class PachinkoController : MonoBehaviour
     public static void ReceivePlan(int slot, int packed)
     {
         if (GameAuthority.IsServer) return;
-        if (slot != GameAuthority.LocalPlayerId) { MonitorPlanHandler?.Invoke(slot, PachinkoPlan.Unpack(packed)); return; }   // 남의 슬롯 = 관전 모니터용
+        if (slot != GameAuthority.LocalPlayerId) { PachinkoPlan other = PachinkoPlan.Unpack(packed); Debug.Log($"[파칭코] 관전 plan 수신 슬롯 {slot} — {other} (t={Time.unscaledTime:F1})"); MonitorPlanHandler?.Invoke(slot, other); return; }   // 남의 슬롯 = 관전 모니터용
         PachinkoController c = Ensure();
         c.authority = false;
         var run = new Run { plan = PachinkoPlan.Unpack(packed) };
@@ -227,7 +231,7 @@ public class PachinkoController : MonoBehaviour
     public static void ReceivePushed(int slot, int who)
     {
         if (GameAuthority.IsServer) return;
-        if (slot != GameAuthority.LocalPlayerId) { MonitorPushedHandler?.Invoke(slot, who); return; }
+        if (slot != GameAuthority.LocalPlayerId) { Debug.Log($"[파칭코] 관전 눌림 수신 슬롯 {slot} — {(who < 0 ? "시간 끝" : "누름")} (t={Time.unscaledTime:F1})"); MonitorPushedHandler?.Invoke(slot, who); return; }
         MonitorPushedHandler?.Invoke(slot, who);
         if (Instance == null || !Instance.runs.TryGetValue(slot, out Run r) || r.phase == Phase.Result || r.phase == Phase.Done) return;
         Instance.EnterResult(slot, r, who, broadcast: false);
@@ -247,7 +251,7 @@ public class PachinkoController : MonoBehaviour
         if (Instance == null) return;
         int slot = GameAuthority.LocalPlayerId;
         if (!Instance.runs.TryGetValue(slot, out Run r) || r.phase != Phase.Push) return;
-        if (Instance.authority) Instance.EnterResult(slot, r, slot, broadcast: false);
+        if (Instance.authority) Instance.EnterResult(slot, r, slot, broadcast: true);
         else if (!r.requested) { r.requested = true; NetCommands.RequestPachinkoPush(); }
     }
 
@@ -266,6 +270,28 @@ public class PachinkoController : MonoBehaviour
         Debug.Log($"[파칭코] 시작({(authority ? "호스트" : "클라")}) 슬롯 {slot} — {r.plan} · {(local ? (overlay ? "오버레이" : "연출 없음(임시 경로)") : "원격 슬롯")} · PUSH 창 {r.openAt - now:F1}~{r.closeAt - now:F1}초");
         MonitorPlanHandler?.Invoke(slot, r.plan);   // 내 슬롯·호스트가 아는 원격 슬롯 모두(관전 모니터)
         if (local) PlayHandler?.Invoke(r.plan);
+        if (local && testAutoPushDelay >= 0f) StartCoroutine(TestAutoPush(testAutoPushDelay + r.plan.PreludeSeconds() - (PachinkoSettings.VideoTheme(r.plan.theme) != null ? PachinkoSettings.DebugSkipSeconds : 0f)));
+    }
+
+    // 시험용(-pachinkoAutoPush 초): PUSH 창이 열리고 이 초 뒤에 내 PUSH를 자동으로 누른다(클라면 RPC). 로그 「[파칭코] 시험 자동 PUSH」.
+    static float testAutoPushDelay = -1f;
+    System.Collections.IEnumerator TestAutoPush(float wait)
+    {
+        float until = Time.unscaledTime + Mathf.Max(0.1f, wait);
+        while (Time.unscaledTime < until) yield return null;
+        Debug.Log($"[파칭코] 시험 자동 PUSH — 슬롯 {GameAuthority.LocalPlayerId} (t={Time.unscaledTime:F1})");
+        RequestPush();
+    }
+
+    // 시험용(-pachinkoVote 테마 초): 투표 창이 열린 뒤 이 초에 이 PC가 그 테마(0~3)에 한 표 던진다.
+    static bool voteOpenSeen;
+    System.Collections.IEnumerator TestVote(int theme, float delay)
+    {
+        while (!voteOpenSeen) yield return null;
+        float until = Time.unscaledTime + delay;
+        while (Time.unscaledTime < until) yield return null;
+        Debug.Log($"[파칭코] 시험 투표 — 슬롯 {GameAuthority.LocalPlayerId} → 테마 {theme} (t={Time.unscaledTime:F1})");
+        CastVote(theme);
     }
 
     void EnterResult(int slot, Run r, int who, bool broadcast)
@@ -279,7 +305,7 @@ public class PachinkoController : MonoBehaviour
         if (broadcast)
         {
             NetGameState state = NetGameState.Instance;
-            if (state != null && GamePause.IsNetworked && !local) state.BroadcastPachinkoPushed(slot, who);
+            if (state != null && GamePause.IsNetworked) state.BroadcastPachinkoPushed(slot, who);   // 호스트 슬롯도(클라 모니터가 호스트 눌림·시간 끝을 본다)
         }
         if (local) PushedHandler?.Invoke(who);
     }
@@ -348,7 +374,7 @@ public class PachinkoController : MonoBehaviour
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    static void ResetStatics() { Instance = null; triggeredThisRun = false; PlayHandler = null; PushedHandler = null; MonitorPlanHandler = null; MonitorPushedHandler = null; MonitorClearHandler = null; VoteOpenHandler = null; VoteTallyHandler = null; VoteCloseHandler = null; voting = false; voteClosed = false; voteModes = null; VoteTheme = -1; }
+    static void ResetStatics() { Instance = null; triggeredThisRun = false; PlayHandler = null; PushedHandler = null; MonitorPlanHandler = null; MonitorPushedHandler = null; MonitorClearHandler = null; VoteOpenHandler = null; VoteTallyHandler = null; VoteCloseHandler = null; voteOpenSeen = false; voting = false; voteClosed = false; voteModes = null; VoteTheme = -1; }
 
     // ───────── 개발 인자 ─────────
 
@@ -356,6 +382,12 @@ public class PachinkoController : MonoBehaviour
     static void TestArg()
     {
         string[] args = Environment.GetCommandLineArgs();
+        for (int i = 0; i + 1 < args.Length; i++)
+        {
+            if (args[i] == "-pachinkoAutoPush" && float.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float ap)) testAutoPushDelay = ap;
+            if (args[i] == "-pachinkoVote" && i + 2 < args.Length && int.TryParse(args[i + 1], out int vt) && float.TryParse(args[i + 2], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float vd))
+                Ensure().StartCoroutine(Ensure().TestVote(vt, vd));
+        }
         for (int i = 0; i + 1 < args.Length; i++)
         {
             if (args[i] != "-pachinkoTest") continue;
