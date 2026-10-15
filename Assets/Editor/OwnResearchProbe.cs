@@ -15,7 +15,7 @@ static class OwnResearchProbe
         var tracks = AssetDatabase.FindAssets("t:UnitUpgradeTrackData", new[] { "Assets/Data/UnitUpgrades" }).Select(g => AssetDatabase.LoadAssetAtPath<UnitUpgradeTrackData>(AssetDatabase.GUIDToAssetPath(g))).ToList();
         var types = AssetDatabase.FindAssets("t:AttackTypeUpgradeTrackData", new[] { "Assets/Data/AttackTypeUpgrades" }).Select(g => AssetDatabase.LoadAssetAtPath<AttackTypeUpgradeTrackData>(AssetDatabase.GUIDToAssetPath(g))).ToList();
         var sb = new StringBuilder();
-        foreach (string n in new[] { "전설적인_정준영", "전설적인_임채현", "제한_최영민", "초월_이태훈_AP", "다른세계_올마이트", "랜덤_손오공", "희귀함_김경현" })
+        foreach (string n in new[] { "다른세계_올마이트", "다른세계_브로리", "랜덤_손오공" })
         {
             var d = AssetDatabase.LoadAssetAtPath<UnitData>($"Assets/Data/Units/Roster/{n}.asset");
             var go = sp.Spawn(d, c, 0);

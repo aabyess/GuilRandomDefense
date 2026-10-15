@@ -258,6 +258,14 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
     public void LevelUp(UnitUpgradeTrackData track)
     {
         if (track == null) return;
+        // 같은 등급이 두 트랙에 걸리면 딕셔너리 순서로 먹히는 쪽이 바뀐다(10-16: 가제 「다른세계 강화」 잔재) — 경고만 남긴다.
+        if (track.targetUnit == null && track.targetGrades != null)
+            foreach (KeyValuePair<UnitUpgradeTrackData, int> other in legacyGradeLevels)
+            {
+                if (other.Key == null || other.Key == track || other.Key.targetUnit != null || other.Key.targetGrades == null) continue;
+                foreach (UnitGrade g in track.targetGrades)
+                    if (other.Key.targetGrades.Contains(g)) UnityEngine.Debug.LogWarning($"[강화소] 등급 {g}이(가) 두 트랙에 걸려 있습니다: {track.name} · {other.Key.name} — 하나만 먹습니다.");
+            }
         legacyGradeLevels[track] = Level(track) + 1;
         OnLevelChanged?.Invoke();
     }
