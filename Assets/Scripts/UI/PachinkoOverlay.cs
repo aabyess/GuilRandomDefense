@@ -401,6 +401,7 @@ public class PachinkoOverlay : MonoBehaviour
         // 보상 띠
         {   // 「번쩍임 줄이기」 토글(켜면 경고 스트로브 끄고 섬광 α 절반)
             Image rb = Img("reduceFlash", stage, null, new Color(0f, 0f, 0f, 0.4f), true);
+            reduceFlashBtn = rb.gameObject;
             Place(rb.rectTransform, 24, 1030, 270, 40);
             TMP_Text rl = Label("reduceLabel", rb.transform, "", 24f, Color.white, TextAlignmentOptions.Center);
             Stretch(rl.rectTransform);
@@ -1656,6 +1657,7 @@ public class PachinkoOverlay : MonoBehaviour
     RenderTexture fireRT;
     bool fireVideoTarget, fireChromeHidden;
     TMP_Text fireBanner, fireBadge;
+    GameObject reduceFlashBtn;
     Image fireSubtitleCover;
 
     /// <summary>16:9 영상용 렌더 텍스처로 바꾼다(리제로 영상은 1920×820 가로로 긴 판이라 RT가 다르다). off면 원래대로.</summary>
@@ -1682,6 +1684,7 @@ public class PachinkoOverlay : MonoBehaviour
         if (ticker != null) ticker.gameObject.SetActive(visible);
         if (meterText != null) meterText.gameObject.SetActive(visible);
         if (pauseText != null) pauseText.gameObject.SetActive(visible);
+        if (reduceFlashBtn != null) reduceFlashBtn.SetActive(visible);   // 영상만 보이는 동안은 파칭코 UI를 전혀 안 보인다
         if (fireBadge != null) fireBadge.gameObject.SetActive(!visible);   // 영상만 보이는 동안 G.R.D 배지
     }
 
@@ -1971,7 +1974,7 @@ public class PachinkoOverlay : MonoBehaviour
 
     void MonitorUpdate()
     {
-        if (mon.Count == 0) { if (monitorRoot != null && monitorRoot.gameObject.activeSelf) monitorRoot.gameObject.SetActive(false); return; }
+        if (mon.Count < 2) { if (monitorRoot != null && monitorRoot.gameObject.activeSelf) monitorRoot.gameObject.SetActive(false); return; }
         if (monitorRoot == null)
         {
             monitorRoot = Rt("monitor", transform);

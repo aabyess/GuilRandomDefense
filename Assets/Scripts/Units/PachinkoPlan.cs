@@ -79,7 +79,7 @@ public static class PachinkoSettings
         new VideoThemeSpec
         {
             theme = 2, key = "fire", title = "炎炎ノ消防隊", voteName = "불꽃", voteDesc = "영상 룰렛 · 같은 숫자면 크리티컬 · PUSH", art = "炎",
-            videoFile = "fireforce_play.mp4", rouletteStart = 90f, rouletteStop = 106f, pushAt = 220f, videoEnd = 225f, coverSubtitles = true,
+            videoFile = "fireforce_play.mp4", rouletteStart = 90f, rouletteStop = 106f, pushAt = 220f, videoEnd = 225f, coverSubtitles = false,
             cardColor = new Color(0.5f, 0.2f, 0.02f, 0.95f), fillColor = new Color(1f, 0.8f, 0.2f, 0.55f), barColor = new Color(1f, 0.6f, 0.1f), pickColor = new Color(1f, 0.75f, 0.25f),
         },
         new VideoThemeSpec
