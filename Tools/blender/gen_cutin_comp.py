@@ -360,7 +360,7 @@ def make(style, unit, grade, name, nick):
 
 
 # 유닛, 등급, 이름, 별명
-JOBS = [("초월_최상호_AD", "초월", "최상호", "구일에서가장자유로운남자"), ("초월_노태현_AP", "초월", "노태현", "여동생살해자")]
+JOBS = [("초월_최상호_AD", "초월", "최상호", "킹카가될뻔했던사나이"), ("초월_노태현_AP", "초월", "노태현", "여동생살해자")]
 if __name__ == "__main__" and not (len(sys.argv) > 1 and sys.argv[1] == "C"):
     only = sys.argv[1:]
     for unit, grade, name, nick in JOBS:
