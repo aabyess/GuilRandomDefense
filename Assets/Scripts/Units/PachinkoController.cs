@@ -186,6 +186,16 @@ public class PachinkoController : MonoBehaviour
         VoteCloseHandler?.Invoke(theme);
     }
 
+    /// <summary>표 비율 = 확률, 무투표·안 누른 사람은 표에서 빠짐(아무도 안 눌렀으면 넷 균등). count[0..3] = 東京喰種·Re:ゼロ·불꽃·전생슬 표 수. 시험(PachinkoVoteSample)이 같은 함수를 부른다.</summary>
+    public static int PickTheme(int[] count)
+    {
+        int total = count[0] + count[1] + count[2] + count[3];
+        if (total == 0) return UnityEngine.Random.Range(0, 4);
+        float r = UnityEngine.Random.value * total;
+        for (int i = 0; i < 4; i++) { r -= count[i]; if (r <= 0f) return i; }
+        return 0;
+    }
+
     void CloseVote()
     {
         var count = new int[4];
@@ -195,15 +205,7 @@ public class PachinkoController : MonoBehaviour
             int v = votes[context.PlayerId];
             if (v >= 1 && v <= 4) count[v - 1]++;
         }
-        int total = count[0] + count[1] + count[2] + count[3];
-        int theme;   // 표 비율 = 확률, 무투표·안 누른 사람은 표에서 빠짐(아무도 안 눌렀으면 넷 균등)
-        if (total == 0) theme = UnityEngine.Random.Range(0, 4);
-        else
-        {
-            float r = UnityEngine.Random.value * total;
-            theme = 0;
-            for (int i = 0; i < 4; i++) { r -= count[i]; if (r <= 0f) { theme = i; break; } }
-        }
+        int theme = PickTheme(count);
         int a = count[0], b = count[1];
         voteClosed = true;
         VoteTheme = theme;
@@ -382,6 +384,13 @@ public class PachinkoController : MonoBehaviour
     static void TestArg()
     {
         string[] args = Environment.GetCommandLineArgs();
+        // 시험 인자(모든 PC가 씬 로드 즉시 읽는다 — 클라도 plan이 오기 전에 같은 skip·push·테마를 갖게. 10-16: 예전엔 호스트 루틴 안에서만 읽어 클라가 어긋났다)
+        int ski = Array.IndexOf(args, "-pachinkoSkipTo");   // 영상형 테마 시작 위치 점프(시험용)
+        if (ski >= 0 && ski + 1 < args.Length && float.TryParse(args[ski + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float skipTo)) PachinkoSettings.DebugSkipSeconds = Mathf.Max(0f, skipTo);
+        int pi = Array.IndexOf(args, "-pachinkoPush");   // success|fail — 영상형 테마 PUSH 결과 고정(빌드 확인용)
+        if (pi >= 0 && pi + 1 < args.Length) PachinkoPlan.ForcePush = args[pi + 1].ToLowerInvariant().StartsWith("s");
+        int ti = Array.IndexOf(args, "-pachinkoTheme");   // tokyo|rezero|fire|slime — 결과를 고정하면 투표를 건너뛰므로 테마도 인자로 고른다
+        if (ti >= 0 && ti + 1 < args.Length) { string tn = args[ti + 1].ToLowerInvariant(); VideoThemeSpec vs = PachinkoSettings.VideoThemeByKey(tn); PachinkoOverlay.Theme = tn.StartsWith("re") ? 1 : vs != null ? vs.theme : 0; }
         for (int i = 0; i + 1 < args.Length; i++)
         {
             if (args[i] == "-pachinkoAutoPush" && float.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float ap)) testAutoPushDelay = ap;
@@ -402,14 +411,6 @@ public class PachinkoController : MonoBehaviour
         float until = Time.unscaledTime + 8f;
         while (Time.unscaledTime < until || RewardDistributor.Instance == null) yield return null;
         Debug.Log($"[파칭코] 개발 인자로 발동: {string.Join(",", modes)}");
-        // -pachinkoTheme tokyo|rezero — 결과를 고정하면 투표를 건너뛰므로 테마도 인자로 고른다(10-16 사장님 리제로 확인).
-        string[] args = Environment.GetCommandLineArgs();
-        int ski = Array.IndexOf(args, "-pachinkoSkipTo");   // 영상형 테마 시작 위치 점프(시험용)
-        if (ski >= 0 && ski + 1 < args.Length && float.TryParse(args[ski + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float skipTo)) PachinkoSettings.DebugSkipSeconds = Mathf.Max(0f, skipTo);
-        int pi = Array.IndexOf(args, "-pachinkoPush");   // success|fail — 영상형 테마 PUSH 결과 고정(빌드 확인용)
-        if (pi >= 0 && pi + 1 < args.Length) PachinkoPlan.ForcePush = args[pi + 1].ToLowerInvariant().StartsWith("s");
-        int ti = Array.IndexOf(args, "-pachinkoTheme");
-        if (ti >= 0 && ti + 1 < args.Length) { string tn = args[ti + 1].ToLowerInvariant(); VideoThemeSpec vs = PachinkoSettings.VideoThemeByKey(tn); PachinkoOverlay.Theme = tn.StartsWith("re") ? 1 : vs != null ? vs.theme : 0; }
         Begin(modes);
     }
 }

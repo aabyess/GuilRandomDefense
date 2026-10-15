@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 using UnityEngine;
 
@@ -42,6 +43,23 @@ static class PachinkoPlanSample
             bad += shapeBad + packBad + themeBad;
         }
         sb.AppendLine(bad == 0 ? "✅ 이상 없음" : $"❌ 불일치 {bad}");
+        return sb.ToString();
+    }
+}
+
+// 투표 4택 표 비율 표본(PachinkoController.PickTheme) — gameshot/배치: call PachinkoVoteSample.Run
+static class PachinkoVoteSample
+{
+    static string Run()
+    {
+        var sb = new StringBuilder();
+        foreach (var c in new[] { new[] { 0, 0, 1, 1 }, new[] { 0, 0, 2, 1 }, new[] { 1, 0, 0, 3 }, new[] { 0, 0, 0, 0 }, new[] { 1, 1, 1, 1 }, new[] { 0, 0, 1, 0 } })
+        {
+            var hit = new int[4]; const int N = 100000;
+            for (int i = 0; i < N; i++) hit[PachinkoController.PickTheme(c)]++;
+            int tot = c[0] + c[1] + c[2] + c[3];
+            sb.AppendLine($"표 [{string.Join(",", c)}] → " + string.Join(" · ", System.Linq.Enumerable.Range(0, 4).Select(k => $"테마{k} {hit[k] * 100f / N:F1}%(기대 {(tot == 0 ? 25f : c[k] * 100f / tot):F1})")));
+        }
         return sb.ToString();
     }
 }
