@@ -315,6 +315,29 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
         return 1f;
     }
 
+    // 2026-10-16 — 유닛 전용 등급 연구(UnitData.ownGradeResearch)가 있으면 그 값으로, 레벨은 등급 트랙을 따라간다(원작 Trig_upgrade_u가 같이 올림).
+    public float SpeedMultiplierForUnitGrade(UnitData unit)
+    {
+        if (unit == null) return 1f;
+        UnitGrade grade = TrackGradeOf(unit);
+        return unit.ownGradeResearch != null ? unit.ownGradeResearch.SpeedMultiplierForLevel(LevelForGrade(grade)) : SpeedMultiplierForGrade(grade);
+    }
+
+    public float BonusForUnitGrade(UnitData unit)
+    {
+        if (unit == null) return 0f;
+        UnitGrade grade = TrackGradeOf(unit);
+        return unit.ownGradeResearch != null ? unit.ownGradeResearch.BonusForLevel(LevelForGrade(grade)) : BonusForGrade(grade);
+    }
+
+    // 공격타입 자식 연구 가산 — 유닛에 레벨당 절대값(attackTypeBonusPerLevel)이 있으면 그 값 × 이 유닛 공격타입 트랙 레벨.
+    public float AttackTypeBonusForUnit(UnitData unit)
+    {
+        if (unit == null) return 0f;
+        if (unit.attackTypeBonusPerLevel > 0) return unit.attackTypeBonusPerLevel * LevelForAttackType(unit.attackType);
+        return AttackBonusForAttackType(unit.attackType, unit.grade);
+    }
+
     public float BonusForUnit(UnitData unit)
     {
         if (unit == null) return 0f;

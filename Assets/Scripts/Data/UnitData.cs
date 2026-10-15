@@ -629,6 +629,14 @@ public class UnitData : ScriptableObject
     // 표: Docs/research/ORIGINAL_MATCH_NAMES_2026-10-07.tsv(Tools/original_match_names.py) → Assets/Editor/OriginalMatchApply.cs가 채운다. 화면 표시는 GameVersion.BetaShowOriginalMatch가 켜져 있을 때만.
     public string originalMatchName;
 
+    // ⚠️ 맨 뒤(2026-10-16, 사장님 「원작과 같게」 — 강화소 원작 대조) — 원작은 유닛마다 받는 연구(upgr)가 다르다.
+    // ownGradeResearch: 이 유닛 한 종만 받는 등급 연구(전설 울티 R02S·초월 사보 R00D …). 원작 JASS(Trig_upgrade_u)가 등급 연구(R000·R002·R003·R004)를 살 때
+    //   같은 레벨로 같이 올려 주므로 구매 칸을 따로 두지 않고 그 등급 트랙의 레벨을 따라가되 값(공속 gba1/gmo1·가산 gba2/gmo2)만 이 트랙 것을 쓴다.
+    //   비어 있으면 지금처럼 등급 트랙. 영원 전용 트랙(UnitUpgradeTrackData.targetUnit, 따로 구매)과 다른 장치다.
+    // attackTypeBonusPerLevel: 공격타입 자식 연구(R01K~R01W)의 레벨당 가산 절대값(gba2). 0이면 등급 묶음 값(AttackTypeUpgradeTrackData.AttackBonusForLevel).
+    public UnitUpgradeTrackData ownGradeResearch;
+    public int attackTypeBonusPerLevel;
+
     /// <summary>판매는 희귀함까지만(사장님 10-07, 원작 판매 능력 A0B8·A0BA·A0B9도 안흔함·특별함·희귀함까지) — 전설 이상·히든·랜덤유닛·다른세계 등은 판매 없음. 회유 유닛은 IsRecruit 예외(호출부).</summary>
     // 솔·성탄·뻬꼼(히든)은 흔함 강화 트랙을 받는 흔함 띠 유닛이라(UnitUpgrades.TrackGradeOf) 판매도 흔함과 같은 경로·보상(3회 누적 위습 + 35% 목재)이다(사장님 10-16).
     public bool SellableGrade => !sellBlocked && UnitUpgrades.TrackGradeOf(this).Tier() <= 3 && grade != UnitGrade.RandomUnit && grade != UnitGrade.OtherWorld;
