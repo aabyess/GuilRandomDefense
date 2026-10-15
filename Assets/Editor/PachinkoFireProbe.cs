@@ -27,6 +27,12 @@ public static class PachinkoFireProbe
         v.rouletteStart = 4f; v.rouletteStop = 8f; v.pushAt = 14f; v.videoEnd = 19f;
         return "불꽃 시각 압축";
     }
+    public static string Skip25() { PachinkoSettings.DebugSkipSeconds = 25f; return "skip 25"; }
+    public static string Skip85() { PachinkoSettings.DebugSkipSeconds = 85f; return "skip 85"; }
+    public static string Skip140() { PachinkoSettings.DebugSkipSeconds = 140f; return "skip 140"; }
+    public static string Skip215() { PachinkoSettings.DebugSkipSeconds = 215f; return "skip 215"; }
+    public static string Skip65() { PachinkoSettings.DebugSkipSeconds = 65f; return "skip 65"; }
+    public static string Skip0() { PachinkoSettings.DebugSkipSeconds = 0f; return "skip 0"; }
     public static string Vote() { PachinkoController.Begin(null); return "투표 시작"; }
     // 모니터 사진용: 가짜 원격 슬롯 둘
     public static string FakeMonitor()

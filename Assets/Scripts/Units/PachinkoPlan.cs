@@ -53,6 +53,8 @@ public static class PachinkoSettings
     public const bool VideoSuccessIsTopReward = true;
     /// <summary>영상형 테마 PUSH 성공 확률(사장님 10-16: 5초 안에 눌러도 51%만 성공, 안 누르면 무조건 실패). 호스트가 plan을 굴릴 때 미리 정해 plan.pushWin에 넣어 전원이 같은 결과를 본다.</summary>
     public const float VideoPushSuccessChance = 0.51f;
+    /// <summary>시험용(-pachinkoSkipTo &lt;초&gt;): 영상형 테마 연출을 이 초만큼 건너뛴 지점에서 시작한다. 평소 0 — 실게임엔 영향 없다.</summary>
+    public static float DebugSkipSeconds;
     /// <summary>영상형 테마 결과 화면이 떠 있는 시간(크리티컬 PUSH 성공 / 실패 · 꽝).</summary>
     public const float VideoSuccessResultSeconds = 5.5f, VideoFailResultSeconds = 3.0f, VideoMissResultSeconds = 3.0f;
     /// <summary>한 슬롯의 파칭코가 이 값(초)보다 더 지체되면 호스트가 그 슬롯을 강제로 끝낸다(끊김·멈춤으로 전원 정지가 길어지는 것 방지).</summary>

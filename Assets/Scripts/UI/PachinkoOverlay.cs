@@ -1637,7 +1637,7 @@ public class PachinkoOverlay : MonoBehaviour
     // ───────── 불꽃 소방대(theme 2, 사장님 10-16): 영상 한 편 위에 룰렛 — 1:30 회전 → 1:46 판정 → (크리티컬) 3:40 PUSH → 3:45 끝 ─────────
     RenderTexture fireRT;
     bool fireVideoTarget, fireChromeHidden;
-    TMP_Text fireBanner;
+    TMP_Text fireBanner, fireBadge;
     Image fireSubtitleCover;
 
     /// <summary>16:9 영상용 렌더 텍스처로 바꾼다(리제로 영상은 1920×820 가로로 긴 판이라 RT가 다르다). off면 원래대로.</summary>
@@ -1662,6 +1662,9 @@ public class PachinkoOverlay : MonoBehaviour
         if (machineRect != null) machineRect.gameObject.SetActive(visible);
         if (holdsRect != null) holdsRect.gameObject.SetActive(visible);
         if (ticker != null) ticker.gameObject.SetActive(visible);
+        if (meterText != null) meterText.gameObject.SetActive(visible);
+        if (pauseText != null) pauseText.gameObject.SetActive(visible);
+        if (fireBadge != null) fireBadge.gameObject.SetActive(!visible);   // 영상만 보이는 동안 G.R.D 배지
     }
 
     IEnumerator FireVideoRoutine(float t0, VideoThemeSpec spec)
@@ -1692,10 +1695,19 @@ public class PachinkoOverlay : MonoBehaviour
             Place(fireBanner.rectTransform, 160, 120, 1600, 180);
             fireBanner.gameObject.SetActive(false);
         }
+        if (fireBadge == null)
+        {   // 영상 워터마크 자리를 가리는 G.R.D 배지
+            fireBadge = Label("fireBadge", stage, "G.R.D", 40f, new Color(1f, 0.82f, 0.25f), TextAlignmentOptions.Center, 0.3f);
+            Place(fireBadge.rectTransform, 20, 18, 220, 60);
+            fireBadge.gameObject.SetActive(false);
+        }
         if (fireSubtitleCover == null)
         {   // 영상에 구워진 가사 자막(아래 가운데)이 룰렛 숫자와 겹치지 않게 어두운 띠를 깐다(룰렛이 위)
-            fireSubtitleCover = Img("fireSubCover", stage, null, new Color(0f, 0f, 0f, 0.72f));
-            Place(fireSubtitleCover.rectTransform, 0, 760, 1920, 320);
+            fireSubtitleCover = Img("fireSubCover", stage, null, new Color(0f, 0f, 0f, 0.97f));
+            Place(fireSubtitleCover.rectTransform, 0, 735, 1920, 175);
+            // 한 겹으론 자막이 비쳐 보여(스테이지 알파 적용 실측) 같은 띠를 한 겹 더 덮는다
+            Image second = Img("fireSubCover2", fireSubtitleCover.transform, null, new Color(0f, 0f, 0f, 1f));
+            Stretch(second.rectTransform);
             fireSubtitleCover.transform.SetAsFirstSibling();
             fireSubtitleCover.gameObject.SetActive(false);
         }
@@ -1704,9 +1716,10 @@ public class PachinkoOverlay : MonoBehaviour
     IEnumerator SequenceVideo(PachinkoPlan p, VideoThemeSpec spec)
     {
         EnsureFireWidgets();
-        float t0 = Now;
+        float t0 = Now - PachinkoSettings.DebugSkipSeconds;   // -pachinkoSkipTo(시험용, 평소 0)
         kanekiRect.gameObject.SetActive(false); heartbeat = false;
         SetFireChrome(false);
+        fireSubtitleCover.gameObject.SetActive(spec.coverSubtitles);
         UseFireVideo(true);
         videoNatural = true;
         videoStopRequested = false;
@@ -1714,8 +1727,9 @@ public class PachinkoOverlay : MonoBehaviour
         videoCo = StartCoroutine(FireVideoRoutine(t0, spec));
 
         // 1:30 룰렛 회전 시작 — 기계가 튀어나온다
-        yield return WaitUntilTime(t0 + spec.rouletteStart);
+        yield return WaitUntilVideo(t0, spec.rouletteStart);
         SetFireChrome(true);
+        fireBadge.gameObject.SetActive(true);
         ticker.gameObject.SetActive(false); holdsRect.gameObject.SetActive(false);   // 영상 위라 전광판·구슬은 뺀다
         fireSubtitleCover.gameObject.SetActive(spec.coverSubtitles);
         Play(Slot.Open);
@@ -1737,17 +1751,17 @@ public class PachinkoOverlay : MonoBehaviour
         // 정지: 왼쪽 → 오른쪽 → 가운데(1:46에 딱 멈춘다)
         float stopAt = t0 + spec.rouletteStop;
         float span = spec.rouletteStop - spec.rouletteStart;
-        yield return WaitUntilTime(t0 + spec.rouletteStart + span * 0.45f);
+        yield return WaitUntilVideo(t0, spec.rouletteStart + span * 0.45f);
         StartCoroutine(StopReel(0, p.left, 1.5f, spinSpeeds[0]));
-        yield return WaitUntilTime(t0 + spec.rouletteStart + span * 0.7f);
+        yield return WaitUntilVideo(t0, spec.rouletteStart + span * 0.7f);
         StartCoroutine(StopReel(2, p.right, 1.9f, spinSpeeds[2]));
         float centerDur = p.reach ? 2.6f : 1.4f;
-        yield return WaitUntilTime(stopAt - centerDur);
+        yield return WaitUntilVideo(t0, spec.rouletteStop - centerDur);
         if (p.reach) reels[1].Highlight(new Color(1f, 0.78f, 0.6f));
         StopAllSpin();
         yield return StopReel(1, p.center, centerDur, spinSpeeds[1] * 0.5f);
         reels[1].Highlight(Color.white);
-        yield return WaitUntilTime(stopAt);   // 1:46 판정
+        yield return WaitUntilVideo(t0, spec.rouletteStop);   // 판정
 
         float resultStart;
         if (!p.win)
@@ -1769,12 +1783,15 @@ public class PachinkoOverlay : MonoBehaviour
         fireBanner.gameObject.SetActive(true);
         StartCoroutine(PopLabel(fireBanner, 3.2f));
         Play(Slot.Hold);
-        yield return Wait(1.2f);
-        numbersSmallTarget = 1f;   // 숫자는 작게 구석으로 — 영상이 이어진다
+        yield return Wait(1.6f);
+        // 룰렛 패널은 접고 영상만 — PUSH 때 다시 등장한다
+        { float fu = 0f; while (fu < 0.3f) { fu += Dt; machineRect.localScale = Vector3.one * Mathf.Lerp(1f, 0.6f, fu / 0.3f); yield return null; } }
+        SetFireChrome(false);
+        fireSubtitleCover.gameObject.SetActive(spec.coverSubtitles);
+        machineRect.localScale = Vector3.one;
 
         // 3:40 PUSH(5초) — 영상은 3:45까지
-        yield return WaitUntilTime(t0 + spec.pushAt);
-        numbersSmallTarget = 0f;
+        yield return WaitUntilVideo(t0, spec.pushAt);
         yield return PushWindow();
         if (pushedWho == int.MinValue)
         {
@@ -1785,9 +1802,10 @@ public class PachinkoOverlay : MonoBehaviour
         pushGroup.gameObject.SetActive(false); dim.color = new Color(0, 0, 0, 0);
         bool pushed = pushedWho >= 0 && p.pushWin;   // 눌렀어도 51%(plan.pushWin)에 안 들면 실패
         // 영상 마지막 구간(3:45)까지 마저 흘려 보낸다 — PUSH 5초가 3:40~3:45
-        float videoEnd = t0 + spec.videoEnd;
-        if (videoPlayer.isPlaying && Now < videoEnd) yield return WaitUntilTime(videoEnd);
+        if (videoPlayer.isPlaying && VideoClock(t0) < spec.videoEnd) yield return WaitUntilVideo(t0, spec.videoEnd);
         if (videoPlayer.isPlaying) videoPlayer.Pause();
+        SetFireChrome(true); fireBadge.gameObject.SetActive(false);   // 결과 화면에서 숫자·로고를 다시 보인다
+        fireSubtitleCover.gameObject.SetActive(false);
         if (!pushed)
         {
             // 실패: 화면이 금이 가며 흑백으로 빠지고 조각이 떨어진다(「번쩍임 줄이기」와 무관하게 흑백 유지, 섬광만 끈다)
@@ -1814,6 +1832,17 @@ public class PachinkoOverlay : MonoBehaviour
         }
         yield return FireFinish(resultStart + resSecs);
     }
+
+    /// <summary>영상형 테마의 「영상 시각」(초). 영상이 돌고 있으면 VideoPlayer.time(지연·시크 오차를 따른다), 아니면 연출 시작 기준 실시간.
+    /// 시작이 늦어진 영상이 컨트롤러 시계(PUSH 창)보다 뒤처지면 실시간을 따라 PUSH를 놓치지 않는다.</summary>
+    float VideoClock(float t0)
+    {
+        float wall = Now - t0;
+        if (videoPlayer != null && videoPlayer.isPlaying && !RecordMode) return Mathf.Max((float)videoPlayer.time, wall);
+        return wall;
+    }
+
+    IEnumerator WaitUntilVideo(float t0, float videoSeconds) { while (VideoClock(t0) < videoSeconds) yield return null; }
 
     IEnumerator FireFinish(float until)
     {
@@ -1859,7 +1888,7 @@ public class PachinkoOverlay : MonoBehaviour
 
     void MonitorPlan(int slot, PachinkoPlan plan)
     {
-        mon[slot] = new MonEntry { slot = slot, plan = plan, t0 = Now };
+        mon[slot] = new MonEntry { slot = slot, plan = plan, t0 = Now - (PachinkoSettings.VideoTheme(plan.theme) != null ? PachinkoSettings.DebugSkipSeconds : 0f) };
     }
 
     void MonitorPushed(int slot, int who)

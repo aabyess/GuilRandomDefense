@@ -17,7 +17,7 @@ using UnityEngine.InputSystem;
 /// 오버레이 연결(구현담당2): PachinkoController.PlayHandler = plan => …(내 plan 연출 시작, PUSH는 plan.PreludeSeconds() 뒤 PachinkoSettings.PushSeconds 동안),
 ///   PachinkoController.PushedHandler = who => …(내 줄 가운데 정지 — who ≥ 0 = 내가 눌렀다, -1 = 시간 끝 자동). Space 입력은 이 컨트롤러가 받는다.
 ///   클릭으로도 누르려면 PachinkoController.RequestPush()를 부른다. 훅이 비어 있으면 로그만 찍고 바로 결과로 간다(임시 경로).
-/// 개발 인자: -pachinkoTest jackpot|win|revive|reach|miss|random [-pachinkoTheme tokyo|rezero|fire|slime] [-pachinkoPush success|fail]  (게임 씬 진입 8초 뒤 모든 슬롯에 그 결과 — 쉼표로 슬롯별 지정 가능 「win,miss」)
+/// 개발 인자: -pachinkoTest jackpot|win|revive|reach|miss|random [-pachinkoTheme tokyo|rezero|fire|slime] [-pachinkoPush success|fail] [-pachinkoSkipTo <초>]  (게임 씬 진입 8초 뒤 모든 슬롯에 그 결과 — 쉼표로 슬롯별 지정 가능 「win,miss」)
 /// </summary>
 public class PachinkoController : MonoBehaviour
 {
@@ -257,7 +257,8 @@ public class PachinkoController : MonoBehaviour
     {
         bool overlay = local && PlayHandler != null;
         float now = Time.unscaledTime;
-        float prelude = overlay || !local ? r.plan.PreludeSeconds() : PachinkoSettings.NoOverlayDelay;
+        float skip = PachinkoSettings.VideoTheme(r.plan.theme) != null ? PachinkoSettings.DebugSkipSeconds : 0f;   // -pachinkoSkipTo 시험용
+        float prelude = overlay || !local ? Mathf.Max(0.5f, r.plan.PreludeSeconds() - skip) : PachinkoSettings.NoOverlayDelay;
         r.startAt = now;
         r.openAt = now + (local && !overlay ? PachinkoSettings.NoOverlayDelay : prelude);
         r.closeAt = r.openAt + (local && !overlay ? 0f : r.plan.PushSeconds());
@@ -371,6 +372,8 @@ public class PachinkoController : MonoBehaviour
         Debug.Log($"[파칭코] 개발 인자로 발동: {string.Join(",", modes)}");
         // -pachinkoTheme tokyo|rezero — 결과를 고정하면 투표를 건너뛰므로 테마도 인자로 고른다(10-16 사장님 리제로 확인).
         string[] args = Environment.GetCommandLineArgs();
+        int ski = Array.IndexOf(args, "-pachinkoSkipTo");   // 영상형 테마 시작 위치 점프(시험용)
+        if (ski >= 0 && ski + 1 < args.Length && float.TryParse(args[ski + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float skipTo)) PachinkoSettings.DebugSkipSeconds = Mathf.Max(0f, skipTo);
         int pi = Array.IndexOf(args, "-pachinkoPush");   // success|fail — 영상형 테마 PUSH 결과 고정(빌드 확인용)
         if (pi >= 0 && pi + 1 < args.Length) PachinkoPlan.ForcePush = args[pi + 1].ToLowerInvariant().StartsWith("s");
         int ti = Array.IndexOf(args, "-pachinkoTheme");
