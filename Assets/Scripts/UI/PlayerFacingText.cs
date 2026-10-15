@@ -137,9 +137,12 @@ public static class PlayerFacingText
     // 피해 유형 표기(사장님 정의 10-08): 고정=방어·마저항 무시 / 폭발형=마저항만·폭뎀증폭만 / AP=마법(마저항·마깎·마뎀증폭) / AD=물리(방어 적용, 방무 비율은 덧붙임).
     static string DamageKindLabel(SkillEffect e)
     {
-        if (e.fixedDamage) return "고정 피해";
-        if (e.explosive) return "폭발형 피해";
-        if (e.damageType == DamageType.AP) return "마법 피해";
+        switch (SkillTypeTags.KindOf(e))   // 조합 검색 서랍의 스킬 유형 필터와 같은 판정(SkillTypeTags)
+        {
+            case DamageKind.Fixed: return "고정 피해";
+            case DamageKind.Explosive: return "폭발형 피해";
+            case DamageKind.Magic: return "마법 피해";
+        }
         string ignore = e.armorIgnoreRatio >= 0.999f ? " · 방어 무시" : e.armorIgnoreRatio > 0f ? $" · 방어 {Pct(e.armorIgnoreRatio)} 무시" : "";
         return "물리 피해" + ignore;
     }
@@ -157,7 +160,9 @@ public static class PlayerFacingText
             case SkillEffectKind.ArmorBreak: return $"적 방어력 −{e.multiplier:0.#}{dur}";
             case SkillEffectKind.ArmorBonus: return e.multiplier < 0f ? $"적 방어력 −{-e.multiplier:0.#}" : $"방어력 +{e.multiplier:0.#}";
             case SkillEffectKind.AttackSpeedBuffPercent: return $"{Who(e)} 공격속도 +{Pct(e.multiplier)}{dur}";
-            case SkillEffectKind.AttackPowerBuffPercent: return $"{Who(e)} 공격력 +{Pct(e.multiplier)}{dur}";
+            case SkillEffectKind.AttackPowerBuffPercent:
+                if (e.perHighGradeUnitBonus > 0f) return $"{Who(e)} 공격력 +{Pct(e.multiplier)}, 상위 유닛 1기당 +{Pct(e.perHighGradeUnitBonus)}{dur}";   // 최상호 수장·왕의 자질: 개수 비례
+                return $"{Who(e)} 공격력 +{Pct(e.multiplier)}{dur}";
             case SkillEffectKind.AttackPowerBuffFlat: return $"{Who(e)} 공격력 +{e.multiplier:N0}{dur}";
             case SkillEffectKind.ExtraProjectile: return $"추가 공격 {e.multiplier:0}발";
             case SkillEffectKind.BossDamageMultiplier: return $"보스에게 피해 ×{e.multiplier:0.##}";

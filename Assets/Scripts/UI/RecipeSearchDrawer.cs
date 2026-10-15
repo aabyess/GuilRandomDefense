@@ -99,6 +99,7 @@ public class RecipeSearchDrawer : MonoBehaviour
     string query = "";
     ScrollRect scroll;
     int gradeChip;
+    SkillTypeTag typeMask;   // 스킬 유형 칩(여러 개 = OR, 등급·지금 가능과는 AND) — 사장님 10-15
     bool nowOnly;
     bool dirty = true;
     bool thumbsDirty;
@@ -240,9 +241,10 @@ public class RecipeSearchDrawer : MonoBehaviour
 
         BuildInput();
         BuildChips();
+        BuildTypeChips();
 
         infoText = MakeText(panel, "Info", "", 15f, Muted, TextAlignmentOptions.Left, FontStyles.Normal);
-        Place(infoText.rectTransform, Inset, 150f + TopPad, PanelWidth - Inset * 2f, 24f);
+        Place(infoText.rectTransform, Inset, 150f + TopPad + TypeRowsHeight, PanelWidth - Inset * 2f, 24f);
 
         BuildScroll();
         if (wc3Panel)
@@ -290,6 +292,74 @@ public class RecipeSearchDrawer : MonoBehaviour
     GameObject[] chipBorders;
     bool chipWc3;
 
+    // 스킬 유형 칩 두 줄(피해 유형 · 디버프). 눌러 켜고 다시 눌러 끈다. 여러 개를 켜면 OR(하나라도 가진 유닛), 등급 칩과는 AND.
+    const float TypeRowsHeight = 70f;
+    static readonly string[] TypeLabels = { "물리", "마법", "폭발형", "고정", "방무뎀", "끝딜", "방깎", "마깎", "마뎀증폭", "폭증", "이속↓", "스턴" };
+    static readonly SkillTypeTag[] TypeTags =
+    {
+        SkillTypeTag.Physical, SkillTypeTag.Magic, SkillTypeTag.Explosive, SkillTypeTag.Fixed, SkillTypeTag.ArmorIgnore, SkillTypeTag.Finisher,
+        SkillTypeTag.ArmorBreak, SkillTypeTag.MagicArmorBreak, SkillTypeTag.MagicAmp, SkillTypeTag.ExplosiveAmp, SkillTypeTag.Slow, SkillTypeTag.Stun,
+    };
+    Image[] typeImages;
+    GameObject[] typeBorders;
+
+    void BuildTypeChips()
+    {
+        typeImages = new Image[TypeLabels.Length];
+        typeBorders = new GameObject[TypeLabels.Length];
+        const int perRow = 6;
+        const float labelWidth = 46f, gap = 4f, height = 30f;
+        string[] rowNames = { "유형", "디버프" };
+        float chipWidth = (PanelWidth - Inset * 2f - labelWidth - gap * perRow) / perRow;
+        for (int row = 0; row < 2; row++)
+        {
+            float y = 144f + TopPad + row * 34f;
+            TMP_Text rowLabel = MakeText(panel, "TypeRowLabel" + row, rowNames[row], 14f, Muted, TextAlignmentOptions.Left, FontStyles.Bold);
+            Place(rowLabel.rectTransform, Inset, y, labelWidth, height);
+            for (int col = 0; col < perRow; col++)
+            {
+                int i = row * perRow + col;
+                RectTransform chip = NewRect("TypeChip" + i, panel);
+                Place(chip, Inset + labelWidth + gap + col * (chipWidth + gap), y, chipWidth, height);
+                Image bg = chip.gameObject.AddComponent<Image>();
+                Skin(bg, "button_navy_9s", ChipOff);
+                if (UiSkin.Wc3Has("win_chip")) UiSkin.ApplyWc3(bg, "win_chip", 2f);
+                typeImages[i] = bg;
+                Button button = chip.gameObject.AddComponent<Button>();
+                ColorBlock colors = button.colors;
+                colors.highlightedColor = new Color(1.25f, 1.25f, 1.45f, 1f);
+                colors.pressedColor = new Color(0.8f, 0.8f, 0.9f, 1f);
+                button.colors = colors;
+                int captured = i;
+                button.onClick.AddListener(() => OnTypeChip(captured));
+                TMP_Text text = MakeText(chip, "Label", TypeLabels[i], 15f, Color.white, TextAlignmentOptions.Center, FontStyles.Bold);
+                Stretch(text.rectTransform, 0f, 0f, 0f, 0f);
+                typeBorders[i] = chipWc3 ? NewRect("NoBorder", chip).gameObject : AddSquareBorder(chip, "GoldBorder", Gold, 2f);
+            }
+        }
+        RefreshTypeChips();
+    }
+
+    void OnTypeChip(int index)
+    {
+        typeMask ^= TypeTags[index];
+        RefreshTypeChips();
+        dirty = true;
+    }
+
+    void RefreshTypeChips()
+    {
+        if (typeImages == null) return;
+        for (int i = 0; i < typeImages.Length; i++)
+        {
+            bool on = (typeMask & TypeTags[i]) != 0;
+            if (typeBorders[i] != null) typeBorders[i].SetActive(on);
+            if (chipWc3) typeImages[i].sprite = UiSkin.Wc3(on ? "win_chip_selected" : "win_chip");
+            TMP_Text label = typeImages[i].GetComponentInChildren<TMP_Text>();
+            if (label != null) label.color = on ? new Color(1f, 0.84f, 0.25f, 1f) : Color.white;
+        }
+    }
+
     // 워크3풍 단추 그림 + 호버·눌림 그림 바꿈
     static void Wc3Button(Image image)
     {
@@ -336,7 +406,7 @@ public class RecipeSearchDrawer : MonoBehaviour
     void BuildScroll()
     {
         RectTransform scrollRect = NewRect("Scroll", panel);
-        Place(scrollRect, Inset - 4f, 180f + TopPad, PanelWidth - Inset * 2f + 8f, PanelHeight - 180f - TopPad - Inset);
+        Place(scrollRect, Inset - 4f, 180f + TopPad + TypeRowsHeight, PanelWidth - Inset * 2f + 8f, PanelHeight - 180f - TopPad - TypeRowsHeight - Inset);
         scroll = scrollRect.gameObject.AddComponent<ScrollRect>();
         Image hit = scrollRect.gameObject.AddComponent<Image>();
         hit.color = new Color(0f, 0f, 0f, 0.001f);
@@ -555,7 +625,9 @@ public class RecipeSearchDrawer : MonoBehaviour
             // 10-08 사장님 「닫으면 다 초기화, 버그 사전 방지」: 등급 칩·「지금 가능」·스크롤·고른 줄도 처음 상태로(도우미로 넘어갈 때도 닫지만 검색어만 OpenHelper가 따로 들고 간다).
             gradeChip = 0;
             nowOnly = false;
+            typeMask = SkillTypeTag.None;
             RefreshChips();
+            RefreshTypeChips();
             selectedRecipe = null;
             foreach (Row row in rows) if (row.gold != null) row.gold.SetActive(false);
             if (scroll != null) { scroll.StopMovement(); scroll.verticalNormalizedPosition = 1f; }
@@ -693,6 +765,7 @@ public class RecipeSearchDrawer : MonoBehaviour
             {
                 if (recipe == null || recipe.result == null) continue;
                 if (!PassesGrade(recipe.result.grade)) continue;
+                if (typeMask != SkillTypeTag.None && (SkillTypeTags.Of(recipe.result) & typeMask) == 0) continue;
                 if (nowOnly && !system.CanCombineNow(recipe)) continue;
                 if (nq.Length == 0) { direct.Add(recipe); continue; }
                 if (HangulSearch.UnitMatches(nq, recipe.result) || HangulSearch.Matches(nq, HangulSearch.Normalize(recipe.commandId)))
