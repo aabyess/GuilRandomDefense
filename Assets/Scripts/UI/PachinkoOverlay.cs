@@ -419,7 +419,7 @@ public class PachinkoOverlay : MonoBehaviour
             Paint();
             rb.gameObject.AddComponent<Button>().onClick.AddListener(() => { ReduceFlash = !ReduceFlash; Paint(); });
         }
-        bandRect = Rt("reward", stage); Place(bandRect, 192, 860, 1536, 150);
+        bandRect = Rt("reward", stage); Place(bandRect, 192, 915, 1536, 135);   // 숫자(640px, 아래 끝 920)와 겹치지 않게 아래로(10-16 시트 점검)
         bandImage = bandRect.gameObject.AddComponent<Image>(); bandImage.sprite = Spr("UI/reward_band"); bandImage.raycastTarget = false;
         bandText = Label("bandText", bandRect, "", 56f, Color.white, TextAlignmentOptions.Center, 0.2f); Stretch(bandText.rectTransform);
         bandRect.gameObject.SetActive(false);
@@ -1710,9 +1710,18 @@ public class PachinkoOverlay : MonoBehaviour
         videoPlayer.url = path;
         if (RecordMode) videoPlayer.timeReference = UnityEngine.Video.VideoTimeReference.ExternalTime;
         videoPlayer.Prepare();
-        float wait = 0f;
-        while (!videoPlayer.isPrepared && wait < 8f) { wait += Dt; yield return null; }
-        if (!videoPlayer.isPrepared) { Debug.LogWarning("[파칭코] 불꽃 영상 준비 실패"); videoCo = null; yield break; }
+        // 준비가 느려도(한 PC에서 두 창·느린 PC) 포기하지 않고 영상 끝 시각까지 기다린다 — 준비되면 아래에서 Now−t0 지점으로 따라붙는다.
+        // 기다리는 동안은 어두운 바탕 + G.R.D 배지(+「영상 준비 중」)가 보이고 룰렛 패널은 제때 뜬다.
+        float wait = 0f; bool warned = false;
+        if (fireBadge != null) fireBadge.text = "G.R.D · 영상 준비 중…";
+        while (!videoPlayer.isPrepared && !videoStopRequested && Now - t0 < spec.videoEnd)
+        {
+            wait += Dt;
+            if (!warned && wait > 8f) { warned = true; Debug.LogWarning("[파칭코] 영상 준비가 8초를 넘겼다 — 계속 기다린다(준비되면 따라붙는다)"); }
+            yield return null;
+        }
+        if (fireBadge != null) fireBadge.text = "G.R.D";
+        if (!videoPlayer.isPrepared) { Debug.LogWarning("[파칭코] 불꽃 영상 준비 실패(영상 끝 시각까지 안 됨)"); videoCo = null; yield break; }
         if (videoStopRequested) { videoCo = null; yield break; }
         videoStartTime = t0;   // 영상 0초 = 연출 시작 시각 — 준비가 늦었으면 그만큼 건너뛰어 컨트롤러 시계(PUSH 창)와 맞춘다
         videoPlayer.time = Mathf.Max(0f, Now - t0);
@@ -2823,12 +2832,12 @@ public class PachinkoOverlay : MonoBehaviour
         videoPlayer.url = path;
         if (RecordMode) videoPlayer.timeReference = UnityEngine.Video.VideoTimeReference.ExternalTime;
         videoPlayer.Prepare();
-        float wait = 0f;
-        while (!videoPlayer.isPrepared && wait < 5f) { wait += Dt; yield return null; }
+        float wait = 0f; float requestedAt = Now;
+        while (!videoPlayer.isPrepared && !videoStopRequested && wait < 25f) { wait += Dt; yield return null; }   // 느린 PC·두 창: 5초에 포기하지 않는다
         if (!videoPlayer.isPrepared) { Debug.LogWarning("[파칭코] 배경 영상 준비 실패"); videoCo = null; yield break; }
         if (videoStopRequested) { videoCo = null; yield break; }
         videoStartTime = Now;
-        videoPlayer.time = 0.0;
+        videoPlayer.time = videoNatural ? Mathf.Clamp(Now - requestedAt, 0f, 60f) : 0.0;   // 리제로 영상은 늦어진 만큼 건너뛰어 연출 시계와 맞춘다
         videoPlayer.Play();
         videoShowTarget = 1f;
         AudioEvent?.Invoke("video:" + videoFileName, videoStartTime, AudioPrefs.MusicVolume);
