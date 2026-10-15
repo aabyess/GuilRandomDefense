@@ -134,14 +134,23 @@ public static class PlayerFacingText
         }
     }
 
+    // 피해 유형 표기(사장님 정의 10-08): 고정=방어·마저항 무시 / 폭발형=마저항만·폭뎀증폭만 / AP=마법(마저항·마깎·마뎀증폭) / AD=물리(방어 적용, 방무 비율은 덧붙임).
+    static string DamageKindLabel(SkillEffect e)
+    {
+        if (e.fixedDamage) return "고정 피해";
+        if (e.explosive) return "폭발형 피해";
+        if (e.damageType == DamageType.AP) return "마법 피해";
+        string ignore = e.armorIgnoreRatio >= 0.999f ? " · 방어 무시" : e.armorIgnoreRatio > 0f ? $" · 방어 {Pct(e.armorIgnoreRatio)} 무시" : "";
+        return "물리 피해" + ignore;
+    }
+
     static string Effect(SkillEffect e)
     {
         if (e == null) return "";
-        string ignore = e.armorIgnoreRatio >= 0.999f ? " 방어 무시" : e.armorIgnoreRatio > 0f ? $" 방어 {Pct(e.armorIgnoreRatio)} 무시" : "";
         string dur = e.duration > 0f ? $" {e.duration:0.#}초" : "";
         switch (e.kind)
         {
-            case SkillEffectKind.Damage: { string a = Amount(e); return a.Length == 0 ? "" : $"{Who(e)}에게 {a} 피해{ignore}"; }
+            case SkillEffectKind.Damage: { string a = Amount(e); return a.Length == 0 ? "" : $"{Who(e)}에게 {a} {DamageKindLabel(e)}"; }
             case SkillEffectKind.DamageOverTime: { string a = Amount(e); return a.Length == 0 ? "지속 피해" : $"{Who(e)}에게 지속 피해 {a}{dur}"; }
             case SkillEffectKind.Stun: return $"스턴{(e.duration > 0f ? $" {e.duration:0.#}초" : "")}";
             case SkillEffectKind.Slow: return $"적 이동속도 −{Pct(1f - e.multiplier)}{dur}";   // multiplier = 남는 속도 배율
