@@ -630,7 +630,8 @@ public class UnitData : ScriptableObject
     public string originalMatchName;
 
     /// <summary>판매는 희귀함까지만(사장님 10-07, 원작 판매 능력 A0B8·A0BA·A0B9도 안흔함·특별함·희귀함까지) — 전설 이상·히든·랜덤유닛·다른세계 등은 판매 없음. 회유 유닛은 IsRecruit 예외(호출부).</summary>
-    public bool SellableGrade => !sellBlocked && grade.Tier() <= 3 && grade != UnitGrade.RandomUnit && grade != UnitGrade.OtherWorld;
+    // 솔·성탄·뻬꼼(히든)은 흔함 강화 트랙을 받는 흔함 띠 유닛이라(UnitUpgrades.TrackGradeOf) 판매도 흔함과 같은 경로·보상(3회 누적 위습 + 35% 목재)이다(사장님 10-16).
+    public bool SellableGrade => !sellBlocked && UnitUpgrades.TrackGradeOf(this).Tier() <= 3 && grade != UnitGrade.RandomUnit && grade != UnitGrade.OtherWorld;
 
     /// <summary>베타 표시용 「원작: 징베」 — 스위치가 꺼졌거나 대응이 없으면 빈 문자열.</summary>
     public string OriginalMatchLabel => GameVersion.BetaShowOriginalMatch && !string.IsNullOrEmpty(originalMatchName) ? $"원작: {originalMatchName}" : "";

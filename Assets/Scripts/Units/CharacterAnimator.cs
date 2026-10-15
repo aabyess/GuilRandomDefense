@@ -49,6 +49,11 @@ public class CharacterAnimator : MonoBehaviour
     bool hasSpeed, hasAttack, hasDie, hasSpell, hasAttackVariant, hasSpellVariant;
     int attackVariantCount = 1, spellVariantCount = 1;
     float lastAttackTime = -10f;
+    // 공격 모션을 공속에 맞춘다(사장님 10-16): 공속이 빨라 타격 주기가 모션보다 짧으면 매 타격마다 모션을 처음부터 다시 재생하고(끝까지 안 마쳐도 됨),
+    // 그 사이 재생 속도를 올려 잘림을 줄인다. 느린 유닛(주기 ≥ 모션)은 지금처럼 한 번 재생 후 대기.
+    float attackClipLength;                 // 컨트롤러의 Attack 계열 클립 중 가장 긴 것(초). 0이면 모름
+    float attackPlaybackBoost = 1f;
+    const float MaxAttackPlaybackSpeed = 2.5f;
 
     void Awake()
     {
@@ -79,6 +84,7 @@ public class CharacterAnimator : MonoBehaviour
         }
         // 변형 개수 = 컨트롤러 클립 중 「Attack」「Attack 2」… 꼴(상태 순서는 컨트롤러가 번호순으로 짠다).
         if (hasAttackVariant) attackVariantCount = CountVariants("Attack");
+        attackClipLength = 0f;   // 클립 이름은 「mixamo.com」일 수 있어 상태 이름으로 못 찾는다 — 공격 상태에 들어가 보며 Update가 배운다(LearnAttackLength)
         if (hasSpellVariant) spellVariantCount = CountVariants("Spell");
     }
 
@@ -90,10 +96,31 @@ public class CharacterAnimator : MonoBehaviour
         animator.SetFloat(SpeedHash, Mathf.Clamp01(speed / Mathf.Max(0.01f, runSpeed)));
 
         // 걷는 중(Move 상태)일 때만 재생 속도를 맞춘다. 서 있거나 공격할 때는 원래 속도.
+        LearnAttackLength(animator.GetCurrentAnimatorStateInfo(0));
         bool walking = speed / Mathf.Max(0.01f, runSpeed) > 0.15f;
         animator.speed = walking && bodyHeight > 0.01f
             ? Mathf.Clamp(speed / bodyHeight / walkClipHeightsPerSecond, 1f, maxWalkPlaybackSpeed)
-            : 1f;
+            : (attackPlaybackBoost > 1.001f && IsAttackState(animator.GetCurrentAnimatorStateInfo(0)) ? attackPlaybackBoost : 1f);
+    }
+
+    // 공격 상태의 실제 길이(초, 상태 속도 반영)를 처음 보는 순간 배운다 — 첫 타격은 보정 없이 한 번 재생된다.
+    void LearnAttackLength(AnimatorStateInfo info)
+    {
+        if (!IsAttackState(info)) return;
+        // info.speed = 상태 자체의 속도(Animator.speed 보정은 안 섞인다, 10-16 실측), clip.length = 보정과 무관한 원본 길이.
+        AnimatorClipInfo[] clips = animator.GetCurrentAnimatorClipInfo(0);
+        if (clips.Length == 0 || clips[0].clip == null) return;
+        float stateSpeed = Mathf.Max(0.01f, info.speed);
+        float duration = clips[0].clip.length / stateSpeed;
+        if (duration > 0.05f && duration < 20f) attackClipLength = duration;
+    }
+
+    bool IsAttackState(AnimatorStateInfo info)
+    {
+        if (info.IsName("Attack")) return true;
+        for (int i = 2; i <= attackVariantCount; i++)
+            if (info.IsName("Attack " + i)) return true;
+        return false;
     }
 
     // 몸 키(월드 단위). 스폰 직후 T자·대기 자세 경계라 조금 오차가 있어도 재생 속도에는 충분하다.
@@ -146,11 +173,30 @@ public class CharacterAnimator : MonoBehaviour
     /// <summary>공격이 나갈 때 부른다.</summary>
     public void PlayAttack()
     {
+        float interval = Time.time - lastAttackTime;   // 이전 타격과의 간격 = 이 유닛의 실제 공격 주기(처음·오랜만이면 크다)
         lastAttackTime = Time.time;
         if (animator != null && hasAttack)
         {
-            if (hasAttackVariant && attackVariantCount > 1) animator.SetInteger(AttackVariantHash, Random.Range(0, attackVariantCount));
-            animator.SetTrigger(AttackHash);
+            int variant = hasAttackVariant && attackVariantCount > 1 ? Random.Range(0, attackVariantCount) : 0;
+            if (hasAttackVariant && attackVariantCount > 1) animator.SetInteger(AttackVariantHash, variant);
+
+            // 주기가 모션보다 짧으면 재생을 빠르게(상한 있음). 아니면 원래 속도.
+            attackPlaybackBoost = attackClipLength > 0.01f && interval > 0.05f && interval < attackClipLength
+                ? Mathf.Min(MaxAttackPlaybackSpeed, attackClipLength / interval)
+                : 1f;
+
+            AnimatorStateInfo current = animator.GetCurrentAnimatorStateInfo(0);
+            bool inTransition = animator.IsInTransition(0);
+            AnimatorStateInfo next = inTransition ? animator.GetNextAnimatorStateInfo(0) : current;
+            bool attackingNow = IsAttackState(current) || (inTransition && IsAttackState(next));
+            if (attackingNow && attackPlaybackBoost > 1.001f)
+            {
+                // 아직 앞 모션이 안 끝났는데 다음 타격 — 트리거는 canTransitionToSelf=false라 앞 모션이 끝난 뒤에야 먹는다. 바로 처음부터 다시 재생한다.
+                animator.ResetTrigger(AttackHash);
+                if (attackVariantCount > 1) animator.Play(variant == 0 ? "Attack" : "Attack " + (variant + 1), 0, 0f);
+                else animator.Play((inTransition && IsAttackState(next) ? next : current).fullPathHash, 0, 0f);
+            }
+            else animator.SetTrigger(AttackHash);
         }
         AttackPlayed?.Invoke(); // MP
     }
