@@ -1009,32 +1009,22 @@ public class EnemyDummy : MonoBehaviour
         // isAbilityDamage가 false(평타·Bash)면 type이 AP여도 무시하지 않는다 — 원작 평타엔
         // UNIVERSAL이 없어서다(위 요약 참고). AD/AP 혼합(우리 로스터 9종)은 지금도 기존과
         // 같이 이 조건이 거짓이라(type이 순수 AP가 아니므로) 안 샌다.
+        // 🔴 2026-10-15 사장님 피해 유형 정의:
+        //  물리 = 표기 방어력만(방깎) · 마법(능력 AP) = 마저항·마깎·마뎀증폭 · 폭발형 = 마저항만(방어력 안 받음) · 방무뎀 = 방어 수치 ×(1−비율)로 계산한 물리.
+        //  (고정 피해는 TakeDamage 앞에서 이 함수를 건너뛴다.) 물리는 마저항 배율을 곱하지 않는다 — AP 평타(isAbilityDamage=false)도 물리다.
         bool bypassPhysicalArmor = isAbilityDamage && type == DamageType.AP;
 
         if (!bypassPhysicalArmor)
         {
-            // ⚠️ 2026-09-05 리서치담당 확인(DAMAGE_TYPING_AND_MAGIC_AXIS.md): 원작에
-            // DAMAGE_TYPE_MAGIC이 0건이다 — 적에게 붙는 Aegr는 "마법 저항"이 아니라
-            // 공격타입별 감쇄(파생 A0P9의 Def1=0.85·Def5=0.90)이고, 난이도+스킬 스택으로
-            // 레벨만 오르내리는 별개 축이다. **우리 EffectiveMagicMultiplier가 모델한
-            // "마법 저항"은 원작 대응이 없다** — 필드·코드는 안 지운다(사장님 지시).
-            // 되살릴 일이 있으면 이 자리가 아니라 Aegr 레벨(난이도+스킬 스택) 축으로 다시
-            // 설계할 것. 지금은 AP(=UNIVERSAL)일 때 이 배율도 같이 건너뛴다 — 우리 평타는
-            // 전부 AD라 결과적으로 이 배율이 아무 데도 안 걸리는데, 그게 원작과 일치하는
-            // 상태다.
-            amount *= explosive ? BaseMagicResistMultiplier : EffectiveMagicMultiplier;   // 폭발형은 마저항만(마깎·마뎀증폭 제외 — 사장님 10-08)
-
-            // 방무뎀은 전부/전무가 아니라 비율이다. 피해를 둘로 갈라 한쪽만 감폭시킨다.
-            float ignored = Mathf.Clamp01(armorIgnoreRatio);
-            // armorScale(UnitData.attackArmorIgnoreRatio — 사장님 10-06 배성령 방무뎀 50%): 양수 방어 수치 자체를 이만큼으로 줄여 계수에 넣는다.
-            float armor = EffectiveArmor;
-            if (armorScale < 1f && armor > 0f) armor *= Mathf.Max(0f, armorScale);
-            amount = amount * (1f - ignored) * ArmorMultiplier(armor)
-                   + amount * ignored;
+            // 물리: 방어 수치 자체를 (1−방무비율)·armorScale로 줄여 계수에 넣는다. 음수 방어(방깎으로 0 아래)도 같은 비율로 줄어든다(비율 1이면 방어 0 = 무시).
+            float keep = (1f - Mathf.Clamp01(armorIgnoreRatio)) * Mathf.Max(0f, armorScale);
+            amount *= ArmorMultiplier(EffectiveArmor * keep);
+            // 폭발형 플래그가 붙은 AD 효과(사장님 사양 스킬 다수)는 옛 동작 유지 — 마저항(난이도 기본값)만 곱한다. 일반 물리는 마저항 배율을 안 곱한다.
+            if (explosive) amount *= BaseMagicResistMultiplier;
         }
         else if (isAbilityDamage)
         {
-            // 🔴 2026-10-08 사장님 정의: AP(방어 무시) 스킬 피해도 **마법저항·마깎·마뎀증폭을 받는다**(일반 마뎀). 폭발형은 마저항만. 옛 코드는 AP 스킬 피해에서 이 배율을 통째로 건너뛰었다.
+            // 마법(능력 AP): 방어력은 무시, 마저항·마깎·마뎀증폭을 받는다(사장님 10-08). 폭발형은 마저항만.
             amount *= explosive ? BaseMagicResistMultiplier : EffectiveMagicMultiplier;
         }
 
