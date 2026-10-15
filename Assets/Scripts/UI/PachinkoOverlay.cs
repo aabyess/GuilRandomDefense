@@ -1803,9 +1803,13 @@ public class PachinkoOverlay : MonoBehaviour
 
         // 같은 숫자 셋 = 크리티컬 보너스
         if (spec.key == "slime") yield return SlimeCriticalIntro();
-        else if (!ReduceFlash) StartCoroutine(WinFlashStandard());
-        shakeUntil = Now + 0.4f;
-        fireBanner.text = p.center == 7 && p.left == 7 ? "7 7 7  クリティカル ボーナス!!" : "クリティカル ボーナス!";
+        else StartCoroutine(FireCriticalFlash());   // 흔들기 없이 줌 펀치로
+        if (spec.key == "fire") ShowFireBanner(p.center == 7 && p.left == 7);
+        else
+        {
+            fireBanner.text = p.center == 7 && p.left == 7 ? "7 7 7  クリティカル ボーナス!!" : "クリティカル ボーナス!";
+            fireBanner.fontStyle = FontStyles.Normal; fireBanner.color = new Color(1f, 0.82f, 0.25f); fireBanner.outlineColor = new Color32(30, 0, 12, 255); fireBanner.outlineWidth = 0.3f;
+        }
         fireBanner.gameObject.SetActive(true);
         StartCoroutine(PopLabel(fireBanner, 3.2f));
         Play(Slot.Hold);
@@ -1872,6 +1876,112 @@ public class PachinkoOverlay : MonoBehaviour
     }
 
     IEnumerator WaitUntilVideo(float t0, float videoSeconds) { while (VideoClock(t0) < videoSeconds) yield return null; }
+
+    // ───────── 불꽃 소방대 연출(실기 아닌 PV 학습 노트 적용, 사장님 10-16) ─────────
+    Image fireDisk, fireBtnDome, fireBtnRing;
+    TMP_Text fireOseL, fireOseR, fireBtnText;
+
+    void EnsureFireStyleWidgets()
+    {
+        if (fireDisk != null) return;
+        // 크리티컬 배너 뒤 불꽃 띠(진홍 막 + 금 선 두 줄) — 원형 스프라이트는 가운데만 밝아 점처럼 보여 직사각 띠로
+        fireDisk = Img("fireDisk", stage, null, new Color(0.04f, 0f, 0f, 0.68f));
+        Place(fireDisk.rectTransform, 90, 128, 1740, 176);
+        fireDisk.raycastTarget = false;
+        foreach (float yy in new[] { 0f, 172f })
+        {
+            var line = Img("fireDiskLine", fireDisk.transform, null, new Color(1f, 0.82f, 0.25f, 0.95f));
+            line.rectTransform.anchorMin = new Vector2(0f, 1f); line.rectTransform.anchorMax = new Vector2(1f, 1f); line.rectTransform.pivot = new Vector2(0.5f, 1f);
+            line.rectTransform.anchoredPosition = new Vector2(0f, -yy); line.rectTransform.sizeDelta = new Vector2(0f, 4f); line.raycastTarget = false;
+        }
+        fireDisk.transform.SetSiblingIndex(Mathf.Max(0, fireBanner.transform.GetSiblingIndex()));   // 글자 뒤
+        fireDisk.gameObject.SetActive(false);
+        // PUSH: 초록 버섯 버튼(버튼 그림 위에 얹는다) + 양옆 「押セ」 + 빨간 게이지
+        fireBtnDome = Img("fireBtn", pushBtnImage.transform, circle, new Color(0.18f, 0.78f, 0.25f, 1f)); Stretch(fireBtnDome.rectTransform);
+        fireBtnDome.rectTransform.offsetMin = new Vector2(30f, 30f); fireBtnDome.rectTransform.offsetMax = new Vector2(-30f, -30f); fireBtnDome.raycastTarget = false;
+        var rim = fireBtnDome.gameObject.AddComponent<Outline>(); rim.effectColor = new Color(1f, 0.85f, 0.3f, 1f); rim.effectDistance = new Vector2(8f, -8f);
+        fireBtnRing = Img("fireBtnHi", fireBtnDome.transform, circle, new Color(0.7f, 1f, 0.7f, 0.35f)); Stretch(fireBtnRing.rectTransform);
+        fireBtnRing.rectTransform.offsetMin = new Vector2(60f, 110f); fireBtnRing.rectTransform.offsetMax = new Vector2(-60f, -30f); fireBtnRing.raycastTarget = false;
+        fireBtnText = Label("fireBtnText", stage, "PUSH!", 96f, Color.white, TextAlignmentOptions.Center, 0.35f);   // 비활성 부모 아래 외곽선 NRE 회피: 만든 뒤 옮긴다
+        fireBtnText.rectTransform.SetParent(fireBtnDome.transform, false); Stretch(fireBtnText.rectTransform);
+        fireBtnDome.gameObject.SetActive(false);
+        fireOseL = Label("fireOseL", stage, "押", 190f, new Color(1f, 0.15f, 0.12f), TextAlignmentOptions.Center, 0.4f);
+        fireOseR = Label("fireOseR", stage, "セ", 190f, new Color(1f, 0.15f, 0.12f), TextAlignmentOptions.Center, 0.4f);
+        foreach (TMP_Text t in new[] { fireOseL, fireOseR })
+        {
+            t.outlineColor = new Color32(255, 214, 90, 255);
+            t.rectTransform.SetParent(pushGroup, false);
+            t.rectTransform.anchorMin = t.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            t.rectTransform.sizeDelta = new Vector2(260f, 260f);
+            t.gameObject.SetActive(false);
+        }
+        fireOseL.rectTransform.anchoredPosition = new Vector2(-330f, 60f); fireOseL.rectTransform.localRotation = Quaternion.Euler(0, 0, 10f);
+        fireOseR.rectTransform.anchoredPosition = new Vector2(330f, 60f); fireOseR.rectTransform.localRotation = Quaternion.Euler(0, 0, -10f);
+    }
+
+    /// <summary>불꽃 크리티컬 판정 순간(PV ⑥): 직전 1~2프레임 암전 → 흰 섬광 1~3프레임 → 하늘색 반전 2프레임 → 노랑 → 주황 0.3~0.6초 + 줌 펀치(흔들기 없음).</summary>
+    IEnumerator FireCriticalFlash()
+    {
+        winFlashActive = true;
+        float a = ReduceFlash ? 0.5f : 1f;
+        if (!ReduceFlash)
+        {
+            for (int i = 0; i < 2; i++) { flash.color = new Color(0f, 0f, 0f, 0.9f); yield return null; }
+            for (int i = 0; i < 3; i++) { flash.color = new Color(1f, 1f, 1f, 1f); yield return null; }
+            for (int i = 0; i < 2; i++) { flash.color = new Color(0.49f, 0.92f, 0.99f, 0.95f); yield return null; }
+        }
+        // 노랑 → 주황으로 식으며 투명(줌 펀치를 같이)
+        float t = 0f; const float fade = 0.5f;
+        RectTransform vr = videoView.rectTransform;
+        while (t < fade)
+        {
+            t += Dt; float u = Mathf.Clamp01(t / fade);
+            flash.color = new Color(1f, Mathf.Lerp(0.9f, 0.5f, u), Mathf.Lerp(0.35f, 0.1f, u), a * 0.9f * (1f - u) * (1f - u));
+            float pulse = Mathf.Sin(Mathf.Clamp01(t / 0.35f) * Mathf.PI);   // 1.0 → 1.06 → 1.0
+            vr.localScale = Vector3.one * (1f + 0.06f * pulse);
+            machineRect.localScale = Vector3.one * (1f + 0.05f * pulse);
+            yield return null;
+        }
+        vr.localScale = Vector3.one; machineRect.localScale = Vector3.one;
+        flash.color = new Color(1f, 1f, 1f, 0f);
+        winFlashActive = false;
+    }
+
+    /// <summary>크리티컬 배너(붉은 이탤릭 + 금 테두리 + 불꽃 원반).</summary>
+    void ShowFireBanner(bool triple7)
+    {
+        EnsureFireStyleWidgets();
+        fireBanner.text = triple7 ? "777  CRITICAL BONUS!!" : "CRITICAL BONUS!";
+        fireBanner.fontStyle = FontStyles.Italic;
+        fireBanner.color = new Color(1f, 0.12f, 0.1f);
+        fireBanner.outlineColor = new Color32(255, 214, 90, 255);
+        fireBanner.outlineWidth = 0.35f;
+        fireDisk.gameObject.SetActive(true);
+        StartCoroutine(FireDiskPulse(3.2f));
+    }
+
+    IEnumerator FireDiskPulse(float seconds)
+    {
+        float t = 0f;
+        while (t < seconds)
+        {
+            t += Dt;
+            float pop = 1f + 0.3f * Mathf.Exp(-t * 6f) * Mathf.Cos(t * 14f);
+            fireDisk.rectTransform.localScale = new Vector3(1f, Mathf.Min(1.15f, pop), 1f);
+            float a = t > seconds - 0.4f ? Mathf.Clamp01((seconds - t) / 0.4f) : 1f;
+            fireDisk.color = new Color(0.45f, 0.03f, 0.03f, 0.62f * a);
+            yield return null;
+        }
+        fireDisk.gameObject.SetActive(false);
+    }
+
+    void HideFireStyleWidgets()
+    {
+        if (fireDisk == null) return;
+        fireDisk.gameObject.SetActive(false); fireBtnDome.gameObject.SetActive(false);
+        fireOseL.gameObject.SetActive(false); fireOseR.gameObject.SetActive(false);
+        pushBtnImage.color = Color.white;
+    }
 
     // ───────── 전생슬 연출(실기 학습 노트 적용, 사장님 10-16) ─────────
     RectTransform slimeCard, slimeDialog;
@@ -1968,6 +2078,7 @@ public class PachinkoOverlay : MonoBehaviour
 
     void HideSlimeWidgets()
     {
+        HideFireStyleWidgets();
         if (slimeCard == null) return;
         slimeCard.gameObject.SetActive(false); slimeDialog.gameObject.SetActive(false); slimeSplash.gameObject.SetActive(false);
         foreach (TMP_Text b in slimeBangs) if (b != null) b.gameObject.SetActive(false);
@@ -3113,6 +3224,13 @@ public class PachinkoOverlay : MonoBehaviour
         Play(Slot.PushOpen);
         float total = PachinkoSettings.PushSeconds;
         bool slimePush = curTheme == 3;
+        bool firePush = curTheme == 2;
+        if (firePush)
+        {
+            EnsureFireStyleWidgets();
+            fireBtnDome.gameObject.SetActive(true); fireOseL.gameObject.SetActive(true); fireOseR.gameObject.SetActive(true);
+            pushBtnImage.color = new Color(1f, 1f, 1f, 0f);   // 원래 빨간 버튼 그림은 숨기고(클릭 판정은 유지) 초록 버섯을 보인다
+        }
         if (slimePush) { EnsureSlimeWidgets(); slimeOse.gameObject.SetActive(true); videoDuckTarget = 0.178f; }   // 버튼이 뜨면 영상 소리 −15dB
         float t0 = Now;
         int lastSec = -1;
@@ -3122,7 +3240,7 @@ public class PachinkoOverlay : MonoBehaviour
             float elapsed = Now - t0;
             float left = Mathf.Max(0f, total - elapsed);
             gaugeFill.rectTransform.anchorMax = new Vector2(Mathf.Clamp01(left / total), 1f);   // 폭으로 줄인다(스프라이트 없는 Filled는 비율이 안 먹는다)
-            gaugeFill.color = left <= 1f ? (Mathf.Repeat(elapsed * 8f, 1f) < 0.5f ? new Color(1f, 0.1f, 0.1f) : new Color(1f, 0.55f, 0.5f)) : new Color(1f, 0.55f, 0.15f);   // 1초 이하 빨강 깜빡
+            gaugeFill.color = left <= 1f ? (Mathf.Repeat(elapsed * 8f, 1f) < 0.5f ? new Color(1f, 0.1f, 0.1f) : new Color(1f, 0.55f, 0.5f)) : (firePush ? new Color(0.95f, 0.1f, 0.1f) : new Color(1f, 0.55f, 0.15f));   // 1초 이하 빨강 깜빡 · 불꽃은 빨간 게이지
             int sec = Mathf.CeilToInt(left);
             if (sec != lastSec) { lastSec = sec; pushCount.text = sec.ToString(); if (sec > 0) Play(Slot.PushTick); }
             float beat = 1f + 0.08f * Mathf.Sin(elapsed * 28f);
@@ -3140,7 +3258,8 @@ public class PachinkoOverlay : MonoBehaviour
         pushFlashing = false;
         pushBtnImage.sprite = Spr("UI/push_button_pressed");
         pushBtnImage.rectTransform.localScale = Vector3.one;
-        pushBtnImage.color = Color.white;
+        if (!firePush) pushBtnImage.color = Color.white;
+        if (firePush) { fireBtnDome.gameObject.SetActive(false); fireOseL.gameObject.SetActive(false); fireOseR.gameObject.SetActive(false); }
         if (slimePush)
         {
             slimeOse.gameObject.SetActive(false);
@@ -3322,7 +3441,8 @@ public class PachinkoOverlay : MonoBehaviour
             }
         }
         // PUSH 버튼 번쩍
-        if (pushFlashing) pushBtnImage.color = Color.Lerp(Color.white, new Color(1f, 1f, 0.7f), Mathf.Abs(Mathf.Sin(Now * 14f)));
+        if (curTheme >= 2) { }   // 영상형 테마는 PushWindow가 버튼 색(초록 버섯 위 투명·돔 깜박임)을 직접 정한다
+        else if (pushFlashing) pushBtnImage.color = Color.Lerp(Color.white, new Color(1f, 1f, 0.7f), Mathf.Abs(Mathf.Sin(Now * 14f)));
         else pushBtnImage.color = Color.white;
     }
 

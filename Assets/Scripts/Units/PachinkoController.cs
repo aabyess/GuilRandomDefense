@@ -30,6 +30,8 @@ public class PachinkoController : MonoBehaviour
     public static Action<int> VoteCloseHandler;        // 마감 결과 theme 0/1/2 (PachinkoOverlay.Theme 세팅·화면 닫기)
     // 관전 모니터(10-16): 내 것이 아닌 슬롯의 plan·눌림이 도착하면(모든 PC가 전원 plan을 받는다) 모니터가 슬롯별 시계로 재현한다. 내 슬롯도 부른다.
     public static Action<int, PachinkoPlan> MonitorPlanHandler;
+    /// <summary>시험용(-pachinkoPush 인자): PUSH 창이 열리고 0.8초 뒤 자동으로 누른다(성공/실패는 plan.pushWin이 정한다). 실게임엔 영향 없음.</summary>
+    public static bool AutoPushForTest;
     public static Action<int, int> MonitorPushedHandler;   // (slot, who) — who ≥ 0 누름 · -1 시간 끝
     public static Action MonitorClearHandler;
     /// <summary>마감으로 정해진 테마(0=東京喰種 1=Re:ゼロ 2=불꽃 소방대 3=전생슬, -1=아직 안 정함). 투표가 건너뛰어지면 -1.</summary>
@@ -314,7 +316,7 @@ public class PachinkoController : MonoBehaviour
             if (r.phase == Phase.Prelude && now >= r.openAt) r.phase = Phase.Push;
             if (r.phase == Phase.Push)
             {
-                if (slot == me && spacePressed) RequestPush();
+                if (slot == me && (spacePressed || (AutoPushForTest && now >= r.openAt + 0.8f))) RequestPush();
                 if (authority && r.phase == Phase.Push && now >= r.closeAt) EnterResult(slot, r, -1, broadcast: true);
                 else if (!authority && now >= r.closeAt + 3f)
                 { r.phase = Phase.Done; Debug.LogWarning("[파칭코] 호스트 눌림 알림이 안 와 연출을 닫았습니다."); }
@@ -348,7 +350,7 @@ public class PachinkoController : MonoBehaviour
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    static void ResetStatics() { Instance = null; triggeredThisRun = false; PlayHandler = null; PushedHandler = null; MonitorPlanHandler = null; MonitorPushedHandler = null; MonitorClearHandler = null; VoteOpenHandler = null; VoteTallyHandler = null; VoteCloseHandler = null; voting = false; voteClosed = false; voteModes = null; VoteTheme = -1; }
+    static void ResetStatics() { Instance = null; triggeredThisRun = false; PlayHandler = null; PushedHandler = null; MonitorPlanHandler = null; MonitorPushedHandler = null; MonitorClearHandler = null; AutoPushForTest = false; VoteOpenHandler = null; VoteTallyHandler = null; VoteCloseHandler = null; voting = false; voteClosed = false; voteModes = null; VoteTheme = -1; }
 
     // ───────── 개발 인자 ─────────
 
@@ -375,7 +377,7 @@ public class PachinkoController : MonoBehaviour
         int ski = Array.IndexOf(args, "-pachinkoSkipTo");   // 영상형 테마 시작 위치 점프(시험용)
         if (ski >= 0 && ski + 1 < args.Length && float.TryParse(args[ski + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float skipTo)) PachinkoSettings.DebugSkipSeconds = Mathf.Max(0f, skipTo);
         int pi = Array.IndexOf(args, "-pachinkoPush");   // success|fail — 영상형 테마 PUSH 결과 고정(빌드 확인용)
-        if (pi >= 0 && pi + 1 < args.Length) PachinkoPlan.ForcePush = args[pi + 1].ToLowerInvariant().StartsWith("s");
+        if (pi >= 0 && pi + 1 < args.Length) { PachinkoPlan.ForcePush = args[pi + 1].ToLowerInvariant().StartsWith("s"); AutoPushForTest = true; }
         int ti = Array.IndexOf(args, "-pachinkoTheme");
         if (ti >= 0 && ti + 1 < args.Length) { string tn = args[ti + 1].ToLowerInvariant(); VideoThemeSpec vs = PachinkoSettings.VideoThemeByKey(tn); PachinkoOverlay.Theme = tn.StartsWith("re") ? 1 : vs != null ? vs.theme : 0; }
         Begin(modes);
