@@ -800,6 +800,7 @@ public class PachinkoOverlay : MonoBehaviour
     {
         if (running != null) StopCoroutine(running);
         ClearGrayHold();
+        HideSlimeWidgets();
         standalone = isStandalone;
         pushedWho = int.MinValue;
         win = plan.win;
@@ -1204,7 +1205,7 @@ public class PachinkoOverlay : MonoBehaviour
             RectTransform r = Rt("crack", shardRoot);
             var im = r.gameObject.AddComponent<Image>(); im.color = new Color(1f, 0.9f, 0.45f, 0.95f); im.raycastTarget = false;
             r.anchorMin = r.anchorMax = new Vector2(0f, 1f); r.pivot = new Vector2(0.5f, 0f);
-            r.anchoredPosition = new Vector2(hit.x, -hit.y); r.sizeDelta = new Vector2(UnityEngine.Random.Range(3f, 6f), 0f);
+            r.anchoredPosition = new Vector2(hit.x, -hit.y); r.sizeDelta = new Vector2(curTheme == 3 ? UnityEngine.Random.Range(1.5f, 3f) : UnityEngine.Random.Range(3f, 6f), 0f);
             r.localRotation = Quaternion.Euler(0, 0, i * 30f + UnityEngine.Random.Range(-10f, 10f));
             lines.Add(r);
         }
@@ -1374,7 +1375,7 @@ public class PachinkoOverlay : MonoBehaviour
         for (int i = 0; i < 14; i++)
         {
             RectTransform r = Rt("crack", shatterRoot);
-            var im = r.gameObject.AddComponent<Image>(); im.color = curTheme == 1 ? new Color(0.85f, 0.75f, 1f, 0.95f) : new Color(1f, 0.28f, 0.25f, 0.95f); im.raycastTarget = false;   // TG 붉은 균열 · RZ 보라/은빛
+            var im = r.gameObject.AddComponent<Image>(); im.color = curTheme == 1 ? new Color(0.85f, 0.75f, 1f, 0.95f) : curTheme == 3 ? new Color(0.62f, 0.82f, 1f, 0.95f) : new Color(1f, 0.28f, 0.25f, 0.95f); im.raycastTarget = false;   // TG 붉은 균열 · RZ 보라/은빛
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f); r.pivot = new Vector2(0.5f, 0f);
             r.anchoredPosition = impact; r.sizeDelta = new Vector2(UnityEngine.Random.Range(3f, 6f), 0f);
             r.localRotation = Quaternion.Euler(0, 0, i * (360f / 14f) + UnityEngine.Random.Range(-12f, 12f));
@@ -1801,7 +1802,8 @@ public class PachinkoOverlay : MonoBehaviour
         }
 
         // 같은 숫자 셋 = 크리티컬 보너스
-        if (!ReduceFlash) StartCoroutine(WinFlashStandard());
+        if (spec.key == "slime") yield return SlimeCriticalIntro();
+        else if (!ReduceFlash) StartCoroutine(WinFlashStandard());
         shakeUntil = Now + 0.4f;
         fireBanner.text = p.center == 7 && p.left == 7 ? "7 7 7  クリティカル ボーナス!!" : "クリティカル ボーナス!";
         fireBanner.gameObject.SetActive(true);
@@ -1813,6 +1815,7 @@ public class PachinkoOverlay : MonoBehaviour
         SetFireChrome(false);
         fireSubtitleCover.gameObject.SetActive(spec.coverSubtitles);
         machineRect.localScale = Vector3.one;
+        if (slimeBangs[0] != null) foreach (TMP_Text b in slimeBangs) b.gameObject.SetActive(false);
 
         // 3:40 PUSH(5초) — 영상은 3:45까지
         yield return WaitUntilVideo(t0, spec.pushAt);
@@ -1839,7 +1842,9 @@ public class PachinkoOverlay : MonoBehaviour
         }
         resultStart = Now;
         float resSecs = p.ResultSeconds(pushed);
-        if (pushed && !ReduceFlash) { StartCoroutine(WinFlashStandard()); shakeUntil = Now + 0.4f; }
+        if (pushed && spec.key == "slime") StartCoroutine(SlimeSuccessFx());
+        else if (pushed && !ReduceFlash) { StartCoroutine(WinFlashStandard()); shakeUntil = Now + 0.4f; }
+        if (!pushed && spec.key == "slime") foreach (Reel rl in reels) rl.Highlight(new Color(0.74f, 0.78f, 0.88f));   // 빛 빠진 은색 숫자
         bool top = PachinkoSettings.VideoSuccessIsTopReward || p.jackpot;   // PUSH 성공 = 제일 좋은 보상(랜덤유닛)
         if (pushed)
         {
@@ -1868,8 +1873,149 @@ public class PachinkoOverlay : MonoBehaviour
 
     IEnumerator WaitUntilVideo(float t0, float videoSeconds) { while (VideoClock(t0) < videoSeconds) yield return null; }
 
+    // ───────── 전생슬 연출(실기 학습 노트 적용, 사장님 10-16) ─────────
+    RectTransform slimeCard, slimeDialog;
+    TMP_Text slimeDialogText, slimeOse;
+    Image slimeSplash;
+    TMP_Text[] slimeBangs = new TMP_Text[3];
+    float videoDuck = 1f, videoDuckTarget = 1f;
+    AudioClip slimePressClip;
+
+    void EnsureSlimeWidgets()
+    {
+        if (slimeCard != null) return;
+        // 「告」 마름모 카드: 군청 바탕 + 흰 선 마름모(두 겹) + 흰 명조 글자
+        slimeCard = Rt("slimeCard", stage); Place(slimeCard, 960 - 230, 540 - 230, 460, 460);
+        var diamond = Img("diamond", slimeCard, null, new Color(0.02f, 0.05f, 0.35f, 0.92f)); Stretch(diamond.rectTransform);
+        diamond.rectTransform.sizeDelta = new Vector2(-120f, -120f); diamond.rectTransform.localRotation = Quaternion.Euler(0, 0, 45f);
+        var o1 = diamond.gameObject.AddComponent<Outline>(); o1.effectColor = new Color(1f, 1f, 1f, 0.95f); o1.effectDistance = new Vector2(5f, -5f);
+        var inner = Img("diamondInner", diamond.transform, null, new Color(0f, 0f, 0f, 0f)); Stretch(inner.rectTransform);
+        inner.rectTransform.offsetMin = new Vector2(26f, 26f); inner.rectTransform.offsetMax = new Vector2(-26f, -26f);
+        var o2 = inner.gameObject.AddComponent<Outline>(); o2.effectColor = new Color(0.62f, 0.82f, 1f, 0.9f); o2.effectDistance = new Vector2(3f, -3f);
+        var glyph = Label("告", slimeCard, "告", 190f, Color.white, TextAlignmentOptions.Center, 0.1f); Stretch(glyph.rectTransform);
+        slimeCard.gameObject.SetActive(false);
+        // 대현자 대화창
+        slimeDialog = Rt("slimeDialog", stage); Place(slimeDialog, 260, 740, 1400, 190);
+        var dbg = slimeDialog.gameObject.AddComponent<Image>(); dbg.color = new Color(0.02f, 0.06f, 0.2f, 0.88f); dbg.raycastTarget = false;
+        var dout = slimeDialog.gameObject.AddComponent<Outline>(); dout.effectColor = new Color(0.62f, 0.82f, 1f, 0.9f); dout.effectDistance = new Vector2(3f, -3f);
+        foreach (float yy in new[] { 10f, 176f })
+        {   // 위아래 홀로그램 띠
+            var strip = Img("strip", slimeDialog, null, new Color(0.45f, 0.75f, 1f, 0.55f));
+            strip.rectTransform.anchorMin = new Vector2(0f, 1f); strip.rectTransform.anchorMax = new Vector2(1f, 1f); strip.rectTransform.pivot = new Vector2(0.5f, 1f);
+            strip.rectTransform.anchoredPosition = new Vector2(0f, -yy); strip.rectTransform.sizeDelta = new Vector2(-40f, 4f);
+        }
+        slimeDialogText = Label("dlgText", slimeDialog, "", 58f, Color.white, TextAlignmentOptions.Center, 0.1f); Stretch(slimeDialogText.rectTransform);
+        slimeDialog.gameObject.SetActive(false);
+        // 청록 물보라 막
+        slimeSplash = Img("slimeSplash", stage, null, new Color(0.2f, 0.9f, 0.95f, 0f)); Stretch(slimeSplash.rectTransform);
+        slimeSplash.raycastTarget = false; slimeSplash.gameObject.SetActive(false);
+        // 금색 「! ! !」 막대(숫자 아래)
+        for (int i = 0; i < 3; i++)
+        {
+            slimeBangs[i] = Label("bang" + i, stage, "!!!", 120f, new Color(1f, 0.82f, 0.25f), TextAlignmentOptions.Center, 0.25f);
+            Place(slimeBangs[i].rectTransform, BigX[i] - 160f, 860f, 320f, 160f);
+            slimeBangs[i].gameObject.SetActive(false);
+        }
+        // PUSH 위 기울어진 금 「押せ!!」
+        slimeOse = Label("slimeOse", stage, "押せ!!", 150f, new Color(1f, 0.82f, 0.25f), TextAlignmentOptions.Center, 0.3f);   // 비활성 부모 아래에서 만들면 TMP 외곽선이 NRE — 만든 뒤 옮긴다
+        slimeOse.rectTransform.SetParent(pushGroup, false);
+        slimeOse.rectTransform.anchorMin = slimeOse.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+        slimeOse.rectTransform.sizeDelta = new Vector2(700f, 200f); slimeOse.rectTransform.anchoredPosition = new Vector2(330f, 120f);
+        slimeOse.rectTransform.localRotation = Quaternion.Euler(0, 0, 12f);
+        slimeOse.gameObject.SetActive(false);
+    }
+
+    /// <summary>크리티컬 판정 직후: 「告」 카드(0.5초) → 대현자 「クリティカルを実行しますか? ▷Yes」 → 청록 물보라, 같은 숫자 아래 금색 「! ! !」.</summary>
+    IEnumerator SlimeCriticalIntro()
+    {
+        EnsureSlimeWidgets();
+        Play(Slot.Hold);
+        slimeCard.gameObject.SetActive(true);
+        float t = 0f;
+        while (t < 0.5f)
+        {
+            t += Dt; float u = Mathf.Clamp01(t / 0.5f); float e = 1f - Mathf.Pow(1f - u, 3f);
+            slimeCard.localScale = Vector3.one * Mathf.Lerp(0.3f, 1f, e);
+            yield return null;
+        }
+        yield return Wait(0.5f);
+        slimeCard.gameObject.SetActive(false);
+        slimeDialog.gameObject.SetActive(true);
+        slimeDialogText.text = "クリティカルを実行しますか?";
+        yield return Wait(0.6f);
+        slimeDialogText.text = "クリティカルを実行しますか?\n<color=#9ED0FE>▷Yes</color>";
+        yield return Wait(0.7f);
+        slimeDialog.gameObject.SetActive(false);
+        // 청록 물보라
+        slimeSplash.gameObject.SetActive(true);
+        float peak = ReduceFlash ? 0.35f : 0.7f;
+        t = 0f;
+        while (t < 0.55f) { t += Dt; slimeSplash.color = new Color(0.2f, 0.9f, 0.95f, peak * (1f - t / 0.55f)); yield return null; }
+        slimeSplash.gameObject.SetActive(false);
+        // 숫자 아래 「! ! !」가 솟는다
+        for (int i = 0; i < 3; i++) { slimeBangs[i].gameObject.SetActive(true); }
+        t = 0f;
+        while (t < 0.3f)
+        {
+            t += Dt; float u = Mathf.Clamp01(t / 0.3f);
+            foreach (TMP_Text b in slimeBangs) { b.alpha = u; b.rectTransform.localScale = Vector3.one * Mathf.Lerp(0.5f, 1f, u); }
+            yield return null;
+        }
+    }
+
+    /// <summary>시험용(PachinkoFireProbe): 성공 효과만 따로 돌린다.</summary>
+    public static void DebugSlimeSuccessFx() { var o = Ensure(); o.root.gameObject.SetActive(true); o.StartCoroutine(o.SlimeSuccessFx()); }
+
+    void HideSlimeWidgets()
+    {
+        if (slimeCard == null) return;
+        slimeCard.gameObject.SetActive(false); slimeDialog.gameObject.SetActive(false); slimeSplash.gameObject.SetActive(false);
+        foreach (TMP_Text b in slimeBangs) if (b != null) b.gameObject.SetActive(false);
+        if (slimeOse != null) slimeOse.gameObject.SetActive(false);
+        videoDuckTarget = 1f;
+    }
+
+    /// <summary>PUSH 성공: 흰 3프레임 → 파스텔 하늘 0.15초 → 주황 반짝이 0.8초(실기 17:15).</summary>
+    IEnumerator SlimeSuccessFx()
+    {
+        winFlashActive = true;
+        float a = ReduceFlash ? 0.5f : 1f;
+        int whiteFrames = ReduceFlash ? 1 : 3;
+        for (int i = 0; i < whiteFrames; i++) { flash.color = new Color(1f, 1f, 1f, a); yield return null; }
+        float t = 0f;
+        while (t < 0.15f) { t += Dt; flash.color = new Color(0.72f, 0.88f, 1f, a * 0.8f * (1f - t / 0.15f) + 0.1f); yield return null; }
+        flash.color = new Color(1f, 1f, 1f, 0f);
+        winFlashActive = false;
+        // 주황 불꽃 반짝이 0.8초
+        Debug.Log("[파칭코] 전생슬 성공 반짝이 시작");
+        var sparks = new List<(Image img, Vector2 pos, Vector2 vel)>();
+        for (int i = 0; i < 40; i++)
+        {
+            float sz = UnityEngine.Random.Range(36f, 80f);
+            Image img = NewFxImage(FxSpr("spark_" + UnityEngine.Random.Range(1, 9)), new Color(1f, 0.55f, 0.17f, 1f), new Vector2(sz, sz));
+            sparks.Add((img, new Vector2(UnityEngine.Random.Range(200f, 1720f), UnityEngine.Random.Range(300f, 800f)), new Vector2(UnityEngine.Random.Range(-60f, 60f), UnityEngine.Random.Range(-160f, -40f))));
+        }
+        Debug.Log($"[파칭코] 반짝이 {sparks.Count}개 · 부모 활성 {fireworkRoot.gameObject.activeInHierarchy} · 스프라이트 {(sparks[0].img.sprite != null)}");
+        t = 0f;
+        while (t < 0.8f)
+        {
+            t += Dt; float u = t / 0.8f;
+            for (int i = 0; i < sparks.Count; i++)
+            {
+                var sp = sparks[i];
+                sp.img.rectTransform.anchoredPosition = new Vector2(sp.pos.x + sp.vel.x * t, -(sp.pos.y + sp.vel.y * t));
+                sp.img.color = new Color(1f, Mathf.Lerp(0.6f, 0.3f, u), 0.1f, (1f - u) * (0.6f + 0.4f * Mathf.Sin(t * 40f + i)));
+            }
+            yield return null;
+        }
+        foreach (var sp in sparks) if (sp.img != null) Destroy(sp.img.gameObject);
+        yield break;
+        foreach (var sp in sparks) if (sp.img != null) sp.img.gameObject.SetActive(false);
+    }
+
     IEnumerator FireFinish(float until)
     {
+        HideSlimeWidgets();
         while (Now < until) yield return null;
         yield return ReturnFade();
         ClearGrayHold();
@@ -2966,6 +3112,8 @@ public class PachinkoOverlay : MonoBehaviour
         dim.color = new Color(0f, 0f, 0f, 0.6f);
         Play(Slot.PushOpen);
         float total = PachinkoSettings.PushSeconds;
+        bool slimePush = curTheme == 3;
+        if (slimePush) { EnsureSlimeWidgets(); slimeOse.gameObject.SetActive(true); videoDuckTarget = 0.178f; }   // 버튼이 뜨면 영상 소리 −15dB
         float t0 = Now;
         int lastSec = -1;
         pushFlashing = true;
@@ -2979,6 +3127,7 @@ public class PachinkoOverlay : MonoBehaviour
             if (sec != lastSec) { lastSec = sec; pushCount.text = sec.ToString(); if (sec > 0) Play(Slot.PushTick); }
             float beat = 1f + 0.08f * Mathf.Sin(elapsed * 28f);
             pushBtnImage.rectTransform.localScale = Vector3.one * beat;
+            if (slimePush) pushBtnImage.color = !ReduceFlash && Mathf.Repeat(elapsed, 0.3f) >= 0.15f ? new Color(0.62f, 0.78f, 1f, 1f) : Color.white;   // 빨강 ↔ 은청 0.15초 교대
             pushCount.rectTransform.localScale = Vector3.one * (1f + 0.12f * Mathf.Abs(Mathf.Sin(elapsed * 6f)));
             ringImage.rectTransform.localScale = Vector3.one * (0.7f + (elapsed % 1f) * 0.9f);
             Color rc = Gold; rc.a = 0.9f * (1f - (elapsed % 1f)); ringImage.color = rc;
@@ -2991,6 +3140,17 @@ public class PachinkoOverlay : MonoBehaviour
         pushFlashing = false;
         pushBtnImage.sprite = Spr("UI/push_button_pressed");
         pushBtnImage.rectTransform.localScale = Vector3.one;
+        pushBtnImage.color = Color.white;
+        if (slimePush)
+        {
+            slimeOse.gameObject.SetActive(false);
+            videoDuckTarget = 1f;
+            if (pushedWho >= 0)
+            {
+                if (slimePressClip == null) slimePressClip = Resources.Load<AudioClip>(Folder + "Sfx/slime_push_hit");
+                if (slimePressClip != null) audioSource.PlayOneShot(slimePressClip, Mathf.Clamp01(AudioPrefs.MusicVolume * 1.2f));
+            }
+        }
         Play(Slot.PushPress);
         StartCoroutine(Flash(0.3f));
         yield return Wait(0.3f);
@@ -3120,7 +3280,8 @@ public class PachinkoOverlay : MonoBehaviour
         videoView.color = new Color(1f, 1f, 1f, videoShow);
         videoDim.color = new Color(0f, 0f, 0f, 0.15f * videoShow);   // 숫자가 읽힐 만큼만(α 0.2 이하)
         if (kanekiGroup != null) kanekiGroup.alpha = 1f - videoShow;
-        if (videoAudio != null) videoAudio.volume = Mathf.Clamp01(AudioPrefs.MusicVolume * (VoiceActive() ? 0.4f : 1f) * Mathf.Clamp01(videoShow * 4f));
+        videoDuck = Mathf.MoveTowards(videoDuck, videoDuckTarget, Dt * 4f);
+        if (videoAudio != null) videoAudio.volume = Mathf.Clamp01(AudioPrefs.MusicVolume * (VoiceActive() ? 0.4f : 1f) * Mathf.Clamp01(videoShow * 4f) * videoDuck);
         if (videoAudio2 != null) videoAudio2.volume = Mathf.Clamp01(AudioPrefs.MusicVolume * (VoiceActive() ? 0.4f : 1f));
         if (RecordMode && videoPlayer != null && videoPlayer.isPlaying) videoPlayer.externalReferenceTime = Now - videoStartTime;
         GameBgm.Duck = Mathf.MoveTowards(GameBgm.Duck, duckTarget, Dt * 2f);
