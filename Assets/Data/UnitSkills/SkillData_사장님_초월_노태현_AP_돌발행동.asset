@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: "SkillData_사장님_초월_노태현_AP_돌발행동"
   m_EditorClassIdentifier: 
   skillName: "돌발행동 — 체력스킬(게이지 100)"
-  description: "[돌발행동]\n체력 스킬, 최대 체력(100)일 때 발동. 노태현 주변 범위에 현재 체력 15% 마법 피해 (소리 지르기). 쓰면 체력 게이지 0. 재생 1/초 · 기본 공격 시 +1 [임시값, 사장님이 나중에 정함]."
+  description: "[돌발행동]\n체력 스킬, 최대 체력(100)일 때 발동. 노태현 중심 범위 700 안 모든 적에게 각자 현재 체력 15% 마법 피해 (소리 지르기). 쓰면 체력 게이지 0. 재생 1/초 · 기본 공격 시 +1 [임시값, 사장님이 나중에 정함]."
   triggerType: 3
   levels:
   - cooldown: 0
     triggerChance: 1
-    range: 300
+    range: 700
     hitCountThreshold: 100
     resetTo: 0
     gaugeKind: 1
