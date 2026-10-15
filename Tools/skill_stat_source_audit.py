@@ -66,7 +66,8 @@ for p in sorted(glob.glob('Assets/Data/Units/Roster/*.asset')):
     OVR={'히든_감탄떡볶이':['H03X'],'히든_맥주만땅':['H03T'],'히든_이삭토스트':['H03Q'],'히든_여은서':['H03O']}
     note0=''
     if n in OVR: vm=OVR[n]; note0='값 상향(40ca04c97) 전 원작값 기준 출처. '
-    src=vm or cids
+    okc=[c for c in cids if c in vm]
+    src=okc or vm or cids
     srckind='값일치' if vm else ('csv만(값 불일치·없음)' if cids else '불명')
     if vm and cids and set(vm)&set(cids): srckind='값일치=csv'
     elif vm and cids: srckind='값일치(csv와 다름)'
@@ -80,6 +81,8 @@ for p in sorted(glob.glob('Assets/Data/Units/Roster/*.asset')):
     sk=[SK[g] for g in sg if g in SK]
     fixed = any(s[2] for s in sk) or n.startswith('초월_최상호') or n.startswith('초월_노태현')
     skown=set().union(*[s[1] for s in sk]) if sk else set()
+    nm=n.split('_',1)[1].split('_')[0] if '_' in n else n
+    if any(('_'+nm) in s[0] for s in sk): skown|=set(cids)   # 스킬 에셋이 이 로스터 이름으로 csv 채널에서 만들어짐(더미 E유닛 소유 트리거 → csv 영웅)
     ns=[x for x in sk if not x[2]]
     nsown=set().union(*[x[1] for x in ns]) if ns else set()
     extra=note0
