@@ -55,6 +55,28 @@ static class R70SizeProbe
         return $"스킨 노드 {n}개에 ×0.6 직접 적용";
     }
 
+    // 스토리 건물(visualScale 50)은 몸에 렌더러가 있어 스킨 노드 규칙에 안 걸려야 한다 — skinNode 비어 있음·visualRoot만 배율.
+    static string StoryCheck()
+    {
+        var sb = new System.Text.StringBuilder();
+        var bf = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+        Vector3 c = LaneMarker.Get(0).LaneCenter;
+        foreach (string n in new[] { "Enemy_Story01_하이츠", "Enemy_R70_라인몹", "Enemy_R70_신지우", "Enemy_R01_박진웅" })
+        {
+            var ed = AssetDatabase.LoadAssetAtPath<EnemyData>($"Assets/Data/Enemies/{n}.asset");
+            var go = Object.Instantiate(ed.prefab, c + new Vector3(0f, 0f, 30f), Quaternion.identity);
+            if (go.TryGetComponent(out WaypointMover m)) m.enabled = false;
+            var e = go.GetComponent<EnemyDummy>(); e.Initialize(ed, 1f);
+            var vr = (Transform)typeof(EnemyDummy).GetField("visualRoot", bf).GetValue(e);
+            var sk = (Transform)typeof(EnemyDummy).GetField("skinNode", bf).GetValue(e);
+            var b = new Bounds(go.transform.position, Vector3.zero); bool first = true;
+            foreach (var r in go.GetComponentsInChildren<Renderer>()) { if (first) { b = r.bounds; first = false; } else b.Encapsulate(r.bounds); }
+            sb.AppendLine($"{n} visualScale {ed.visualScale} · 루트 {go.transform.localScale.x:F2} · visualRoot {(vr != null ? vr.localScale.x.ToString("F3") : "null")} · skinNode {(sk != null ? sk.name + " " + sk.localScale.x.ToString("F3") : "없음")} · 경계 높이 {b.size.y:F1}");
+            Object.Destroy(go);
+        }
+        return sb.ToString();
+    }
+
     static string Report()
     {
         var sb = new System.Text.StringBuilder();

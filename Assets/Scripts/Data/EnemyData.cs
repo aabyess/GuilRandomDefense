@@ -222,4 +222,8 @@ public class EnemyData : ScriptableObject
     // [퀘스트] 피카·모리아·대장 셋 · 해적 함대 · 에그헤드 · 고런트-보스 · 메타몽(라운드 보스 10~40은 없다).
     // 값은 Tools/sync_enemy_resistant_from_w3u.py가 w3u uabi에서 유도한다. false면 지금 동작(일반 지속).
     public bool resistantSkin;
+
+    // ⚠️ 맨 뒤(2026-10-16, R70 라인몹 크기) — true면 visualScale을 「몸」뿐 아니라 스킨 노드(루트의 형제, EnemyDummy.skinNode)에도 곱한다.
+    // 스킨이 바인딩된 적은 몸이 빈 노드라 visualScale이 화면에 안 먹었다. 스토리 건물은 visualScale 50이 몸(자리표시) 전용이라 false(기본)로 둔다.
+    public bool visualScaleAffectsSkin;
 }

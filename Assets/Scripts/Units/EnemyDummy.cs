@@ -58,8 +58,30 @@ public class EnemyDummy : MonoBehaviour
         data = enemyData;
         SetReplicaHp(currentHp, maxHp);
         if (enemyData != null) SetReplicaStats(enemyData.armor, enemyData.moveSpeed);   // 첫 Render 전 자리값
-        if (enemyData != null && visualRoot != null)
-            visualRoot.localScale = baseVisualScale * Mathf.Max(0.01f, enemyData.visualScale);
+        if (enemyData != null) ApplyVisualScale(enemyData);
+    }
+
+    // 스킨이 바인딩된 적은 visualRoot(「몸」)가 렌더러를 걷어낸 빈 노드이고 스킨은 루트의 형제 노드다 — visualScale이 몸에만 곱해져 스킨엔 안 걸렸다(10-16 R70 라인몹 0.6).
+    // 몸에 렌더러가 없고 렌더러를 가진 다른 자식(스킨 노드)이 있고 EnemyData.visualScaleAffectsSkin이 켜진 적만 그 노드에도 같은 배율을 곱한다(스토리 건물 50배는 몸 전용). 콜라이더·에이전트가 걸린 루트는 안 건드린다.
+    Transform skinNode;
+    Vector3 baseSkinScale = Vector3.one;
+    void CacheSkinNode()
+    {
+        skinNode = null;
+        if (visualRoot == null || visualRoot.GetComponentInChildren<Renderer>(true) != null) return;
+        foreach (Transform child in transform)
+        {
+            if (child == visualRoot || child.GetComponentInChildren<Renderer>(true) == null) continue;
+            skinNode = child; baseSkinScale = child.localScale;
+            return;
+        }
+    }
+
+    void ApplyVisualScale(EnemyData d)
+    {
+        float scale = Mathf.Max(0.01f, d.visualScale);
+        if (visualRoot != null) visualRoot.localScale = baseVisualScale * scale;
+        if (skinNode != null && d.visualScaleAffectsSkin) skinNode.localScale = baseSkinScale * scale;
     }
 
     // MP: 원작 R01G — 판 도중 누가 나갈 때마다(Gone1~4) Player(5) 계열(스토리·퀘스트 미니보스·크립)의 최대 체력
@@ -442,10 +464,7 @@ public class EnemyDummy : MonoBehaviour
             MaxHp = enemyData.hp * startHpMultiplier;
 
             // 콜라이더가 걸린 루트가 아니라 시각 부위에만 곱한다(위 visualRoot 주석 참고).
-            if (visualRoot != null)
-            {
-                visualRoot.localScale = baseVisualScale * Mathf.Max(0.01f, enemyData.visualScale);
-            }
+            ApplyVisualScale(enemyData);
         }
 
         if (TeamBuffs.EnemySlowMultiplier < 1f) ApplySlow();   // 냉철함 발동 뒤에 나온 적도 같은 이감
@@ -487,6 +506,7 @@ public class EnemyDummy : MonoBehaviour
         {
             baseVisualScale = visualRoot.localScale;
         }
+        CacheSkinNode();
     }
 
     // 오라 등이 거는 추가 회복량(초당). data.hpRegenPerSecond(에셋 고정값)와 별개로 더해진다 —
