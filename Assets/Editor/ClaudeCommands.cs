@@ -1353,6 +1353,14 @@ public static class ClaudeCommands
                 if (!Enum.TryParse(token.Substring(4), true, out Key kk) || kk == Key.None) return $"❌ key: 뒤엔 키 이름(Q·W·Space …): {token}";
                 job.clicks.Add("@key:" + kk);
             }
+            else if (token.StartsWith("film:"))
+            {
+                // film:<초>:<fps> — 그 구간 매 프레임을 ~/GRD_showcase/frames/<판이름>/f_%05d.png로 저장(Time.captureFramerate 고정)
+                string[] fp = token.Substring(5).Split(':');
+                if (fp.Length != 2 || !float.TryParse(fp[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float fs) || fs <= 0f
+                    || !int.TryParse(fp[1], out int ffps) || ffps < 1) return $"❌ film: 뒤엔 <초>:<fps>: {token}";
+                job.clicks.Add("@film:" + fs.ToString(System.Globalization.CultureInfo.InvariantCulture) + ":" + ffps);
+            }
             else if (token == "buttons") job.clicks.Add("@buttons");
             else if (token == "cardpair") job.clicks.Add("@cardpair");
             else if (token.StartsWith("call:")) job.clicks.Add("@call:" + token.Substring(5));
@@ -1499,6 +1507,25 @@ public static class ClaudeCommands
 
     static double nextGameShotTick;
 
+    // film:<초>:<fps> — 이력서 소개 영상 프레임 캡처(2026-10-15). 게임 프레임마다 한 장씩.
+    static bool filmRunning;
+    static int filmFrames, filmFps, filmDone, filmLastFrame = -1;
+    static string filmDir;
+    static void FilmUpdate()
+    {
+        if (!filmRunning || !EditorApplication.isPlaying) { filmRunning = false; EditorApplication.update -= FilmUpdate; Time.captureFramerate = 0; return; }
+        if (Time.frameCount == filmLastFrame) return;
+        filmLastFrame = Time.frameCount;
+        ScreenCapture.CaptureScreenshot(Path.Combine(filmDir, $"f_{filmDone:D5}.png"));
+        filmDone++;
+        if (filmDone >= filmFrames)
+        {
+            filmRunning = false;
+            EditorApplication.update -= FilmUpdate;
+            Time.captureFramerate = 0;
+        }
+    }
+
     static void TickGameShot()
     {
         if (EditorApplication.timeSinceStartup < nextGameShotTick) return;
@@ -1617,6 +1644,31 @@ public static class ClaudeCommands
                         string pressed = ClickButton(pair.Key);   // 카드 글자 = 유닛 이름(Card0「임장혁」)
                         job.report += pressed != null ? $"   🃏 cardpair: 「{pair.Key}」×{pair.Count()} 카드를 누름 → {pressed}\n" : $"   🃏 cardpair: 「{pair.Key}」 카드를 못 찾음\n";
                     }
+                    job.clickIndex++;
+                    Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
+                    break;
+                }
+                if (target.StartsWith("@film:"))
+                {
+                    // Tick은 0.25초마다라 프레임 단위 캡처를 못 한다 — 별도 update 훅(FilmUpdate)이 게임 프레임마다 찍고, 여기선 끝나길 기다린다.
+                    string[] fp = target.Substring(6).Split(':');
+                    if (!filmRunning && filmDone == 0)
+                    {
+                        filmFps = int.Parse(fp[1]);
+                        filmFrames = Mathf.CeilToInt(float.Parse(fp[0], System.Globalization.CultureInfo.InvariantCulture) * filmFps);
+                        string baseName = Path.GetFileNameWithoutExtension(job.file ?? "film");
+                        filmDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "GRD_showcase", "frames", baseName);
+                        if (Directory.Exists(filmDir)) Directory.Delete(filmDir, true);
+                        Directory.CreateDirectory(filmDir);
+                        filmLastFrame = -1;
+                        Time.captureFramerate = filmFps;   // 에디터가 느려도 게임 시간은 프레임당 1/fps
+                        filmRunning = true;
+                        EditorApplication.update += FilmUpdate;
+                        break;
+                    }
+                    if (filmRunning) break;
+                    job.report += $"   🎞 film: {filmDone}프레임 @{filmFps}fps → {filmDir}\n";
+                    filmDone = 0;
                     job.clickIndex++;
                     Advance(job, job.clickIndex < job.clicks.Count ? "clicking" : job.spawns.Count + job.combines.Count > 0 ? "spawning" : "waiting");
                     break;
@@ -4120,6 +4172,7 @@ public static class ClaudeCommands
 
     static void FinishGameShot(GameShotJob job)
     {
+        Time.captureFramerate = 0;   // film: 중간에 끝나도 고정 프레임률을 남기지 않는다
         ReleaseShotMouse();
         // 사장님 기억 난이도를 되돌린다(판이 바꿔 둔 것).
         PlayerPrefs.DeleteKey(DifficultyManager.ToolAutoPickKey);
