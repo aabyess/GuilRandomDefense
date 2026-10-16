@@ -2361,6 +2361,13 @@ public class PachinkoOverlay : MonoBehaviour
             l.rectTransform.sizeDelta = new Vector2(0f, h); l.rectTransform.anchoredPosition = new Vector2(0f, -y);
             l.raycastTarget = false; l.richText = true; return l;
         }
+        void Strip(float y, float h, float a)
+        {
+            Image b = Img("specStrip", specRoot, null, new Color(0f, 0f, 0f, a)); b.raycastTarget = false;
+            b.rectTransform.anchorMin = new Vector2(0f, 1f); b.rectTransform.anchorMax = new Vector2(1f, 1f); b.rectTransform.pivot = new Vector2(0.5f, 1f);
+            b.rectTransform.sizeDelta = new Vector2(0f, h); b.rectTransform.anchoredPosition = new Vector2(0f, -y);
+        }
+        Strip(0f, 130f, 0.55f); Strip(320f, 280f, 0.5f); Strip(860f, 190f, 0.6f);   // 밝은 영상 위에서도 글자가 읽히게
         specName = Top("specName", "", 52f, new Color(1f, 0.82f, 0.25f), 24f, 80f);
         specDigits = Top("specDigits", "", 190f, new Color(1f, 0.9f, 0.5f), 330f, 260f);
         specStatus = Top("specStatus", "", 48f, Color.white, 880f, 80f);
