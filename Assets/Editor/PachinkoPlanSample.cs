@@ -81,7 +81,7 @@ static class PachinkoPlanSample
                 q.rushHit != p.rushHit || q.rushSeed != p.rushSeed) packBad++;
         }
         float f(int c) => c * 100f / N;
-        float expRush = 100f * (1f - Mathf.Pow(1f - PachinkoSettings.VideoRushWinChance, vt.RushCount));
+        float expRush = 100f * (1f - Mathf.Pow(1f - vt.rushChance, vt.RushCount));
         bad += shapeBad + packBad + themeBad + rushBad;
         return $"[테마 {theme} {vt.key}] 러쉬 {vt.RushCount}번 · 첫 룰렛 당첨 {f(first):F2}% (기대 30) · 크리티컬 전체 {f(crit):F2}% (기대 {0.3f * expRush:F2}) · 러쉬 도달 중 크리티컬 {(first == 0 ? 0 : crit * 100f / first):F2}% (기대 {expRush:F2}) · 랜덤 유닛(PUSH 성공) 전체 {f(top):F2}% (기대 {0.3f * expRush * 0.51f:F2})\n   모양 불일치 {shapeBad} · 러쉬 숫자 불일치 {rushBad} · Pack 왕복 불일치 {packBad} · theme 불일치 {themeBad}";
     }

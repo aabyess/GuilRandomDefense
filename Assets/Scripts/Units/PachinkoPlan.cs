@@ -16,6 +16,8 @@ public sealed class VideoThemeSpec
     public float rouletteStart, rouletteStop, pushAt, videoEnd;
     /// <summary>3단계 재설계(10-16 오후, Docs/PACHINKO_RULES.md): 첫 룰렛 0~firstEnd초 → 러쉬 firstEnd~rushEnd초(rushInterval마다 숫자) → 크리티컬 PUSH(pushAt). 전부 영상 안의 초.</summary>
     public float firstEnd = 30f, rushEnd, rushInterval = 2f;
+    /// <summary>러쉬 숫자 한 번당 크리티컬 확률(사장님 10-16: 불꽃 5% · 전생슬 6%).</summary>
+    public float rushChance = PachinkoSettings.VideoRushWinChance;
     /// <summary>러쉬 숫자가 뜨는 횟수(불꽃 (106-30)/2 = 38 · 전생슬 (80-30)/2 = 25).</summary>
     public int RushCount => Mathf.Max(0, Mathf.FloorToInt((rushEnd - firstEnd) / rushInterval + 1e-4f));
     /// <summary>i번째(0부터) 러쉬 숫자가 뜨는 영상 시각. 마지막(RushCount-1번째)이 rushEnd.</summary>
@@ -96,7 +98,7 @@ public static class PachinkoSettings
         {
             theme = 3, key = "slime", title = "転生したらスライムだった件", voteName = "전생슬", voteDesc = "영상 룰렛 · 같은 숫자면 크리티컬 · PUSH", art = "スライム",
             tickerText = "★ 転生したらスライムだった件 ★ 大賢者 ★ 魔物の国 テンペスト ★ 捕食者 ★ G.R.D 大海賊フィーバー ★ 転生したらスライムだった件 ★ 大賢者 ★ 魔物の国 テンペスト ★ 捕食者 ★ G.R.D 大海賊フィーバー ★",
-            videoFile = "tensura_play.mp4", rouletteStart = 70f, rouletteStop = 80f, firstEnd = 30f, rushEnd = 80f, pushAt = 221.19f - 5f, videoEnd = 221.19f, coverSubtitles = false,
+            videoFile = "tensura_play.mp4", rouletteStart = 70f, rouletteStop = 80f, firstEnd = 30f, rushEnd = 80f, rushChance = 0.06f, pushAt = 221.19f - 5f, videoEnd = 221.19f, coverSubtitles = false,
             cardColor = new Color(0.04f, 0.3f, 0.5f, 0.95f), fillColor = new Color(0.4f, 0.85f, 1f, 0.55f), barColor = new Color(0.2f, 0.7f, 0.95f), pickColor = new Color(0.55f, 0.88f, 1f),
         },
     };
@@ -239,7 +241,7 @@ public struct PachinkoPlan
         int n = vt.RushCount, hit = -1;
         if (first && n > 0)
         {
-            if (mode == null) { for (int i = 0; i < n; i++) if (Random.value < PachinkoSettings.VideoRushWinChance) { hit = i; break; } }
+            if (mode == null) { for (int i = 0; i < n; i++) if (Random.value < vt.rushChance) { hit = i; break; } }
             else if (mode == "jackpot" || mode == "win") hit = Random.Range(0, n);
         }
         p.jackpot = false; p.revive = false;
