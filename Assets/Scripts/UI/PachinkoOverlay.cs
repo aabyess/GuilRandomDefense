@@ -1055,7 +1055,6 @@ public class PachinkoOverlay : MonoBehaviour
         root.gameObject.SetActive(false);
         StartCoroutine(ReturnFadeOut());
         running = null;
-        StartSpectateIfAny();   // 꽝·탈락 뒤: 진행 중인 다른 플레이어 영상을 크게 하나 관전
     }
 
     // ───────── 화려한 연출 도구(사장님 「파칭코 영상처럼 화려하게」) ─────────
@@ -2288,6 +2287,7 @@ public class PachinkoOverlay : MonoBehaviour
         root.gameObject.SetActive(false);
         StartCoroutine(ReturnFadeOut());
         running = null;
+        StartSpectateIfAny();   // 꽝·탈락 뒤: 진행 중인 다른 플레이어 영상을 크게 하나 관전
     }
 
     IEnumerator PopLabel(TMP_Text label, float seconds)
