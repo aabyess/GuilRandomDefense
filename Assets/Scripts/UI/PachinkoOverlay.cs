@@ -2341,6 +2341,8 @@ public class PachinkoOverlay : MonoBehaviour
         return list;
     }
 
+    public static string DebugSpecAudio() { var o = instance; if (o == null || o.videoAudio == null) return "없음"; return $"관전={o.specCo != null} 재생={o.videoAudio.isPlaying} 볼륨={o.videoAudio.volume:F2} 영상재생={o.videoPlayer.isPlaying}"; }
+
     void StartSpectateIfAny()
     {
         if (specCo != null || SpecCandidates().Count == 0) return;
@@ -2455,7 +2457,11 @@ public class PachinkoOverlay : MonoBehaviour
             videoPlayer.url = path; videoPlayer.Prepare();
             float w = 0f;
             while (!videoPlayer.isPrepared && w < 10f) { w += Dt; yield return null; }
-            if (videoPlayer.isPrepared) { videoPlayer.time = Mathf.Max(0f, Now - e.t0); videoPlayer.Play(); }
+            if (videoPlayer.isPrepared)
+            {
+                videoPlayer.time = Mathf.Max(0f, Now - e.t0); videoPlayer.Play();
+                videoShowTarget = 1f; videoDuckTarget = 0.35f;   // 관전 중인 영상 소리를 작게(내 판은 끝났다)
+            }
         }
         specLoadedFile = vs.videoFile; specLoading = false;
     }
@@ -2494,9 +2500,11 @@ public class PachinkoOverlay : MonoBehaviour
             SpecDigitsAt(specTarget, vs, el, specD, specSpin); SpecShowGems(specTarget.plan.theme, specD, specSpin);
             specStatus.text = SpecStatusAt(specTarget, vs, el, rank);
             specHint.gameObject.SetActive(cands.Count > 1);
+            if (videoAudio != null) videoAudio.volume = Mathf.Clamp01(AudioPrefs.MusicVolume * 0.35f);   // 내 root가 꺼져 Update의 볼륨 줄이 안 돈다 — 여기서 직접(작게)
             yield return null;
         }
         if (videoPlayer != null && (videoPlayer.isPlaying || videoPlayer.isPrepared)) videoPlayer.Stop();
+        videoShow = videoShowTarget = 0f; videoDuckTarget = 1f;
         specRoot.gameObject.SetActive(false);
         specTarget = null; specCo = null;
     }
