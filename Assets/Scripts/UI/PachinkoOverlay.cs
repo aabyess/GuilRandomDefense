@@ -2455,7 +2455,11 @@ public class PachinkoOverlay : MonoBehaviour
             videoPlayer.url = path; videoPlayer.Prepare();
             float w = 0f;
             while (!videoPlayer.isPrepared && w < 10f) { w += Dt; yield return null; }
-            if (videoPlayer.isPrepared) { videoPlayer.time = Mathf.Max(0f, Now - e.t0); videoPlayer.Play(); }
+            if (videoPlayer.isPrepared)
+            {
+                videoPlayer.time = Mathf.Max(0f, Now - e.t0); videoPlayer.Play();
+                videoShowTarget = 1f; videoDuckTarget = 0.35f;   // 관전 중인 영상 소리를 작게(내 판은 끝났다)
+            }
         }
         specLoadedFile = vs.videoFile; specLoading = false;
     }
@@ -2497,6 +2501,7 @@ public class PachinkoOverlay : MonoBehaviour
             yield return null;
         }
         if (videoPlayer != null && (videoPlayer.isPlaying || videoPlayer.isPrepared)) videoPlayer.Stop();
+        videoShow = videoShowTarget = 0f; videoDuckTarget = 1f;
         specRoot.gameObject.SetActive(false);
         specTarget = null; specCo = null;
     }
