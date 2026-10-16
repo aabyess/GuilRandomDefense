@@ -17,7 +17,7 @@ using UnityEngine.InputSystem;
 /// 오버레이 연결(구현담당2): PachinkoController.PlayHandler = plan => …(내 plan 연출 시작, PUSH는 plan.PreludeSeconds() 뒤 PachinkoSettings.PushSeconds 동안),
 ///   PachinkoController.PushedHandler = who => …(내 줄 가운데 정지 — who ≥ 0 = 내가 눌렀다, -1 = 시간 끝 자동). Space 입력은 이 컨트롤러가 받는다.
 ///   클릭으로도 누르려면 PachinkoController.RequestPush()를 부른다. 훅이 비어 있으면 로그만 찍고 바로 결과로 간다(임시 경로).
-/// 개발 인자: -pachinkoTest jackpot|win|revive|reach|miss|random [-pachinkoTheme tokyo|rezero|fire|slime] [-pachinkoPush success|fail] [-pachinkoSkipTo <초>]  (게임 씬 진입 8초 뒤 모든 슬롯에 그 결과 — 쉼표로 슬롯별 지정 가능 「win,miss」)
+/// 개발 인자: -pachinkoTest jackpot|win|revive|reach|miss|random [-pachinkoTheme tokyo|rezero|fire|slime] [-pachinkoPush success|fail] [-pachinkoSkipTo <초>] [-pachinkoRushAt <n>]  (게임 씬 진입 8초 뒤 모든 슬롯에 그 결과 — 쉼표로 슬롯별 지정 가능 「win,miss」)
 /// </summary>
 public class PachinkoController : MonoBehaviour
 {
@@ -390,6 +390,8 @@ public class PachinkoController : MonoBehaviour
         // 시험 인자(모든 PC가 씬 로드 즉시 읽는다 — 클라도 plan이 오기 전에 같은 skip·push·테마를 갖게. 10-16: 예전엔 호스트 루틴 안에서만 읽어 클라가 어긋났다)
         int ski = Array.IndexOf(args, "-pachinkoSkipTo");   // 영상형 테마 시작 위치 점프(시험용)
         if (ski >= 0 && ski + 1 < args.Length && float.TryParse(args[ski + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float skipTo)) PachinkoSettings.DebugSkipSeconds = Mathf.Max(0f, skipTo);
+        int rai = Array.IndexOf(args, "-pachinkoRushAt");   // 크리티컬 확정 시험에서 러쉬 n번째에 당첨(1부터)
+        if (rai >= 0 && rai + 1 < args.Length && int.TryParse(args[rai + 1], out int rushAt)) PachinkoSettings.DebugRushAt = Mathf.Max(0, rushAt);
         int pi = Array.IndexOf(args, "-pachinkoPush");   // success|fail — 영상형 테마 PUSH 결과 고정(빌드 확인용)
         if (pi >= 0 && pi + 1 < args.Length) { PachinkoPlan.ForcePush = args[pi + 1].ToLowerInvariant().StartsWith("s"); AutoPushForTest = true; }
         int ti = Array.IndexOf(args, "-pachinkoTheme");   // tokyo|rezero|fire|slime — 결과를 고정하면 투표를 건너뛰므로 테마도 인자로 고른다

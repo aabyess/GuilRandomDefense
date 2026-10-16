@@ -66,6 +66,8 @@ public static class PachinkoSettings
     public const float VideoFirstWinChance = 0.30f, VideoRushWinChance = 0.05f;
     /// <summary>시험용(-pachinkoSkipTo &lt;초&gt;): 영상형 테마 연출을 이 초만큼 건너뛴 지점에서 시작한다. 평소 0 — 실게임엔 영향 없다.</summary>
     public static float DebugSkipSeconds;
+    /// <summary>시험용(-pachinkoRushAt &lt;n&gt;): 크리티컬 확정(-pachinkoTest jackpot|win)일 때 러쉬 n번째(1부터)에서 당첨시킨다. 0이면 랜덤.</summary>
+    public static int DebugRushAt;
     /// <summary>영상형 테마 결과 화면이 떠 있는 시간(크리티컬 PUSH 성공 / 실패 · 꽝).</summary>
     public const float VideoSuccessResultSeconds = 5.5f, VideoFailResultSeconds = 3.0f, VideoMissResultSeconds = 3.0f;
     /// <summary>한 슬롯의 파칭코가 이 값(초)보다 더 지체되면 호스트가 그 슬롯을 강제로 끝낸다(끊김·멈춤으로 전원 정지가 길어지는 것 방지).</summary>
@@ -242,7 +244,7 @@ public struct PachinkoPlan
         if (first && n > 0)
         {
             if (mode == null) { for (int i = 0; i < n; i++) if (Random.value < vt.rushChance) { hit = i; break; } }
-            else if (mode == "jackpot" || mode == "win") hit = Random.Range(0, n);
+            else if (mode == "jackpot" || mode == "win") hit = DebugRushAt > 0 ? Mathf.Min(DebugRushAt, n) - 1 : Random.Range(0, n);
         }
         p.jackpot = false; p.revive = false;
         p.reach = first;
