@@ -229,10 +229,10 @@ public class NetGameState : NetworkBehaviour
 
     // 30R 보스 파칭코(10-14): 호스트가 정한 연출 길(PachinkoPlan.Pack)을 전원에게 — 각 PC가 PachinkoController.PlayHandler(오버레이)를 부른다. 정지는 CutinHold가 맡는다.
     // 사양(사장님 10-14): 플레이어마다 따로 뽑는다 — 슬롯별 plan을 한 번씩 보내고 각 PC는 자기 슬롯 것만 쓴다.
-    public void BroadcastPachinko(int slot, int packedPlan) { if (HasStateAuthority) RPC_Pachinko((sbyte)slot, packedPlan); }
+    public void BroadcastPachinko(int slot, long packedPlan) { if (HasStateAuthority) RPC_Pachinko((sbyte)slot, packedPlan); }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.Proxies)]
-    public void RPC_Pachinko(sbyte slot, int packedPlan)
+    public void RPC_Pachinko(sbyte slot, long packedPlan)
     {
         PachinkoController.ReceivePlan(slot, packedPlan);
     }
