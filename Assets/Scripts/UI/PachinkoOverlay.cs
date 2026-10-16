@@ -2316,7 +2316,7 @@ public class PachinkoOverlay : MonoBehaviour
 
     // ───────── 관전(사장님 10-16 결정): 꽝·탈락한 사람은 진행 중인 다른 플레이어 영상을 「크게 하나」 보고 좌우 키로 넘긴다 ─────────
     // 영상은 하나만 재생(그 사람의 plan·시계로 숫자·단계를 재현), 가장 앞선 판(크리티컬 > 러쉬 > 첫 룰렛) 자동 선택, 위에 이름표.
-    RectTransform specRoot; RawImage specView; TMP_Text specName, specDigits, specStatus, specHint;
+    RectTransform specRoot; RawImage specView; TMP_Text specName, specStatus, specHint; readonly Image[] specGem = new Image[3];
     Coroutine specCo; MonEntry specTarget; string specLoadedFile; bool specLoading;
 
     bool IsSpecCandidate(MonEntry e, out int rank)
@@ -2361,35 +2361,68 @@ public class PachinkoOverlay : MonoBehaviour
             l.rectTransform.sizeDelta = new Vector2(0f, h); l.rectTransform.anchoredPosition = new Vector2(0f, -y);
             l.raycastTarget = false; l.richText = true; return l;
         }
-        void Strip(float y, float h, float a)
-        {
-            Image b = Img("specStrip", specRoot, null, new Color(0f, 0f, 0f, a)); b.raycastTarget = false;
-            b.rectTransform.anchorMin = new Vector2(0f, 1f); b.rectTransform.anchorMax = new Vector2(1f, 1f); b.rectTransform.pivot = new Vector2(0.5f, 1f);
-            b.rectTransform.sizeDelta = new Vector2(0f, h); b.rectTransform.anchoredPosition = new Vector2(0f, -y);
+        void Pill(float y, float w, float h)
+        {   // 글자 뒤만 어둡게(화면 가로지르는 띠 금지) — 밝은 영상 위에서도 읽히게
+            Image p = Img("specPill", specRoot, null, new Color(0f, 0f, 0f, 0.72f)); p.raycastTarget = false;
+            p.rectTransform.anchorMin = p.rectTransform.anchorMax = new Vector2(0.5f, 1f); p.rectTransform.pivot = new Vector2(0.5f, 1f);
+            p.rectTransform.sizeDelta = new Vector2(w, h); p.rectTransform.anchoredPosition = new Vector2(0f, -y);
         }
-        Strip(0f, 130f, 0.55f); Strip(320f, 280f, 0.5f); Strip(860f, 190f, 0.6f);   // 밝은 영상 위에서도 글자가 읽히게
+        Pill(18f, 420f, 90f); Pill(872f, 1150f, 76f); Pill(1000f, 760f, 52f);
+        for (int i = 0; i < 3; i++)
+        {   // 내 판과 같은 보석 숫자(SymbolsFire/SymbolsSlime) 셋
+            specGem[i] = Img("specGem" + i, specRoot, null, Color.white);
+            specGem[i].raycastTarget = false;
+            specGem[i].rectTransform.anchorMin = specGem[i].rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            specGem[i].rectTransform.sizeDelta = new Vector2(330f, 330f);
+            specGem[i].rectTransform.anchoredPosition = new Vector2((i - 1) * 380f, 20f);
+        }
         specName = Top("specName", "", 52f, new Color(1f, 0.82f, 0.25f), 24f, 80f);
-        specDigits = Top("specDigits", "", 190f, new Color(1f, 0.9f, 0.5f), 330f, 260f);
         specStatus = Top("specStatus", "", 48f, Color.white, 880f, 80f);
         specHint = Top("specHint", "◀  ←  →  ▶   다른 플레이어로 넘기기", 30f, new Color(0.8f, 0.85f, 1f), 1000f, 50f);
         specRoot.gameObject.SetActive(false);
     }
 
-    string SpecDigitsAt(MonEntry e, VideoThemeSpec vs, float el)
+    /// <summary>관전 숫자 셋과 아직 도는 중인지(도는 칸은 번짐 그림).</summary>
+    void SpecDigitsAt(MonEntry e, VideoThemeSpec vs, float el, int[] d, bool[] spin)
     {
         PachinkoPlan p = e.plan;
-        string Spin() => UnityEngine.Random.Range(1, 10).ToString();
+        for (int i = 0; i < 3; i++) { spin[i] = false; d[i] = 1; }
         if (el < vs.firstEnd || !p.reach)
         {
             float L = vs.firstEnd * 0.45f + 1.5f, R = vs.firstEnd * 0.7f + 1.9f, C = vs.firstEnd;
-            return $"{(el >= L ? p.left.ToString() : Spin())}  {(el >= C ? p.center.ToString() : Spin())}  {(el >= R ? p.right.ToString() : Spin())}";
+            d[0] = p.left; d[1] = p.center; d[2] = p.right;
+            spin[0] = el < L; spin[1] = el < C; spin[2] = el < R;
+            for (int i = 0; i < 3; i++) if (spin[i]) d[i] = 1 + (int)(Now * 14f + i * 3) % 9;
+            return;
         }
         int n = vs.RushCount, last = -1;
         for (int i = 0; i < n; i++) { if (vs.RushDrawTime(i) <= el) last = i; else break; }
         if (p.win) last = Mathf.Min(last, p.RushWinIndex);
-        if (last < 0) return $"{p.left}  {p.center}  {p.right}";
+        if (last < 0) { d[0] = p.left; d[1] = p.center; d[2] = p.right; return; }
         p.RushDigits(last, out byte a, out byte b, out byte c);
-        return $"{a}  {b}  {c}";
+        d[0] = a; d[1] = b; d[2] = c;
+    }
+
+    static Sprite SpecSym(string dir, string file)
+    {
+        Sprite sp = Spr(dir + "/" + file);
+        if (sp != null || dir == "Symbols" || Spr(dir + "/symbol_1") != null) return sp;
+        return Spr("Symbols/" + file);
+    }
+
+    void SpecShowGems(int theme, int[] d, bool[] spin)
+    {
+        string dir = theme == 0 ? "Symbols" : theme == 1 ? "SymbolsRz" : SymbolDirOr(theme == 2 ? "SymbolsFire" : "SymbolsSlime", "SymbolsRz");
+        int fi = (int)(Now * 12f) % 6;
+        for (int i = 0; i < 3; i++)
+        {
+            int sym = d[i];
+            Sprite sp;
+            if (spin[i]) sp = SpecSym(dir, $"symbol_{sym}_blur");
+            else if (sym % 2 == 1 && SpecSym(dir, $"symbol_{sym}_f0") != null) sp = SpecSym(dir, $"symbol_{sym}_f{fi}") ?? SpecSym(dir, $"symbol_{sym}");
+            else sp = SpecSym(dir, $"symbol_{sym}");
+            specGem[i].sprite = sp; specGem[i].enabled = sp != null; specGem[i].preserveAspect = true;
+        }
     }
 
     string SpecStatusAt(MonEntry e, VideoThemeSpec vs, float el, int rank)
@@ -2427,6 +2460,7 @@ public class PachinkoOverlay : MonoBehaviour
         specLoadedFile = vs.videoFile; specLoading = false;
     }
 
+    readonly int[] specD = new int[3]; readonly bool[] specSpin = new bool[3];
     IEnumerator SpectateRoutine()
     {
         EnsureSpecWidgets();
@@ -2457,7 +2491,7 @@ public class PachinkoOverlay : MonoBehaviour
             IsSpecCandidate(specTarget, out int rank);
             float el = Now - specTarget.t0;
             specName.text = cands.Count > 1 ? $"관전  {cands.IndexOf(specTarget) + 1} / {cands.Count}" : "관전";
-            specDigits.text = SpecDigitsAt(specTarget, vs, el);
+            SpecDigitsAt(specTarget, vs, el, specD, specSpin); SpecShowGems(specTarget.plan.theme, specD, specSpin);
             specStatus.text = SpecStatusAt(specTarget, vs, el, rank);
             specHint.gameObject.SetActive(cands.Count > 1);
             yield return null;
