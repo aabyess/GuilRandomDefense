@@ -1024,7 +1024,7 @@ public class PachinkoOverlay : MonoBehaviour
                 StartCoroutine(Fireworks(true, 0));
                 StartCoroutine(Pop(logoOoatari, p.ResultSeconds() + 0.5f, 1.2f, keep: true));
                 StartCoroutine(Later(3.0f, Fireworks(true, curTheme)));
-                ShowBand("大当たり 보상: 랜덤 유닛 ×1");
+                ShowBand("大当たり 보상: 랜덤 유닛 ×1" + (pushedWho >= 0 && p.pushWin ? " + 희귀함 위습 ×1 (PUSH 성공)" : ""));
             }
             else
             {
@@ -1643,7 +1643,7 @@ public class PachinkoOverlay : MonoBehaviour
                 StartCoroutine(Fireworks(true, 1));
                 StartCoroutine(Pop(logoOoatari, p.ResultSeconds() + 0.5f, 1.2f, keep: true));
                 StartCoroutine(Later(3.0f, Fireworks(true, curTheme)));
-                ShowBand("大当たり 보상: 랜덤 유닛 ×1");
+                ShowBand("大当たり 보상: 랜덤 유닛 ×1" + (pushedWho >= 0 && p.pushWin ? " + 희귀함 위습 ×1 (PUSH 성공)" : ""));
             }
             else
             {
@@ -1890,7 +1890,8 @@ public class PachinkoOverlay : MonoBehaviour
         if (videoPlayer.isPlaying) videoPlayer.Pause();
         SetFireChrome(true); fireBadge.gameObject.SetActive(false);   // 결과 화면에서 숫자·로고를 다시 보인다
         fireSubtitleCover.gameObject.SetActive(false);
-        if (!pushed)
+        bool lost = !pushed && !p.jackpot;   // 777은 PUSH를 놓쳐도 랜덤 유닛은 확정 — 깨짐·흑백 없이 「보너스 놓침」
+        if (lost)
         {
             // 실패: 화면이 금이 가며 흑백으로 빠지고 조각이 떨어진다(「번쩍임 줄이기」와 무관하게 흑백 유지, 섬광만 끈다)
             yield return ShatterScreen(false, 0.9f, gray: true, noReveal: true);
@@ -1901,14 +1902,20 @@ public class PachinkoOverlay : MonoBehaviour
         float resSecs = p.ResultSeconds(pushed);
         if (pushed && spec.key == "slime") StartCoroutine(SlimeSuccessFx());
         else if (pushed && !ReduceFlash) { StartCoroutine(WinFlashStandard()); shakeUntil = Now + 0.4f; }
-        if (!pushed && spec.key == "slime") foreach (Reel rl in reels) rl.Highlight(new Color(0.74f, 0.78f, 0.88f));   // 빛 빠진 은색 숫자
+        if (lost && spec.key == "slime") foreach (Reel rl in reels) rl.Highlight(new Color(0.74f, 0.78f, 0.88f));   // 빛 빠진 은색 숫자
         bool top = PachinkoSettings.VideoSuccessIsTopReward || p.jackpot;   // PUSH 성공 = 제일 좋은 보상(랜덤유닛)
         if (pushed)
         {
             StartCoroutine(Confetti(Mathf.Max(5.5f, resSecs - 0.4f)));
             StartCoroutine(Fireworks(top, spec.theme));
             StartCoroutine(Pop(top ? logoOoatari : logoAtari, resSecs + 0.5f, 1.2f, keep: true));
-            ShowBand(top ? "大当たり 보상: 랜덤 유닛 ×1" : "当たり 보상: 전설·히든 위습 ×1");
+            ShowBand(p.jackpot ? "大当たり 보상: 랜덤 유닛 ×1 + 희귀함 위습 ×1 (PUSH 성공)" : top ? "大当たり 보상: 랜덤 유닛 ×1" : "当たり 보상: 전설·히든 위습 ×1");
+        }
+        else if (p.jackpot)
+        {
+            StartCoroutine(Confetti(Mathf.Max(3f, resSecs - 0.4f)));
+            StartCoroutine(Pop(logoOoatari, resSecs + 0.5f, 1.2f, keep: true));
+            ShowBand("大当たり 보상: 랜덤 유닛 ×1 (PUSH 보너스 놓침)");
         }
         else
         {
@@ -2276,12 +2283,13 @@ public class PachinkoOverlay : MonoBehaviour
             if (p.win)
             {
                 bool top = PachinkoSettings.VideoSuccessIsTopReward || p.jackpot;
+                if (p.jackpot) return ok ? "<color=#FFD54A>777 + PUSH 성공! 랜덤 유닛 + 희귀함 위습</color>" : "<color=#FFD54A>777 대당첨! 랜덤 유닛</color> · 보너스 놓침";
                 if (ok) return top ? "<color=#FFD54A>PUSH 성공! 랜덤 유닛</color>" : "<color=#FFD54A>PUSH 성공! 전설·히든 위습</color>";
                 return PachinkoSettings.VideoSuccessIsTopReward ? "<color=#FF8A65>PUSH 실패 · 전설·히든 위습</color>" : "<color=#FF8A65>PUSH 실패 · 희귀함 위습</color>";
             }
             return p.reach ? "리치 꽝 · 희귀함 위습" : "꽝 · 특별함 위습";
         }
-        return p.jackpot ? "<color=#FFD54A>777 대당첨! 랜덤 유닛</color>" : p.win ? "<color=#FFD54A>당첨! 전설·히든 위습</color>" : p.reach ? "리치 꽝 · 희귀함 위습" : "꽝 · 특별함 위습";
+        return p.jackpot ? (ok ? "<color=#FFD54A>777 + PUSH 성공! 랜덤 유닛 + 희귀함 위습</color>" : "<color=#FFD54A>777 대당첨! 랜덤 유닛</color> · 보너스 놓침") : p.win ? "<color=#FFD54A>당첨! 전설·히든 위습</color>" : p.reach ? "리치 꽝 · 희귀함 위습" : "꽝 · 특별함 위습";
     }
 
     string MonitorLine(MonEntry e, out bool finished)

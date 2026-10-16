@@ -338,7 +338,7 @@ public class PachinkoController : MonoBehaviour
             {
                 Debug.LogWarning($"[파칭코] 슬롯 {slot} 안전장치 — 예정 시간을 {PachinkoSettings.StallSafetySeconds:F0}초 넘겨 강제로 끝냅니다.");
                 r.phase = Phase.Done;
-                if (authority) RewardDistributor.Instance?.GrantPachinkoReward(slot, RewardPlan(r));
+                if (authority) { PachinkoPlan rp = RewardPlan(r, out bool extra); RewardDistributor.Instance?.GrantPachinkoReward(slot, rp, extra); }
                 continue;
             }
             if (r.phase == Phase.Prelude && now >= r.openAt) r.phase = Phase.Push;
@@ -352,7 +352,7 @@ public class PachinkoController : MonoBehaviour
             else if (r.phase == Phase.Result && now >= r.endAt)
             {
                 r.phase = Phase.Done;
-                if (authority) RewardDistributor.Instance?.GrantPachinkoReward(slot, RewardPlan(r));
+                if (authority) { PachinkoPlan rp = RewardPlan(r, out bool extra); RewardDistributor.Instance?.GrantPachinkoReward(slot, rp, extra); }
             }
         }
         if (allDone || !Running)
@@ -366,9 +366,11 @@ public class PachinkoController : MonoBehaviour
     /// 보상 계산용 plan. 영상형 테마(사장님 10-16): 같은 숫자 셋(크리티컬 = plan.win) + PUSH 성공 → 제일 좋은 보상(777 보상, 랜덤유닛) ·
     /// PUSH 실패 → 당첨 보상(전설·히든 위습). 꽝은 plan 그대로(리치꽝/꽝). 값은 PachinkoSettings.VideoSuccessIsTopReward.
     /// </summary>
-    static PachinkoPlan RewardPlan(Run r)
+    static PachinkoPlan RewardPlan(Run r, out bool extraRareWisp)
     {
         PachinkoPlan p = r.plan;
+        extraRareWisp = p.jackpot && r.pushedOk;   // 사장님 10-16: 777은 PUSH와 상관없이 랜덤 유닛 확정, PUSH 성공이면 희귀함 위습 ×1 덤(네 테마 공통)
+        if (p.jackpot) return p;
         if (PachinkoSettings.VideoTheme(p.theme) != null && p.win)
         {
             if (PachinkoSettings.VideoSuccessIsTopReward) { p.jackpot = r.pushedOk; p.win = true; }

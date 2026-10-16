@@ -765,7 +765,7 @@ public class RewardDistributor : MonoBehaviour
     }
 
     /// <summary>30R 보스 파칭코 보상(사장님 10-14): 그 슬롯 플레이어만. 777 = 랜덤유닛 직접 · 당첨 = 전설·히든 위습(솔·성탄·뻬꼼 제외, 풀카운트 감점 없음) · 리치 꽝 = 희귀함 위습 · 꽝 = 특별함 위습.</summary>
-    public void GrantPachinkoReward(int slot, PachinkoPlan plan)
+    public void GrantPachinkoReward(int slot, PachinkoPlan plan, bool extraRareWisp = false)
     {
         if (!GameAuthority.IsServer) return;
         PlayerContext context = null;
@@ -792,6 +792,17 @@ public class RewardDistributor : MonoBehaviour
                 spawner.Spawn(unit, position, slot);
                 PlayerNotification.Show(slot, "<color=#FFD700>大当たり 보상: 랜덤 유닛 ×1</color>", 8f);
                 Debug.Log($"[파칭코보상] 슬롯 {slot} 777 → 랜덤유닛 {unit.unitName}");
+                if (extraRareWisp)
+                {   // 777 + PUSH 성공 덤: 희귀함 위습 ×1
+                    WispData bonus = pachinkoReachMissWisp != null ? pachinkoReachMissWisp : (pachinkoReachMissWisp = FindWispByName("Wisp_희귀함"));
+                    if (bonus != null)
+                    {
+                        SpawnWisp(context, bonus, 1, newWorldReward: false, excludeRestricted: false);
+                        PlayerNotification.Show(slot, "<color=#FFD700>PUSH 보너스: 희귀함 위습 ×1</color>", 8f);
+                        Debug.Log($"[파칭코보상] 슬롯 {slot} 777 + PUSH 성공 → 희귀함 위습 1기 추가");
+                    }
+                    else Debug.LogWarning("RewardDistributor: 777 PUSH 보너스(희귀함 위습)를 못 찾아 못 줍니다.");
+                }
                 return;
             }
         }
