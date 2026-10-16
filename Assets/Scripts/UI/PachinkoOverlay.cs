@@ -1055,6 +1055,7 @@ public class PachinkoOverlay : MonoBehaviour
         root.gameObject.SetActive(false);
         StartCoroutine(ReturnFadeOut());
         running = null;
+        StartSpectateIfAny();   // 꽝·탈락 뒤: 진행 중인 다른 플레이어 영상을 크게 하나 관전
     }
 
     // ───────── 화려한 연출 도구(사장님 「파칭코 영상처럼 화려하게」) ─────────
@@ -2313,6 +2314,152 @@ public class PachinkoOverlay : MonoBehaviour
     /// <summary>시험·사진용: 가짜 슬롯 하나를 모니터에 올린다(gameshot call).</summary>
     public static void DebugAddMonitor(int slot, PachinkoPlan plan) { Ensure().MonitorPlan(slot, plan); }
 
+    // ───────── 관전(사장님 10-16 결정): 꽝·탈락한 사람은 진행 중인 다른 플레이어 영상을 「크게 하나」 보고 좌우 키로 넘긴다 ─────────
+    // 영상은 하나만 재생(그 사람의 plan·시계로 숫자·단계를 재현), 가장 앞선 판(크리티컬 > 러쉬 > 첫 룰렛) 자동 선택, 위에 이름표.
+    RectTransform specRoot; RawImage specView; TMP_Text specName, specDigits, specStatus, specHint;
+    Coroutine specCo; MonEntry specTarget; string specLoadedFile; bool specLoading;
+
+    bool IsSpecCandidate(MonEntry e, out int rank)
+    {
+        rank = -1;
+        if (e.slot == GameAuthority.LocalPlayerId) return false;
+        VideoThemeSpec vs = PachinkoSettings.VideoTheme(e.plan.theme);
+        if (vs == null) return false;
+        MonitorLine(e, out bool fin);
+        float el = Now - e.t0;
+        if (fin || el > vs.videoEnd + 14f) return false;
+        PachinkoPlan p = e.plan;
+        rank = el < vs.firstEnd ? 1 : !p.reach ? 0 : (p.win && el >= vs.RushDrawTime(p.RushWinIndex)) ? 3 : 2;
+        return true;
+    }
+
+    List<MonEntry> SpecCandidates()
+    {
+        var list = new List<MonEntry>();
+        foreach (MonEntry e in mon.Values) if (IsSpecCandidate(e, out _)) list.Add(e);
+        list.Sort((a, b) => a.slot.CompareTo(b.slot));
+        return list;
+    }
+
+    void StartSpectateIfAny()
+    {
+        if (specCo != null || SpecCandidates().Count == 0) return;
+        specCo = StartCoroutine(SpectateRoutine());
+    }
+
+    void EnsureSpecWidgets()
+    {
+        if (specRoot != null) return;
+        specRoot = Rt("spectate", transform); Stretch(specRoot);
+        Image bg = specRoot.gameObject.AddComponent<Image>(); bg.color = Color.black; bg.raycastTarget = false;
+        RectTransform vr = Rt("specView", specRoot); Stretch(vr);
+        specView = vr.gameObject.AddComponent<RawImage>(); specView.raycastTarget = false;
+        TMP_Text Top(string n, string t, float size, Color c, float y, float h)
+        {
+            TMP_Text l = Label(n, specRoot, t, size, c, TextAlignmentOptions.Center, 0.3f);
+            l.rectTransform.anchorMin = new Vector2(0f, 1f); l.rectTransform.anchorMax = new Vector2(1f, 1f); l.rectTransform.pivot = new Vector2(0.5f, 1f);
+            l.rectTransform.sizeDelta = new Vector2(0f, h); l.rectTransform.anchoredPosition = new Vector2(0f, -y);
+            l.raycastTarget = false; l.richText = true; return l;
+        }
+        specName = Top("specName", "", 52f, new Color(1f, 0.82f, 0.25f), 24f, 80f);
+        specDigits = Top("specDigits", "", 190f, new Color(1f, 0.9f, 0.5f), 330f, 260f);
+        specStatus = Top("specStatus", "", 48f, Color.white, 880f, 80f);
+        specHint = Top("specHint", "◀  ←  →  ▶   다른 플레이어로 넘기기", 30f, new Color(0.8f, 0.85f, 1f), 1000f, 50f);
+        specRoot.gameObject.SetActive(false);
+    }
+
+    string SpecDigitsAt(MonEntry e, VideoThemeSpec vs, float el)
+    {
+        PachinkoPlan p = e.plan;
+        string Spin() => UnityEngine.Random.Range(1, 10).ToString();
+        if (el < vs.firstEnd || !p.reach)
+        {
+            float L = vs.firstEnd * 0.45f + 1.5f, R = vs.firstEnd * 0.7f + 1.9f, C = vs.firstEnd;
+            return $"{(el >= L ? p.left.ToString() : Spin())}  {(el >= C ? p.center.ToString() : Spin())}  {(el >= R ? p.right.ToString() : Spin())}";
+        }
+        int n = vs.RushCount, last = -1;
+        for (int i = 0; i < n; i++) { if (vs.RushDrawTime(i) <= el) last = i; else break; }
+        if (p.win) last = Mathf.Min(last, p.RushWinIndex);
+        if (last < 0) return $"{p.left}  {p.center}  {p.right}";
+        p.RushDigits(last, out byte a, out byte b, out byte c);
+        return $"{a}  {b}  {c}";
+    }
+
+    string SpecStatusAt(MonEntry e, VideoThemeSpec vs, float el, int rank)
+    {
+        string name = PlayerDisplayName.Of(e.slot);
+        PachinkoPlan p = e.plan;
+        if (rank == 3)
+        {
+            if (el >= vs.pushAt) return $"<color=#FFD54A>{name}  PUSH!</color>";
+            return $"<color=#FF5A4A>{name}  CRITICAL BONUS!</color>";
+        }
+        if (rank == 2)
+        {
+            int i = Mathf.Clamp(Mathf.FloorToInt((el - vs.firstEnd) / vs.rushInterval + 1e-3f), 0, vs.RushCount - 1);
+            return $"<color=#FFD54A>{name}  보너스 스테이지 {i + 1}/{vs.RushCount}</color>";
+        }
+        return el < vs.firstEnd ? $"{name}  룰렛 회전 중" : $"{name}  결과 확인 중";
+    }
+
+    IEnumerator SpecLoadVideo(MonEntry e, VideoThemeSpec vs)
+    {
+        specLoading = true;
+        if (fireRT == null)
+            fireRT = new RenderTexture(1280, 720, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB) { name = "PachinkoFireVideo", filterMode = FilterMode.Bilinear, useMipMap = false, autoGenerateMips = false };
+        if (videoPlayer.isPlaying || videoPlayer.isPrepared) videoPlayer.Stop();
+        videoPlayer.targetTexture = fireRT; specView.texture = fireRT;
+        string path = System.IO.Path.Combine(Application.streamingAssetsPath, vs.videoFile);
+        if (System.IO.File.Exists(path))
+        {
+            videoPlayer.url = path; videoPlayer.Prepare();
+            float w = 0f;
+            while (!videoPlayer.isPrepared && w < 10f) { w += Dt; yield return null; }
+            if (videoPlayer.isPrepared) { videoPlayer.time = Mathf.Max(0f, Now - e.t0); videoPlayer.Play(); }
+        }
+        specLoadedFile = vs.videoFile; specLoading = false;
+    }
+
+    IEnumerator SpectateRoutine()
+    {
+        EnsureSpecWidgets();
+        specRoot.gameObject.SetActive(true); specRoot.SetAsLastSibling();
+        if (monitorRoot != null) monitorRoot.gameObject.SetActive(false);
+        specTarget = null; specLoadedFile = null;
+        while (true)
+        {
+            var cands = SpecCandidates();
+            if (cands.Count == 0) break;
+            var kb = UnityEngine.InputSystem.Keyboard.current;
+            int dir = 0;
+            if (kb != null)
+            {
+                if (kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame) dir = 1;
+                else if (kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame) dir = -1;
+            }
+            int idx = specTarget != null ? cands.IndexOf(specTarget) : -1;
+            if (idx < 0)
+            {   // 처음이거나 보던 사람이 끝났다 → 가장 앞선 판(크리티컬 > 러쉬 > 첫 룰렛)
+                int best = -1; MonEntry pick = null;
+                foreach (MonEntry c in cands) { IsSpecCandidate(c, out int rk); if (rk > best) { best = rk; pick = c; } }
+                specTarget = pick;
+            }
+            else if (dir != 0) specTarget = cands[((idx + dir) % cands.Count + cands.Count) % cands.Count];
+            VideoThemeSpec vs = PachinkoSettings.VideoTheme(specTarget.plan.theme);
+            if (!specLoading && (specLoadedFile != vs.videoFile || dir != 0)) StartCoroutine(SpecLoadVideo(specTarget, vs));
+            IsSpecCandidate(specTarget, out int rank);
+            float el = Now - specTarget.t0;
+            specName.text = cands.Count > 1 ? $"관전  {cands.IndexOf(specTarget) + 1} / {cands.Count}" : "관전";
+            specDigits.text = SpecDigitsAt(specTarget, vs, el);
+            specStatus.text = SpecStatusAt(specTarget, vs, el, rank);
+            specHint.gameObject.SetActive(cands.Count > 1);
+            yield return null;
+        }
+        if (videoPlayer != null && (videoPlayer.isPlaying || videoPlayer.isPrepared)) videoPlayer.Stop();
+        specRoot.gameObject.SetActive(false);
+        specTarget = null; specCo = null;
+    }
+
     void MonitorClear() { mon.Clear(); if (monitorRoot != null) monitorRoot.gameObject.SetActive(false); }
 
     void MonitorPlan(int slot, PachinkoPlan plan)
@@ -2375,6 +2522,7 @@ public class PachinkoOverlay : MonoBehaviour
 
     void MonitorUpdate()
     {
+        if (specCo != null) { if (monitorRoot != null) monitorRoot.gameObject.SetActive(false); return; }
         if (mon.Count < 2) { if (monitorRoot != null && monitorRoot.gameObject.activeSelf) monitorRoot.gameObject.SetActive(false); return; }
         if (monitorRoot == null)
         {
