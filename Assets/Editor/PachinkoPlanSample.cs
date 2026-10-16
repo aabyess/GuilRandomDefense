@@ -5,6 +5,14 @@ using UnityEngine;
 // PachinkoPlan.Roll 10만 회 표본(구현담당1, 10-16) — 테마별 결과 분포·PUSH 성공률·판 내부 일관성·Pack/Unpack 왕복
 static class PachinkoPlanSample
 {
+    /// <summary>배치모드: Unity -batchmode -quit -projectPath . -executeMethod PachinkoPlanSample.Batch (결과 ~/grd/GRD_pachinko_stages/sample.txt)</summary>
+    public static void Batch()
+    {
+        string dir = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "grd", "GRD_pachinko_stages");
+        System.IO.Directory.CreateDirectory(dir);
+        System.IO.File.WriteAllText(System.IO.Path.Combine(dir, "sample.txt"), Run());
+    }
+
     static string Run()
     {
         const int N = 100000;
