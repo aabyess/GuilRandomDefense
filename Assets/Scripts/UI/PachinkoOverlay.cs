@@ -2341,6 +2341,8 @@ public class PachinkoOverlay : MonoBehaviour
         return list;
     }
 
+    public static string DebugSpecAudio() { var o = instance; if (o == null || o.videoAudio == null) return "없음"; return $"관전={o.specCo != null} 재생={o.videoAudio.isPlaying} 볼륨={o.videoAudio.volume:F2} 영상재생={o.videoPlayer.isPlaying}"; }
+
     void StartSpectateIfAny()
     {
         if (specCo != null || SpecCandidates().Count == 0) return;

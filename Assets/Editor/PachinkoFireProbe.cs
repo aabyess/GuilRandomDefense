@@ -69,4 +69,5 @@ public static class PachinkoFireProbe
         PachinkoOverlay.DebugAddMonitor(3, PachinkoPlan.Roll("reach"));
         return "관전 시험";
     }
+    public static string SpecAudio() => PachinkoOverlay.DebugSpecAudio();
 }
