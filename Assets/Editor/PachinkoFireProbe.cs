@@ -34,6 +34,7 @@ public static class PachinkoFireProbe
     public static string Skip65() { PachinkoSettings.DebugSkipSeconds = 65f; return "skip 65"; }
     public static string Skip75() { PachinkoSettings.DebugSkipSeconds = 75f; return "skip 75"; }
     public static string Skip100() { PachinkoSettings.DebugSkipSeconds = 100f; return "skip 100"; }
+    public static string Skip196() { PachinkoSettings.DebugSkipSeconds = 196f; return "skip 196"; }
     public static string Skip200() { PachinkoSettings.DebugSkipSeconds = 200f; return "skip 200"; }
     public static string Skip214() { PachinkoSettings.DebugSkipSeconds = 214f; return "skip 214"; }
     public static string Skip0() { PachinkoSettings.DebugSkipSeconds = 0f; return "skip 0"; }
