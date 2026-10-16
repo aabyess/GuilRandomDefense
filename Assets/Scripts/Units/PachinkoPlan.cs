@@ -14,6 +14,12 @@ public sealed class VideoThemeSpec
 {
     public int theme; public string key, title, voteName, voteDesc, art, videoFile;
     public float rouletteStart, rouletteStop, pushAt, videoEnd;
+    /// <summary>3단계 재설계(10-16 오후, Docs/PACHINKO_RULES.md): 첫 룰렛 0~firstEnd초 → 러쉬 firstEnd~rushEnd초(rushInterval마다 숫자) → 크리티컬 PUSH(pushAt). 전부 영상 안의 초.</summary>
+    public float firstEnd = 30f, rushEnd, rushInterval = 2f;
+    /// <summary>러쉬 숫자가 뜨는 횟수(불꽃 (106-30)/2 = 38 · 전생슬 (80-30)/2 = 25).</summary>
+    public int RushCount => Mathf.Max(0, Mathf.FloorToInt((rushEnd - firstEnd) / rushInterval + 1e-4f));
+    /// <summary>i번째(0부터) 러쉬 숫자가 뜨는 영상 시각. 마지막(RushCount-1번째)이 rushEnd.</summary>
+    public float RushDrawTime(int i) => firstEnd + rushInterval * (i + 1);
     public string tickerText;   // 위 금색 띠에 흐르는 문구("…★…" 한 줄, 두 번 이어 붙여 둔다)
     public bool coverSubtitles;   // 영상에 구워진 자막이 아래에 있어 룰렛 뒤에 어두운 띠를 깐다
     public Color cardColor, fillColor, barColor, pickColor;
@@ -54,6 +60,8 @@ public static class PachinkoSettings
     public const bool VideoSuccessIsTopReward = true;
     /// <summary>영상형 테마 PUSH 성공 확률(사장님 10-16: 5초 안에 눌러도 51%만 성공, 안 누르면 무조건 실패). 호스트가 plan을 굴릴 때 미리 정해 plan.pushWin에 넣어 전원이 같은 결과를 본다.</summary>
     public const float VideoPushSuccessChance = 0.51f;
+    /// <summary>영상형 3단계(사장님 10-16 오후): 첫 룰렛 당첨 30% · 러쉬 숫자 한 번당 당첨(=크리티컬) 5%(불꽃 38번 ≈ 86%) · PUSH 51%(위). 보상: PUSH 성공 랜덤 유닛 · 크리티컬만 전설·히든 위습 · 러쉬까지 희귀함 위습 · 첫 룰렛 꽝 특별함 위습.</summary>
+    public const float VideoFirstWinChance = 0.30f, VideoRushWinChance = 0.05f;
     /// <summary>시험용(-pachinkoSkipTo &lt;초&gt;): 영상형 테마 연출을 이 초만큼 건너뛴 지점에서 시작한다. 평소 0 — 실게임엔 영향 없다.</summary>
     public static float DebugSkipSeconds;
     /// <summary>영상형 테마 결과 화면이 떠 있는 시간(크리티컬 PUSH 성공 / 실패 · 꽝).</summary>
@@ -81,14 +89,14 @@ public static class PachinkoSettings
         {
             theme = 2, key = "fire", title = "炎炎ノ消防隊", voteName = "불꽃", voteDesc = "영상 룰렛 · 같은 숫자면 크리티컬 · PUSH", art = "炎",
             tickerText = "★ 炎炎ノ消防隊 ★ 熱いぜ! ★ 燃えろ! ★ 超炎上FEVER ★ G.R.D 大海賊フィーバー ★ 炎炎ノ消防隊 ★ 熱いぜ! ★ 燃えろ! ★ 超炎上FEVER ★ G.R.D 大海賊フィーバー ★",
-            videoFile = "fireforce_play.mp4", rouletteStart = 90f, rouletteStop = 106f, pushAt = 220f, videoEnd = 225f, coverSubtitles = false,
+            videoFile = "fireforce_play.mp4", rouletteStart = 90f, rouletteStop = 106f, firstEnd = 30f, rushEnd = 106f, pushAt = 220f, videoEnd = 225f, coverSubtitles = false,
             cardColor = new Color(0.5f, 0.2f, 0.02f, 0.95f), fillColor = new Color(1f, 0.8f, 0.2f, 0.55f), barColor = new Color(1f, 0.6f, 0.1f), pickColor = new Color(1f, 0.75f, 0.25f),
         },
         new VideoThemeSpec
         {
             theme = 3, key = "slime", title = "転生したらスライムだった件", voteName = "전생슬", voteDesc = "영상 룰렛 · 같은 숫자면 크리티컬 · PUSH", art = "スライム",
             tickerText = "★ 転生したらスライムだった件 ★ 大賢者 ★ 魔物の国 テンペスト ★ 捕食者 ★ G.R.D 大海賊フィーバー ★ 転生したらスライムだった件 ★ 大賢者 ★ 魔物の国 テンペスト ★ 捕食者 ★ G.R.D 大海賊フィーバー ★",
-            videoFile = "tensura_play.mp4", rouletteStart = 70f, rouletteStop = 80f, pushAt = 221.19f - 5f, videoEnd = 221.19f, coverSubtitles = false,
+            videoFile = "tensura_play.mp4", rouletteStart = 70f, rouletteStop = 80f, firstEnd = 30f, rushEnd = 80f, pushAt = 221.19f - 5f, videoEnd = 221.19f, coverSubtitles = false,
             cardColor = new Color(0.04f, 0.3f, 0.5f, 0.95f), fillColor = new Color(0.4f, 0.85f, 1f, 0.55f), barColor = new Color(0.2f, 0.7f, 0.95f), pickColor = new Color(0.55f, 0.88f, 1f),
         },
     };
@@ -102,25 +110,52 @@ public struct PachinkoPlan
     public PachinkoHold hold;
     public byte yokoku;                // 0~3 (継続 ×N+1)
     public bool pushWin;               // 영상형 테마: 크리티컬일 때 PUSH를 누르면 성공하는 판인가(호스트가 미리 정함, 안 누르면 어차피 실패)
+    // 영상형 테마(불꽃·전생슬) 3단계 — 의미(릴형 테마는 안 쓴다):
+    //  reach = 첫 룰렛 당첨(보너스 스테이지=러쉬로 간다) · win = 크리티컬(러쉬에서 당첨) · jackpot = 안 씀(보상 단계에서만 PUSH 성공으로 세워짐)
+    //  left/center/right = 첫 룰렛 숫자(reach면 세 숫자 같음, 아니면 안 같음)
+    //  rushHit = 러쉬 당첨 순번+1(0=러쉬 당첨 없음 → 러쉬 끝까지 가고 끝), rushSeed = 러쉬 숫자 시드(RushDigits)
+    public byte rushHit;
+    public ushort rushSeed;
     public byte theme;                 // 0=東京喰種 1=Re:ゼロ 2=불꽃 소방대 3=전생슬(테마 투표 결과, PachinkoOverlay.Theme)
     public PachinkoBg bg;
     public PachinkoCut cut;
 
-    /// <summary>네트워크용 25비트 포장.</summary>
-    public int Pack() =>
-        (win ? 1 : 0) | (reach ? 2 : 0) | (revive ? 4 : 0) | (jackpot ? 1 << 25 : 0) | (pushWin ? 1 << 28 : 0) | (theme & 3) << 26 |
-        (left & 15) << 3 | (center & 15) << 7 | (right & 15) << 11 |
-        ((int)hold & 7) << 15 | (yokoku & 3) << 18 | ((int)bg & 3) << 20 | ((int)cut & 7) << 22;
+    /// <summary>네트워크용 포장(64비트: 앞 29비트 옛 판 + 러쉬 순번 6비트·시드 16비트).</summary>
+    public long Pack() =>
+        (win ? 1L : 0L) | (reach ? 2L : 0L) | (revive ? 4L : 0L) | (jackpot ? 1L << 25 : 0L) | (pushWin ? 1L << 28 : 0L) | (long)(theme & 3) << 26 |
+        (long)(left & 15) << 3 | (long)(center & 15) << 7 | (long)(right & 15) << 11 |
+        (long)((int)hold & 7) << 15 | (long)(yokoku & 3) << 18 | (long)((int)bg & 3) << 20 | (long)((int)cut & 7) << 22 |
+        (long)(rushHit & 63) << 32 | (long)rushSeed << 38;
 
-    public static PachinkoPlan Unpack(int v) => new PachinkoPlan
+    public static PachinkoPlan Unpack(long v) => new PachinkoPlan
     {
-        win = (v & 1) != 0, reach = (v & 2) != 0, revive = (v & 4) != 0, jackpot = (v & (1 << 25)) != 0, pushWin = (v & (1 << 28)) != 0, theme = (byte)((v >> 26) & 3),
+        win = (v & 1) != 0, reach = (v & 2) != 0, revive = (v & 4) != 0, jackpot = (v & (1L << 25)) != 0, pushWin = (v & (1L << 28)) != 0, theme = (byte)((v >> 26) & 3),
         left = (byte)((v >> 3) & 15), center = (byte)((v >> 7) & 15), right = (byte)((v >> 11) & 15),
         hold = (PachinkoHold)((v >> 15) & 7), yokoku = (byte)((v >> 18) & 3), bg = (PachinkoBg)((v >> 20) & 3), cut = (PachinkoCut)((v >> 22) & 7),
+        rushHit = (byte)((v >> 32) & 63), rushSeed = (ushort)((v >> 38) & 0xFFFF),
     };
 
-    public override string ToString() =>
-        $"{(jackpot ? "777대당첨" : win ? "당첨" : reach ? "리치꽝" : "꽝")}{(revive ? "(부활)" : "")} {left}{center}{right} 리치 {reach} 보류 {hold} 예고 {yokoku} 배경 {bg} 컷인 {cut}";
+    /// <summary>영상형 테마인가(불꽃·전생슬).</summary>
+    public bool IsVideo => PachinkoSettings.VideoTheme(theme) != null;
+    /// <summary>러쉬 당첨(크리티컬) 순번, 없으면 -1.</summary>
+    public int RushWinIndex => rushHit - 1;
+
+    /// <summary>
+    /// i번째 러쉬 숫자 세 개. rushSeed로 정해지므로 모든 PC가 같은 숫자를 본다. 당첨 순번(RushWinIndex)이면 세 숫자가 같고, 그 밖엔 절대 안 같다.
+    /// 당첨 뒤(i > RushWinIndex)는 안 뜬다(러쉬가 거기서 끝나 크리티컬로 넘어간다).
+    /// </summary>
+    public void RushDigits(int i, out byte l, out byte c, out byte r)
+    {
+        uint h = (uint)rushSeed * 2654435761u + (uint)(i + 1) * 40503u + 0x9E3779B9u;
+        h ^= h >> 15; h *= 2246822519u; h ^= h >> 13; h *= 3266489917u; h ^= h >> 16;
+        l = (byte)(1 + h % 9); c = (byte)(1 + (h / 9) % 9); r = (byte)(1 + (h / 81) % 9);
+        if (i == RushWinIndex) { c = l; r = l; }
+        else if (l == c && c == r) r = (byte)(r % 9 + 1);
+    }
+
+    public override string ToString() => IsVideo
+        ? $"[영상형] 첫 룰렛 {left}{center}{right} {(reach ? "당첨" : "꽝")}{(reach ? (win ? $" · 러쉬 {rushHit}번째 크리티컬(시드 {rushSeed}) · PUSH {(pushWin ? "성공판" : "실패판")}" : " · 러쉬 끝까지 크리티컬 없음") : "")}"
+        : $"{(jackpot ? "777대당첨" : win ? "당첨" : reach ? "리치꽝" : "꽝")}{(revive ? "(부활)" : "")} {left}{center}{right} 리치 {reach} 보류 {hold} 예고 {yokoku} 배경 {bg} 컷인 {cut}";
 
     /// <summary>
     /// 시안 plan()의 C# 이식(10-14 사양: 777 / 세 같은 숫자(7 제외) / 리치 꽝 / 그냥 꽝 네 결과).
@@ -189,7 +224,36 @@ public struct PachinkoPlan
             case "reach": p.hold = PachinkoHold.Red; p.yokoku = 2; p.bg = PachinkoBg.Red; p.cut = PachinkoCut.Red; break;
             case "miss": p.hold = PachinkoHold.White; p.yokoku = 0; p.bg = PachinkoBg.None; p.cut = PachinkoCut.None; p.reach = false; break;
         }
+        VideoThemeSpec vt = PachinkoSettings.VideoTheme(p.theme);
+        if (vt != null) RollVideoStages(ref p, vt, mode);
         return p;
+    }
+
+    /// <summary>
+    /// 영상형 테마 3단계 결과를 새로 굴려 위에서 정한 릴형 값을 덮어쓴다(연출 값 hold·yokoku·bg·cut은 그대로 둔다).
+    /// mode: null=확률(첫 룰렛 30% → 러쉬 한 번당 5%), "jackpot"/"win"=크리티컬 확정, "reach"/"revive"=러쉬까지만(크리티컬 없음), "miss"=첫 룰렛 꽝.
+    /// </summary>
+    static void RollVideoStages(ref PachinkoPlan p, VideoThemeSpec vt, string mode)
+    {
+        bool first = mode == null ? Random.value < PachinkoSettings.VideoFirstWinChance : mode != "miss";
+        int n = vt.RushCount, hit = -1;
+        if (first && n > 0)
+        {
+            if (mode == null) { for (int i = 0; i < n; i++) if (Random.value < PachinkoSettings.VideoRushWinChance) { hit = i; break; } }
+            else if (mode == "jackpot" || mode == "win") hit = Random.Range(0, n);
+        }
+        p.jackpot = false; p.revive = false;
+        p.reach = first;
+        p.win = hit >= 0;
+        p.rushHit = (byte)(hit + 1);
+        p.rushSeed = (ushort)Random.Range(0, 65536);
+        int d = Random.Range(1, 10);
+        p.left = p.center = p.right = (byte)d;
+        if (!first)
+        {
+            do { p.left = (byte)Random.Range(1, 10); p.center = (byte)Random.Range(1, 10); p.right = (byte)Random.Range(1, 10); }
+            while (p.left == p.center && p.center == p.right);
+        }
     }
 
     static T Pick<T>(T a, int wa, T b, int wb, T c = default, int wc = 0, T d = default, int wd = 0)
@@ -217,7 +281,7 @@ public struct PachinkoPlan
     public float PreludeSeconds()
     {
         VideoThemeSpec vt = PachinkoSettings.VideoTheme(theme);
-        if (vt != null) return win ? vt.pushAt : vt.rouletteStop;   // 꽝은 판정 시각에 끝(PUSH 없음)
+        if (vt != null) return win ? vt.pushAt : reach ? vt.rushEnd : vt.firstEnd;   // 크리티컬=영상 끝 무렵 PUSH · 러쉬까지만=러쉬 끝에 끝 · 첫 룰렛 꽝=30초에 끝(PUSH 없음)
         if (theme == 1) return (win ? PachinkoSettings.RzSpinWinSeconds : PachinkoSettings.RzSpinMissSeconds) - PachinkoSettings.PushSeconds;   // 영상 끝에서 PUSH 5초가 닫히고 결과
         float t = 0.9f + 2.4f;
         if (!reach) return t + 0.4f;

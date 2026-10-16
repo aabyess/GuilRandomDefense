@@ -220,7 +220,7 @@ public class PachinkoController : MonoBehaviour
 
     // ───────── 클라: 내 plan 수신 · 눌림 수신 ─────────
 
-    public static void ReceivePlan(int slot, int packed)
+    public static void ReceivePlan(int slot, long packed)
     {
         if (GameAuthority.IsServer) return;
         if (slot != GameAuthority.LocalPlayerId) { PachinkoPlan other = PachinkoPlan.Unpack(packed); Debug.Log($"[파칭코] 관전 plan 수신 슬롯 {slot} — {other} (t={Time.unscaledTime:F1} · 벽시계 {DateTime.Now:HH:mm:ss.fff})"); MonitorPlanHandler?.Invoke(slot, other); return; }   // 남의 슬롯 = 관전 모니터용
@@ -363,8 +363,8 @@ public class PachinkoController : MonoBehaviour
     }
 
     /// <summary>
-    /// 보상 계산용 plan. 영상형 테마(사장님 10-16): 같은 숫자 셋(크리티컬 = plan.win) + PUSH 성공 → 제일 좋은 보상(777 보상, 랜덤유닛) ·
-    /// PUSH 실패 → 당첨 보상(전설·히든 위습). 꽝은 plan 그대로(리치꽝/꽝). 값은 PachinkoSettings.VideoSuccessIsTopReward.
+    /// 보상 계산용 plan. 영상형 테마(사장님 10-16 오후 3단계): 크리티컬(plan.win) + PUSH 성공 → 랜덤유닛(jackpot 보상) · 크리티컬만 → 전설·히든 위습(win) ·
+    /// 러쉬까지만(plan.reach) → 희귀함 위습 · 첫 룰렛 꽝 → 특별함 위습. 플래그는 가장 높이 간 단계 하나만 남긴다.
     /// </summary>
     static PachinkoPlan RewardPlan(Run r, out bool extraRareWisp)
     {
@@ -373,8 +373,7 @@ public class PachinkoController : MonoBehaviour
         if (p.jackpot) return p;
         if (PachinkoSettings.VideoTheme(p.theme) != null && p.win)
         {
-            if (PachinkoSettings.VideoSuccessIsTopReward) { p.jackpot = r.pushedOk; p.win = true; }
-            else if (!r.pushedOk) { p.jackpot = false; p.win = false; p.reach = true; }   // 옛 방식
+            p.jackpot = r.pushedOk; p.win = true;
         }
         return p;
     }
