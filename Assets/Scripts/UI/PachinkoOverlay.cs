@@ -104,12 +104,14 @@ public class PachinkoOverlay : MonoBehaviour
     public static AudioClip[] RzWinLines = new AudioClip[9];   // 리제로 당첨 대사(사장님 지정 전 — 비어 있음)
 
     // 영상 타격 연출(사장님 10-14): 공격·피격 순간마다 배경만 번쩍/「두둥」 — Resources/Pachinko/Impacts/<영상>.json
-    [Serializable] class ImpactItem { public float t, strength; public string kind; }
+    [Serializable] class ImpactItem { public float t, strength; public string kind, color; }   // color = 섬광 색(#RRGGBB, 비면 흰색)
     [Serializable] class ImpactList { public ImpactItem[] items; }
     ImpactItem[] impactTrack = new ImpactItem[0];
     int impactIdx, impactSource;   // 1 = 배경 영상 · 2 = 결과 영상
     float impactBase;
     RawImage ghostR, ghostC;
+    Vector2 tickerBasePos; Image tickBg; Image[] tickBorders;
+    bool videoTickerMode;   // 영상형 테마: 띠는 영상만 보이는 구간에 보이고 룰렛 패널이 펼쳐지면 접힌다
     Coroutine impactCo;
 
     RectTransform fireworkRoot;
@@ -330,8 +332,8 @@ public class PachinkoOverlay : MonoBehaviour
         speedRect.gameObject.SetActive(false);
 
         // 위 띠(흐르는 글자)
-        ticker = Rt("ticker", stage); Place(ticker, 0, 100, 1920, 64);
-        var tickBg = ticker.gameObject.AddComponent<Image>(); tickBg.color = new Color(0.78f, 0.1f, 0.45f, 0.92f); tickBg.raycastTarget = false;
+        ticker = Rt("ticker", stage); Place(ticker, 0, 100, 1920, 64); tickerBasePos = ticker.anchoredPosition;
+        tickBg = ticker.gameObject.AddComponent<Image>(); tickBg.color = new Color(0.78f, 0.1f, 0.45f, 0.92f); tickBg.raycastTarget = false;
         ticker.gameObject.AddComponent<RectMask2D>();
         tickerText = Label("tickerText", ticker, "★ G.R.D 大海賊フィーバー ★ BOSS DOWN! 運命のルーレット ★ 揃えば大当たり ★ G.R.D 大海賊フィーバー ★ BOSS DOWN! 運命のルーレット ★ 揃えば大当たり ★", 36f, Color.white, TextAlignmentOptions.MidlineLeft, 0.18f);
         tickerText.rectTransform.anchorMin = new Vector2(0, 0); tickerText.rectTransform.anchorMax = new Vector2(0, 1);
@@ -817,7 +819,12 @@ public class PachinkoOverlay : MonoBehaviour
         curTheme = plan.theme; Theme = plan.theme;
         // 리제로·영상형 테마는 보석 숫자(사장님 10-16 「이런 숫자 느낌으로」). 테마 색 보석(SymbolsFire·SymbolsSlime)이 있으면 그것, 없으면 리제로 보석.
         activeSymbolDir = plan.theme == 0 ? "Symbols" : plan.theme == 1 ? "SymbolsRz" : SymbolDirOr(plan.theme == 2 ? "SymbolsFire" : "SymbolsSlime", "SymbolsRz");
-        if (PachinkoSettings.VideoTheme(plan.theme) == null) { UseFireVideo(false); SetFireChrome(true); }
+        if (PachinkoSettings.VideoTheme(plan.theme) == null)
+        {
+            videoTickerMode = false; ApplyTickerStyle(null);
+            impactTrack = new ImpactItem[0]; impactSource = 0;   // 영상형 테마의 타격 시각표가 남아 다른 테마에서 번쩍이지 않게
+            UseFireVideo(false); SetFireChrome(true);
+        }
         root.gameObject.SetActive(true);
         ResetVisuals();
         duckTarget = BgmDuck;
@@ -1696,12 +1703,36 @@ public class PachinkoOverlay : MonoBehaviour
         fireChromeHidden = !visible;
         if (machineRect != null) machineRect.gameObject.SetActive(visible);
         if (holdsRect != null) holdsRect.gameObject.SetActive(visible);
-        if (ticker != null) ticker.gameObject.SetActive(visible);
+        if (ticker != null) ticker.gameObject.SetActive(videoTickerMode ? !visible : visible);
         if (meterText != null) meterText.gameObject.SetActive(visible);
         if (pauseText != null) pauseText.gameObject.SetActive(visible);
         if (reduceFlashBtn != null) reduceFlashBtn.SetActive(visible);   // 영상만 보이는 동안은 파칭코 UI를 전혀 안 보인다
         if (fireBadge != null) fireBadge.gameObject.SetActive(!visible);   // 영상만 보이는 동안 G.R.D 배지
     }
+
+    /// <summary>위 흐르는 띠 모양: 영상형 테마는 금색 띠 + 테마색 테두리 + 테마 문구, null이면 원래(분홍 띠·대해적 문구).</summary>
+    void ApplyTickerStyle(VideoThemeSpec spec)
+    {
+        if (tickBorders == null)
+        {
+            tickBorders = new Image[2];
+            for (int i = 0; i < 2; i++)
+            {
+                tickBorders[i] = Img("tickBorder" + i, ticker, null, Color.white);
+                RectTransform br = tickBorders[i].rectTransform;
+                br.anchorMin = new Vector2(0f, i == 0 ? 1f : 0f); br.anchorMax = new Vector2(1f, i == 0 ? 1f : 0f);
+                br.pivot = new Vector2(0.5f, i == 0 ? 1f : 0f); br.sizeDelta = new Vector2(0f, 6f); br.anchoredPosition = Vector2.zero;
+                tickBorders[i].raycastTarget = false;
+            }
+        }
+        if (defaultTickerText == null) defaultTickerText = tickerText.text;
+        bool v = spec != null;
+        tickBg.color = v ? new Color(0.98f, 0.8f, 0.14f, 0.96f) : new Color(0.78f, 0.1f, 0.45f, 0.92f);
+        tickerText.color = v ? new Color(0.35f, 0.04f, 0.02f) : Color.white;
+        tickerText.text = v && !string.IsNullOrEmpty(spec.tickerText) ? spec.tickerText : defaultTickerText;
+        foreach (Image b in tickBorders) { b.gameObject.SetActive(v); if (v) b.color = spec.barColor; }
+    }
+    string defaultTickerText;
 
     IEnumerator FireVideoRoutine(float t0, VideoThemeSpec spec)
     {
@@ -1763,9 +1794,11 @@ public class PachinkoOverlay : MonoBehaviour
         EnsureFireWidgets();
         float t0 = Now - PachinkoSettings.DebugSkipSeconds;   // -pachinkoSkipTo(시험용, 평소 0)
         kanekiRect.gameObject.SetActive(false); heartbeat = false;
+        videoTickerMode = true; ApplyTickerStyle(spec);
         SetFireChrome(false);
         fireSubtitleCover.gameObject.SetActive(spec.coverSubtitles);
         UseFireVideo(true);
+        LoadImpacts(spec.videoFile, 1, t0);   // 룰렛 전 구간의 번쩍임·흔들림 시각표(Resources/Pachinko/Impacts/<영상>.json)
         videoNatural = true;
         videoStopRequested = false;
         if (videoCo != null) StopCoroutine(videoCo);
@@ -2784,15 +2817,17 @@ public class PachinkoOverlay : MonoBehaviour
             ImpactItem it = impactTrack[impactIdx++];
             if (vt - it.t > 0.4f) continue;   // 이미 지나간 것(탐색 직후 등)은 건너뜀
             if (impactCo != null) StopCoroutine(impactCo);
-            impactCo = StartCoroutine(ImpactFx(Mathf.Clamp01(it.strength), it.kind == "both"));
+            Color tint = Color.white;
+            if (!string.IsNullOrEmpty(it.color)) ColorUtility.TryParseHtmlString(it.color, out tint);
+            impactCo = StartCoroutine(ImpactFx(Mathf.Clamp01(it.strength), it.kind == "both", tint));
         }
     }
 
-    IEnumerator ImpactFx(float strength, bool both)
+    IEnumerator ImpactFx(float strength, bool both, Color tint)
     {
         // ① 흰 섬광 α 0.25~0.6 · 0.12초
         float calm = ReduceFlash ? 0.4f : 1f;   // 번쩍임 줄이기: 연속 임팩트의 섬광·흔들림·색수차를 크게 줄인다
-        StartCoroutine(FlashColor(new Color(1f, 1f, 1f, Mathf.Lerp(0.25f, 0.5f, strength) * calm), 0.06f));
+        StartCoroutine(FlashColor(new Color(tint.r, tint.g, tint.b, Mathf.Lerp(0.25f, 0.5f, strength) * calm), 0.06f));
         float shake = Mathf.Lerp(4f, 14f, strength) * calm, pulse = Mathf.Lerp(0.04f, 0.08f, strength);
         RectTransform vr = videoView.rectTransform;
         float t = 0f;
@@ -2803,6 +2838,7 @@ public class PachinkoOverlay : MonoBehaviour
             float sc = 1f + pulse * Mathf.Sin(u * Mathf.PI);   // ③ 1.0 → 1.04~1.08 → 1.0 「두둥」
             Vector2 off = t < 0.2f ? new Vector2(UnityEngine.Random.Range(-shake, shake), UnityEngine.Random.Range(-shake, shake)) * k : Vector2.zero;   // ② 4~14px · 0.2초
             vr.localScale = Vector3.one * sc; vr.anchoredPosition = off;
+            if (ticker != null && ticker.gameObject.activeSelf) ticker.anchoredPosition = tickerBasePos + off;   // 위 띠도 같이 흔들린다
             if (both && !ReduceFlash)   // ④ 색수차
             {
                 float d = 18f * strength * k;
@@ -2813,6 +2849,7 @@ public class PachinkoOverlay : MonoBehaviour
             yield return null;
         }
         vr.localScale = Vector3.one; vr.anchoredPosition = Vector2.zero;
+        if (ticker != null) ticker.anchoredPosition = tickerBasePos;
         ghostR.color = new Color(1f, 0f, 0f, 0f); ghostC.color = new Color(0f, 1f, 1f, 0f);
         impactCo = null;
     }
@@ -3484,7 +3521,8 @@ public class PachinkoOverlay : MonoBehaviour
             }
         if (tickerText != null)
         {
-            float x = -(Now * 160f % 2300f);
+            float loop = videoTickerMode ? Mathf.Max(400f, tickerText.preferredWidth * 0.5f) : 2300f;   // 문구 절반 길이만큼 흐르면 이음매 없이 되돌아간다
+            float x = -(Now * 160f % loop);
             tickerText.rectTransform.anchoredPosition = new Vector2(x, 0f);
         }
         if (Now < shakeUntil) stage.localPosition = new Vector3(UnityEngine.Random.Range(-10f, 10f), UnityEngine.Random.Range(-8f, 8f), 0f);

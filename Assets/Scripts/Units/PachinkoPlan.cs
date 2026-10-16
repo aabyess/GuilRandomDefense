@@ -14,6 +14,7 @@ public sealed class VideoThemeSpec
 {
     public int theme; public string key, title, voteName, voteDesc, art, videoFile;
     public float rouletteStart, rouletteStop, pushAt, videoEnd;
+    public string tickerText;   // 위 금색 띠에 흐르는 문구("…★…" 한 줄, 두 번 이어 붙여 둔다)
     public bool coverSubtitles;   // 영상에 구워진 자막이 아래에 있어 룰렛 뒤에 어두운 띠를 깐다
     public Color cardColor, fillColor, barColor, pickColor;
 }
@@ -79,12 +80,14 @@ public static class PachinkoSettings
         new VideoThemeSpec
         {
             theme = 2, key = "fire", title = "炎炎ノ消防隊", voteName = "불꽃", voteDesc = "영상 룰렛 · 같은 숫자면 크리티컬 · PUSH", art = "炎",
+            tickerText = "★ 炎炎ノ消防隊 ★ 熱いぜ! ★ 燃えろ! ★ 超炎上FEVER ★ G.R.D 大海賊フィーバー ★ 炎炎ノ消防隊 ★ 熱いぜ! ★ 燃えろ! ★ 超炎上FEVER ★ G.R.D 大海賊フィーバー ★",
             videoFile = "fireforce_play.mp4", rouletteStart = 90f, rouletteStop = 106f, pushAt = 220f, videoEnd = 225f, coverSubtitles = false,
             cardColor = new Color(0.5f, 0.2f, 0.02f, 0.95f), fillColor = new Color(1f, 0.8f, 0.2f, 0.55f), barColor = new Color(1f, 0.6f, 0.1f), pickColor = new Color(1f, 0.75f, 0.25f),
         },
         new VideoThemeSpec
         {
             theme = 3, key = "slime", title = "転生したらスライムだった件", voteName = "전생슬", voteDesc = "영상 룰렛 · 같은 숫자면 크리티컬 · PUSH", art = "スライム",
+            tickerText = "★ 転生したらスライムだった件 ★ 大賢者 ★ 魔物の国 テンペスト ★ 捕食者 ★ G.R.D 大海賊フィーバー ★ 転生したらスライムだった件 ★ 大賢者 ★ 魔物の国 テンペスト ★ 捕食者 ★ G.R.D 大海賊フィーバー ★",
             videoFile = "tensura_play.mp4", rouletteStart = 70f, rouletteStop = 80f, pushAt = 221.19f - 5f, videoEnd = 221.19f, coverSubtitles = false,
             cardColor = new Color(0.04f, 0.3f, 0.5f, 0.95f), fillColor = new Color(0.4f, 0.85f, 1f, 0.55f), barColor = new Color(0.2f, 0.7f, 0.95f), pickColor = new Color(0.55f, 0.88f, 1f),
         },
