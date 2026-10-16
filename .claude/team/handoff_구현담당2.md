@@ -1,4 +1,32 @@
-# 구현담당2 인수인계 — 2026-10-15 세션 교체 (파칭코 연출 개선·친구 피드백 0.3.20 뒤) ← 이 절이 최신
+# 구현담당2 인수인계 — 2026-10-16 밤 (파칭코 영상형 테마·밤샘 4항목 뒤) ← 이 절이 최신
+
+새 세션은 기억이 없다. 이 절 → 아래 옛 절 → `.claude/NEXT_SESSION.md`. 작업 장소 worktree `/Users/sang/GitHub/GuilRandomDefense-w2`(w2). 산출물은 전부 `~/grd/GRD_*/`(홈 `~/GRD_*` 아님), 에디터 로그 `~/grd/GRD_w2_editor<N>.log`. push·SampleScene 수정 금지, 병합은 PM(나는 `git merge --ff-only main`).
+
+## 끝낸 일 (전부 main 병합, git log 제목으로 찾는다)
+- **소개 영상·스틸 촬영**: gameshot 옵션 `film:<초>:<fps>`·`filmwait`·`filmbg`·`filmcam`·`scene:<씬>` + `Assets/Editor/ShowcaseCalls.cs`. 결과 `~/grd/GRD_showcase/media/`. 공개 레포엔 영상 넣지 않음(PM 확정).
+- **A/B/C 피드백**(35e035a02): 솔·성탄·뻬꼼 판매(`UnitData.SellableGrade`) · 공격 모션 공속 맞춤(`CharacterAnimator.PlayAttack`, 탐침 `AttackAnimProbe`) · 상붕카 비행.
+- **파칭코 영상형 테마** 불꽃 소방대(theme 2)·전생슬(theme 3): `VideoThemeSpec`/`PachinkoSettings.VideoThemes`(영상 시각표), `PachinkoPlan`(PUSH 성공=777 보상 `VideoPushSuccessChance=0.51`, 실패·안 누름=전설·히든·꽝), `PachinkoController`(4택 투표·시험 인자 `-pachinkoTheme fire|slime` `-pachinkoPush success|fail` `-pachinkoSkipTo <초>`), `PachinkoOverlay.SequenceVideo`, 관전 모니터(RPC 없이 plan으로 재현, 2인 이상만). 영상 `Assets/StreamingAssets/fireforce_play.mp4`·`tensura_play.mp4`(H.264 720p, `Tools/pachinko_video_transcode.sh fire|slime`로 재생성). 자막 가림 띠 제거(사장님), G.R.D 배지 유지.
+- **밤샘 4항목**: 전생슬 연출(告 카드·대현자 Yes·PUSH 돔·성공/실패 연출) · 불꽃 연출(크리티컬 암전→흰→하늘→노랑 줌 펀치·CRITICAL BONUS·초록 버섯 PUSH) · 릴 받침 · 번쩍임 줄이기 시 영상 섬광·흔들림 ×0.4 · 리제로 당첨 제목 카드(`RzTitleCard`) · 결과 띠 y915~1050.
+- **영상 준비 지연 대응**: FireVideoRoutine이 영상 끝까지 기다렸다 `Now−t0`로 따라붙음(8초 넘기면 경고·배지 「영상 준비 중…」).
+- 아침 시트 `~/grd/GRD_pachinko_test/morning/`(m_*.png 13장, before/, README.txt, driver.sh·run_theme.sh·sheets.sh·tile.sh). 불꽃·전생슬은 `PachinkoFireProbe.Compress`/`CompressSlime`으로 시각 압축 촬영.
+- 시험 탐침 `Assets/Editor/PachinkoFireProbe.cs`(Jackpot/Win/Miss/Reach, Slime*, Tokyo*, Rezero*, PushFail/Success/Random, AutoPush, Skip*, Compress*, FakeMonitor, Vote).
+
+## 남은 일 / 대기
+- **사장님 확인 대기**: 도쿄구울 11~13초 공백 · 자막이 작고 흐림(PM이 묻는 중).
+- 관전 모니터 크기: 구현담당1이 고친 판으로 PM이 다시 잼 — 결과 오면 필요 시 가운데 표시 확인.
+- 미확인: 전생슬 성공 FX 주황 반짝이(캡처로 못 잡음 → 빌드에서 `-pachinkoPush success`) · 윈도 빌드 H.264 mp4 재생 · 2인 멀티 실측(-mpSolo는 구현담당1).
+- 도쿄구울·리제로엔 크리티컬 PUSH 성공/실패가 노트에 없어 만들지 않음(근거 없음 보고함).
+- 이전부터: 돌발행동 소리 지르기 전용 이펙트 없음 · 컷인 PNG 최상호 옛 칭호 글자 · 파칭코 SP 리치 영상/컷인 얼굴 자료 대기 · check_missing_assets 기존 없는 guid 43개.
+
+## 함정
+- gameshot: `ClaudeBridge/inbox/g2_*.txt`(접두 g2_, 매번 새 이름, `rm -f outbox/이름.txt`), 소스 고친 뒤 `refresh` → `Library/ScriptAssemblies/*.dll`이 편집보다 새로워질 때까지 + 20~25초. PM이 w2를 ff하면 플레이 중 도메인 리로드로 판이 오염 → 다시 찍기. `call:`은 인자 없는 static만. shots 폴더는 PM이 비웠다(폴더만 있음).
+- 영상형 PUSH 버튼 색은 Update가 덮어쓰던 버그가 있었음(수정됨) — 새 연출이 버튼 색을 바꾸면 Update 쪽도 볼 것. 비활성 부모 아래 TMP 외곽선 Label 생성은 NRE → 활성 부모에서 만든 뒤 SetParent.
+- zsh 함정: 배열 1-인덱스, 문자열 변수 단어분리 안 됨 → 타일 스크립트는 bash 파일. `timeout` 명령 없음. 120초 넘는 명령은 백그라운드.
+- 작업트리 잔여(Art/Materials·Fonts·UI Skin .meta·Cinematics·Effects/Original·`DelaGothicOne SDF.asset`·`Assets/Photon/스크린샷*.png`)는 유니티 재직렬화·남의 파일 — 커밋 금지.
+- w2에는 `Tools/w3x/원본` 없음(필요하면 main 것을 심볼릭 링크 후 반드시 삭제).
+
+---------- 아래는 10-15 인수인계 ----------
+# 구현담당2 인수인계 — 2026-10-15 세션 교체 (파칭코 연출 개선·친구 피드백 0.3.20 뒤)
 
 ## 끝낸 일 (커밋 제목으로 찾는다, 전부 main 병합)
 - **파칭코 연출 개선**(9b0a92a58·a0a2aee98·a2826419a): `PachinkoOverlay.cs`·`PachinkoPlan.cs`(MissResultSeconds 2.0). 정지 타격·가운데 줄 liftT·리치 강조(1.3배+잔상+빛 쓸기)·7 금 쓸기·미니 릴·당첨 섬광 표준·경고 스트로브·로고 쾅·집중선·SP 레터박스·결과 공백 메움·복귀 페이드. `PachinkoOverlay.ReduceFlash`(PlayerPrefs `pachinko_reduce_flash`) = 「번쩍임 줄이기」 토글(오버레이 왼쪽 아래; 설정 메뉴 노출은 PM에 알림). 리제로 불꽃 「1」 버그: `SymSpr`는 테마 세트에 없는 프레임을 도쿄구울 Symbols/로 폴백하지 않는다.
