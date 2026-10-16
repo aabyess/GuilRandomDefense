@@ -50,7 +50,7 @@ def in_radius(fs):
 
 def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    out = os.path.expanduser("~/GRD_motion_trial/Story01_옥문강")
+    out = os.path.expanduser("~/grd/GRD_motion_trial/Story01_옥문강")
     tri_limit = 10000
     it = iter(args)
     for a in it:

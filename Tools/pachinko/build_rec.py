@@ -1,11 +1,11 @@
 #!/usr/bin/python3
-"""PachinkoRecorder가 남긴 프레임(~/GRD_pachinko_rec/<이름>/f_*.png)과 events.json으로 소리 포함 mp4를 만든다.
+"""PachinkoRecorder가 남긴 프레임(~/grd/GRD_pachinko_rec/<이름>/f_*.png)과 events.json으로 소리 포함 mp4를 만든다.
 이벤트 이름: video:<파일>(StreamingAssets) · music:<클립>(Resources/Pachinko/Sfx) · musicfade(마지막 music을 vol초에 걸쳐 페이드아웃) · 그 밖 = 대사 클립(Sfx/<이름>.mp3).
-사용: /usr/bin/python3 Tools/pachinko/build_rec.py 777   → ~/GRD_pachinko_shots/rec_777.mp4  (게임 BGM·시스템 소리는 안 들어간다)"""
+사용: /usr/bin/python3 Tools/pachinko/build_rec.py 777   → ~/grd/GRD_pachinko_shots/rec_777.mp4  (게임 BGM·시스템 소리는 안 들어간다)"""
 import json, os, subprocess, sys
 name = sys.argv[1]
 home = os.path.expanduser('~'); root = os.getcwd()
-d = f'{home}/GRD_pachinko_rec/{name}'
+d = f'{home}/grd/GRD_pachinko_rec/{name}'
 ev = json.load(open(f'{d}/events.json'))
 sfx = f'{root}/Assets/Resources/Pachinko/Sfx'
 sa = f'{root}/Assets/StreamingAssets'
@@ -41,7 +41,7 @@ for i, e in enumerate(events):
         f += f"volume={vol},"
     f += f"adelay={ms}|{ms}[a{i}]"
     filters.append(f); labels.append(f'[a{i}]')
-out = f'{home}/GRD_pachinko_shots/rec_{name}.mp4'
+out = f'{home}/grd/GRD_pachinko_shots/rec_{name}.mp4'
 cmd = ['ffmpeg', '-y', '-loglevel', 'error', '-framerate', '30', '-i', f'{d}/f_%05d.png'] + inputs
 if labels:
     cmd += ['-filter_complex', ';'.join(filters) + ';' + ''.join(labels) + f"amix=inputs={len(labels)}:normalize=0:duration=longest[aout]", '-map', '0:v', '-map', '[aout]', '-c:a', 'aac']

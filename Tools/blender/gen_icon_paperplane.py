@@ -1,9 +1,9 @@
 """유물 「종이비행기」 아이콘 후보(blender 세션 2026-10-06) — 직접 그림(원작 대응 그림 없음, 자작).
-/usr/bin/python3 Tools/blender/gen_icon_paperplane.py ~/GRD_item_icons → R002_종이비행기_후보.png(256) · _64.png
+/usr/bin/python3 Tools/blender/gen_icon_paperplane.py ~/grd/GRD_item_icons → R002_종이비행기_후보.png(256) · _64.png
 하늘 그라데이션 바탕 + 접힌 면마다 명암 다른 흰 종이비행기 + 테두리(원작 BTN 틀 느낌)."""
 import os, sys
 from PIL import Image, ImageDraw, ImageFilter
-out = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/GRD_item_icons"); os.makedirs(out, exist_ok=True)
+out = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/grd/GRD_item_icons"); os.makedirs(out, exist_ok=True)
 S = 1024
 img = Image.new("RGB", (S, S))
 px = img.load()

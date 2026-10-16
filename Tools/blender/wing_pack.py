@@ -1,10 +1,10 @@
-"""S2 날개 Unity용 묶음(blender, 2026-10-09): ~/GRD_wings/_raw/<이름>/(export_mdx_anim_fbx 산출) → ~/GRD_wings/<이름>/{<이름>.fbx, Textures/, wing.json, preview.png}
+"""S2 날개 Unity용 묶음(blender, 2026-10-09): ~/grd/GRD_wings/_raw/<이름>/(export_mdx_anim_fbx 산출) → ~/grd/GRD_wings/<이름>/{<이름>.fbx, Textures/, wing.json, preview.png}
   blender -b --factory-startup --python Tools/blender/wing_pack.py -- <이름> [<이름> …]
 wing.json: 재질별 필터(additive 등)·텍스처·UV 이동·알파 곡선(원본 json의 meshes), 클립(이름·프레임·30fps·반복), 크기·부착(원작 chest) 정보.
 미리보기: Stand 한가운데 프레임, 뒤(+Y)·앞(-Y)에서 두 컷(검은 바탕, 가산은 발광으로)."""
 import bpy, sys, os, glob, json, shutil
 from mathutils import Vector
-H = os.path.expanduser('~'); RAW = H + '/GRD_wings/_raw'; OUT = H + '/GRD_wings'
+H = os.path.expanduser('~'); RAW = H + '/grd/GRD_wings/_raw'; OUT = H + '/grd/GRD_wings'
 names = sys.argv[sys.argv.index('--') + 1:]
 
 

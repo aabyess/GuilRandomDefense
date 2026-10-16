@@ -1,9 +1,9 @@
 """워크3풍 UI 평면 부품(시스템 파이썬, PIL): 채팅 줄 띠 · 점수판 행 구분선 · 메뉴 구분선. (blender 세션 2026-10-07)
-/usr/bin/python3 Tools/blender/gen_wc3_ui_flat.py [~/GRD_wc3_ui]"""
+/usr/bin/python3 Tools/blender/gen_wc3_ui_flat.py [~/grd/GRD_wc3_ui]"""
 import os, sys
 import numpy as np
 from PIL import Image, ImageDraw
-D = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else '~/GRD_wc3_ui'); os.makedirs(D, exist_ok=True)
+D = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else '~/grd/GRD_wc3_ui'); os.makedirs(D, exist_ok=True)
 # chat_line_band 320×80: 검정, 알파 최대 0.6, 양끝 32px·위아래 10px로 번짐
 w, h = 320, 80; x = np.linspace(0, 1, w); y = np.linspace(0, 1, h)
 fx = np.clip(np.minimum(x, 1 - x) / (32 / w), 0, 1); fy = np.clip(np.minimum(y, 1 - y) / (7 / h), 0, 1)

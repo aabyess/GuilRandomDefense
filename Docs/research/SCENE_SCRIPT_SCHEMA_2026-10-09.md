@@ -1,7 +1,7 @@
 # 원작 연출 「대본」 json 형식 (schemaVersion 1)
 
-위치: `~/GRD_scenes/scripts/<id>.json` — 샘플: `shanks_haki.json`(가장 단순) · `enel_eltor.json`(스테이지 머신 풀어 씀) · `dragon_storm.json`(랜덤 낙뢰 11회) · `shiki_fleet.json`(함대 + 투사체).
-사진(Blender 재현): `~/GRD_scenes/render/<id>_sheet.png` (스냅샷 `<id>_<n>.png`). 생성 `Tools/w3x/scene_scripts.py`·`Tools/blender/render_scene.py`·`Tools/w3x/scene_sheet.py`(repo).
+위치: `~/grd/GRD_scenes/scripts/<id>.json` — 샘플: `shanks_haki.json`(가장 단순) · `enel_eltor.json`(스테이지 머신 풀어 씀) · `dragon_storm.json`(랜덤 낙뢰 11회) · `shiki_fleet.json`(함대 + 투사체).
+사진(Blender 재현): `~/grd/GRD_scenes/render/<id>_sheet.png` (스냅샷 `<id>_<n>.png`). 생성 `Tools/w3x/scene_scripts.py`·`Tools/blender/render_scene.py`·`Tools/w3x/scene_sheet.py`(repo).
 
 ## 단위
 - 거리 = **워크3 단위**(1 = 0.01 m, 우리 맵 환산은 SkillVfxTable.nativeSizes), 시간 = 초, 각도 = 도(°), 투명도 0~1.
@@ -25,7 +25,7 @@
 - `random`이 있는 값은 원작이 매번 다르게 뽑는 것(범위 [lo,hi])이고 json에는 seed 고정값이 들어 있다 → 재현기는 다시 뽑아도 됨.
 
 ## models{} (모델 이름 → 재생에 필요한 것)
-`folder`(~/GRD_orig_vfx_trial/<folder>/ — 없으면 null=워크3 기본 모델, 맵에 없음 → **자체 메시로 대체**, note 참고), `inMap`, `sequencesMs[{name,start,end,loop}]`(MDX 전체 시간 ms; 시퀀스 길이=end−start), `meshCount`, `jsonPath`(그 모델의 FBX json: unity 블록 uvOffsetClip0·알파 곡선·레이어 블렌드), `pre2[…]`:
+`folder`(~/grd/GRD_orig_vfx_trial/<folder>/ — 없으면 null=워크3 기본 모델, 맵에 없음 → **자체 메시로 대체**, note 참고), `inMap`, `sequencesMs[{name,start,end,loop}]`(MDX 전체 시간 ms; 시퀀스 길이=end−start), `meshCount`, `jsonPath`(그 모델의 FBX json: unity 블록 uvOffsetClip0·알파 곡선·레이어 블렌드), `pre2[…]`:
 - PRE2 한 묶음 필드 전부: `node, nodeFlags, parentId, pivot[x,y,z](모델 좌표), speed, variation(속도 변동 비율), latitude(방출각 °), gravity, lifespanSec, emissionRate(초당), width, length(방출 면), filterMode(blend|additive|modulate|modulate2x|alphakey), rows, cols(플립북), headOrTail, tailLength, midTime(0~1: 3구간 경계), colorsRGB01[시작,중간,끝], alpha255[시작,중간,끝], scale3[시작,중간,끝](워크3 단위 지름), squirt, textureIndex, tracks{KP2E(방출률 키)·KP2V(가시 0/1)·KP2S 속도 …: interp, keysMsAbs[[ms,[값…]]]}`.
 - 키 시간은 MDX 전체 ms(시퀀스 start를 빼서 쓴다). 입자는 월드 공간(부모를 안 따라감)이 기본, 방출 위치 = pivot + (width×length 면 안 무작위).
 - 재생 순서 규칙: **한 층의 알파 곡선(geoset 알파·층 알파)에서 시퀀스 첫 키보다 앞 시각은 정적 알파(보통 1.0)** — 키가 다음 시퀀스부터 시작하는 모델(roarthunder 6개 낙뢰 시퀀스)이 있다. 모델 json의 geosetAlphaKeys/layerAlphaKeys를 쓸 때 반드시 적용할 것.
@@ -37,11 +37,11 @@
 
 ## 추가(10-09 구현담당2 요청 반영)
 - `models.<모델>.playSequence{name,startMs,endMs}` = 기본 재생 시퀀스(stand, 없으면 첫 시퀀스). `pre2[].sequenceStartMs`가 같은 기준값(keysMsAbs에서 빼면 시퀀스 상대 ms). spawn에 `anim`이 있으면 그 이름이 든 시퀀스 기준(sequencesMs에서 start 확인).
-- `pre2[].textureFile` = ~/GRD_orig_vfx_trial/<모델>/Textures/<파일>.png (+ `textureSourcePath` 원작 경로). **입자 텍스처 PNG가 폴더에 빠져 있던 것 1018개를 전부 복사해 채움**(Tools/w3x/fix_pre2_textures.py) — 이전에 반입한 모델은 Textures/를 다시 복사할 것.
+- `pre2[].textureFile` = ~/grd/GRD_orig_vfx_trial/<모델>/Textures/<파일>.png (+ `textureSourcePath` 원작 경로). **입자 텍스처 PNG가 폴더에 빠져 있던 것 1018개를 전부 복사해 채움**(Tools/w3x/fix_pre2_textures.py) — 이전에 반입한 모델은 Textures/를 다시 복사할 것.
 - folder=null 모델은 `substituteNote`(대체 모양·크기 한 줄). spawn의 `substitute`(해적선 프리팹 경로·길이 380)·`originalModel`(샹크스 번개 = roarthunder로 대체) 참고.
 - 대본 개수: 4(샹크스·시키·에넬·드래곤). 더 필요하면 표(Docs/research/REPRESENTATIVE_SCENES_2026-10-09.md)에서 PM이 정함.
 
-## 자동 생성 대본(~/GRD_scenes/auto/ → 20개씩 scripts/로) 좌표
+## 자동 생성 대본(~/grd/GRD_scenes/auto/ → 20개씩 scripts/로) 좌표
 - `at.world[x,y]` = **시전자 원점 기준 절대 좌표**(워크3 단위): 시전자 (0,0), 대상 (600,0), x축 = 시전자→대상 방향, y = 왼쪽(워크3 각도 +90°), 각도 0° = +x.
 - `at.offset[x,y]` = **anchor(caster|target)에서의 상대**(anchor 위치 + offset = world). 게임에서는 anchor 실제 위치에 두고 offset을 (x=시전자→대상 방향, y=그 왼쪽)으로 돌려 더하면 된다.
 - `moveTo` 목표와 `teleport.to`도 같은 좌표(world/offset/anchor 형식). 자동 대본의 이동은 teleport(SetUnitPositionLoc)만 나오고 moveTo는 손으로 만든 시키 대본에만 있다.

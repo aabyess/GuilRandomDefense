@@ -21,7 +21,7 @@ import bpy
 import numpy as np
 from mathutils import Vector
 
-OUT = os.path.expanduser("~/GRD_motion_trial/소품_금화목재")
+OUT = os.path.expanduser("~/grd/GRD_motion_trial/소품_금화목재")
 TRI_LIMIT = 1500
 
 

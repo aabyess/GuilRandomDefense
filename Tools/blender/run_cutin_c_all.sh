@@ -3,10 +3,10 @@
 #   Tools/blender/run_cutin_c_all.sh            → 캐릭터 렌더(Blender, 허벅지까지·차분한 정면) + 합성·영상
 #   Tools/blender/run_cutin_c_all.sh 유닛 …     → 그 유닛만(예: 초월_노태현_AP 불멸_신지우)
 #   C_POSE=hips Tools/blender/run_cutin_c_all.sh → 포즈 바꾸기(calm·hips·crossed·point·fist)
-# 산출: ~/GRD_cutin/render/C_<유닛>_thigh.png(+.txt 틀 치수) → ~/GRD_cutin/C_all/C_<유닛>.mp4 · _still.png · _timing.txt · _contact_sheet.png
+# 산출: ~/grd/GRD_cutin/render/C_<유닛>_thigh.png(+.txt 틀 치수) → ~/grd/GRD_cutin/C_all/C_<유닛>.mp4 · _still.png · _timing.txt · _contact_sheet.png
 # Assets엔 안 쓴다(읽기만: 로스터 에셋 이름·Assets/Art/Units/<유닛>/<유닛>.fbx).
 cd "$(dirname "$0")/../.."
-OUT=~/GRD_cutin/render
+OUT=~/grd/GRD_cutin/render
 mkdir -p $OUT
 units=("$@")
 if [ ${#units} -eq 0 ]; then

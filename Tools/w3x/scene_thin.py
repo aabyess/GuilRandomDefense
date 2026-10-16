@@ -3,7 +3,7 @@
 - OK_BY_EYE: 렌더 시트를 눈으로 보고 쓸 만하다고 판단한 것 → 품질을 「양호(눈 확인)」로.
 - NO_VISUAL: 더미 모델만 있어 보이는 게 없는 것 → 「연출 없음(더미 모델만)」."""
 import json, os, glob
-H = os.path.expanduser("~"); S = H + "/GRD_scenes/auto"; R = H + "/GRD_scenes/auto_render"
+H = os.path.expanduser("~"); S = H + "/grd/GRD_scenes/auto"; R = H + "/grd/GRD_scenes/auto_render"
 THIN = {"랜덤_한마_바키__Byakuya_E": 0.15, "랜덤_한마_바키__Byakuya_R": 0.15, "불멸_김용태__roger_Mana": 0.6, "영원_조세민__hancock_skill_Mana": 0.5}
 NO_VISUAL = {"제한_이유범__Sinobu_Skill_4"}
 OK_BY_EYE = """랜덤_카마도_탄지로__Ryougi_Skill_3 변화됨_강재규__carrot_skill_2 변화됨_박은석__Transpom_AceMana 변화됨_박은석__Transpom_Ace_bulRemake

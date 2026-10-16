@@ -1,9 +1,9 @@
 """파칭코 숫자 v3(10-14, blender; 2차: 시안 좌표계 viewBox 0 0 600 600 · 필터 수치 시안 그대로, SVG 크기만 1024로 확대): 사장님 확정 웹 시안(digits.html, claude.ai/artifact/VFAuaknTYmQN2uHaZRmmhp)의 SVG를 그대로 단독 페이지로 렌더.
-  /usr/bin/python3 Tools/pachinko/symbol_v3.py [출력폴더=~/GRD_pachinko_art/symbols_v3]
+  /usr/bin/python3 Tools/pachinko/symbol_v3.py [출력폴더=~/grd/GRD_pachinko_art/symbols_v3]
 폰트: Bodoni Moda(OFL, 가변 wght 900) · Abril Fatface(OFL, 7) — <출력>/fonts/ 에 TTF+OFL.txt. 렌더: 헤드리스 Chrome 투명 PNG 1024.
 산출: symbol_N.png(홀수·7 = f0) · symbol_N_f0~f5.png(불꽃 6프레임, feTurbulence seed 바꿈) · 크리스털(짝수) symbol_N.png + symbol_N_s0/s1(별빛 반짝) · symbol_N_blur.png(세로 모션블러)"""
 import os, re, subprocess, sys, json
-OUT = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/GRD_pachinko_art/symbols_v3")
+OUT = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/grd/GRD_pachinko_art/symbols_v3")
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 SRC = open(OUT + "/src/digits.html", encoding="utf8").read()
 defs = re.search(r"<defs>(.*?)</defs>", SRC, re.S).group(1)

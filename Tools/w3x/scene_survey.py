@@ -1,6 +1,6 @@
 """대표 스킬 연출 후보 표(2026-10-09, blender): 원작 캐릭터마다 「눈에 띄는 큰 스킬」 트리거를 j에서 점수로 찾는다.
 
-  /usr/bin/python3 Tools/w3x/scene_survey.py   → ~/GRD_scenes/scene_table.csv · scene_table.json
+  /usr/bin/python3 Tools/w3x/scene_survey.py   → ~/grd/GRD_scenes/scene_table.csv · scene_table.json
 입력: Docs/reference/MASTER_UID_ROSTER_MAP.csv(유닛 ID → 우리 로스터) · war3map.j(공격 트리거 사슬) · w3u(더미 유닛 umdl) · w3a(능력 이름)
 점수: 더미 유닛 종류×3 + 이펙트 호출 + 대기·타이머×2 + 번개×2 + 반복문×2 + 입자 모델 수 (깊이 ≥1 트리거만; 공격 트리거 자신은 제외)
 """
@@ -9,7 +9,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.abspath(os.pat
 src = open(HERE + "/cast_vfx_survey.py", encoding="utf8").read()
 sys.argv = ["x", "/tmp/_ss"]
 exec(compile(src[:src.index("# ───────── 로스터·우리 스킬")], "cast_vfx_survey", "exec"))
-OUT = os.path.expanduser("~/GRD_scenes"); os.makedirs(OUT, exist_ok=True)
+OUT = os.path.expanduser("~/grd/GRD_scenes"); os.makedirs(OUT, exist_ok=True)
 JL = J.split("\n")
 def jline(fn):
     for i, ln in enumerate(JL, 1):

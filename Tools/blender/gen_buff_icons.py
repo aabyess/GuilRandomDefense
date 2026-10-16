@@ -1,9 +1,9 @@
 """정보창 「상태:」 버프·디버프 아이콘 7종(PIL, 시스템 파이썬): 금속 테두리 + 기호, 512 슈퍼샘플 → 64(+128 미리보기) + 시트.
-/usr/bin/python3 Tools/blender/gen_buff_icons.py [~/GRD_buff_icons]"""
+/usr/bin/python3 Tools/blender/gen_buff_icons.py [~/grd/GRD_buff_icons]"""
 import os, sys, math
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
-D = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else '~/GRD_buff_icons'); os.makedirs(D, exist_ok=True)
+D = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else '~/grd/GRD_buff_icons'); os.makedirs(D, exist_ok=True)
 S = 512
 GOLD = (236, 196, 92); WHITE = (245, 240, 220); GREEN = (120, 220, 110); RED = (230, 70, 60); BLUE = (90, 170, 255)
 

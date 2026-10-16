@@ -3,7 +3,7 @@ import sys,os,re,collections,json
 sys.path.insert(0,'Tools/w3x')
 import w3u,wts
 S=wts.parse('Tools/w3x/원본/war3map_new.wts')
-inv=json.load(open(os.path.expanduser('~/GRD_motion_trial/inventory/inventory.json')))
+inv=json.load(open(os.path.expanduser('~/grd/GRD_motion_trial/inventory/inventory.json')))
 byname={r['name'].lower():r for r in inv['files']}
 U=w3u.parse('Tools/w3x/원본/풀린것/war3map.w3u')
 def key(n):

@@ -1,5 +1,5 @@
 """우리 SkillData(Assets/Data/UnitSkills) → 원작 능력 코드 → 아이콘 png 대응표(2026-10-06, blender 세션 · 읽기 전용).
-   먼저 extract_icons.py를 돌려 ability_icons.csv·~/GRD_skill_icons/를 만든 뒤 돌린다.  /usr/bin/python3 필수(yaml·PIL).
+   먼저 extract_icons.py를 돌려 ability_icons.csv·~/grd/GRD_skill_icons/를 만든 뒤 돌린다.  /usr/bin/python3 필수(yaml·PIL).
    찾는 순서: ① 파일명·skillName·description에 적힌 원작 능력 코드(w3a에 실제 있는 것만) ② 코드에 아이콘이 없으면(더미 능력 등)
    그 에셋의 원작 트리거/유닛(uid)의 「대표 능력」 아이콘 ③ 사장님 신규 초월 스킬은 설계표의 「참고한 원작 능력」 수동 표.
    쓰는 곳: Tools/skill_icons/skill_icon_map.csv
@@ -25,7 +25,7 @@ for a in A:
 # 아이콘 표(extract_icons.py 결과): 경로 → (분류, png)
 ICON = {}
 for r in csv.DictReader(open('Tools/skill_icons/ability_icons.csv', encoding='utf-8-sig')):
-    if r['아이콘종류'] == '기본': ICON.setdefault(r['아이콘경로'], (r['맵안/밖'], r['png파일(~/GRD_skill_icons/)'], r.get('출처', '')))
+    if r['아이콘종류'] == '기본': ICON.setdefault(r['아이콘경로'], (r['맵안/밖'], r['png파일(~/grd/GRD_skill_icons/)'], r.get('출처', '')))
 UNIT = {u['id']: dict(name=strip(wts.resolve(str(u['mods'].get('unam', '')), S)), uabi=[x for x in str(u['mods'].get('uabi', '')).split(',') if x]) for u in U}
 TRIG2UID = {}
 for uid, t in re.findall(r"SaveTriggerHandle\(udg_HashAttack,'(\w{4})',\d+,gg_trg_(\w+)\)", J):
@@ -120,7 +120,7 @@ DEFAULT_ICON = 'std_btnspellbookbls.png'   # 「아이콘없음」 행(더미채
 rows = []
 def add(path, kind, code, how, conf, alt=''):
     ic = icon_of(code) if code else None
-    if ic and not ic['png'] and code == 'A0GQ' and os.path.exists(os.path.expanduser('~/GRD_skill_icons/std_btnshade.png')):   # PASBTNShadeTrueSight는 못 구함 → 같은 그림 결의 BTNShade(유령)로 임시 대체
+    if ic and not ic['png'] and code == 'A0GQ' and os.path.exists(os.path.expanduser('~/grd/GRD_skill_icons/std_btnshade.png')):   # PASBTNShadeTrueSight는 못 구함 → 같은 그림 결의 BTNShade(유령)로 임시 대체
         ic = dict(ic, png='std_btnshade.png', src='웹 모음(대체: BTNShade)')
     rows.append([path, kind, code or '', AB.get(code, {}).get('name', '') if code else '', how, (ic or {}).get('path', ''), (ic or {}).get('cat', '아이콘없음'), (ic or {}).get('png', ''), (ic or {}).get('src', ''), alt, conf])
 
@@ -133,7 +133,7 @@ for f in sorted(glob.glob('Assets/Data/UnitSkills/*.asset')):
     std = next((v for k, v in STD_MANUAL.items() if base.endswith(k) or k in base), None)
     if std and not any(k in base for k in MANUAL):
         png = 'std_%s.png' % std[0]
-        if os.path.exists(os.path.expanduser('~/GRD_skill_icons/' + png)):
+        if os.path.exists(os.path.expanduser('~/grd/GRD_skill_icons/' + png)):
             rows.append([rel, kind, '', '', '사장님 신규 스킬·공용 디버프: 원작 대응 없음 → 효과(%s)에 맞춘 웹 표준 BTN 수동 지정' % std[1], 'BTN\\' + std[0], '맵밖', png, '웹 모음(수동 선택)', '', '낮음'])
             continue
     man = next((v for k, v in MANUAL.items() if k in base), None)
@@ -194,13 +194,13 @@ for r_ in rows:
         key = r_[5].replace('/', '\\').split('\\')[-1].lower()
         key = key[:-4] if key.endswith('.blp') else key
         std_ = FALLBACK_STD.get(key)
-        if std_ and os.path.exists(os.path.expanduser('~/GRD_skill_icons/std_%s.png' % std_)):
+        if std_ and os.path.exists(os.path.expanduser('~/grd/GRD_skill_icons/std_%s.png' % std_)):
             r_[6], r_[7], r_[8], r_[10] = '맵밖', 'std_%s.png' % std_, '웹 모음(수동 대체: 원작 그림은 맵 밖)', '낮음'
 open('Tools/skill_icons/default_icon.txt', 'w', encoding='utf-8').write(DEFAULT_ICON + '\n')
 
 with open('Tools/skill_icons/skill_icon_map.csv', 'w', encoding='utf-8-sig', newline='') as fh:
     w = csv.writer(fh)
-    w.writerow(['에셋 경로', '종류', '원작 능력 코드', '원작 능력 이름', '찾은 방법', '아이콘 경로(원작)', '맵안/밖', 'png(~/GRD_skill_icons/)', '그림 출처', '대체 후보', '확신도'])
+    w.writerow(['에셋 경로', '종류', '원작 능력 코드', '원작 능력 이름', '찾은 방법', '아이콘 경로(원작)', '맵안/밖', 'png(~/grd/GRD_skill_icons/)', '그림 출처', '대체 후보', '확신도'])
     w.writerows(rows)
 n = len(rows)
 print('행', n, '| 분류', dict(collections.Counter(r[6] for r in rows)), '| 확신도', dict(collections.Counter(r[10] for r in rows)))

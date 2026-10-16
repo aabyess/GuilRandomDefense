@@ -1,11 +1,11 @@
 """첫 화면(로비) 배경 렌더 — 해 질 녘 섬·협곡 대지·상점·횃불·안개(2026-10-06, blender 세션).
    워크3 본 메뉴 느낌: 어둡고 묵직한 판타지, 3D 장면이 뒤에 깔리고 오른쪽 1/3은 메뉴 자리라 비워 둔다.
-   우리 에셋: 상점 7채(~/GRD_motion_trial/상점_7채/*.fbx) · 협곡 텍스처(~/GRD_canyon/canyon_strata.png·canyon_top.png — gen_canyon_tex.py).
+   우리 에셋: 상점 7채(~/grd/GRD_motion_trial/상점_7채/*.fbx) · 협곡 텍스처(~/grd/GRD_canyon/canyon_strata.png·canyon_top.png — gen_canyon_tex.py).
    그 밖은 전부 절차(지형=높이장 · 바다 · 하늘 · 바위 · 횃불). 외부 에셋 없음.
 
    blender -b --factory-startup --python Tools/blender/gen_lobby_art.py -- <출력폴더> <가로> <세로> <샘플수>
-   기본: ~/GRD_lobby_art  2560 1440 96   → <출력폴더>/bg_raw_<가로>.png (후처리는 gen_lobby_post.py)
-   2차 시안: 환경변수 LOBBY_V2=1 → 앞마당 돌길·자갈·풀·유닛 실루엣(조세민·손오공·전유라 Idle) · 노출 −0.35. 출력은 ~/GRD_lobby_art_v2(승인본 ~/GRD_lobby_art는 안 건드림).
+   기본: ~/grd/GRD_lobby_art  2560 1440 96   → <출력폴더>/bg_raw_<가로>.png (후처리는 gen_lobby_post.py)
+   2차 시안: 환경변수 LOBBY_V2=1 → 앞마당 돌길·자갈·풀·유닛 실루엣(조세민·손오공·전유라 Idle) · 노출 −0.35. 출력은 ~/grd/GRD_lobby_art_v2(승인본 ~/grd/GRD_lobby_art는 안 건드림).
    Blender 창(MCP)에서 장면만 보려면 환경변수 LOBBY_NO_RENDER=1 (render 건너뜀) 후 exec로 불러도 된다.
 """
 import bpy, bmesh, math, os, sys, glob
@@ -13,7 +13,7 @@ import numpy as np
 from mathutils import Vector, Matrix, Euler
 
 argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
-OUT = os.path.expanduser(argv[0] if len(argv) > 0 else '~/GRD_lobby_art')
+OUT = os.path.expanduser(argv[0] if len(argv) > 0 else '~/grd/GRD_lobby_art')
 RW = int(argv[1]) if len(argv) > 1 else 2560
 RH = int(argv[2]) if len(argv) > 2 else 1440
 SAMPLES = int(argv[3]) if len(argv) > 3 else 96
@@ -142,8 +142,8 @@ def terrain_material():
         mp = nd(t, 'ShaderNodeMapping', loc=(loc[0] - 250, loc[1])); mp.inputs['Scale'].default_value = (scale,) * 3
         lk(t, pos, mp.inputs[0]); lk(t, mp.outputs[0], im.inputs[0])
         return im
-    strata = imgnode(HOME + '/GRD_canyon/canyon_strata.png', .085, 'BOX', (-300, -400))
-    topimg = imgnode(HOME + '/GRD_canyon/canyon_top.png', .06, 'FLAT', (-300, 150))
+    strata = imgnode(HOME + '/grd/GRD_canyon/canyon_strata.png', .085, 'BOX', (-300, -400))
+    topimg = imgnode(HOME + '/grd/GRD_canyon/canyon_top.png', .06, 'FLAT', (-300, 150))
     # 풀: 어두운 이끼 녹색 + 마른 흙 섞기
     nz = nd(t, 'ShaderNodeTexNoise', loc=(-700, 500)); nz.inputs['Scale'].default_value = .09; nz.inputs['Detail'].default_value = 6
     lk(t, pos, nz.inputs[0])
@@ -284,7 +284,7 @@ def ground_fog():
 
 # ------------------------------------------------------------------ 소품: 상점·횃불·바위
 def import_shop(name, loc, yaw, scale=1.0):
-    f = HOME + '/GRD_motion_trial/상점_7채/상점_%s.fbx' % name
+    f = HOME + '/grd/GRD_motion_trial/상점_7채/상점_%s.fbx' % name
     before = set(bpy.data.objects)
     bpy.ops.import_scene.fbx(filepath=f)
     new = [o for o in bpy.data.objects if o not in before]
@@ -450,7 +450,7 @@ def v2_ground_detail():
 
 def v2_figures():
     """게임 유닛 실루엣: 돌길 옆에 서서 상점을 바라본다(카메라 쪽에서 보면 역광·달빛이라 몸 윤곽만 남는다)."""
-    glob_ = HOME + '/GRD_motion_trial/'
+    glob_ = HOME + '/grd/GRD_motion_trial/'
     srcs = [glob_ + '특별함_조세민@Move합성/특별함_조세민.fbx', glob_ + '랜덤_손오공@Move합성/랜덤_손오공.fbx', glob_ + '히든_전유라@이음새/히든_전유라.fbx']
     spots = [(-36.0, -35.0, 0), (-32.0, -41.0, 1), (-41.0, -43.0, 2), (-27.5, -33.5, 1), (-45.0, -37.0, 0)]
     H = float(os.environ.get('LOBBY_FIG_H', '3.8'))

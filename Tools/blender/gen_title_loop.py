@@ -9,12 +9,12 @@
 사용:
   blender -b --factory-startup --python Tools/blender/gen_title_loop.py -- <출력> <가로> <세로> <샘플>      (환경변수 TITLE_FRAMES="1" 또는 "1-192" 또는 "5,60,120")
   /usr/bin/python3 Tools/blender/gen_title_loop.py post <출력>   → raw/ 를 gen_lobby_post의 후처리(꽃·색조·비네트·입자)로 frames/title_0001.png… + title_loop_preview.mp4
-산출 ~/GRD_title_loop/."""
+산출 ~/grd/GRD_title_loop/."""
 import os, sys
 if len(sys.argv) > 1 and sys.argv[1] == 'post':          # ---- 후처리(시스템 파이썬)
     import glob, subprocess
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    D = os.path.expanduser(sys.argv[2] if len(sys.argv) > 2 else '~/GRD_title_loop')
+    D = os.path.expanduser(sys.argv[2] if len(sys.argv) > 2 else '~/grd/GRD_title_loop')
     sys.argv = [sys.argv[0], D]
     import gen_lobby_post as P
     os.makedirs(D + '/frames', exist_ok=True)

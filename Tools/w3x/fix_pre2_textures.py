@@ -2,8 +2,8 @@
 import glob, json, os, shutil, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mdx_anim, mdx_geo
-H = os.path.expanduser("~"); T = H + "/GRD_orig_vfx_trial"
-W = [H + f"/GRD_motion_trial/{w}/work" for w in ("original_vfx", "transcend_vfx", "grade_extra", "original_skin")]
+H = os.path.expanduser("~"); T = H + "/grd/GRD_orig_vfx_trial"
+W = [H + f"/grd/GRD_motion_trial/{w}/work" for w in ("original_vfx", "transcend_vfx", "grade_extra", "original_skin")]
 cp = miss = 0
 for jp in glob.glob(T + "/*/*.json"):
     d = json.load(open(jp)); t = os.path.basename(os.path.dirname(jp))

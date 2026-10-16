@@ -12,7 +12,7 @@ using UnityEngine.UI;
 /// 이 오버레이는 <see cref="PachinkoController.PlayHandler"/>(내 plan 연출 시작) · <see cref="PachinkoController.PushedHandler"/>(내 PUSH 눌림/시간 끝)에만 붙는다.
 ///
 /// 타이밍은 <see cref="PachinkoPlan.PreludeSeconds"/>와 같은 길이로 짰다 — 보류 0.9 + 세 줄 정지 2.4 + (리치 1.3 + 継続 N×1.05 + SP 배경 단계×0.75 + 슬롯 1.8 + 컷인 1.6) 뒤 PUSH 창이 열린다.
-/// 화면 글자는 전부 일본어. 그림 재료는 Assets/Resources/Pachinko/(blender ~/GRD_pachinko_art 반입 · 폰트 Dela Gothic One OFL).
+/// 화면 글자는 전부 일본어. 그림 재료는 Assets/Resources/Pachinko/(blender ~/grd/GRD_pachinko_art 반입 · 폰트 Dela Gothic One OFL).
 /// 게임 시간이 서 있으므로(GamePause) 전부 unscaled 시간이다.
 ///
 /// 🔸 SP 리치 애니메이션 자리(사장님이 파일을 따로 주실 예정): <see cref="SpReachSlot"/>(RectTransform)에 <see cref="SpReachPlayer"/>를 걸면

@@ -57,7 +57,7 @@ def in_box(fs, box):
 def main():
     global BODY_BBOX
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    out = os.path.expanduser("~/GRD_motion_trial/Story04_라멘")
+    out = os.path.expanduser("~/grd/GRD_motion_trial/Story04_라멘")
     tri_limit = 10000
     it = iter(args)
     for a in it:

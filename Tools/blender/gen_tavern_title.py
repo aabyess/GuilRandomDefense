@@ -10,7 +10,7 @@ import numpy as np
 from mathutils import Vector, Matrix, Quaternion
 
 argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
-OUT = os.path.expanduser(argv[0] if len(argv) > 0 else '~/GRD_tavern_title')
+OUT = os.path.expanduser(argv[0] if len(argv) > 0 else '~/grd/GRD_tavern_title')
 RW = int(argv[1]) if len(argv) > 1 else 1920
 RH = int(argv[2]) if len(argv) > 2 else 1080
 SAMPLES = int(argv[3]) if len(argv) > 3 else 96

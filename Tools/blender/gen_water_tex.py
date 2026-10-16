@@ -1,11 +1,11 @@
 """원작 원랜디 톤 바다 물 텍스처(blender 세션 2026-10-07, 사장님 「바다 물 색상 이렇게 가능해?」, 참고 /tmp/claude-501/ref_original_water.png 의 색만 재서 새로 만듦 — 블리자드 텍스처 추출 없음).
-PIL·numpy(주기 소음: FFT 필터 → 가장자리 이음새 0). /usr/bin/python3 Tools/blender/gen_water_tex.py [~/GRD_water]
+PIL·numpy(주기 소음: FFT 필터 → 가장자리 이음새 0). /usr/bin/python3 Tools/blender/gen_water_tex.py [~/grd/GRD_water]
 산출: water_color_2048.png(RGB, 이음새 없음) · water_normal_2048.png(잔물결 노멀, 이음새 없음) · water_shallow_band.png(512×256 RGBA, 가로 이음, 아래→위 알파 0→불투명 밝은 청록) · spec.txt(색 값 규격) · compare_water.png
 기준색(참고 사진 실측): 깊은 물 RGB(32,73,93) · 얕은 물 띠 RGB(79,104,111)~(151,162,143, 모래 비침) · 채도 낮고 어두움."""
 import os, sys, math
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
-D = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else '~/GRD_water'); os.makedirs(D, exist_ok=True)
+D = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else '~/grd/GRD_water'); os.makedirs(D, exist_ok=True)
 N = 2048; rng = np.random.RandomState(1007)
 
 def pnoise(n, beta, seed):

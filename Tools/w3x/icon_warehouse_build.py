@@ -29,7 +29,7 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 DST = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/Desktop/구랜디스킨모음/17_원랜디아이콘")
 SRC = os.path.join(HERE, "원본", "풀린것")
 S = wts.parse(os.path.join(HERE, "원본", "war3map_new.wts"))
-ARC = Archive(os.path.expanduser("~/GRD_motion_trial/_work/ord.mpq"))
+ARC = Archive(os.path.expanduser("~/grd/GRD_motion_trial/_work/ord.mpq"))
 strip = lambda v: re.sub(r"\|[cC][0-9a-fA-F]{8}|\|[rR]", "", str(v)).strip()                       # noqa: E731
 res = lambda v: strip(wts.resolve(str(v), S))                                                       # noqa: E731
 

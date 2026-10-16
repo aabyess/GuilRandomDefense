@@ -1,12 +1,12 @@
 """명령 카드 아이콘 6종(blender 세션 2026-10-07, PM 지시): 이동(빨간 화살표)·홀딩(방패)·정지·공격(교차 칼)·반복(순환 화살표)·판매(금화).
 워크3 BTN 문법(어두운 그라데이션 바탕 + 위에서 빛 받는 입체 소품 + 가장자리 어둡게)으로 새로 모델링·렌더 — 블리자드 그림 추출 없음.
-blender -b --factory-startup --python Tools/blender/gen_wc3_cmd_icons.py -- [~/GRD_wc3_ui/icons]   → <이름>_256 렌더 → PIL로 128·64 + 비교 시트(icons_sheet.png)
+blender -b --factory-startup --python Tools/blender/gen_wc3_cmd_icons.py -- [~/grd/GRD_wc3_ui/icons]   → <이름>_256 렌더 → PIL로 128·64 + 비교 시트(icons_sheet.png)
 """
 import os, sys, math
 HERE = os.path.dirname(os.path.abspath(__file__))
 exec(open(os.path.join(HERE, 'gen_ui_wc3_common.py'), encoding='utf-8').read())
 argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
-OUT = os.path.expanduser(argv[0] if argv else '~/GRD_wc3_ui/icons'); os.makedirs(OUT + '/_raw', exist_ok=True)
+OUT = os.path.expanduser(argv[0] if argv else '~/grd/GRD_wc3_ui/icons'); os.makedirs(OUT + '/_raw', exist_ok=True)
 NAMES = os.environ.get('ICONS', 'move,hold,stop,attack,patrol,sell').split(',')
 
 def scene():

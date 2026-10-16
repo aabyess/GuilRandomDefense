@@ -1,6 +1,6 @@
-"""워크3풍 창 그림(blender 세션 2026-10-07, PM 지시: 승인된 ~/GRD_wc3_ui 같은 디자인 언어로 F5 조합 서랍·조합 도우미·메뉴(F10)·채팅·점수판 세트).
+"""워크3풍 창 그림(blender 세션 2026-10-07, PM 지시: 승인된 ~/grd/GRD_wc3_ui 같은 디자인 언어로 F5 조합 서랍·조합 도우미·메뉴(F10)·채팅·점수판 세트).
 gen_wc3_ui.py의 재질·도우미·부품(돌 테·금 이중선·남색 판)을 그대로 불러 쓴다. 블리자드 그림 추출 없음.
-  blender -b --factory-startup --python Tools/blender/gen_wc3_ui_windows.py -- [출력 ~/GRD_wc3_ui] [샘플 128]   (환경변수 WC3W_PARTS)
+  blender -b --factory-startup --python Tools/blender/gen_wc3_ui_windows.py -- [출력 ~/grd/GRD_wc3_ui] [샘플 128]   (환경변수 WC3W_PARTS)
 """
 import os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))

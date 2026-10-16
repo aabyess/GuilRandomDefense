@@ -1,8 +1,8 @@
 """창 그림 비교 합성(시스템 파이썬): 지금 화면(ClaudeBridge/shots) 옆에 새 부품으로 같은 배치를 9-slice 조립.
-/usr/bin/python3 Tools/blender/compare_wc3_windows.py [~/GRD_wc3_ui]  → compare_drawer.png · compare_helper.png"""
+/usr/bin/python3 Tools/blender/compare_wc3_windows.py [~/grd/GRD_wc3_ui]  → compare_drawer.png · compare_helper.png"""
 import os, sys
 from PIL import Image, ImageDraw
-D = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else '~/GRD_wc3_ui')
+D = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else '~/grd/GRD_wc3_ui')
 SHOTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'ClaudeBridge', 'shots')
 L = lambda n: Image.open(f'{D}/{n}.png').convert('RGBA')
 def s9(name, w, h, m1):

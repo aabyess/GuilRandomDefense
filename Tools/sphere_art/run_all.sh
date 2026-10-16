@@ -1,6 +1,6 @@
 #!/bin/sh
 # 초월 부가 이펙트 재료 → 납작 JSON 전부 다시(알파벳 = Resources 키 접두, 로스터 = Roster 에셋 이름). 쓰고 나서 유니티에서 call SphereArtBuilder.BuildAll → python3 Tools/sphere_art/build_table.py → refresh
-B=~/GRD_motion_trial/초월_부가이펙트
+B=~/grd/GRD_motion_trial/초월_부가이펙트
 H=$(dirname "$0")/flatten_effects.py
 /usr/bin/python3 $H $B/초월_구주호_AD juho_ad 초월_구주호_AD
 /usr/bin/python3 $H $B/초월_김만경_AD kim_ad 초월_김만경_AD

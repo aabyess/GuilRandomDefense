@@ -3,13 +3,13 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// 워크3풍 UI 그림(blender가 새로 렌더 — ~/GRD_wc3_ui/, 정본 Tools/blender/gen_wc3_ui.py, 규격표 Docs/design/WC3_UI_ART_SPEC_2026-10-07.md)을
+/// 워크3풍 UI 그림(blender가 새로 렌더 — ~/grd/GRD_wc3_ui/, 정본 Tools/blender/gen_wc3_ui.py, 규격표 Docs/design/WC3_UI_ART_SPEC_2026-10-07.md)을
 /// Assets/Resources/UI/SkinWc3/로 복사하고 9-slice 테두리·반복 설정을 건다. 호출: call Wc3SkinApply.Apply (다시 불러도 안전).
 /// 납품은 2배 해상도라 코드에서 pixelsPerUnitMultiplier=2(또는 크기 지정)로 1배 크기로 쓴다. 블리자드 그림 아님 — 전부 새로 렌더한 것.
 /// </summary>
 static class Wc3SkinApply
 {
-    const string Source = "GRD_wc3_ui";
+    const string Source = "grd/GRD_wc3_ui";
     const string Dest = "Assets/Resources/UI/SkinWc3";
 
     // 파일 이름(확장자 없이) → 9-slice 테두리(좌, 아래, 우, 위) px(2배 그림 기준) · 가로로 반복해 깔면 true

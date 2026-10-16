@@ -1,16 +1,16 @@
 """효과음 고르기·다듬기(2026-10-06, blender 세션 · 사장님 「자잘자잘한 효과음」 · Assets엔 안 씀, 연결은 PM).
-   재료: ① 원작 맵 mp3 ~/GRD_original_sounds/ ② Kenney CC0 팩 ~/GRD_sfx/_src/<팩>/(Impact Sounds · UI Audio · Interface Sounds · RPG Audio · Casino Audio · Digital Audio — 전부 CC0, 팩의 License.txt가 거기 있다)
+   재료: ① 원작 맵 mp3 ~/grd/GRD_original_sounds/ ② Kenney CC0 팩 ~/grd/GRD_sfx/_src/<팩>/(Impact Sounds · UI Audio · Interface Sounds · RPG Audio · Casino Audio · Digital Audio — 전부 CC0, 팩의 License.txt가 거기 있다)
    각 소리: 첫 소리 3ms 앞에서 자름(시작 무음 제거) → 최대 길이로 자르거나 3% 아래로 떨어지면 거기서 끝 → 끝 페이드 → 모노 44.1k → 피크 −1 dBFS → 16bit wav.
-   산출: ~/GRD_sfx/<자리>/<자리>_NN.wav · README.md · _audition_all.wav(자리 순서대로 이어 붙인 듣기용) · 들어보기_목록.md
+   산출: ~/grd/GRD_sfx/<자리>/<자리>_NN.wav · README.md · _audition_all.wav(자리 순서대로 이어 붙인 듣기용) · 들어보기_목록.md
    /usr/bin/python3 Tools/sfx/make_sfx.py      (numpy 필요 · ffmpeg는 PATH)
 """
 import os, glob, subprocess, wave, json
 import numpy as np
 
 HOME = os.path.expanduser('~')
-ORIG = HOME + '/GRD_original_sounds/'
-SRC = HOME + '/GRD_sfx/_src/'
-OUT = HOME + '/GRD_sfx/'
+ORIG = HOME + '/grd/GRD_original_sounds/'
+SRC = HOME + '/grd/GRD_sfx/_src/'
+OUT = HOME + '/grd/GRD_sfx/'
 SR = 44100
 PACK = {'impact': 'impact-sounds', 'ui': 'ui-audio', 'iface': 'interface-sounds', 'rpg': 'rpg-audio', 'casino': 'casino-audio', 'digital': 'digital-audio'}
 
@@ -83,7 +83,7 @@ def main():
     write_wav(OUT + '_audition_all.wav', np.concatenate(aud))
     with open(OUT + 'README.md', 'w', encoding='utf-8') as fh:
         fh.write('# GRD 효과음 (2026-10-06, blender · Tools/sfx/make_sfx.py)\n\n44.1kHz 모노 16bit wav · 시작 무음 제거 · 피크 −1 dBFS(자리끼리 크기를 맞춘 게 아니라 전부 같은 피크다 → 게임에서 자리별 볼륨은 PM이: 권장 enemy_death −8dB · ui_click −6dB · hit_* −4dB · boss_* 0dB).\n')
-        fh.write('출처: ① 원작 맵 mp3(~/GRD_original_sounds, 게임 안 자산이라 저장소 밖 배포물엔 넣을 때 확인 — Docs/REPLACE_BEFORE_PUBLIC.md 참고) ② Kenney 팩(CC0 — 크레딧 불필요, 팩 License.txt는 ~/GRD_sfx/_src/<팩>/License.txt).\n\n')
+        fh.write('출처: ① 원작 맵 mp3(~/grd/GRD_original_sounds, 게임 안 자산이라 저장소 밖 배포물엔 넣을 때 확인 — Docs/REPLACE_BEFORE_PUBLIC.md 참고) ② Kenney 팩(CC0 — 크레딧 불필요, 팩 License.txt는 ~/grd/GRD_sfx/_src/<팩>/License.txt).\n\n')
         fh.write('| 자리 | 번호 | 출처 파일 | 라이선스 | 길이(초) | 피크(dBFS) | 메모 |\n|---|---|---|---|---|---|---|\n')
         for r in rows:
             fh.write('| %s | %02d | %s | %s | %.2f | %.1f | %s |\n' % r)

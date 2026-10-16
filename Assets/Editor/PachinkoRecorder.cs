@@ -6,7 +6,7 @@ using UnityEngine;
 
 /// <summary>
 /// 파칭코 오버레이 결정론 녹화(사장님 10-14 「소리 포함 실시간 녹화」): Time.captureFramerate=30으로 게임 시각을 프레임마다 1/30초로 고정하고
-/// 매 프레임 스크린샷(~/GRD_pachinko_rec/&lt;이름&gt;/f_00000.png …)을 저장, 오버레이가 낸 소리(대사·영상 음악)의 시각을 events.json에 남긴다.
+/// 매 프레임 스크린샷(~/grd/GRD_pachinko_rec/&lt;이름&gt;/f_00000.png …)을 저장, 오버레이가 낸 소리(대사·영상 음악)의 시각을 events.json에 남긴다.
 /// 그 뒤 Tools/pachinko/build_rec.py가 프레임 + 소리 클립을 ffmpeg로 합쳐 mp4를 만든다(게임 BGM·시스템 소리는 안 들어간다).
 /// 호출(플레이 중, gameshot 해상도 1280x720): call PachinkoRecorder.Rec777 · Rec333 · RecMiss — 끝나면 스스로 멈춘다.
 /// </summary>
@@ -45,7 +45,7 @@ static class PachinkoRecorder
         if (!Application.isPlaying) return "❌ 플레이 중에만";
         if (recording) return "이미 녹화 중";
         recName = name;
-        dir = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "GRD_pachinko_rec", name);
+        dir = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "grd/GRD_pachinko_rec", name);
         if (Directory.Exists(dir)) Directory.Delete(dir, true);
         Directory.CreateDirectory(dir);
         events.Clear(); index = 0; idle = 0; t0 = -1f; lastFrame = -1;

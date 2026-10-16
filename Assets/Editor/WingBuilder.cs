@@ -5,12 +5,12 @@ using UnityEditor.Animations;
 using UnityEngine;
 
 /// <summary>
-/// 날개 6종(~/GRD_wings, blender) → Assets/Art/Wings/ + 프리팹 Assets/Resources/Wings/. 순서: call WingBuilder.Copy → refresh → call WingBuilder.Build.
+/// 날개 6종(~/grd/GRD_wings, blender) → Assets/Art/Wings/ + 프리팹 Assets/Resources/Wings/. 순서: call WingBuilder.Copy → refresh → call WingBuilder.Build.
 /// 재질: wing.json의 mesh별 filter(additive/addalpha=가산 · blend=알파블렌드 · transparent=알파컷) + 텍스처. 지오셋 알파 키·UV 이동은 아직 안 쓴다(정지 알파 1).
 /// </summary>
 static class WingBuilder
 {
-    static readonly string Src = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "GRD_wings");
+    static readonly string Src = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "grd/GRD_wings");
     const string Dst = "Assets/Art/Wings";
 
     static string Copy()

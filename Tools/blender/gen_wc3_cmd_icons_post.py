@@ -1,9 +1,9 @@
 """명령 카드 아이콘 후처리(시스템 파이썬): 렌더(투명) → 워크3 BTN식 바탕(어두운 남흑 방사 그라데이션) + 소품 그림자 + 가장자리 베벨 → 128·64 + 시트.
-/usr/bin/python3 Tools/blender/gen_wc3_cmd_icons_post.py [~/GRD_wc3_ui/icons]"""
+/usr/bin/python3 Tools/blender/gen_wc3_cmd_icons_post.py [~/grd/GRD_wc3_ui/icons]"""
 import os, sys
 import numpy as np
 from PIL import Image, ImageFilter, ImageDraw
-D = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else '~/GRD_wc3_ui/icons')
+D = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else '~/grd/GRD_wc3_ui/icons')
 NAMES = ['move', 'hold', 'stop', 'attack', 'patrol', 'sell']; S = 256
 yy, xx = np.mgrid[0:S, 0:S] / (S - 1)
 r = np.sqrt((xx - .45) ** 2 + (yy - .4) ** 2)

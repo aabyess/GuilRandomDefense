@@ -5,7 +5,7 @@
   ② 캐릭터가 틀의 50% 이상: 캐릭터 실루엣의 화면 안 높이 ≥ 화면 높이 50%
 고르는 순서: Tools/blender/cutin_picks.json(사람이 고른 것) → 공용 클립 유닛 3기 중 1기는 프리셋(가리키기·팔짱·주먹·허리 돌려 가며, 비슷해 보이는 것 방지)
   → 공격 프레임 c1·c2·c3 중 둘 다 통과한 첫 것 → 프리셋 중 통과한 첫 것 → 그래도 없으면 c1(실패로 적는다).
-산출: render/C_<유닛>_thigh.png(고른 것 복사) · C_<유닛>_cands.json의 chosen/checks · ~/GRD_cutin/C_all/_check.txt(통과·실패 목록).
+산출: render/C_<유닛>_thigh.png(고른 것 복사) · C_<유닛>_cands.json의 chosen/checks · ~/grd/GRD_cutin/C_all/_check.txt(통과·실패 목록).
 """
 import glob
 import json
@@ -15,7 +15,7 @@ import sys
 
 from PIL import Image, ImageFilter
 
-HOME = os.path.expanduser(os.environ.get("CUTIN_HOME", "~/GRD_cutin"))
+HOME = os.path.expanduser(os.environ.get("CUTIN_HOME", "~/grd/GRD_cutin"))
 R = os.path.join(HOME, "render")
 W, H = 1920, 1080
 HH = 1320                                  # layers_C의 캐릭터 높이

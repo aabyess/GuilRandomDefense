@@ -1,8 +1,8 @@
 """대표 연출 대본 일괄 생성(2026-10-09, blender): scene_table.json의 모든 (로스터, 트리거)를 jass_sim으로 풀어 대본 json으로.
 
   /usr/bin/python3 Tools/w3x/scene_auto.py [prep|compile]
-  prep    : 필요한 맵 안 모델을 창고에서 평평한 ~/GRD_orig_vfx_trial/로 복사(없으면 MPQ에서 변환 목록을 만든다)
-  compile : 대본 ~/GRD_scenes/auto/<id>.json + 색인 ~/GRD_scenes/auto_index.csv
+  prep    : 필요한 맵 안 모델을 창고에서 평평한 ~/grd/GRD_orig_vfx_trial/로 복사(없으면 MPQ에서 변환 목록을 만든다)
+  compile : 대본 ~/grd/GRD_scenes/auto/<id>.json + 색인 ~/grd/GRD_scenes/auto_index.csv
 워크3 기본 모델(맵에 없음) 대체 규칙: 번개류→roarthunder · 배→우리 해적선 프리팹 · 폭발/충격→SuperBigExplosion · 불→E_FireEX · 얼음→AZ-Ice-Zhendi3 · 치유/신성→Effect Blessing of Elun · 바람→tornado33 · 그 외→SuperBigExplosion
 ourSkill: 그 로스터 스킬 중 마나/게이트/확률 액티브(시그니처: triggerType≠Aura) 가운데 피해 효과 합이 가장 큰 것(패시브·버프 금지), 없으면 빈칸.
 """
@@ -11,22 +11,22 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.abspath(os.pat
 sys.path.insert(0, HERE)
 import jass_sim, w3u, w3a, yaml                                     # noqa: E402
 from mpqread import Archive                                          # noqa: E402
-H = os.path.expanduser("~"); T = H + "/GRD_orig_vfx_trial"; OUT = os.environ.get("SCENE_OUT", H + "/GRD_scenes/auto"); os.makedirs(OUT, exist_ok=True)
+H = os.path.expanduser("~"); T = H + "/grd/GRD_orig_vfx_trial"; OUT = os.environ.get("SCENE_OUT", H + "/grd/GRD_scenes/auto"); os.makedirs(OUT, exist_ok=True)
 MODE = sys.argv[1] if len(sys.argv) > 1 else "compile"
 S2 = bool(os.environ.get("JASS_S2"))               # S2(2.323) 해석: 단위 자료는 슬크(unitui·unitbalance·unitdata), MPQ는 s2.mpq
 if S2:
     import slk
-    ARC = Archive(H + "/GRD_motion_trial/_work/s2.mpq")
+    ARC = Archive(H + "/grd/GRD_motion_trial/_work/s2.mpq")
     _ui, _bal, _dat = (slk.parse(ARC.read(f"units\\{n}.slk"))[1] for n in ("unitui", "unitbalance", "unitdata"))
     fl = lambda v: float(v) if v not in (None, "", "-", "_") else None
     U = {k: dict(umdl=r.get("file", ""), usca=fl(r.get("modelScale")) or 1.0, umvh=fl(_dat.get(k, {}).get("moveHeight")) or 0.0, udtm=fl(_dat.get(k, {}).get("death")) or 0.0,
                  uhpm=fl(_bal.get(k, {}).get("HP")), uhpr=fl(_bal.get(k, {}).get("regenHP")), unam=f"S2 {k}") for k, r in _ui.items()}
 else:
     U = {u["id"]: u["mods"] for u in w3u.parse(HERE + "/원본/풀린것/war3map.w3u")}
-    ARC = Archive(H + "/GRD_motion_trial/_work/ord.mpq")
+    ARC = Archive(H + "/grd/GRD_motion_trial/_work/ord.mpq")
 tag = lambda m: os.path.splitext(re.split(r"[\\/]", m)[-1])[0]
 clean = lambda s: re.sub(r"\|c[0-9a-fA-F]{8}|\|r", "", s or "")
-table = json.load(open(os.environ.get("SCENE_TABLE", H + "/GRD_scenes/scene_table.json")))
+table = json.load(open(os.environ.get("SCENE_TABLE", H + "/grd/GRD_scenes/scene_table.json")))
 SIMS = {}
 def sim_of(tr):
     if tr not in SIMS: SIMS[tr] = jass_sim.simulate(tr)
@@ -186,6 +186,6 @@ if MODE == "compile":
         sc["models"] = models
         json.dump(sc, open(f"{OUT}/{sid}.json", "w"), ensure_ascii=False, indent=1)
         index.append([sid, row["roster"], clean(row["name"])[:20], row["trigger"], row["jline"], row["score"], "대표" if sc["primary"] else "2차", n_sp, sc["durationSec"], s["unresolved"], sc["quality"], "; ".join(subs[:4]), sk, skn])
-    with open(os.environ.get("SCENE_INDEX", H + "/GRD_scenes/auto_index.csv"), "w", encoding="utf-8-sig", newline="") as f:
+    with open(os.environ.get("SCENE_INDEX", H + "/grd/GRD_scenes/auto_index.csv"), "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f); w.writerow(["id", "우리 유닛", "원작", "트리거", "j 줄", "점수", "구분", "더미·이펙트 수", "길이(초)", "미해결 조건", "품질", "대체 모델", "ourSkill 에셋", "ourSkill 이름"]); w.writerows(index)
     print(len(index), "대본")

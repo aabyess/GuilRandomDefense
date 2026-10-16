@@ -69,4 +69,4 @@ CC-BY가 아닌 19건(Sketchfab Standard 14 · NC 4 · NC-ND 1)도 같은 표에
 | Song Myung (송명, The SongMyung Project Authors) | 첫 화면 제목 「구랜디」 | SIL Open Font License 1.1 (`Assets/Fonts/Lobby/OFL-SongMyung.txt`) | https://github.com/google/fonts |
 | Nanum Myeongjo ExtraBold (나눔명조, NAVER Corporation) | 첫 화면 단추·본문 | SIL Open Font License 1.1 (`Assets/Fonts/Lobby/OFL-NanumMyeongjo.txt`) | https://github.com/google/fonts |
 
-첫 화면 배경·제목 판·메뉴 틀·단추 그림은 blender 세션이 이 프로젝트용으로 만든 것이다(`~/GRD_lobby_art/`, 외부 에셋 아님).
+첫 화면 배경·제목 판·메뉴 틀·단추 그림은 blender 세션이 이 프로젝트용으로 만든 것이다(`~/grd/GRD_lobby_art/`, 외부 에셋 아님).

@@ -2,7 +2,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-// 초월 엄태웅 「폭탄제조」 폭발 이펙트(10-06) — blender 시안 Tools/blender/gen_bomb_fx.py(~/GRD_bomb_fx/bomb_sheet.png)를 파티클로 옮긴 것.
+// 초월 엄태웅 「폭탄제조」 폭발 이펙트(10-06) — blender 시안 Tools/blender/gen_bomb_fx.py(~/grd/GRD_bomb_fx/bomb_sheet.png)를 파티클로 옮긴 것.
 // 구성(시안 순서): 지면 섬광 → 불덩이(노랑→주황→암적으로 식음) → 충격파 고리 → 파편 → 연기 기둥.
 // 프리팹 단위: 피해 반경 = 1(지름 2). SkillVfxTable 측정(0.4초 뒤 가로 지름)이 ≈2가 되게 고리를 0.4초에 반경 1로 맞췄다.
 // 텍스처는 무료 팩(Hovl GlowFree1·SmokeFree1, Kenney circle_02). 스킬 이펙트 표가 Assets/Art/Effects/Bomb도 찾는다(SkillVfxTableBuilder).

@@ -1,6 +1,6 @@
 # 원작 맵(ORD11.089) 커스텀 파일 목록 (2026-10-08, blender)
 
-PM 지시 「원랜디 스킨·스킬 창고 ①」. 도구: `Tools/w3x/original_asset_inventory.py`(이름 모으기·읽기) · `original_asset_inventory_stats.py`(집계). 산출 원본 `~/GRD_motion_trial/inventory/inventory.json`(파일별 역할·참조처·맵 안 여부·크기).
+PM 지시 「원랜디 스킨·스킬 창고 ①」. 도구: `Tools/w3x/original_asset_inventory.py`(이름 모으기·읽기) · `original_asset_inventory_stats.py`(집계). 산출 원본 `~/grd/GRD_motion_trial/inventory/inventory.json`(파일별 역할·참조처·맵 안 여부·크기).
 **Assets엔 아무것도 안 넣었다.** 원작 저작물(블리자드·중국 모델러)이라 게임 반입은 사장님 판단 대기.
 
 ## 조사 방법과 한계
@@ -41,7 +41,7 @@ PM 지시 「원랜디 스킨·스킬 창고 ①」. 도구: `Tools/w3x/original
 ## 창고(15·16)에 들어갈 후보 수
 
 - **15_원랜디스킨**: 맵 안 커스텀 유닛 모델 **182개**(캐릭터·적·보스). 변환 대상 모델 용량 53.8MB.
-- **16_원랜디스킬**: 맵 안 커스텀 이펙트·투사체 모델 **689개**(+ 이미 변환한 초월 37종 `~/GRD_motion_trial/transcend_vfx`는 합친다. 겹치는 건 유닛 이름 기준으로 하나만).
+- **16_원랜디스킬**: 맵 안 커스텀 이펙트·투사체 모델 **689개**(+ 이미 변환한 초월 37종 `~/grd/GRD_motion_trial/transcend_vfx`는 합친다. 겹치는 건 유닛 이름 기준으로 하나만).
 - 하위 모델 81개는 16에 같이 두되 index에 「하위」로 표시.
 
 ## 다음에 정할 것(PM)

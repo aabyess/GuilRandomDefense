@@ -1,14 +1,14 @@
 """워크3풍 게임 UI 그림 렌더(blender 세션 2026-10-07, 규격표 Docs/design/WC3_UI_ART_SPEC_2026-10-07.md · 구현담당2 의뢰).
 블리자드 UI 그림 추출·복제 없음 — 돌·금속·구슬을 전부 새로 모델링해 Cycles로 찍는다. 공통 재질·도우미 = gen_ui_wc3_common.py.
 척도: 목표 1px = 0.01m, 납품 = 목표×2 → 렌더 200px/m. 광원은 위(약간 왼쪽·앞) 한 방향.
-  blender -b --factory-startup --python Tools/blender/gen_wc3_ui.py -- [출력 ~/GRD_wc3_ui] [샘플 128]   (환경변수 WC3_PARTS="bar,capL,capR,pillar,panel")
+  blender -b --factory-startup --python Tools/blender/gen_wc3_ui.py -- [출력 ~/grd/GRD_wc3_ui] [샘플 128]   (환경변수 WC3_PARTS="bar,capL,capR,pillar,panel")
   /usr/bin/python3 Tools/blender/gen_wc3_ui.py compare [출력]   → compare_console.png(참고 사진과 같은 구도 나란히)
 """
 import os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 if len(sys.argv) > 1 and sys.argv[1] == 'compare':                       # ---------------- 비교 합성(시스템 파이썬)
     from PIL import Image, ImageDraw
-    D = os.path.expanduser(sys.argv[2] if len(sys.argv) > 2 else '~/GRD_wc3_ui')
+    D = os.path.expanduser(sys.argv[2] if len(sys.argv) > 2 else '~/grd/GRD_wc3_ui')
     L = lambda n: Image.open(f'{D}/{n}.png').convert('RGBA')
     def s9(src, w, h, m):                                                    # 9-slice(m = 납품 여백 px) → 목표 크기(납품/2)
         sw, sh = src.size; out = Image.new('RGBA', (w * 2, h * 2), (0, 0, 0, 0)); W2, H2 = w * 2, h * 2
@@ -77,7 +77,7 @@ if len(sys.argv) > 1 and sys.argv[1] == 'compare':                       # -----
 import math, random
 exec(open(os.path.join(HERE, 'gen_ui_wc3_common.py'), encoding='utf-8').read())
 argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
-OUT = os.path.expanduser(argv[0] if argv else '~/GRD_wc3_ui'); os.makedirs(OUT, exist_ok=True)
+OUT = os.path.expanduser(argv[0] if argv else '~/grd/GRD_wc3_ui'); os.makedirs(OUT, exist_ok=True)
 SAMPLES = int(argv[1]) if len(argv) > 1 else 128
 TILT = 12.0                                    # 돌 콘솔은 위에서 12° 내려다봄(참고 사진처럼 윗면이 밝게 보이게)
 PPM = 200.0                                    # 납품 px / m (목표 1px = 1cm, 납품 2배)

@@ -1,9 +1,9 @@
-"""숫자 v2 후처리: 별빛 하이라이트 점 + 세로 모션블러 + contact_sheet_v2. /usr/bin/python3 Tools/pachinko/symbol_v2_post.py [폴더=~/GRD_pachinko_art/symbols_v2]
+"""숫자 v2 후처리: 별빛 하이라이트 점 + 세로 모션블러 + contact_sheet_v2. /usr/bin/python3 Tools/pachinko/symbol_v2_post.py [폴더=~/grd/GRD_pachinko_art/symbols_v2]
 원본 렌더는 <폴더>/_raw/symbol_N.png (blender -b … symbol_v2.py 결과를 복사해 둔 것)."""
 import os, random, sys, math
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
-D = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/GRD_pachinko_art/symbols_v2"); RAW = D + "/_raw"
+D = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/grd/GRD_pachinko_art/symbols_v2"); RAW = D + "/_raw"
 def sparkle(im, seed, n=4):
     a = np.asarray(im).astype("float32") / 255; lum = a[..., :3].mean(-1); m = (lum > 0.93) & (a[..., 3] > 0.9)
     ys, xs = np.nonzero(m)

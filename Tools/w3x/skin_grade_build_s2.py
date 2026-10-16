@@ -1,9 +1,9 @@
 """최신 원랜디(S2 2.323) 유닛 스킨을 등급별 폴더로(2026-10-09, blender2; PM 지시). skin_grade_build.py(구버전)의 S2판.
   /usr/bin/python3 Tools/w3x/skin_grade_build_s2.py [등급번호 …]   → ~/Desktop/구랜디스킨모음/원랜디_신작_스킨/<NN_등급>/<ID_이름>/ + 등급마다 격자 png(글자·NEW)·.blend·index.csv
-입력: ~/GRD_motion_trial/s2_skin/units.json(s2_units.py) · fbx/(export_mdx_anim_fbx.py 결과, 같은 폴더에 json). 이름은 구버전 같은 ID 이름 대체(「추정」)."""
+입력: ~/grd/GRD_motion_trial/s2_skin/units.json(s2_units.py) · fbx/(export_mdx_anim_fbx.py 결과, 같은 폴더에 json). 이름은 구버전 같은 ID 이름 대체(「추정」)."""
 import csv, glob, json, os, re, shutil, subprocess, sys
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE))
-H = os.path.expanduser("~"); S = H + "/GRD_motion_trial/s2_skin"; OUTR = H + "/Desktop/구랜디스킨모음/원랜디_신작_스킨"
+H = os.path.expanduser("~"); S = H + "/grd/GRD_motion_trial/s2_skin"; OUTR = H + "/Desktop/구랜디스킨모음/원랜디_신작_스킨"
 GR = [("01", "흔함"), ("02", "안흔함"), ("03", "특별함"), ("04", "희귀함"), ("05", "전설"), ("06", "히든"), ("07", "변화됨"), ("08", "랜덤_다른세계"), ("09", "제한됨"), ("10", "특수함"), ("11", "초월"), ("12", "불멸"), ("13", "영원"), ("14", "신규_등급미상"), ("15", "더미_상점_퀘스트")]
 sys.path.insert(0, HERE)
 from s2_char_names import cname

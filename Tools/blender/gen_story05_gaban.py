@@ -26,7 +26,7 @@ PARTS = {"5_body_1.0_0_0": "role_jiaba_shenti.png", "5_-axe_1.0_0_0": "role_jiab
 
 def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    out = os.path.expanduser("~/GRD_motion_trial/Story05_가반")
+    out = os.path.expanduser("~/grd/GRD_motion_trial/Story05_가반")
     it = iter(args)
     for a in it:
         if a == "--out":

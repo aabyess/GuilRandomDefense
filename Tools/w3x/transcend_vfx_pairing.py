@@ -1,8 +1,8 @@
 """초월 스킬 ↔ 원작 이펙트 모델 대응표 (2026-10-08, PM 첫 지시 ①).
 
-  /usr/bin/python3 Tools/w3x/transcend_vfx_pairing.py [작업폴더=~/GRD_motion_trial/transcend_vfx]
+  /usr/bin/python3 Tools/w3x/transcend_vfx_pairing.py [작업폴더=~/grd/GRD_motion_trial/transcend_vfx]
 
-입력: ~/GRD_cast_vfx_trial/survey.json(cast_vfx_survey.py 산출 — 우리 초월 스킬·원작 트리거 사슬·이펙트 출처) + 원작 war3map.j·w3a·w3u 직접 디코드.
+입력: ~/grd/GRD_cast_vfx_trial/survey.json(cast_vfx_survey.py 산출 — 우리 초월 스킬·원작 트리거 사슬·이펙트 출처) + 원작 war3map.j·w3a·w3u 직접 디코드.
 짝짓기 근거 3종(강한 순):
   [이름]      우리 스킬 에셋·원작트리거 칸·설명의 `Trig_X`가 원작 트리거 이름과 같음(survey의 pair_skill)
   [능력코드]  우리 스킬 이름이 원작 능력 코드(A0GZ 같은)로 시작 → w3a 그 능력의 아트 필드(acat·atat·asat·aeat·amat·alig)의 .mdl/.mdx 값만
@@ -26,11 +26,11 @@ from mpqread import Archive                                          # noqa: E40
 
 GRADE = os.environ.get("GRADE", "초월")                                    # 초월·불멸·영원
 TAG = {"초월": "transcend", "불멸": "immortal", "영원": "eternal"}[GRADE]
-W = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else f"~/GRD_motion_trial/{TAG}_vfx")      # 불멸·영원은 W/fbx → ~/GRD_orig_vfx_trial 심볼릭 링크(평평한 모델 폴더)
-SURVEY = json.load(open(os.path.expanduser("~/GRD_cast_vfx_trial/survey.json" if GRADE == "초월" else f"~/GRD_cast_vfx_{GRADE}/survey.json")))
+W = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else f"~/grd/GRD_motion_trial/{TAG}_vfx")      # 불멸·영원은 W/fbx → ~/grd/GRD_orig_vfx_trial 심볼릭 링크(평평한 모델 폴더)
+SURVEY = json.load(open(os.path.expanduser("~/grd/GRD_cast_vfx_trial/survey.json" if GRADE == "초월" else f"~/grd/GRD_cast_vfx_{GRADE}/survey.json")))
 JL = open(os.path.join(HERE, "원본/풀린것/war3map.j"), encoding="utf8", errors="replace").read().split("\n")
 ABIL = {a["id"]: {m["field"]: m["value"] for m in a["mods"] if m["level"] <= 1 or m["field"] not in ()} for a in w3a.parse(os.path.join(HERE, "원본/풀린것/war3map.w3a"))}
-ARC = Archive(os.path.expanduser("~/GRD_motion_trial/_work/ord.mpq"))
+ARC = Archive(os.path.expanduser("~/grd/GRD_motion_trial/_work/ord.mpq"))
 ART = [("acat", "시전자"), ("atat", "대상"), ("asat", "특수"), ("aeat", "효과"), ("amat", "투사체"), ("alig", "번개")]
 MODEL = re.compile(r"\.(mdl|mdx)$", re.I)
 JUNK = re.compile(r"dummy|spawnmodels|^\.mdx?$", re.I)

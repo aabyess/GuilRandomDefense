@@ -25,7 +25,7 @@ KEEP_ALL = "--head-only" not in sys.argv     # 사장님 10-02: 「병 안에 �
 
 def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    out = os.path.expanduser("~/GRD_motion_trial/Story10_디오")
+    out = os.path.expanduser("~/grd/GRD_motion_trial/Story10_디오")
     it = iter(args)
     for a in it:
         if a == "--out":

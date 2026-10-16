@@ -3,7 +3,7 @@
 우리 쪽 붙일 후보 스킬 = 그 로스터 스킬 중 (a) 설명·에셋 이름에 그 트리거 이름이 든 것, 없으면 (b) 상시 패시브(Aura) 아닌 것 중 효과 수가 가장 큰 것."""
 import csv, glob, json, os, re, yaml
 H = os.path.expanduser("~"); ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-res = json.load(open(H + "/GRD_scenes/scene_table.json"))
+res = json.load(open(H + "/grd/GRD_scenes/scene_table.json"))
 g2p = {}
 for mp in glob.glob(ROOT + "/Assets/Data/**/*.asset.meta", recursive=True):
     m = re.search(r"guid: (\w+)", open(mp, encoding="utf8").read()); g2p[m.group(1)] = mp[:-5]

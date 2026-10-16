@@ -1,13 +1,13 @@
 """선술집 쌍여닫이 문 그림(blender 세션 2026-10-06, PM 지시 「첫 화면 → 게임/대기실 문 열림 연출」).
-산출 ~/GRD_tavern_door/ : door_left.png · door_right.png(각 1920×2160 정면, 문짝 하나가 화면 절반 960×1080 의 2배) ·
+산출 ~/grd/GRD_tavern_door/ : door_left.png · door_right.png(각 1920×2160 정면, 문짝 하나가 화면 절반 960×1080 의 2배) ·
   door_gap_light.png(문틈 빛 한 장, 1920×2160 가운데 세로 줄, 투명 배경) · door_left_45/75.png · door_right_45/75.png(안쪽으로 젖힌 각도).
-화면 없이(정본): blender -b --factory-startup --python Tools/blender/gen_tavern_door.py -- ~/GRD_tavern_door
+화면 없이(정본): blender -b --factory-startup --python Tools/blender/gen_tavern_door.py -- ~/grd/GRD_tavern_door
 좌표: 문 전체 x −1..1(왼짝 −1..0 · 오른짝 0..1), 높이 z 0..H, 앞(보는 쪽)이 −Y. 각 짝은 폭 1 × 높이 H=1.125(= 960:1080).
 구성: 세로 널판 6장(틈으로 뒤의 따뜻한 불빛이 비침) · 쇠띠 3줄 + 못 · 경첩 통 · 안쪽 가장자리 손잡이 고리 · 문틀 바깥 테두리."""
 import math, os, random, sys
 import bpy, numpy as np
 
-out = os.path.expanduser(sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else "~/GRD_tavern_door"); os.makedirs(out, exist_ok=True)
+out = os.path.expanduser(sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else "~/grd/GRD_tavern_door"); os.makedirs(out, exist_ok=True)
 W, H = 1.0, 1.125
 RX, RY = 1920, 2160
 random.seed(11)

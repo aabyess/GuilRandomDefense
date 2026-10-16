@@ -2,7 +2,7 @@
 문틀(돌 기둥·나무 인방·돌벽) 안의 쌍여닫이 문: PBR 원목(결·옹이·닳은 모서리·손잡이 때) · 녹슨 쇠띠·리벳·경첩·고리.
 앞(카메라 쪽) = 어둑한 밤 거리(차가운 달빛 + 벽 등), 뒤(안쪽) = 따뜻한 주황 선술집 빛(면광 + 안개 → 열릴수록 틈으로 쏟아지는 빛줄기 + 바닥 빛 웅덩이 + 먼지 입자).
 문 뒤는 투명(안쪽 바닥·벽은 카메라에 안 보이게) · 빛줄기(볼륨)만 반투명으로 남는다.
-blender -b --factory-startup --python Tools/blender/gen_tavern_door_v2.py -- <출력> <가로> <세로> <샘플>   (기본 ~/GRD_tavern_door_v2 1920 1080 96)
+blender -b --factory-startup --python Tools/blender/gen_tavern_door_v2.py -- <출력> <가로> <세로> <샘플>   (기본 ~/grd/GRD_tavern_door_v2 1920 1080 96)
 환경변수 DOOR_FRAMES="0,12,23" 또는 "0-23". 프레임 i: 열림 각도 = 100° × i/23 (등간격, 안쪽(+Y)으로).  산출 frames/door_00~23.png (RGBA).
 좌표: 문 열린 구멍 x −1..1, z 0..2.4, 카메라는 −Y에서 +Y를 본다. 짝: 경첩 x=∓0.95, 폭 0.95(가운데에서 만남)."""
 import bpy, bmesh, math, os, sys, random
@@ -10,7 +10,7 @@ import numpy as np
 from mathutils import Vector
 
 argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
-OUT = os.path.expanduser(argv[0] if len(argv) > 0 else '~/GRD_tavern_door_v2')
+OUT = os.path.expanduser(argv[0] if len(argv) > 0 else '~/grd/GRD_tavern_door_v2')
 RW = int(argv[1]) if len(argv) > 1 else 1920
 RH = int(argv[2]) if len(argv) > 2 else 1080
 SAMPLES = int(argv[3]) if len(argv) > 3 else 96

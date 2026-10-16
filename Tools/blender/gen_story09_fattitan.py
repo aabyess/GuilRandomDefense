@@ -25,7 +25,7 @@ PARTS = {"5_body_1_0_0": "body", "5_face_1_0_0": "face", "5_hair_1_0_0": "hair"}
 
 def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    out = os.path.expanduser("~/GRD_motion_trial/Story09_거인")
+    out = os.path.expanduser("~/grd/GRD_motion_trial/Story09_거인")
     arm_deg = 70.0
     it = iter(args)
     for a in it:

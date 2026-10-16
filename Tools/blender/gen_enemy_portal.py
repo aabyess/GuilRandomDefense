@@ -2,14 +2,14 @@
 지름 1 단위 모델(구현담당1이 ×56). 오브젝트 둘: 「돌판」(원판 메시, 원점 = 아랫면 가운데) · 「문양」(얇은 평면, 원점 가운데, 돌판 윗면 위에 따로 — Unity에서 회전).
 둘 다 XZ 평면에 눕고 법선 +Y(Unity 기준; Blender에선 +Z, FBX axis_up=Y로 내보냄).
 텍스처: portal_stone.png(돌판, 1024 타일) · portal_glyph.png(문양, 1024 RGBA: 검정 바탕 = 알파 0, 푸른/흰 빛) — Additive 셰이더 가정.
-1) /usr/bin/python3 Tools/blender/gen_enemy_portal.py tex [~/GRD_enemy_portal]   → 텍스처 두 장
-2) blender -b --factory-startup --python Tools/blender/gen_enemy_portal.py -- [~/GRD_enemy_portal]   → enemy_portal.fbx · .glb · preview.png
+1) /usr/bin/python3 Tools/blender/gen_enemy_portal.py tex [~/grd/GRD_enemy_portal]   → 텍스처 두 장
+2) blender -b --factory-startup --python Tools/blender/gen_enemy_portal.py -- [~/grd/GRD_enemy_portal]   → enemy_portal.fbx · .glb · preview.png
 """
 import os, sys, math
 if len(sys.argv) > 1 and sys.argv[1] == 'tex':                                   # ---------------- 텍스처(PIL)
     import numpy as np
     from PIL import Image, ImageDraw, ImageFilter
-    D = os.path.expanduser(sys.argv[2] if len(sys.argv) > 2 else '~/GRD_enemy_portal'); os.makedirs(D, exist_ok=True)
+    D = os.path.expanduser(sys.argv[2] if len(sys.argv) > 2 else '~/grd/GRD_enemy_portal'); os.makedirs(D, exist_ok=True)
     rng = np.random.RandomState(56); N = 1024
     def fnoise(cells, oct_=5):                                                    # 이음새 없는(주기) 값 소음
         acc = np.zeros((N, N)); amp = 1; tot = 0
@@ -59,7 +59,7 @@ if len(sys.argv) > 1 and sys.argv[1] == 'tex':                                  
 
 import bpy, bmesh
 argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
-OUT = os.path.expanduser(argv[0] if argv else '~/GRD_enemy_portal')
+OUT = os.path.expanduser(argv[0] if argv else '~/grd/GRD_enemy_portal')
 bpy.ops.wm.read_factory_settings(use_empty=True); sc = bpy.context.scene
 def img_mat(name, path, emit=False):
     m = bpy.data.materials.new(name); m.use_nodes = True; t = m.node_tree; b = next(n for n in t.nodes if n.type == 'BSDF_PRINCIPLED')

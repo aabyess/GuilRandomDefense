@@ -26,7 +26,7 @@ TEX = {"Core": "Core_Color.png", "Dant": "Dant_Color.png"}     # → 건물_다�
 
 def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    out = os.path.expanduser("~/GRD_motion_trial/Story08_다크영")
+    out = os.path.expanduser("~/grd/GRD_motion_trial/Story08_다크영")
     frame = 1
     bright = None   # 시범용: 거의 검정인 텍스처의 바닥 명도(sRGB 0~1). 모양은 그대로
     it = iter(args)

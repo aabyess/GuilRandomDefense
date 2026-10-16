@@ -28,6 +28,6 @@ public static class RareSkillLoadProbe
             sb.AppendLine();
         }
         Debug.Log("[RareSkillLoadProbe]\n" + sb);
-        System.IO.File.WriteAllText(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile) + "/GRD_damage_probe/rare_skill_load.txt", sb.ToString());
+        System.IO.File.WriteAllText(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile) + "/grd/GRD_damage_probe/rare_skill_load.txt", sb.ToString());
     }
 }

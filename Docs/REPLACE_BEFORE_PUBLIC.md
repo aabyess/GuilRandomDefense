@@ -22,10 +22,10 @@
 
 | 무엇 | 어디 | 넣은 날 | 메모 |
 |---|---|---|---|
-| UI 그림(점수판·하단 콘솔·로비) | 예정 — 구현담당2 설계 중 | 2026-10-03 결정 | 맵 안에 든 그림은 `~/GRD_motion_trial/_work/ord.mpq`에서 꺼냄. 워크3 기본 UI는 정품 데이터(War3.mpq/CASC)가 있어야 함 — 이 컴퓨터엔 없음 |
+| UI 그림(점수판·하단 콘솔·로비) | 예정 — 구현담당2 설계 중 | 2026-10-03 결정 | 맵 안에 든 그림은 `~/grd/GRD_motion_trial/_work/ord.mpq`에서 꺼냄. 워크3 기본 UI는 정품 데이터(War3.mpq/CASC)가 있어야 함 — 이 컴퓨터엔 없음 |
 | 초월 부가 이펙트·상시 오라 모양 | `Assets/Resources/Effects/Sphere/` | 2026-10-01 | 원작 맵 MDX에서 추출한 메시. 텍스처 39개는 근사 그림(원본 BLP 없음) |
 | 원작 문구 | 코드 곳곳(wts 원문) | 누적 | 원랜디 문구 그대로 — 원작자 저작물 |
-| 부서진손거울(ItemData_R001) 아이콘 | `Assets/Art/Items/R001_부서진손거울.png` | 2026-10-06 | 원작 맵 A0UF 「영주대리」 능력 아이콘(`~/GRD_skill_icons/A0UF_$영주대리.png`, 사장님이 고른 「청동 메달」). R001 아이콘 = 원작 맵 A0UF 아이콘 |
+| 부서진손거울(ItemData_R001) 아이콘 | `Assets/Art/Items/R001_부서진손거울.png` | 2026-10-06 | 원작 맵 A0UF 「영주대리」 능력 아이콘(`~/grd/GRD_skill_icons/A0UF_$영주대리.png`, 사장님이 고른 「청동 메달」). R001 아이콘 = 원작 맵 A0UF 아이콘 |
 
 ## 🟠 추출 · 권리 불명
 
@@ -49,8 +49,8 @@
 | 무엇 | 비고 |
 |---|---|
 | 아이템 아이콘(Assets/Art/Items/) — 원랜디 맵에서 꺼낸 BLP→PNG | 사장님 10-04 「친구끼리라 원작 그림 OK」. 맵 안에 든 것만 쓴다(워크3 기본 BTN 아이콘은 우리에게 없음) |
-| 스킬·유물 아이콘(예정, 연결은 구현담당) — 원랜디 맵 BLP→PNG `~/GRD_skill_icons/` | 사장님 10-06 「원랜디 파일에서 가져다 쓰자」. 맵 안에 든 것만 쓴다(능력 아이콘 1,065개 중 고유 201장만 맵 안, 나머지는 워크3 표준 BTN — War3.mpq 없음). 대응표 `Tools/skill_icons/skill_icon_map.csv`. ⚠️ 위 아이템 줄과 달리 `Assets/Art/Items/`의 지금 그림은 실제로 game-icons.net(CC BY 3.0, `~/GRD_motion_trial/아이템아이콘/credits.md`)이다 — 원작 아이템 아이콘 38개 중 34개는 맵 밖이라 못 뽑는다 |
-| 웹에서 구한 워크3 기본 아이콘 약 370종 → `~/GRD_skill_icons/std_*.png`(능력 맵 밖 BTN + 아이템 맵 밖 34) | 사장님 10-06 「워크 파일이 없으니 웹에서 찾아서 써도 된다」. 출처 https://github.com/Wc3ReforegIcons/Wc3ReforegIcons.github.io (btn*.jpg 256×256, 워크3 리포지드 HD 아이콘, 라이선스 표기 없음 · 블리자드 이미지). 파일 이름 일치로만 붙임(PASBTN→BTN 32종은 같은 그림의 패시브판으로 대체 표시). 클래식 원본과 그림 결이 다르다. 비공개 베타용 — 공개 전 교체 |
+| 스킬·유물 아이콘(예정, 연결은 구현담당) — 원랜디 맵 BLP→PNG `~/grd/GRD_skill_icons/` | 사장님 10-06 「원랜디 파일에서 가져다 쓰자」. 맵 안에 든 것만 쓴다(능력 아이콘 1,065개 중 고유 201장만 맵 안, 나머지는 워크3 표준 BTN — War3.mpq 없음). 대응표 `Tools/skill_icons/skill_icon_map.csv`. ⚠️ 위 아이템 줄과 달리 `Assets/Art/Items/`의 지금 그림은 실제로 game-icons.net(CC BY 3.0, `~/grd/GRD_motion_trial/아이템아이콘/credits.md`)이다 — 원작 아이템 아이콘 38개 중 34개는 맵 밖이라 못 뽑는다 |
+| 웹에서 구한 워크3 기본 아이콘 약 370종 → `~/grd/GRD_skill_icons/std_*.png`(능력 맵 밖 BTN + 아이템 맵 밖 34) | 사장님 10-06 「워크 파일이 없으니 웹에서 찾아서 써도 된다」. 출처 https://github.com/Wc3ReforegIcons/Wc3ReforegIcons.github.io (btn*.jpg 256×256, 워크3 리포지드 HD 아이콘, 라이선스 표기 없음 · 블리자드 이미지). 파일 이름 일치로만 붙임(PASBTN→BTN 32종은 같은 그림의 패시브판으로 대체 표시). 클래식 원본과 그림 결이 다르다. 비공개 베타용 — 공개 전 교체 |
 
 ## 🟢 작성자 표기
 

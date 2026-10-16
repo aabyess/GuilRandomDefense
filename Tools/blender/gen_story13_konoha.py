@@ -27,7 +27,7 @@ TRI_LIMIT = 10000
 
 def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    out = os.path.expanduser("~/GRD_motion_trial/Story13_나뭇잎")
+    out = os.path.expanduser("~/grd/GRD_motion_trial/Story13_나뭇잎")
     box = BOX
     it = iter(args)
     for a in it:

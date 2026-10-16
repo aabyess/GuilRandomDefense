@@ -8,18 +8,18 @@
 
 ## ⭐⭐⭐⭐⭐⭐⭐⭐ PM 13 진행 (10-16 아침 전) — 파칭코 밤샘 1바퀴 끝
 - 팀원 그대로(--fresh 금지). w2 병합 전부 push: 26c9a2970 불꽃 연출(충돌: 시험 인자 파싱은 구현담당1 위치 유지+AutoPushForTest) · 666c9e3c6 릴 받침·번쩍임 줄이기 · 6b78d242d 리제로 제목 카드 · 550409cff 받침 옅게·카드 위치 · d8c23259e 영상 준비 지연 시 끝까지 기다려 따라붙기·결과 띠 아래로.
-- 구현담당1 검증 통과: Roll 10만 회 설정값 일치 · 2인 MP(관전·보상·클라 PUSH RPC·자동 누름 둘 중복 없음·끊김 시 호스트 시계로 정상 종료·투표 비율) · 영상 실패해도 보상·정지 해제 정상. d8c23259e 두 창 재실측 ✅(영상 실패 경고 사라짐 · 클라 꽝 먼저 끝나면 모니터 가운데 크게, ~/GRD_pachinko_mp/E/). 미측정: 클라 모니터의 호스트 시계가 몇 초 어긋나 보임.
-- 아침 보고 자료: ~/GRD_pachinko_test/morning/(m_*.png 4테마 + before/ + m_rezero_titlecard·m_tokyo_win_band). 도쿄구울·리제로는 크리티컬 PUSH 성공/실패 근거 없음(노트) → 안 만듦.
+- 구현담당1 검증 통과: Roll 10만 회 설정값 일치 · 2인 MP(관전·보상·클라 PUSH RPC·자동 누름 둘 중복 없음·끊김 시 호스트 시계로 정상 종료·투표 비율) · 영상 실패해도 보상·정지 해제 정상. d8c23259e 두 창 재실측 ✅(영상 실패 경고 사라짐 · 클라 꽝 먼저 끝나면 모니터 가운데 크게, ~/grd/GRD_pachinko_mp/E/). 미측정: 클라 모니터의 호스트 시계가 몇 초 어긋나 보임.
+- 아침 보고 자료: ~/grd/GRD_pachinko_test/morning/(m_*.png 4테마 + before/ + m_rezero_titlecard·m_tokyo_win_band). 도쿄구울·리제로는 크리티컬 PUSH 성공/실패 근거 없음(노트) → 안 만듦.
 - 사장님께 물을 것: 도쿄구울 11~13초 영상 전환 공백 · 대사 자막 작고 흐림 · 로딩 이미지 파일 경로 · (10-15) 스토리 입구 크기·드라이브 휴지통.
 
 ## ⭐⭐⭐⭐⭐⭐⭐ PM 12 → 13 교체 (10-16 새벽) — 🔴 파칭코 4테마 밤샘 작업 중
 - **팀원은 그대로(10-15 새벽에 띄운 세션)** — `--fresh` 금지. ListAgents로 셋 확인 후 「PM 바뀜」 알리기.
 - 🔴 **사장님 지시(10-16 새벽): 「오늘 밤 밤새 계속 작업, 파칭코 총 4개」 + 「디자인·연출·이펙트 계속 개선」.** 아침에 테마별 전후 캡처로 보고.
-  - 구현담당2(w2): 4테마 연출 개선 목록 진행 중 — ① 전생슬 끝(93f615ca8) ② 불꽃(크리티컬 순간 암전→흰 섬광→하늘색 반전→주황·CRITICAL BONUS 배너·초록 버섯 PUSH+押セ) ③ 도쿄구울·리제로 ~/GRD_pachinko_research/ingame_issues.md 남은 것 ④ 공통 번쩍임 줄이기. + 시험 인자 -pachinkoPush success면 PUSH 자동 누름(지금은 안 누르면 실패라 빌드로 성공 경로를 못 봄). 항목마다 병합 요청 → PM이 main merge --no-ff → csc·check_prefab_refs → push → w2 ff.
-  - 구현담당1(main): 멀티 2인 실측(관전 모니터·보상·투표 4택·PUSH RPC·끊김 안전장치) · Plan 확률 10만 회 · **빌드 화면 검증**(빌드 사본 ../GuilRandomDefense-build 브랜치 test/pachinko = main ff, `NetSetup.BuildMac -mpOut ~/GRD_pachinko_test/<이름>.app`, 게임 안 캡처로 테마별 시트).
+  - 구현담당2(w2): 4테마 연출 개선 목록 진행 중 — ① 전생슬 끝(93f615ca8) ② 불꽃(크리티컬 순간 암전→흰 섬광→하늘색 반전→주황·CRITICAL BONUS 배너·초록 버섯 PUSH+押セ) ③ 도쿄구울·리제로 ~/grd/GRD_pachinko_research/ingame_issues.md 남은 것 ④ 공통 번쩍임 줄이기. + 시험 인자 -pachinkoPush success면 PUSH 자동 누름(지금은 안 누르면 실패라 빌드로 성공 경로를 못 봄). 항목마다 병합 요청 → PM이 main merge --no-ff → csc·check_prefab_refs → push → w2 ff.
+  - 구현담당1(main): 멀티 2인 실측(관전 모니터·보상·투표 4택·PUSH RPC·끊김 안전장치) · Plan 확률 10만 회 · **빌드 화면 검증**(빌드 사본 ../GuilRandomDefense-build 브랜치 test/pachinko = main ff, `NetSetup.BuildMac -mpOut ~/grd/GRD_pachinko_test/<이름>.app`, 게임 안 캡처로 테마별 시트).
   - blender: 그림 요청 대기(구현담당2가 직접 요청 가능).
   - ⚠️ PM은 screencapture 금지 — macOS 「Orca 화면 녹화」 권한 창이 사장님 화면에 떴다(10-16). 빌드 확인은 게임 안 캡처로.
-- **파칭코 사양(메모리 pachinko-reference-video에 전부)**: 4테마 투표(도쿄구울·리제로·불꽃 소방대·전생슬). 영상형(불꽃 youtu.be/dyEh7wz1Xrk 1:30~1:46 룰렛, 3:40 PUSH, 3:45 끝 / 전생슬 jCWZuFgaPFI 1:10~1:20, 끝 5초 전 PUSH) · 같은 숫자 셋 = 크리티컬(30%) · PUSH 성공 51%(안 누르면 실패) · 성공=777 보상(랜덤유닛) · 실패=전설·히든 위습 + 깨짐·흑백 · 꽝=기존. 1:30 전에는 영상만(룰렛 UI 전부 숨김) · 자막 가림 띠 없음 · 숫자는 보석(SymbolsFire·SymbolsSlime, 리제로 SymbolsRz). 학습 노트 ~/GRD_pachinko_art/{fireforce_ref,tensura_ref}/NOTES.md. 시험 인자 -pachinkoTheme tokyo|rezero|fire|slime · -pachinkoTest win|miss|jackpot · -pachinkoPush success|fail · -pachinkoSkipTo <초>.
+- **파칭코 사양(메모리 pachinko-reference-video에 전부)**: 4테마 투표(도쿄구울·리제로·불꽃 소방대·전생슬). 영상형(불꽃 youtu.be/dyEh7wz1Xrk 1:30~1:46 룰렛, 3:40 PUSH, 3:45 끝 / 전생슬 jCWZuFgaPFI 1:10~1:20, 끝 5초 전 PUSH) · 같은 숫자 셋 = 크리티컬(30%) · PUSH 성공 51%(안 누르면 실패) · 성공=777 보상(랜덤유닛) · 실패=전설·히든 위습 + 깨짐·흑백 · 꽝=기존. 1:30 전에는 영상만(룰렛 UI 전부 숨김) · 자막 가림 띠 없음 · 숫자는 보석(SymbolsFire·SymbolsSlime, 리제로 SymbolsRz). 학습 노트 ~/grd/GRD_pachinko_art/{fireforce_ref,tensura_ref}/NOTES.md. 시험 인자 -pachinkoTheme tokyo|rezero|fire|slime · -pachinkoTest win|miss|jackpot · -pachinkoPush success|fail · -pachinkoSkipTo <초>.
 - **10-16 끝난 일(전부 push)**: 특수함 6기 원작 짝(장명자=요정 공 16 사장님 확정) · 성탄·솔·뻬꼼 판매 · 공격 모션 공속 맞춤 · 상붕카 비행 · 노태현 초월 돌발행동 범위 700 · 강화 원작 대조(유닛 전용 연구 13트랙·랜덤/다른세계 가산 버킷·다른세계 가제 트랙 정리) · attackType 64기 원작대로(사장님) · R70 라인몹 ×0.6(visualScaleAffectsSkin)·보스 ×1.5 · 파칭코 회전 방사선 제거 · 소개 레포 github.com/aabyess/GuRandi-AI-Dev(공개, 사장님 이력서용).
 - **사장님 답 대기**: 로딩 이미지 교체 — 사장님이 채팅에 사진(치이카와 인형 진열대)을 붙였는데 파일이 디스크에 없어 못 넣음 → 파일 경로를 받아 Resources/UI/LoadingScreen 교체(LoadingScreen.cs ImagePath). 스토리 입구 크기·드라이브 휴지통(10-15 질문) 그대로.
 
@@ -31,12 +31,12 @@
 - 희귀함 9기 짝(사장님 확정): 강재규=슈가·강주혁=페로나·고어진=와이퍼·구주호=센토마루·김경현=마젤란·김기연=X-드레이크·김정래=사보·강보명=바질·박도진=남음(값·임시 스킬 유지). 안흔함 박민수→H00G(스킬 없음), 문필환=H00E 시구레.
 - 원칙: 데이터가 툴팁보다 우선(센토마루=스플래시뿐, 슈가=3000 지대 1틱). 데이터 없으면 툴팁(와이퍼 7000).
 - 남은 것: 평균 DPS 변화가 큼(제한 −45%·랜덤 −30%·희귀함 −13%·변화됨 +69%·특수함 +43%) → 밸런스 실측 필요할 수 있음. 랜덤 가사이 유노 csv 짝 없음(그대로). 0.3.24 배포 여부 사장님께.
-- import_cutin 기본 src = ~/GRD_cutin_swap/layers(옛 ~/GRD_cutin/layers는 스킨 교체 전 15기).
+- import_cutin 기본 src = ~/grd/GRD_cutin_swap/layers(옛 ~/grd/GRD_cutin/layers는 스킨 교체 전 15기).
 
 ## ⭐⭐⭐⭐⭐ PM 11 이어받기 (10-15 오후) — 팀원은 이미 새 세션 · 0.3.23 배포 완료
 - **팀원 셋 이미 새로 띄움**(10-15 새벽). `--fresh` 다시 돌리지 말고 ListAgents로 확인 후 「PM 바뀜」 알릴 것. ⚠️ spawn_team.sh는 **zsh로**(bash면 옛 탭이 안 닫힘).
 - **배포**: 0.3.23(드라이브·바탕화면 앱, 빌드 사본 release/0.3.23 = 5faeaed71). 0.3.21 해적선 제거·볼보이 안흔함 / 0.3.22 히든 석성례(성성례) 공 55,000·스플 285 / 0.3.23 아래.
-- **피해 유형(사장님 정의 10-15, 구현담당1)**: 물리=방어력만(평타 전부 물리, 마저항 안 받음) · 마법=숨은 마저항·마깍·마뎀증폭 · 폭발형=마저항 기본만+폭뎀증폭만, **방어력 무시**(PM 결정, 정의대로) · 고정=전부 무시 · 방무뎀=방어×(1−비율). EnemyDummy.MitigatedDamage, 탐침 DamageTypeProbe(~/GRD_damage_probe). 스킬 설명 자동 문구에 유형 표기(PlayerFacingText.DamageKindLabel).
+- **피해 유형(사장님 정의 10-15, 구현담당1)**: 물리=방어력만(평타 전부 물리, 마저항 안 받음) · 마법=숨은 마저항·마깍·마뎀증폭 · 폭발형=마저항 기본만+폭뎀증폭만, **방어력 무시**(PM 결정, 정의대로) · 고정=전부 무시 · 방무뎀=방어×(1−비율). EnemyDummy.MitigatedDamage, 탐침 DamageTypeProbe(~/grd/GRD_damage_probe). 스킬 설명 자동 문구에 유형 표기(PlayerFacingText.DamageKindLabel).
 - **초월 최상호 새 사양(초월_최상호_AD)·초월 노태현 개정(초월_노태현_AP)** — 사장님 사양 고정. 노태현 돌발행동=마법, 보스 고정 30만 분기 삭제. 임시값: 최상호 스킬1 범위 300·왕의자질 상한 없음 · 노태현 범위 300·게이지 재생 1/초·평타 +1. 돌발행동 이펙트는 Smash 재사용(전용 「소리 지르기」 그림 필요하면 blender).
 - **사장님 답 대기**: 최상호 표시 이름(지금 「구일에서가장자유로운남자」, 입력말 「킹카가될뻔했던사나이」) 바꿀지 · 히든 4기(감탄떡볶이·맥주만땅·여은서·이삭토스트)가 재료보다 공격력 낮음 — 올릴지 · 희귀함 9기 임시 스킬 교체 여부.
 
@@ -49,8 +49,8 @@
 ## ⭐⭐⭐ PM 10 진행 (10-14 오후~저녁) — 0.3.19 배포 완료
 - **배포**: 0.3.19 드라이브 업로드 완료(0.3.18은 미배포로 합침). 빌드 사본 ../GuilRandomDefense-build release/0.3.19(a3859e795). 배포 전 관문 추가: `PinkMaterialProbe.FixAndRun`(재질 null·FBX 재임포트) · `StaleDollRepair.Check`(전시 인형 메시 끊김) · `Tools/check_missing_assets.py --tracked`(없는 guid 0) · 빌드 시험 `-mpSolo -soloDifficulty easy -pachinkoTest jackpot -mpShotAt …`.
 - **0.3.17 안 보이던 스킨 원인**: 맵 생성기가 씬에 구운 전시 인형(DollIdle, 프리팹 연결 없음)이 FBX 교체로 옛 메시 참조 끊김 → StaleDollRepair. FBX가 .mat보다 먼저 임포트되면 재질 null(조로 분홍) → PinkMaterialProbe.
-- **30R 파칭코(신규, 0.3.19)**: PachinkoController/Plan(구현담당1) + PachinkoOverlay(구현담당2). 테마 투표(도쿄구울/리제로, 클릭, 표 비율 확률) → 사람마다 결과. 확률 777 20%·같은 숫자 40%·리치 꽝 30%·꽝 10%. 보상 777 랜덤유닛·당첨 전설히든 위습·리치꽝 희귀함·꽝 특별함. 대사표·영상·이미지는 사장님 확정(메모리 pachinko-* 참고). 자료: ~/GRD_pachinko_art/(숫자 symbols_v3·fx·scene·bgvideo·rezero_*) · ~/GRD_pachinko_sfx/(sound.html = 「파칭코 사운드 띄워줘」).
-- **진행 중(사장님 3시간 자리 비움 19:30~)**: 파칭코 숫자·이펙트 개선 — 레퍼런스 조사 ~/GRD_pachinko_research/ · 리제로 보석 숫자(blender, symbols_rz) · 인게임 어색한 순간 목록(구현담당2).
+- **30R 파칭코(신규, 0.3.19)**: PachinkoController/Plan(구현담당1) + PachinkoOverlay(구현담당2). 테마 투표(도쿄구울/리제로, 클릭, 표 비율 확률) → 사람마다 결과. 확률 777 20%·같은 숫자 40%·리치 꽝 30%·꽝 10%. 보상 777 랜덤유닛·당첨 전설히든 위습·리치꽝 희귀함·꽝 특별함. 대사표·영상·이미지는 사장님 확정(메모리 pachinko-* 참고). 자료: ~/grd/GRD_pachinko_art/(숫자 symbols_v3·fx·scene·bgvideo·rezero_*) · ~/grd/GRD_pachinko_sfx/(sound.html = 「파칭코 사운드 띄워줘」).
+- **진행 중(사장님 3시간 자리 비움 19:30~)**: 파칭코 숫자·이펙트 개선 — 레퍼런스 조사 ~/grd/GRD_pachinko_research/ · 리제로 보석 숫자(blender, symbols_rz) · 인게임 어색한 순간 목록(구현담당2).
 - 사장님 답 대기: 로딩 화면 사진 파일(받지 못함) · 제한 최영민 초월 오라 · 거구 3기 배율 · 아래 등급 원작 짝 랜덤 배정 여부 · 영원 김영원 짝 · 「help me」 그림 유지 여부.
 
 ## ⭐⭐ PM 10 이어받기 (10-14, PM 9가 사장님 지시로 전원 교체)
@@ -65,9 +65,9 @@
 - 이게 고쳐져야 0.3.18 배포 가능.
 ### 2) 0.3.18 남은 일(사장님 「완료되면 드라이브에 추가 배포」)
 - 날개(main 54948c32f): 파란 날개 허리에 처짐→어깻죽지 0.78~0.82·위로 솟게·뼈 따라가기, 불 날개 한쪽 쏠림. (구현담당1)
-- 어림 텍스처 v2 반입 ~/GRD_blp_audit/placeholder_v2/ 248개(조정판). (구현담당1)
+- 어림 텍스처 v2 반입 ~/grd/GRD_blp_audit/placeholder_v2/ 248개(조정판). (구현담당1)
 - 🆕 사장님 10-09: **도박소·유닛강화소·영원함강화소·도움소·공격타입강화소·항해일지 건물 더 크게 + 클릭 범위 넓게 + 간격 넓게**(양옆 잔디라 넓혀도 됨). 씬 수정=main 에디터(구현담당1), 씬 수정 전 커밋.
-- 구현담당2(w2): 연출 자동검사(batch_05 44·batch_04 15·남은 ~70) 진행분 · 24기 재수출(쿼터니언 연속) 재반입 → 가프 머리 확인 · 박민수_조로(S2 !0702_Zoro, 연출 5개는 반입만·연결 금지 — 특별함은 스킬 없음) · 크레딧 현상수배 E 기본값 + 결함 셋(∞베리 잘림·PD 줄 종이 밖·「보통 모드」 알림 겹침) · 클립 중간 알파 4기(~/GRD_skin_swap/클립중_알파변화.json) · 체력바/사거리 원 키 따라가는지.
+- 구현담당2(w2): 연출 자동검사(batch_05 44·batch_04 15·남은 ~70) 진행분 · 24기 재수출(쿼터니언 연속) 재반입 → 가프 머리 확인 · 박민수_조로(S2 !0702_Zoro, 연출 5개는 반입만·연결 금지 — 특별함은 스킬 없음) · 크레딧 현상수배 E 기본값 + 결함 셋(∞베리 잘림·PD 줄 종이 밖·「보통 모드」 알림 겹침) · 클립 중간 알파 4기(~/grd/GRD_skin_swap/클립중_알파변화.json) · 체력바/사거리 원 키 따라가는지.
 - 사장님 고를 것: 같은 캐릭터 신작 교체 짝(~/Desktop/구랜디스킨모음/같은캐릭터_신작비교/, 「유닛 → 시트 글자」로 오면 교체목록.csv에 「신작N」 줄 → blender). 거구 후보(흰수염·쿠마·모리아) 키울지.
 - 배포 절차: GameVersion → 빌드 사본 checkout -B release/0.3.18 main → BuildBeta.Mac/Windows 배치 → zip -r -y -X(비ASCII 0·testzip) → 맥 실행 확인 → **교체 유닛이 보이는지 빌드에서 확인(이번 사고)** → 패치노트 html 새 섹션+render → 안내문 → rclone 업로드·옛 zip 삭제.
 ### 3) 오늘 함정
@@ -85,7 +85,7 @@
 - ✅ 10-09 19:18 **0.3.17v 배포 완료**(main fddb3a79b 기준 빌드 사본 release/0.3.17, 맥·윈도우 오류 0, 맥 실행 예외 0, 드라이브 업로드·0.3.16 삭제, 패치노트 1_0.3.17). 사장님 시간 때문에 지금 main만 먼저 냄 → 남은 것(날개 수정·현상수배 E·조로·연출 59개+자동검사·24기 재수출 재반입(가프 머리)·클립 중간 알파·어림 텍스처 v2)은 **0.3.18로 마저 끝나면 드라이브에 다시 배포**(사장님). 날개는 main 54948c32f(위치·방향 수정 중).
 - (10-09 밤) 🔴 사장님: 「배포까지 완료되면 세션들 다 새 세션으로(구현담당1·구현담당2·blender --fresh + PM 교체), blender2는 다시 만들지 않음(탭 닫기)」.
 - (10-09 밤 추가) 🔴 사장님 「다 완료되면 배포하자」 — 아래 다 끝나면 배포(0.3.17 또는 큰 덩어리면 0.4.0, release-versioning·패치노트·rclone 업로드).
-  - 날개 꾸미기(원작 S2 대시보드 「모델링」 상품, 흰·검=초월·파랑=변화·물=히든·불=전설·왜곡=칭호, 지금은 전부 풀림·해금 칸만): blender 추출(~/GRD_wings/) → 구현담당1 구현(chest 부착·선택 UI·세이브·멀티 동기화).
+  - 날개 꾸미기(원작 S2 대시보드 「모델링」 상품, 흰·검=초월·파랑=변화·물=히든·불=전설·왜곡=칭호, 지금은 전부 풀림·해금 칸만): blender 추출(~/grd/GRD_wings/) → 구현담당1 구현(chest 부착·선택 UI·세이브·멀티 동기화).
   - 초월 키 맞추기(구현담당2, 머리 높이 기준·카이도·빅맘 1.3~1.5배) · 크레딧 C/D/E 캡처 → 사장님 고르기.
   - BLP 알파 버그(blp-jpeg-alpha-trap): 이펙트 223개 main 재반입(구현담당1) · 유닛 텍스처는 w2 반영·병합 완료(f5795dabe).
   - 연출 대본 batch_04(15건) · v2 65개 diff → batch_05(blender).
@@ -98,8 +98,8 @@
 - 🔴 사장님 새 규칙(10-09, memory session-rotation-by-pm): **대화 길어지면 PM이 판단해 팀원·PM 세션 교체(승인 불필요, 한 줄 보고)**. 팀원은 큰 일 끝낸 뒤 handoff 정리 → spawn_team.sh --fresh <역할>. **임시 세션 blender2·blender3는 일 끝나면 탭 닫고 다시 만들지 않는다**(사장님). 「지금 지시한 일 다 끝나면 기존 세션 전부 새로」도 사장님 지시.
 - 에디터 둘: main 에디터 = 구현담당1 전용, **../GuilRandomDefense-w2(브랜치 w2) 에디터 = 구현담당2 전용**. 씬은 main에서만. **w2 커밋은 PM이 main으로 병합·push**(git -C ../GuilRandomDefense-w2 log main..w2 → main에서 git merge w2, 충돌 시 씬·프리팹 주의 → check_prefab_refs → push). 아직 w2→main 병합 한 번도 안 함.
 ### 1) 진행 중(누가·무엇)
-- **구현담당2(w2)**: 원작 스킨 교체(범위 가=스킨·원작 동작·스킬 연출, 효과·수치·이름은 그대로). 정본 ~/GRD_skin_swap/교체목록.csv(24기). 김경현→상디 model_fixed 재반입·w2 커밋 완료(prefab_refs 0·초상 정상), 남은 것: 낮은 카메라 동작 사진·컷인(~/GRD_cutin_swap/)·연출 LinkPassed → SwapAll로 나머지 23기(blender3 model_fixed 오는 대로). 그 뒤 제작진 화면 새 콘셉트 C 양피지/D 영화 엔딩/E 현상수배(사장님이 A·B는 「다른 느낌」으로 반려).
-- **blender3(임시)**: 교체 24기 모델 재수출(바인드=Stand 첫 프레임·숨김 지오셋 분리·스케일 검수) → ~/GRD_skin_swap/<유닛>/model_fixed/, 한 기마다 구현담당2에게 알림. 상디 끝, 23기 진행 중.
+- **구현담당2(w2)**: 원작 스킨 교체(범위 가=스킨·원작 동작·스킬 연출, 효과·수치·이름은 그대로). 정본 ~/grd/GRD_skin_swap/교체목록.csv(24기). 김경현→상디 model_fixed 재반입·w2 커밋 완료(prefab_refs 0·초상 정상), 남은 것: 낮은 카메라 동작 사진·컷인(~/grd/GRD_cutin_swap/)·연출 LinkPassed → SwapAll로 나머지 23기(blender3 model_fixed 오는 대로). 그 뒤 제작진 화면 새 콘셉트 C 양피지/D 영화 엔딩/E 현상수배(사장님이 A·B는 「다른 느낌」으로 반려).
+- **blender3(임시)**: 교체 24기 모델 재수출(바인드=Stand 첫 프레임·숨김 지오셋 분리·스케일 검수) → ~/grd/GRD_skin_swap/<유닛>/model_fixed/, 한 기마다 구현담당2에게 알림. 상디 끝, 23기 진행 중.
 - **blender**: 컷인 3기 재작업(이태훈 몸 안 보임·신지우·정윤식 작음 + 검사에 몸 비율 하한), 교체목록 새 줄 폴더(skin_swap_pack.py --new — 줄 추가 시 메시지로 알려야 함), 대표 연출 대본 배치.
 - **blender2(임시)**: 최신 원랜디 S2 스킨(~/Desktop/구랜디스킨모음/원랜디_신작_스킨/, 362/435) 칸 이름을 모델 파일 기준 캐릭터 이름으로 정정 + **사장님 요청 비교 시트 신작 초월→불멸→영원→히든** → ~/Desktop/구랜디스킨모음/매칭_신작_<등급>/. 끝나면 사장님께 띄우고(open) 「1→C」 답을 교체목록.csv에 줄 추가(형식 기존 줄 그대로, 시트 글자 앞에 「신작」 표기 권장) → blender에게 알림. blender2는 그 뒤 종료.
 - **구현담당1(main)**: 초월 스킬 모션 영상(~/Desktop/구랜디_초월_스킬모션/, 유닛별 mp4 + 시전 때 재생 애니 정리) 중.
@@ -113,7 +113,7 @@
 
 ## 🔴 10-09 PM 8번째 진행판(최신)
 - 끝남(push): 노태현 Lv.2를 같은 스킬 레벨2로(0eb2bfaa5)·사양 원문 1:1 대조 일치 · 채팅 조합 옛/새/원작 이름 다 받음 · 해적선 비행 · 조합 결과 무조건 레인 가운데(ResultAtCasterUnit=false) · 복사본(박진웅 볼보이·모리아 좀비) 판매 불가 · 신세계 라운드 35초·광폭화 A11S 1 · 신세계 사이드보스 = 원작대로(광폭화는 사이드보스 소환으로만, 10% 대체 폐기), 이름 광폭한 주영호/폭주한 박은석/각성한 김만경, 모델 R10/R20/R30 보스 ×1.2 붉은 틴트, MP 막대 · 항법 창·패배 창(상호파 입단 실패) 개편 · 시작 브금 Strong and Strike(binks_sake.mp3 자리) · 제작진 화면 후원자 줄 · 대표 스킬 연출(SkillCinematic) 4장면+1차 20개 · 원작 이펙트 알파0 수정 재반입.
-- 진행 중: 🔴 **원작 스킨 교체(범위 가=스킨·원작 동작·스킬 연출만, 효과·수치·이름 그대로)** 정본 ~/GRD_skin_swap/교체목록.csv(24기: 초월 9·불멸 6·히든 3·전설 5·흔함 1) — blender가 폴더(model·clip_map·pairing) → 구현담당2가 김경현→상디 시범부터 반입·사진. 매칭 시트 ~/Desktop/구랜디스킨모음/매칭_<등급>/. 원작 구버전 스킨 전 등급 추출 ~/Desktop/구랜디스킨모음/원랜디_구버전_스킨/(269/341, 실패 목록 md).
+- 진행 중: 🔴 **원작 스킨 교체(범위 가=스킨·원작 동작·스킬 연출만, 효과·수치·이름 그대로)** 정본 ~/grd/GRD_skin_swap/교체목록.csv(24기: 초월 9·불멸 6·히든 3·전설 5·흔함 1) — blender가 폴더(model·clip_map·pairing) → 구현담당2가 김경현→상디 시범부터 반입·사진. 매칭 시트 ~/Desktop/구랜디스킨모음/매칭_<등급>/. 원작 구버전 스킨 전 등급 추출 ~/Desktop/구랜디스킨모음/원랜디_구버전_스킨/(269/341, 실패 목록 md).
 - 진행 중: 제작진 화면 새 콘셉트 C 양피지/D 영화 엔딩/E 현상수배(A·B는 사장님 「다른 느낌」) · 상점 강화 중 선택 풀림 = 혼자 재현 0, MP 하네스 확인 중(방어 수정 들어감) · 대표 연출 2차 이후 배치.
 - 사장님 답 대기: 돌발행동 보스 고정 30만 삭제?·폭발형→마법? · 희귀함 리롤 범위(원작=고급도박·고급유닛생성만) · 원작 fly 25기 비행화? · 임준성 방깎 50 조건 완화? · 킹카조합 중복 · 고도현 스킨 센고쿠인데 시키 함대 연출 유지? · 이시원(Y)·이이삭(B) 같은 흰수염 모델 OK?
 - 최신 원랜디 S2 2.323: Tools/w3x/원본_S2_2.323/(gitignore), 풀기만 함, 조사 보류(사장님 「나중에」).
@@ -129,7 +129,7 @@
 - 🔴 원작 이펙트는 **메시만** 옮김 — 219종 중 155종에 PRE2 입자가 있는데 뺐다 → 원랜디처럼 안 보임(사장님 「아닌 거 같은데」). 사장님이 원한 건 **캐릭터 대표 스킬 연출 통째**(샹크스 폭발·시키 함대 소환·에넬 엘토르·드래곤 폭풍: 더미 소환·이동 + 시간차 이펙트 + 입자). 진행: blender = 대표 연출 목록 + 넷 「대본 json」+원작 재현 렌더 → 구현담당2 = 대본 재생기(SkillCinematic)+PRE2→ParticleSystem 변환기 → 넷 원작/우리 나란히 사진 → 승인 후 확대.
 - 함정: .meta 누락 푸시 2번(OriginalVfxPlayer 등·RerollProbe) — 새 스크립트/폴더 커밋 때 meta 확인. `git commit -- 씬`이 남의 미커밋 씬 변경을 담는다(시범 잔여물이 씬에 들어감 → 32c7636d1 제거). 측정 배치가 NavMesh 밖이면 평타 0(불멸 중앙값 표 무효).
 - 다른세계 9기 최종 공속 +25%(원작 랜덤[제한됨]) 승인 · 초월 김만경·황준석·김경현 원작 평타 피해 문(§3-bis 1~3) 승인 → 구현담당1
-- 지시: 구현담당1 = 2·5·솔성탄빼꼼·고급 유닛 생성 분리(에디터 먼저) · 구현담당2 = 맥 F키 + 원작 에셋 받는 설계 · blender = 초월 VFX 13 시범 변환(~/GRD_orig_vfx_trial)·아이콘 243 PNG+표(~/GRD_orig_icons)
+- 지시: 구현담당1 = 2·5·솔성탄빼꼼·고급 유닛 생성 분리(에디터 먼저) · 구현담당2 = 맥 F키 + 원작 에셋 받는 설계 · blender = 초월 VFX 13 시범 변환(~/grd/GRD_orig_vfx_trial)·아이콘 243 PNG+표(~/grd/GRD_orig_icons)
 
 ## ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐ 10-08 저녁 PM 7번째 마감 — **이게 최신** (사장님 「다 완료되면 배포하고 세션 새롭게 다 바꿔」)
 ### 0) 새 PM이 맨 먼저
@@ -175,7 +175,7 @@
 - MP check5 두 창 관문 통과(Docs/research/MP_CHECK5_2026-10-08.md: 상점 번호·목재 잠금·미니보스·게이지 복제) → **0.3.16 배포 가능**. 빌드 사본은 dev/g1-mp-check5(0.3.16mp5) 상태 — 배포 땐 `git checkout -B release/0.3.16 main`으로 새로.
 - 강재규 재생 실측 22.7초(이론 21.0+스턴).
 ### 2) 사장님 답 대기(6)
-1 컷인 효과음 ~/GRD_cutin_sfx/audition_all.wav(슉A 칼/슉B 카드 · 칭A 묵직한 종/칭B 유리, Kenney CC0) 2 솔·성탄·빼꼼 히든 강화 트랙 제외? 3 10엔→고급 생성 전환도 3초 잠금? 4 랜덤[제한됨] 공속+25%? 5 0.3.16 배포?(0.3.15와 MP 비호환, 배포 뒤 rclone grd:·패치노트 버전별 한 장) 6 초월 김만경·황준석·김경현에 원작 평타 피해 문 추가?(TRANSCEND_GATE_PORT_PLAN §3-bis 한 줄 요약, 유재헌은 원작도 없음)
+1 컷인 효과음 ~/grd/GRD_cutin_sfx/audition_all.wav(슉A 칼/슉B 카드 · 칭A 묵직한 종/칭B 유리, Kenney CC0) 2 솔·성탄·빼꼼 히든 강화 트랙 제외? 3 10엔→고급 생성 전환도 3초 잠금? 4 랜덤[제한됨] 공속+25%? 5 0.3.16 배포?(0.3.15와 MP 비호환, 배포 뒤 rclone grd:·패치노트 버전별 한 장) 6 초월 김만경·황준석·김경현에 원작 평타 피해 문 추가?(TRANSCEND_GATE_PORT_PLAN §3-bis 한 줄 요약, 유재헌은 원작도 없음)
 - 그 밖 이전부터: 행운의 토큰 칸 위치·제안값(임채민 25%·천벌 120·유물 3,000·스토리 0.7)·김강민 스킬·게이지 임시값 표·미니보스 틴트 세기(TintAmount 한 줄)
 
 ## ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐ 10-08 아침 PM 6번째 진행판 — **이게 최신** (팀원 셋 그대로, 5번째판 아래 내용 위에 쌓임)
@@ -187,7 +187,7 @@
 ### 진행 중
 - 구현담당2(에디터): 초상 전수 탐침+Tunes 보정 → 컷인 반입·사진. 다음 에디터 = 구현담당1(강재규 실측·MP check5 두 창 관문 = 0.3.16 전 관문)
 ### 사장님 답 대기(6)
-1 컷인 효과음(~/GRD_cutin_sfx/audition_all.wav 슉A/B·칭A/B) 2 솔·성탄·빼꼼 히든 강화 제외? 3 10엔→고급 생성 전환도 3초 잠금? 4 랜덤[제한됨] 공속+25%? 5 0.3.16 배포?(0.3.15와 MP 비호환) 6 초월 지원형 김만경·황준석·김경현에 원작 평타 피해 문 추가?(유재헌은 원작도 없음)
+1 컷인 효과음(~/grd/GRD_cutin_sfx/audition_all.wav 슉A/B·칭A/B) 2 솔·성탄·빼꼼 히든 강화 제외? 3 10엔→고급 생성 전환도 3초 잠금? 4 랜덤[제한됨] 공속+25%? 5 0.3.16 배포?(0.3.15와 MP 비호환) 6 초월 지원형 김만경·황준석·김경현에 원작 평타 피해 문 추가?(유재헌은 원작도 없음)
 ### 작업 트리 잔여
 - 유니티 재직렬화 잔여 ~1,600건(Materials·Prefabs/Generated·Roster 기본값 필드) + .check_entries_out(blender 도구 산출) — 내용 변경 아님. 에디터 빌 때 PM이 정리 커밋 예정.
 
@@ -249,7 +249,7 @@
 - **0.3.14 배포(10-07 저녁, 윈도우+맥)**: 빌드 사본 release/0.3.14 = main 1db760bd8 + 버전 d5c3da580(main에 cherry-pick 75003c539) · ~/Desktop/구랜디_베타/GuRandi_Beta_{Windows,Mac}_0.3.14v.zip(209/214·비ASCII 0·testzip OK) + 안내문 0.3.14 · 최신_맥.app=0.3.14 · 0.3.13 zip 삭제. 맥 실측: 0.3.14v 표시·워크3풍 UI·버그 기록 단추·예외 0. ⚠️ **구글 드라이브 G.R.D 폴더(링크 공유·뷰어)에는 사장님이 직접 올림** — 0.3.13만 올라가 있음, 맥 zip은 아직.
 - 드라이브: G.R.D 폴더 https://drive.google.com/drive/folders/1VLwlW4Q-2OiCp1i5ZvYDttVn5kJsnN2w (링크·뷰어) · 세이브코드 시트 https://docs.google.com/spreadsheets/d/1P6CZFs8EvVnT1L3uIbhDvOV2LM2yPb67HW9z7CtKalA/edit (링크·편집자, 닉네임|세이브 코드).
 ### 2) 0.3.14 내용(전부 main)
-- 워크3풍 UI(사장님 「최대한 똑같이」): blender 그림 ~/GRD_wc3_ui(17종+창 4종+명령 아이콘 6) · 구현담당2 반영 cea1411ba·6ab135f0d·01f2ecdd4·5d74ad0d1·59d832262 · UiSkin.Wc3Active 스위치 · 미니맵 옆 세로 단추 5개는 사장님 지시로 뺌 · 초상 아치 넓힘+얼굴 배율. 미완: 힘/민첩/지능(초월·영원만) 표시·1366×768 사진·시계 구슬/F5 윗줄 크기 사장님 눈.
+- 워크3풍 UI(사장님 「최대한 똑같이」): blender 그림 ~/grd/GRD_wc3_ui(17종+창 4종+명령 아이콘 6) · 구현담당2 반영 cea1411ba·6ab135f0d·01f2ecdd4·5d74ad0d1·59d832262 · UiSkin.Wc3Active 스위치 · 미니맵 옆 세로 단추 5개는 사장님 지시로 뺌 · 초상 아치 넓힘+얼굴 배율. 미완: 힘/민첩/지능(초월·영원만) 표시·1366×768 사진·시계 구슬/F5 윗줄 크기 사장님 눈.
 - 명령 카드 원작 배치 d3f188298: 0 이동M·1 홀딩H·2 정지S·3 공격A / 4 반복P·5·6 유닛 스킬·7 판매 / 8~11 조합 초상 · 모으기 버튼 없음(V 키만) · **판매는 희귀함까지만**(원작 판매 능력도 안흔함·특별·희귀뿐).
 - 반복(패트롤) · 다중 선택 등급순+작은 초상+체력 막대 2779f1011 · 스토리 건물 ×0.7 22d9cc245(ArtBinder.StoryBuildingScale) · 유물 중복 금지(RewardDistributor.PickMissingRelic, 다 가지면 금화 3,000 — 제안값) · 적 출발점 마법진 d091afff5 · 바다 원작 톤 ea019410a(SeaWater 셰이더) · 도움소 마나 표시 · 버그 기록지 4ec3fbcf4(BugNotepad.cs, 구랜디 폴더 버그기록.txt, 강제 종료 실측) · 모리아=안흔함_이호준(좀비 100%·10초, 실측 10/10) · 유닛 이름 19기 18736b262+b55d220de(UnitData.personOverride, 히든 입력말 새 것만 — 「푸은서조합」, 표 Docs/reference/UNIT_RENAMES_2026-10-07.md, 웹 이름표 https://claude.ai/artifact/SCCtPbBBLLYj6mWFBba4vN · ArtifactData renames).
 ### 3) 사장님 답 대기 / 미해결
@@ -281,9 +281,9 @@
 ## ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐ 10-06 저녁 19:20 PM 교체 — **이게 최신** (사장님 운동 중 · 「계속 작업」)
 ### 0) 새 PM이 맨 먼저
 - 🔴 **팀원은 그대로 — `--fresh` 금지.** 구현담당1·2·3·blender 모두 떠 있음(3시간째). ListAgents로 확인 → 「PM 바뀜(pm), 보고는 이쪽」 알리고 하던 일 한 줄씩 받기.
-- 사장님 1순위(19:18): **① 첫 화면 UI 개선 ② 게임 하단 UI 등 화면 전체를 나무·선술집 톤으로**. ②는 구현담당2에게 지시함(다음 스토리 타이머 끝나면 바로 — 그림 ~/GRD_tavern_ui, Resources/UI/SkinTavern + UiSkin 테마 스위치, 옛 돌 그림 보존). ①은 PM 몫.
+- 사장님 1순위(19:18): **① 첫 화면 UI 개선 ② 게임 하단 UI 등 화면 전체를 나무·선술집 톤으로**. ②는 구현담당2에게 지시함(다음 스토리 타이머 끝나면 바로 — 그림 ~/grd/GRD_tavern_ui, Resources/UI/SkinTavern + UiSkin 테마 스위치, 옛 돌 그림 보존). ①은 PM 몫.
 ### 1) PM 진행 중(첫 화면)
-- 섬 배경 **루프 영상**: blender가 192장 렌더 마무리 중(~/GRD_title_loop/) → 끝나면 Unity VideoPlayer(또는 프레임 시퀀스)로 첫 화면 배경(NetLobbyUi.BuildBackdrop의 사진 자리)에 깐다. 용량 주의(웹엠 VP8 권장, 1920×1080 8초).
+- 섬 배경 **루프 영상**: blender가 192장 렌더 마무리 중(~/grd/GRD_title_loop/) → 끝나면 Unity VideoPlayer(또는 프레임 시퀀스)로 첫 화면 배경(NetLobbyUi.BuildBackdrop의 사진 자리)에 깐다. 용량 주의(웹엠 VP8 권장, 1920×1080 8초).
 - 이미 들어간 것: G.R.D 제목판(시안 D)·부제 숨쉬기·단추 달그락(Kenney CC0)·설정 창(나무 게시판, 슬라이더 클릭 닫힘 버그 고침)·제작진 화면(스폰서 노무현제단 = 사장님 친구 이름, 도움 알두환·짬 모)·Tavern Tales 브금·선술집 문 v3(두 짝, 고품질 그림)·카메라 -시야1/2/3·휠·스페이스·부대 지정·마나 게이지·테스터 로그(GameLog, 설정 [로그 폴더 열기]).
 - 🔴 **선술집 실내 첫 화면은 사장님이 폐기**(「다 구리네」). 첫 화면 소품·3D 문 v2도 되돌림. 섬 버전 보존 태그 `title-island-v1`.
 - PM 개발 방식: 빌드 사본(../GuilRandomDefense-build)에서 dev 브랜치 → 배치 맥 빌드 → `-mpShotAt`·임시 Dev 탐침(커밋 금지)으로 사진 → main에 cherry-pick. 에디터 순번과 안 겹친다.
@@ -327,8 +327,8 @@
 - 명령 카드 재배치(bcee45a76: 윗줄 홀드·공격·모으기·판매, 유닛 칸 오른쪽 아래부터 ReflowFlexSlots) · 효과음 13자리(da4a4615e·52b2b8848, GameSound, PlayerNotification.ShowFailure, NetGameState.RPC_GameSound) · 손오공·조세민 Move 합성·전유라 이음새(0440c7ab4) · 전설 징베·레이쥬·보아(4d01a8aa8).
 - **0.3.11 윈도우판 배포(10-06 19:15)**: 빌드 사본 release/0.3.11 = main 444e616a5 · `~/Desktop/구랜디_베타/GuRandi_Beta_Windows_0.3.11v.zip`(207항목·비ASCII 0·testzip OK) + 안내문 0.3.11(맥은 0.3.10 — 같이 하기는 윈도우끼리). 옛 zip(윈 0.3.5·0.3.8·0.3.9·0.3.10, 맥 0.3.8) 사장님 지시로 삭제. 다음 판 0.3.12: 다음 스토리 타이머·상점 QWER·회유·흙길·영원함·섬 루프 영상.
 - **0.3.10 배포(10-06 17:13, 윈도우+맥)**: 빌드 사본 release/0.3.10 = main f7a26ca0d + 13239a5e9(G.R.D·Tavern Tales, main엔 978880280로 체리픽) · `~/Desktop/구랜디_베타/GuRandi_Beta_{Windows,Mac}_0.3.10v.zip`(207/212항목·비ASCII 0·testzip OK) + 안내문 0.3.10. 맥 빌드 실측: 제작진 화면·G.R.D 제목판·부제. 미포함: FlyingMover·황준석(그 뒤 커밋), 김경현(진행 중).
-- 🔴 **첫 화면 섬 버전 보존(사장님 10-06 「선술집 별로면 되돌아올 수 있게」)**: git 태그 `title-island-v1`(6e7363880) + 그림 백업 ~/GRD_title_island_v1/(Resources/UI/Lobby 통째·섬 루프 정지컷). 선술집 버전은 **새 폴더(Resources/UI/LobbyTavern)·테마 스위치**로 넣어 섬 그림을 지우지 않는다 — 되돌리기 = 스위치 한 줄.
-- 🔴 **PM 직접 담당(사장님 「이건 너가 작업했으면」)** — 첫 화면 개선: ① 혼자/같이/세이브 버튼 마우스 올리면 「달그락」 흔들림+소리 ② 부제 「Guil Random Defense」 숨 쉬듯 서서히 보였다 사라짐 ③ 세이브 코드 아래 [설정]: 소리 크기·창모드/전체화면·해상도(1920×1200 등) ④ 선술집 문 열림/닫힘 전환(blender 그림 ~/GRD_tavern_door, Kenney CC0 소리) — 혼자 하기·방 만들기·시작에 열림, 돌아올 때 닫힘 ⑤ 움직이는 배경 영상(blender 렌더 ~/GRD_title_loop, 192프레임 4시간) VideoPlayer로 깔기. PM은 빌드 사본(../GuilRandomDefense-build)에서 배치 빌드로 개발·실측해 에디터 순번과 안 겹치게 한다.
+- 🔴 **첫 화면 섬 버전 보존(사장님 10-06 「선술집 별로면 되돌아올 수 있게」)**: git 태그 `title-island-v1`(6e7363880) + 그림 백업 ~/grd/GRD_title_island_v1/(Resources/UI/Lobby 통째·섬 루프 정지컷). 선술집 버전은 **새 폴더(Resources/UI/LobbyTavern)·테마 스위치**로 넣어 섬 그림을 지우지 않는다 — 되돌리기 = 스위치 한 줄.
+- 🔴 **PM 직접 담당(사장님 「이건 너가 작업했으면」)** — 첫 화면 개선: ① 혼자/같이/세이브 버튼 마우스 올리면 「달그락」 흔들림+소리 ② 부제 「Guil Random Defense」 숨 쉬듯 서서히 보였다 사라짐 ③ 세이브 코드 아래 [설정]: 소리 크기·창모드/전체화면·해상도(1920×1200 등) ④ 선술집 문 열림/닫힘 전환(blender 그림 ~/grd/GRD_tavern_door, Kenney CC0 소리) — 혼자 하기·방 만들기·시작에 열림, 돌아올 때 닫힘 ⑤ 움직이는 배경 영상(blender 렌더 ~/grd/GRD_title_loop, 192프레임 4시간) VideoPlayer로 깔기. PM은 빌드 사본(../GuilRandomDefense-build)에서 배치 빌드로 개발·실측해 에디터 순번과 안 겹치게 한다.
 - **0.3.9 윈도우판 배포(10-06 16:22, 새 PM)**: 빌드 사본 release/0.3.9 = main 3fb42d529 · `~/Desktop/구랜디_베타/GuRandi_Beta_Windows_0.3.9v.zip`(207항목·비ASCII 0·testzip OK) + 안내문 0.3.9(맥은 0.3.8 그대로 — 같이 하기는 윈도우끼리). 포함: 이재윤·박기찬·두유찬·이태훈·신문철·효과음·고정 깡딜 방무·폭탄 이펙트(ba2869a12). 맥 0.3.9는 안 만듦.
 - **0.3.8 배포(10-06 15:22)**: 빌드 사본 `../GuilRandomDefense-build` release/0.3.8 = main afcde5c46 · `~/Desktop/구랜디_베타/GuRandi_Beta_{Windows,Mac}_0.3.8v.zip` + 안내문 0.3.8. 효과음·이재윤 이후는 미포함. 다음 배포 0.3.9(사장님 「초월만 다 넣고 바로 배포」 — 임채민 보류).
 ### 3) 남은 큐(각 handoff에 자세히)
@@ -372,7 +372,7 @@
 ### 2) 그 밖에 오늘 확정·반영
 - 히든 19식 사장님 재료(a16437bc0) · 솔·성탄·뻬꼼 히든 식 삭제 → 하급도박 10%(판 전체)로 솔·성탄·뻬꼼·상붕카 무작위 · 다른세계도 채팅 전용 · 채팅 「이름 조합」(공백·밑줄 무시).
 - 전설 스킬 = 원작 전설 그대로(사장님 「임시로 네가 판단」): blender 대응표 Docs/research/LEGEND_SKILL_PLAN_2026-10-06.md — g1이 반영 중(구주호→슈가·양재모→킹·김용태→드래곤·김건→울티·김민규→시노부·김민준→네코마무시·김정래→아마츠키·박병규→에이스·**노태현→시저 확정**(사장님 「시저 따라 한 것」, 상시 장판 원작대로 두고 실측 DPS 보고)). 진행도는 handoff_구현담당1.
-- 아이콘: 원작 맵 안 201 + 웹(리포지드 HD, BTN 이름 일치) 369 → ~/GRD_skill_icons, 대응표 Tools/skill_icons/*.csv. 아이템 아이콘 37개는 원작으로 교체(I001·R001 제외). **스킬 아이콘 표시**(유닛 정보 창 아이콘 줄 + 툴팁) g2 진행 중 + 명령 카드에서 이동(M)·정지(S) 빼기(사장님).
+- 아이콘: 원작 맵 안 201 + 웹(리포지드 HD, BTN 이름 일치) 369 → ~/grd/GRD_skill_icons, 대응표 Tools/skill_icons/*.csv. 아이템 아이콘 37개는 원작으로 교체(I001·R001 제외). **스킬 아이콘 표시**(유닛 정보 창 아이콘 줄 + 툴팁) g2 진행 중 + 명령 카드에서 이동(M)·정지(S) 빼기(사장님).
 - 첫 화면 = blender 워크3풍 시안 그대로(9859a1232, 사장님 「좋다」) · 대기실 카드 · **대기실 자리 이동**(빈 줄 클릭, 호스트 판정) — PM이 맥 빌드 두 창으로 확인: 방장 3번 이동→시작 좌석 {1,2}·LocalPlayerId 2, 시작 뒤 요청 거절. 미확인: 두 사람 동시 클릭·재접속.
 - 십자가(레인 사이 대지) 모래색 협곡 · 조합판 행 ×1.3(사장님 「그대로」) · 뽑기섬 랜덤유닛 전시 한 줄 5칸(옆 간격 ×1.4) · 선택 위습: 포탈 줄↔위습 60, 겨눈 포탈만 먹음, 판정 r18(사장님 「그대로」).
 - 세이브: 지금 방식 유지(사장님) — 자동 저장 + **클리어 판에만** 세이브 코드. 닉네임별 파일 분리는 취소.
@@ -571,7 +571,7 @@
 | **PM** | 사장님 지시 수신·분배·리뷰·푸시 · 브금(GameBgm·yt-dlp) · 스킨/고유 동작 Assets 반영(모델 배선) · 배포 빌드 |
 | **구현담당1** | 스킬 데이터·UnitAttacker·EnemyDummy · 밸런스 측정 도구(ClaudeCommands autoloop) |
 | **구현담당2** | 초월 부가 이펙트·상시 오라(SphereArt*·flatten·SphereArtBuilder) · 고유 동작(적) · MotionShowProbe |
-| **Blender** | fix_unit_fbx·원작 MDX 추출·조사 — Assets엔 안 씀, 산출 `~/GRD_motion_trial/`(원작 작업 스크래치 `_work/`) |
+| **Blender** | fix_unit_fbx·원작 MDX 추출·조사 — Assets엔 안 씀, 산출 `~/grd/GRD_motion_trial/`(원작 작업 스크래치 `_work/`) |
 
 - 새 세션은 서로 기억이 없다 → **첫 지시에 배경과 에디터 규칙을 같이 준다.**
 - 🔴 **유니티 에디터는 main 하나를 같이 쓴다.** 판(플레이) 중 Assets 쓰기 = 도메인 리로드 = 판 오염. 쓰기·refresh·배선 전 「씁니다/돌립니다」, 상대 「끝났습니다」 뒤에만. 10-01에도 두 번 어겨짐(저장 뒤 알림 · 패치 스크립트가 Assets까지 씀).
@@ -588,7 +588,7 @@
 ## 2. 10-01까지 한 것 (전부 main 푸시)
 - **0.3.1v 배포**: release/0.3.1(빌드 사본) → `~/Desktop/구랜디_베타/`(맥·윈도우 zip·앱·안내문, 0.3.0 삭제). 앱 바이너리 직접 실행 사진으로 0.3.1v 확인. 🔴 **사장님: 데스크톱 .app 더블클릭이 실행 안 됨** — 미해결(§4).
 - **브금 10곡**(GameBgm Cues 표 — 위에서 첫 줄 우선, `resume` 플래그). 볼륨은 평균 dB로 ≈ −33.5dB 맞춤(어림).
-- **고유 동작 46종**(유닛 30·적 16 Generic): Blender 전수조사(`~/GRD_motion_trial/고유동작_전수조사.md`) 1~4묶음. 🔴 FitToHeight가 Generic을 「가장 긴 축」으로 재서 무기·외투 큰 모델이 작아졌다 → AlreadyUpright면 키(Y)로(measureHeight).
+- **고유 동작 46종**(유닛 30·적 16 Generic): Blender 전수조사(`~/grd/GRD_motion_trial/고유동작_전수조사.md`) 1~4묶음. 🔴 FitToHeight가 Generic을 「가장 긴 축」으로 재서 무기·외투 큰 모델이 작아졌다 → AlreadyUpright면 키(Y)로(measureHeight).
 - **초월 부가 이펙트 11곳**(effects.json → `Tools/sphere_art/flatten_effects.py` → `SphereArtBuilder` → extra.tsv): 구주호·김만경(소매=아래팔)·최상호_AD 별빛·박기찬·신문철·이지원·김민준_AP 검 궤적(가정)·최상호 검은 초승달·배성령·박민석·황준석(겹침 결정 대기). 뼈 따라가기·보이는 때 비트 마스크(대기·이동·공격·스킬)·리본(TrailRenderer)·PulseSkill(UnitAttacker 1초).
 - **상시 오라 원작 모양 17모델**(구현담당2 e9b05e74): 등급 오라 원작 크기 일치. 임시 유지 = 맵에 없는 7 + 원작에서 안 켜지는 2. 근사 텍스처 바위는 단색.
 - **측정 도구**: 흔함 위습 몰아주기 · 뽑기 전용 잎(악의근원·상붕카) 점수 +10·보유 시 0 · 그 잎 안 팔기(445e739e). 옛/새 R20 대조는 BALANCE §4.
@@ -618,14 +618,14 @@
 
 ## 4. 사장님 답 대기
 1. 재시동 뒤 앱 더블클릭 되는지.
-2. **워크3 정품 데이터 있나?** 근사 텍스처 39개(HandsAura2 Zap1_Red·Blue_Glow2·EQ_Rock2 등) 원본이 이 컴퓨터엔 없음(`~/GRD_motion_trial/_wc3_textures/찾아본곳.md`). 정품 War3.mpq/리포지드 CASC 위치를 주시면 바로 뽑음.
+2. **워크3 정품 데이터 있나?** 근사 텍스처 39개(HandsAura2 Zap1_Red·Blue_Glow2·EQ_Rock2 등) 원본이 이 컴퓨터엔 없음(`~/grd/GRD_motion_trial/_wc3_textures/찾아본곳.md`). 정품 War3.mpq/리포지드 CASC 위치를 주시면 바로 뽑음.
 3. 볼륨(브금 10곡·효과음) — 평균 dB로만 맞춘 어림값, PM은 소리를 못 들음.
 4. 옛 대기(10-01 오후판 §4): 스킬 주인 질문 표 · 히든·다른세계 원작 대응 · 이펙트 메시 여덟 · 김건 털·박예원 자세 · 히루루크·변신·변화됨 · NC-ND 주영호(고유 동작 반영됨) · 밸런스 숫자.
 
 ## 5. 저장소·작업 폴더
 - main 전부 푸시. 작업트리에 늘 남는 것(커밋 금지): Pretendard SDF 2 · Anton SDF · Materials/Map lane·rock mat · `.check_entries_out/`.
 - worktree: `../GuilRandomDefense-mp`(mp = main과 같음, ff로 맞춤) · `../GuilRandomDefense-build`(release/0.3.3) · `../GuilRandomDefense-mp-build`(멀티 테스트 앱 — 옛 판).
-- 저장소 밖: `~/GRD_motion_trial/`(고유_1~4묶음·초월_부가이펙트·초월_상시오라·_work 스크래치) · `~/Desktop/구랜디스킨모음/80_사운드/`(브금 원본·잘린 판) · `~/Desktop/구랜디_베타/`(배포판).
+- 저장소 밖: `~/grd/GRD_motion_trial/`(고유_1~4묶음·초월_부가이펙트·초월_상시오라·_work 스크래치) · `~/Desktop/구랜디스킨모음/80_사운드/`(브금 원본·잘린 판) · `~/Desktop/구랜디_베타/`(배포판).
 
 ## 6. 굳은 규칙·함정 (누적)
 - **새 컴포넌트가 Awake에서 UnitIdentity/OwnedByPlayer를 캐시하면 안 된다** — 소환 뒤에 붙는다(오라 설치기는 UnitIdentity.Active를 훑음).

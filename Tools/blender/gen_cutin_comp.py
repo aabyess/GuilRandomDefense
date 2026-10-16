@@ -1,9 +1,9 @@
 """상위 등급 뽑기 컷인 합성(2026-10-08, 사장님 시안). PIL+numpy — 시스템 파이썬으로: /usr/bin/python3 Tools/blender/gen_cutin_comp.py
 
-  입력: ~/GRD_cutin/render/{A_<유닛>_face.png, B_<유닛>_bust.png}  (gen_cutin_char.py가 만든 투명 PNG)
-  산출: ~/GRD_cutin/{A,B}_<유닛>_still.png(정점 프레임) · {A,B}_<유닛>.mp4(1920×1080 30fps 1.5초, 게임 화면 위) · layers/(층별 PNG — 등급색만 바꿔 다시 뽑는다)
+  입력: ~/grd/GRD_cutin/render/{A_<유닛>_face.png, B_<유닛>_bust.png}  (gen_cutin_char.py가 만든 투명 PNG)
+  산출: ~/grd/GRD_cutin/{A,B}_<유닛>_still.png(정점 프레임) · {A,B}_<유닛>.mp4(1920×1080 30fps 1.5초, 게임 화면 위) · layers/(층별 PNG — 등급색만 바꿔 다시 뽑는다)
   A안 = 단간론파 「논파」(집중선·먹물·붓글씨 별명·칼자국·기울인 얼굴) · B안 = 캐릭터 소개 카드(동심원 대리석·망점·먹 띠에 이름·흰 줄에 칭호·평행선·상반신)
-  폰트는 전부 OFL: East Sea Dokdo · Nanum Brush Script · Nanum Gothic ExtraBold · Black Han Sans (~/GRD_cutin/fonts, 구글 폰트 raw).
+  폰트는 전부 OFL: East Sea Dokdo · Nanum Brush Script · Nanum Gothic ExtraBold · Black Han Sans (~/grd/GRD_cutin/fonts, 구글 폰트 raw).
   등급색: Assets UnitData.GradeColor — 초월 청록(0.20,0.80,0.76) · 불멸 상아(0.95,0.93,0.80) · 영원 남색(0.22,0.28,0.72).
 """
 import math
@@ -15,7 +15,7 @@ import sys
 import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
-HOME = os.path.expanduser(os.environ.get("CUTIN_HOME", "~/GRD_cutin"))
+HOME = os.path.expanduser(os.environ.get("CUTIN_HOME", "~/grd/GRD_cutin"))
 FONTS = os.path.join(HOME, "fonts")
 W, H = 1920, 1080
 GAME = os.path.expanduser("~/GitHub/GuilRandomDefense/Docs/ui_mockups/compare/31_fubao_focus_on.png")
@@ -617,7 +617,7 @@ def roster_jobs():
 
 
 if __name__ == "__main__" and (len(sys.argv) > 1 and sys.argv[1] == "C"):
-    if len(sys.argv) > 2 and sys.argv[2] == "all":                     # 41기 일괄: ~/GRD_cutin/C_all/ + 정지 화면 모음
+    if len(sys.argv) > 2 and sys.argv[2] == "all":                     # 41기 일괄: ~/grd/GRD_cutin/C_all/ + 정지 화면 모음
         outdir = os.path.join(HOME, "C_all")
         os.makedirs(outdir, exist_ok=True)
         jobs = roster_jobs()

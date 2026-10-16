@@ -1772,7 +1772,7 @@ public static class ArtBinder
 
     public static string RebuildOwnControllersAll()
     {
-        string list = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "GRD_skin_swap/교체목록.csv");
+        string list = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "grd/GRD_skin_swap/교체목록.csv");
         var sb = new System.Text.StringBuilder();
         foreach (string line in System.IO.File.ReadAllLines(list).Skip(1))
         {

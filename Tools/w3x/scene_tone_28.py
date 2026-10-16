@@ -1,11 +1,11 @@
 """대체 폭발 조정 28건(10-14, blender, PM 지시): auto/의 대체 SuperBigExplosion(수명>2초 또는 배율>0.5)을 0.3배·1.2초로.
-  /usr/bin/python3 Tools/w3x/scene_tone_28.py [--apply]   기본은 ~/GRD_scenes/tone_28/{before,after}에만 쓰고 전/후 한 장 시트 compare.png 생성.
+  /usr/bin/python3 Tools/w3x/scene_tone_28.py [--apply]   기본은 ~/grd/GRD_scenes/tone_28/{before,after}에만 쓰고 전/후 한 장 시트 compare.png 생성.
   --apply: EXCEPT 목록을 뺀 나머지를 auto/에 덮음(원본은 tone_28/before에 있음)."""
 import json, os, glob, subprocess, sys
 from concurrent.futures import ThreadPoolExecutor
 from PIL import Image, ImageDraw, ImageFont
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE))
-H = os.path.expanduser("~"); A = H + "/GRD_scenes/auto"; T = H + "/GRD_scenes/tone_28"
+H = os.path.expanduser("~"); A = H + "/grd/GRD_scenes/auto"; T = H + "/grd/GRD_scenes/tone_28"
 SKIP = {"영원_김정래__tots_R"}
 EXCEPT = set(json.load(open(T + "/except.json"))) if os.path.exists(T + "/except.json") else set()
 F = lambda n: ImageFont.truetype("/System/Library/Fonts/AppleSDGothicNeo.ttc", n, index=0)

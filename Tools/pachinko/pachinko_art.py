@@ -1,9 +1,9 @@
 """30R 보스 파칭코 화면용 그림 재료(2026-10-14, blender): 숫자 심볼 1~9(+흐림판) · 글자 로고 6 · 기계 틀 + 릴 창 json.
 시안 3(claude.ai/artifact/Y1Lwz6UjzAzchRANw58ACR) 색감 그대로. 폰트: Dela Gothic One(OFL 1.1, Google Fonts) 전부. 그림은 전부 자체 제작(코드로 그림).
-  /usr/bin/python3 Tools/pachinko/pachinko_art.py [출력폴더=~/GRD_pachinko_art]   폰트는 <출력>/_fonts/DelaGothicOne-Regular.ttf"""
+  /usr/bin/python3 Tools/pachinko/pachinko_art.py [출력폴더=~/grd/GRD_pachinko_art]   폰트는 <출력>/_fonts/DelaGothicOne-Regular.ttf"""
 import json, math, os, sys
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
-OUT = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/GRD_pachinko_art")
+OUT = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/grd/GRD_pachinko_art")
 FONT = OUT + "/_fonts/DelaGothicOne-Regular.ttf"
 OUTLINE = (26, 7, 16, 255)
 def hexc(h): h = h.lstrip("#"); return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))

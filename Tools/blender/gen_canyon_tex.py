@@ -2,12 +2,12 @@
    canyon_strata.png — 절벽 지층. 가로(u)·세로(v) 모두 이음새 없이 반복, v 1장에 띠 7개.
    canyon_top.png    — 윗면 마른 적갈색 흙. 사방 이음새 없음, 풀 없음.
    미리보기: preview_strata_4x4.png / preview_top_4x4.png (4×4 타일)
-   blender -b --factory-startup --python Tools/blender/gen_canyon_tex.py -- [출력폴더, 기본 ~/GRD_canyon]
+   blender -b --factory-startup --python Tools/blender/gen_canyon_tex.py -- [출력폴더, 기본 ~/grd/GRD_canyon]
    (Blender 창에서는 exec(open(경로).read()) 로 돌려도 된다 — 그땐 기본 폴더.)
    이음새 없는 비결: 소음은 전부 FFT 필터 백색소음(자동 주기), 알갱이는 모듈로 감싸 그림.
 """
 import bpy, numpy as np, os, sys
-OUT = os.path.expanduser(sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else "~/GRD_canyon")
+OUT = os.path.expanduser(sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else "~/grd/GRD_canyon")
 os.makedirs(OUT, exist_ok=True)
 S = 1024
 

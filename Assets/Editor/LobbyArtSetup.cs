@@ -6,8 +6,8 @@ using UnityEngine;
 
 /// <summary>
 /// 첫 화면 시안(blender, 사장님 10-06 확정 「디자인 좋다 이대로 가자」) 재료를 Assets로 들인다. 호출: call LobbyArtSetup.Apply (다시 불러도 안전).
-///  · ~/GRD_lobby_art/{bg_1920x1080,bg_2560x1440}.png, ui/{btn_normal,btn_hover,btn_pressed,menu_frame,title_plate}.png → Assets/Resources/UI/Lobby/ (UI는 Sprite, 9-slice 테두리: 단추 좌우·상하 40 · 메뉴 틀 좌우 64·상하 160, 제목 판은 통짜)
-///  · ~/GRD_lobby_art/fonts/{songmyung,nanummyeongjo} → Assets/Fonts/Lobby/ (OFL.txt 동봉) + TMP 폰트 에셋 Assets/Resources/Fonts/{SongMyung,NanumMyeongjo-ExtraBold} SDF (Dynamic, 로비 글자 미리 굽기)
+///  · ~/grd/GRD_lobby_art/{bg_1920x1080,bg_2560x1440}.png, ui/{btn_normal,btn_hover,btn_pressed,menu_frame,title_plate}.png → Assets/Resources/UI/Lobby/ (UI는 Sprite, 9-slice 테두리: 단추 좌우·상하 40 · 메뉴 틀 좌우 64·상하 160, 제목 판은 통짜)
+///  · ~/grd/GRD_lobby_art/fonts/{songmyung,nanummyeongjo} → Assets/Fonts/Lobby/ (OFL.txt 동봉) + TMP 폰트 에셋 Assets/Resources/Fonts/{SongMyung,NanumMyeongjo-ExtraBold} SDF (Dynamic, 로비 글자 미리 굽기)
 /// 출처: 모두 SIL OFL 1.1 폰트(github.com/google/fonts) — Docs/CREDITS.md 참고.
 /// </summary>
 static class LobbyArtSetup
@@ -58,7 +58,7 @@ static class LobbyArtSetup
     static string Apply()
     {
         StringBuilder log = new StringBuilder();
-        string art = Path.Combine(Home, "GRD_lobby_art");
+        string art = Path.Combine(Home, "grd/GRD_lobby_art");
         Directory.CreateDirectory(ArtFolder);
         Directory.CreateDirectory(FontSourceFolder);
         foreach (string name in new[] { "bg_1920x1080.png", "bg_2560x1440.png" }) Copy(Path.Combine(art, name), $"{ArtFolder}/{name}", log);

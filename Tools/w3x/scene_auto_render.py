@@ -1,10 +1,10 @@
 """자동 대본 일괄 재현 렌더 + 시트(2026-10-09, blender). /usr/bin/python3 Tools/w3x/scene_auto_render.py [id접두 …]
-스냅샷 시각: 스폰 시각들 +0.12초를 고르게(최대 6장). 결과 ~/GRD_scenes/auto_render/<id>_sheet.png (+ <id>_n.png)."""
+스냅샷 시각: 스폰 시각들 +0.12초를 고르게(최대 6장). 결과 ~/grd/GRD_scenes/auto_render/<id>_sheet.png (+ <id>_n.png)."""
 import json, os, subprocess, sys
 from concurrent.futures import ThreadPoolExecutor
 from PIL import Image, ImageDraw, ImageFont
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE))
-H = os.path.expanduser("~"); S = os.environ.get("SCENE_OUT", H + "/GRD_scenes/auto"); R = os.environ.get("SCENE_RENDER", H + "/GRD_scenes/auto_render"); os.makedirs(R, exist_ok=True)
+H = os.path.expanduser("~"); S = os.environ.get("SCENE_OUT", H + "/grd/GRD_scenes/auto"); R = os.environ.get("SCENE_RENDER", H + "/grd/GRD_scenes/auto_render"); os.makedirs(R, exist_ok=True)
 F = lambda n: ImageFont.truetype("/System/Library/Fonts/AppleSDGothicNeo.ttc", n, index=0)
 def times_of(sc):
     ts = sorted({e["t"] for e in sc["timeline"] if e["op"] == "spawn"}); D = sc["durationSec"]

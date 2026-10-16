@@ -1,10 +1,10 @@
-"""파칭코 이펙트 그림 재료(10-14, blender): 투명 PNG를 ~/GRD_pachinko_art/fx/에. 전부 코드로 직접 그림(무료·외부 에셋 없음).
+"""파칭코 이펙트 그림 재료(10-14, blender): 투명 PNG를 ~/grd/GRD_pachinko_art/fx/에. 전부 코드로 직접 그림(무료·외부 에셋 없음).
   /usr/bin/python3 Tools/pachinko/fx_art.py [kagune brush streak speed clock butterfly spark]   (인자 없으면 전부)
 시드 고정 — 다시 돌려도 같은 그림."""
 import math, os, sys, random
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
-OUT = os.path.expanduser("~/GRD_pachinko_art/fx"); os.makedirs(OUT, exist_ok=True)
+OUT = os.path.expanduser("~/grd/GRD_pachinko_art/fx"); os.makedirs(OUT, exist_ok=True)
 SS = 2
 def bez(p, t):
     a = [(1 - t) ** 3, 3 * (1 - t) ** 2 * t, 3 * (1 - t) * t * t, t ** 3]

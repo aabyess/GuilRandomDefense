@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Blender 세션의 effects.json → 유니티 빌더가 읽는 납작한 JSON + 재료 복사.
 
-쓰는 법:  python3 Tools/sphere_art/flatten_effects.py <폴더(~/GRD_motion_trial/초월_부가이펙트/<로스터>)> <아스키 별칭> [로스터 이름]
+쓰는 법:  python3 Tools/sphere_art/flatten_effects.py <폴더(~/grd/GRD_motion_trial/초월_부가이펙트/<로스터>)> <아스키 별칭> [로스터 이름]
   · 읽음:   <폴더>/effects.json (스키마는 ../_effects_schema.md)
   · 씀:     Tools/sphere_art/effects/<로스터>.json  — Unity JsonUtility가 읽을 수 있는 고정 꼴(Newtonsoft 없음)
   · 복사:   FBX·텍스처 → Assets/Resources/Effects/Sphere/Src/<로스터>/ (Textures/ 하위 구조 유지)

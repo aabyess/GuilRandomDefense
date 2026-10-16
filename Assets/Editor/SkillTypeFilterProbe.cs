@@ -7,7 +7,7 @@ using UnityEditor;
 using UnityEngine;
 
 // 조합 검색 서랍 스킬 유형 필터 점검(구현담당2, 10-15)
-//  call SkillTypeFilterProbe.Counts  — 유형별 로스터 유닛 수 / 조합식 결과 유닛 수(+ 참고 분류) → ~/GRD_skilltype_counts.txt
+//  call SkillTypeFilterProbe.Counts  — 유형별 로스터 유닛 수 / 조합식 결과 유닛 수(+ 참고 분류) → ~/grd/GRD_skilltype_counts.txt
 //  call SkillTypeFilterProbe.Sample  — 유형마다 무작위 3기(이름·태그·자동 설명) 확인용 표
 //  플레이 중: call SkillTypeFilterProbe.Open / Chips:이름,이름 (서랍 열고 칩 켜기, gameshot용)
 static class SkillTypeFilterProbe
@@ -36,7 +36,7 @@ static class SkillTypeFilterProbe
         sb.Append("\n등급별 로스터 수 / 태그 하나라도 가진 수\n");
         foreach (var gr in all.GroupBy(u => u.grade))
             sb.Append($"{gr.Key,-16}{gr.Count(),5}{gr.Count(u => SkillTypeTags.Of(u) != SkillTypeTag.None),6}\n");
-        File.WriteAllText(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "GRD_skilltype_counts.txt"), sb.ToString());
+        File.WriteAllText(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "grd/GRD_skilltype_counts.txt"), sb.ToString());
         return "\n" + sb;
     }
 
@@ -56,8 +56,8 @@ static class SkillTypeFilterProbe
                 foreach (var s in u.skills.Take(8)) if (s != null) sb.Append($"\n     - {s.name.Replace("SkillData_", "")}: {PlayerFacingText.Summary(s)}");
             }
         }
-        File.WriteAllText(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "GRD_skilltype_samples.txt"), sb.ToString());
-        return $"표본을 ~/GRD_skilltype_samples.txt에 썼다({sb.Length}자)";
+        File.WriteAllText(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "grd/GRD_skilltype_samples.txt"), sb.ToString());
+        return $"표본을 ~/grd/GRD_skilltype_samples.txt에 썼다({sb.Length}자)";
     }
 
     // 특성 반영 전후 비교 + 특성 자산 현황: call SkillTypeFilterProbe.TraitDelta
@@ -86,7 +86,7 @@ static class SkillTypeFilterProbe
             int resWith = results.Count(u => (SkillTypeTags.Of(u) & t) != 0);
             sb.Append($"{t,-18}{skillOnly,12}{withTr,14}{resWith,12}\n");
         }
-        File.WriteAllText(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "GRD_skilltype_traitdelta.txt"), sb.ToString());
+        File.WriteAllText(Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "grd/GRD_skilltype_traitdelta.txt"), sb.ToString());
         return "\n" + sb;
     }
 

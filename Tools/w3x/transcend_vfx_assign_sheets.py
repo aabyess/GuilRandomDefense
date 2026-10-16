@@ -1,9 +1,9 @@
-"""배정 시트(유닛별 한 줄): 스킬 이름 밑에 배정 모델 실렌더. 입력 ~/GRD_orig_vfx_trial/assignment.csv + /tmp/ra/r_<모델>_<0-3>.png(render_fbx_real.py)."""
+"""배정 시트(유닛별 한 줄): 스킬 이름 밑에 배정 모델 실렌더. 입력 ~/grd/GRD_orig_vfx_trial/assignment.csv + /tmp/ra/r_<모델>_<0-3>.png(render_fbx_real.py)."""
 import csv, os, textwrap
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 GRADE = os.environ.get("GRADE", "초월"); TAG = {"초월": "transcend", "불멸": "immortal", "영원": "eternal"}[GRADE]
-H = os.path.expanduser("~"); T = H + "/GRD_orig_vfx_trial"; OUT = T + f"/assignment_sheets_{TAG}"; os.makedirs(OUT, exist_ok=True)
+H = os.path.expanduser("~"); T = H + "/grd/GRD_orig_vfx_trial"; OUT = T + f"/assignment_sheets_{TAG}"; os.makedirs(OUT, exist_ok=True)
 F = lambda s: ImageFont.truetype("/System/Library/Fonts/AppleSDGothicNeo.ttc", s, index=0)
 f14, f12, f18 = F(14), F(12), F(18)
 rows = list(csv.DictReader(open(T + f"/assignment_{TAG}.csv", encoding="utf-8-sig")))

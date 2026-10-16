@@ -1,11 +1,11 @@
 """워크래프트 기본 텍스처(맵 MPQ에 없음) 절차적 재현(2026-10-09, blender). /usr/bin/python3 Tools/w3x/gen_wc3_textures.py [--all]
 이름이 뜻하는 모양을 따른다: 글로=방사 그라데이션, 충격파=링, 번개=가지 있는 번쩍임, 별=뾰족 별, 구름·연기·먼지=부드러운 노이즈, 거품, 불 고리.
-RGB는 색×알파(=가산에서 검정 바탕), 알파=모양(블렌드에서 가장자리가 부드럽다). 출력: ~/GRD_blp_audit/placeholder_v2/<Assets 기준 상대 경로>.
+RGB는 색×알파(=가산에서 검정 바탕), 알파=모양(블렌드에서 가장자리가 부드럽다). 출력: ~/grd/GRD_blp_audit/placeholder_v2/<Assets 기준 상대 경로>.
 기본: 글로·충격파·번개 / --all: + 별·구름·연기·먼지·거품·불고리. Assets에는 쓰지 않는다."""
 import csv, math, os, random, re, sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
-H = os.path.expanduser("~"); OUT = H + "/GRD_blp_audit/placeholder_v2"
+H = os.path.expanduser("~"); OUT = H + "/grd/GRD_blp_audit/placeholder_v2"
 ALL = "--all" in sys.argv
 
 
@@ -175,7 +175,7 @@ def classify(n):
 
 
 if __name__ == "__main__":
-    base = [x for x in csv.reader(open(H + "/GRD_blp_audit/audit.csv", encoding="utf-8-sig"))][1:]
+    base = [x for x in csv.reader(open(H + "/grd/GRD_blp_audit/audit.csv", encoding="utf-8-sig"))][1:]
     want = {"glow", "shock", "light"} | ({"star", "cloud", "smoke", "dust", "foam", "firering"} if ALL else set())
     made = {}; n_files = 0
     for p, kind, *_ in base:

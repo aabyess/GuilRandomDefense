@@ -3,16 +3,16 @@
   /usr/bin/python3 Tools/w3x/transcend_vfx_assign.py
 입력: TRANSCEND_VFX_PAIRING2 표(후보 68) · SkillData(첫 레벨의 효과 대상·반경·직선·장판) · 창고 16 index.csv(모양 묶음·원작 역할) · 후보 모델 json(메시 없음=입자 전용 제외)
 규칙: ①같은 초월 유닛의 원작 캐릭터 후보 모델 안에서만 ②스킬 모양(단일·직선·범위·장판·연쇄·버프)과 모델 모양(묶음·원작 역할·이름 힌트) 점수 ③한 유닛 안 모델 중복 금지(모자라면 중복·표시) ④입자 전용 제외.
-산출: ~/GRD_orig_vfx_trial/assignment.csv (스킬·모델·모양 근거·확신)
+산출: ~/grd/GRD_orig_vfx_trial/assignment.csv (스킬·모델·모양 근거·확신)
 """
 import csv, glob, json, os, re, yaml
 
 H = os.path.expanduser("~")
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-T = H + "/GRD_orig_vfx_trial"
+T = H + "/grd/GRD_orig_vfx_trial"
 GRADE = os.environ.get("GRADE", "초월")                                    # 초월·불멸·영원
 TAG = {"초월": "transcend", "불멸": "immortal", "영원": "eternal"}[GRADE]
-cand = json.load(open(H + f"/GRD_motion_trial/{TAG}_vfx/candidates.json"))
+cand = json.load(open(H + f"/grd/GRD_motion_trial/{TAG}_vfx/candidates.json"))
 idx = {r["폴더 이름"]: r for r in csv.DictReader(open(H + "/Desktop/구랜디스킨모음/16_원랜디스킬/index.csv", encoding="utf-8-sig"))}
 P2 = ROOT + ("/Docs/research/TRANSCEND_VFX_PAIRING2_2026-10-09.csv" if GRADE == "초월" else f"/Docs/research/VFX_PAIRING2_{GRADE}_2026-10-09.csv")
 rows = [r for r in csv.DictReader(open(P2, encoding="utf-8-sig")) if r["구분"] == "후보(유닛 단위)"]
@@ -72,7 +72,7 @@ def model_shape(m):
 KW = [(r"번개|낙뢰|전기|썬더|라이트닝", r"thunder|lightning|zeus|bolt|laser|spark"), (r"불|화염|염|화재|폭발", r"fire|flame|burn|boom|explo"), (r"얼음|빙|냉", r"ice|frost|snow"),
       (r"검|참|베기|도|베", r"slash|sword|blade|cut|moon"), (r"바람|돌풍|폭풍", r"wind|tornado|storm|cyclone"), (r"독|안개|가스", r"poison|gas|smoke|toxic")]
 STRONG = {}
-for r in csv.DictReader(open(H + f"/GRD_motion_trial/{TAG}_vfx/pairing.csv", encoding="utf-8-sig")):
+for r in csv.DictReader(open(H + f"/grd/GRD_motion_trial/{TAG}_vfx/pairing.csv", encoding="utf-8-sig")):
     if "짝 없음" not in r["짝 근거"] and r["변환 상태"] == "변환됨":
         STRONG.setdefault(r["우리 스킬 에셋"], []).append(os.path.splitext(re.split(r"[\\/]", r["원작 이펙트 모델"])[-1])[0])
 def is_body(m):

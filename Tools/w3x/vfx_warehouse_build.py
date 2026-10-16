@@ -1,6 +1,6 @@
 """원랜디 창고 16_원랜디스킬 조립 (2026-10-08).
 
-  /usr/bin/python3 Tools/w3x/vfx_warehouse_build.py [작업폴더=~/GRD_motion_trial/original_vfx] [창고폴더=~/Desktop/구랜디스킨모음/16_원랜디스킬]
+  /usr/bin/python3 Tools/w3x/vfx_warehouse_build.py [작업폴더=~/grd/GRD_motion_trial/original_vfx] [창고폴더=~/Desktop/구랜디스킨모음/16_원랜디스킬]
 
 입력: <작업폴더>/models.json(vfx_warehouse_index.py) · fbx/<모델>/(export_mdx_anim_fbx.py) · verify.json(verify_mdx_fbx.py) · preview/(render_cast_vfx.py orig)
 산출(창고):
@@ -20,7 +20,7 @@ import sys
 
 from PIL import Image, ImageDraw, ImageFont
 
-W = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/GRD_motion_trial/original_vfx")
+W = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/grd/GRD_motion_trial/original_vfx")
 DST = os.path.expanduser(sys.argv[2] if len(sys.argv) > 2 else "~/Desktop/구랜디스킨모음/16_원랜디스킬")
 models = json.load(open(os.path.join(W, "models.json")))
 verify = {r["tag"]: r for r in json.load(open(os.path.join(W, "verify.json")))}

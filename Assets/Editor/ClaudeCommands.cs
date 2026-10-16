@@ -1365,7 +1365,7 @@ public static class ClaudeCommands
             else if (token.StartsWith("filmwait:")) job.filmLate = token.Substring(9);
             else if (token.StartsWith("film:"))
             {
-                // film:<초>:<fps> — 그 구간 매 프레임을 ~/GRD_showcase/frames/<판이름>/f_%05d.png로 저장(Time.captureFramerate 고정)
+                // film:<초>:<fps> — 그 구간 매 프레임을 ~/grd/GRD_showcase/frames/<판이름>/f_%05d.png로 저장(Time.captureFramerate 고정)
                 string[] fp = token.Substring(5).Split(':');
                 if (fp.Length != 2 || !float.TryParse(fp[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float fs) || fs <= 0f
                     || !int.TryParse(fp[1], out int ffps) || ffps < 1) return $"❌ film: 뒤엔 <초>:<fps>: {token}";
@@ -1537,7 +1537,7 @@ public static class ClaudeCommands
         filmFps = int.Parse(fps);
         filmFrames = Mathf.CeilToInt(float.Parse(secs, System.Globalization.CultureInfo.InvariantCulture) * filmFps);
         string baseName = Path.GetFileNameWithoutExtension(job.file ?? "film");
-        filmDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "GRD_showcase", "frames", baseName);
+        filmDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "grd/GRD_showcase", "frames", baseName);
         if (Directory.Exists(filmDir)) Directory.Delete(filmDir, true);
         Directory.CreateDirectory(filmDir);
         filmLastFrame = -1;

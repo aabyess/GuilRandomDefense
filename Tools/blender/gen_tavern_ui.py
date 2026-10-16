@@ -1,5 +1,5 @@
 """선술집 톤 게임 UI 그림 한 벌(blender 세션 2026-10-06, 사장님 「조합 검색 서랍·하단 UI 바도 선술집으로」). PIL 2D. 글자 없음.
-/usr/bin/python3 Tools/blender/gen_tavern_ui.py [~/GRD_tavern_ui]   (gen_settings_panel.py의 나무·쇠 도우미를 가져다 쓴다)
+/usr/bin/python3 Tools/blender/gen_tavern_ui.py [~/grd/GRD_tavern_ui]   (gen_settings_panel.py의 나무·쇠 도우미를 가져다 쓴다)
 산출·9-slice 테두리는 README.md 표. preview_bottom_bar.png · preview_drawer.png (1920×1080)."""
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageFilter
 import gen_settings_panel as G
 from gen_settings_panel import wood, add_planks_gaps, disc, iron_plate, rounded_mask, bevel, fnoise
 
-OUT = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else '~/GRD_tavern_ui'); os.makedirs(OUT, exist_ok=True)
+OUT = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else '~/grd/GRD_tavern_ui'); os.makedirs(OUT, exist_ok=True)
 G.OUT = OUT
 U8 = lambda a: (np.clip(a, 0, 1) * 255).astype(np.uint8)
 
@@ -126,7 +126,7 @@ def slice9(src, w, h, bl, bt=None, br=None, bb=None):
 L = lambda n: Image.open(f'{OUT}/{n}.png').convert('RGBA')
 
 def previews():
-    bgp = os.path.expanduser('~/GRD_lobby_art/bg_1920x1080.png')
+    bgp = os.path.expanduser('~/grd/GRD_lobby_art/bg_1920x1080.png')
     base = Image.open(bgp).convert('RGBA') if os.path.exists(bgp) else Image.new('RGBA', (1920, 1080), (30, 20, 16, 255))
     # --- 하단 바
     im = base.copy(); bar = slice9(L('bar_bottom_9slice'), 1920, 250, 0, 44, 0, 8); im.alpha_composite(bar, (0, 830))

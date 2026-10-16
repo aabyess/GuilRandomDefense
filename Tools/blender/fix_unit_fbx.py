@@ -7633,7 +7633,7 @@ def fix(name, cfg, out_dir=None, save_blend=False):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 🔸 고유 동작 넓히기 준비 2차(2026-09-30 밤, PM 지시) — 「이름@동작」으로 Assets 밖(~/GRD_motion_trial/<이름>/)에 뽑는다. 기본 항목은 그대로.
+# 🔸 고유 동작 넓히기 준비 2차(2026-09-30 밤, PM 지시) — 「이름@동작」으로 Assets 밖(~/grd/GRD_motion_trial/<이름>/)에 뽑는다. 기본 항목은 그대로.
 #   아홉 유닛 전부 원본 클립에 **뼈 위치까지 같은 중복이 없다**(dedupe 실측). 계열별로 원본 이름 → 우리 이름 표만 다르다.
 #   공통: 기준 = Idle 첫 프레임(clip_anchor) · Idle*/Move*를 뺀 전부 골반 수평 제자리(clip_inplace, 높이는 그대로) ·
 #         Attack은 제자리가 기본, 원본 그대로는 Attack_Lunge · 채워 넣은 꼬리는 clip_trim_tail.
@@ -7770,7 +7770,7 @@ UNITS["박민수"]["rigid_meshes"] = {"face_normal": "mixamorig:Head", "l_handle
 UNITS["박민수"].update(_motion_variant(_BL(_pl("pl_momonosuke_orig01")), clip_floor_feet=True))
 
 
-# 🔸 고유 동작판 5묶음(2026-10-03, PM 지시 — 전수조사에서 보류해 둔 「쓸 만함」 여섯 중 fix_unit_fbx 쪽 다섯). 「이름@동작」 변형으로 Assets 밖(~/GRD_motion_trial/고유_5묶음/)에만 뽑는다.
+# 🔸 고유 동작판 5묶음(2026-10-03, PM 지시 — 전수조사에서 보류해 둔 「쓸 만함」 여섯 중 fix_unit_fbx 쪽 다섯). 「이름@동작」 변형으로 Assets 밖(~/grd/GRD_motion_trial/고유_5묶음/)에만 뽑는다.
 #   히든_전유라는 gen_biped_skin 판이라 그쪽 파일에서 처리한다. 클립이 적어 Move가 없는 셋은 이호준식(Idle·Attack만).
 UNITS["특별함_조세민"]["variants"] = {"동작": _motion_variant(_BL({
     "pl_mr5five_orig01_idlehome_a": "Idle", "pl_mr5five_orig01_skill_a": "Attack", "pl_mr5five_orig01_victory_lp": "Win_Loop"}), lunge=False)}

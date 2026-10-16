@@ -1,13 +1,13 @@
 """로비 배경 후처리 + 합성 시안(2026-10-06, blender 세션). gen_lobby_art.py의 렌더(bg_raw_2560.png)를 받아
    꽃·비네트·색조·오른쪽 가라앉힘·필름 입자를 입히고 bg_2560x1440.png · bg_1920x1080.png를 만든 뒤
    gen_lobby_ui.py의 단추·틀·제목 판을 얹은 1600×900 시안(mockup_1600x900.png)을 만든다. 시스템 파이썬:
-   /usr/bin/python3 Tools/blender/gen_lobby_post.py [작업폴더 ~/GRD_lobby_art]
+   /usr/bin/python3 Tools/blender/gen_lobby_post.py [작업폴더 ~/grd/GRD_lobby_art]
 """
 import os, sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-D = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else '~/GRD_lobby_art')
+D = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else '~/grd/GRD_lobby_art')
 FONT_MAIN = D + '/fonts/nanummyeongjo/NanumMyeongjo-ExtraBold.ttf'
 FONT_TITLE = D + '/fonts/songmyung/SongMyung-Regular.ttf'
 rng = np.random.RandomState(7)

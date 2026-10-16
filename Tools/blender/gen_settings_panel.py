@@ -1,12 +1,12 @@
 """첫 화면 설정 창 판 — 선술집 나무 간판/게시판(blender 세션 2026-10-06, 사장님 「너무 각지다」). PIL·numpy 2D 그림(렌더 루프를 안 끊게 가볍게).
-/usr/bin/python3 Tools/blender/gen_settings_panel.py [~/GRD_settings_panel]
+/usr/bin/python3 Tools/blender/gen_settings_panel.py [~/grd/GRD_settings_panel]
 산출: panel_9slice.png(1024², 투명 배경 · 9-slice 테두리 128px) · nameplate.png(512×160) · slider_groove.png(512×48) · slider_knob_rivet.png / slider_knob_mug.png(64²) · preview.png(1280×720). 글자는 안 굽는다(UI가 얹음).
 """
 import os, sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
-OUT = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else '~/GRD_settings_panel'); os.makedirs(OUT, exist_ok=True)
+OUT = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else '~/grd/GRD_settings_panel'); os.makedirs(OUT, exist_ok=True)
 rng = np.random.RandomState(1006)
 SLICE = 128
 
@@ -189,7 +189,7 @@ def slice9(src, w, h, b=SLICE):
     return out
 
 def build_preview():
-    bgp = os.path.expanduser('~/GRD_lobby_art/bg_1920x1080.png')
+    bgp = os.path.expanduser('~/grd/GRD_lobby_art/bg_1920x1080.png')
     bg = Image.open(bgp).convert('RGBA').resize((1280, 720), Image.LANCZOS) if os.path.exists(bgp) else Image.new('RGBA', (1280, 720), (40, 24, 20, 255))
     bg = Image.alpha_composite(bg, Image.new('RGBA', (1280, 720), (0, 0, 0, 120)))
     panel = Image.open(OUT + '/panel_9slice.png'); pw_, ph_ = 560, 480

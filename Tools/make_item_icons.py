@@ -2,8 +2,8 @@
 """아이템 아이콘 35개(워크3 기본 아이콘 자리)를 game-icons.net(CC BY 3.0 / CC0) 그림으로 만든다 — 2026-10-04 사장님 「무료 아이콘으로 채운다」.
 
 돌리기:  /usr/bin/python3 Tools/make_item_icons.py          (Pillow는 /usr/bin/python3에만 있다. cairosvg 없이 macOS qlmanage로 SVG→PNG)
-입력:    https://raw.githubusercontent.com/game-icons/icons/master/<작가>/<이름>.svg  (내려받아 ~/GRD_motion_trial/아이템아이콘/_svg/에 둔다)
-출력:    ~/GRD_motion_trial/아이템아이콘/I0xx_<이름>.png (64×64) · 128/I0xx_<이름>.png (128×128) · _sheet.png(35개 한 장) · credits.md
+입력:    https://raw.githubusercontent.com/game-icons/icons/master/<작가>/<이름>.svg  (내려받아 ~/grd/GRD_motion_trial/아이템아이콘/_svg/에 둔다)
+출력:    ~/grd/GRD_motion_trial/아이템아이콘/I0xx_<이름>.png (64×64) · 128/I0xx_<이름>.png (128×128) · _sheet.png(35개 한 장) · credits.md
          맵에서 꺼낸 원작 3개(I00H·I00T·I00Y)는 건드리지 않는다.
 LinkItemIcons(ItemIconLinker)가 이 폴더의 I*.png를 코드로 매칭해 Assets/Art/Items/로 복사·연결한다.
 워크3 버튼 느낌: 어두운 색조 바탕 + 아이템 성격별 색의 그림 + 그림자 + 베벨 테두리.
@@ -11,7 +11,7 @@ LinkItemIcons(ItemIconLinker)가 이 폴더의 I*.png를 코드로 매칭해 Ass
 import os, subprocess, sys, urllib.request, tempfile, shutil
 from PIL import Image, ImageDraw, ImageFilter, ImageChops, ImageFont
 
-OUT = os.path.expanduser('~/GRD_motion_trial/아이템아이콘')
+OUT = os.path.expanduser('~/grd/GRD_motion_trial/아이템아이콘')
 SVG = os.path.join(OUT, '_svg')
 BASE = 'https://raw.githubusercontent.com/game-icons/icons/master/'
 

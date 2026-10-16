@@ -3,7 +3,7 @@
 #   a: 빅맘 구름(bigmom7) 빼기
 #   b: a + 마르코 날개(mrk7) 0.6배
 #   none: 원래대로
-B=~/GRD_motion_trial/초월_부가이펙트
+B=~/grd/GRD_motion_trial/초월_부가이펙트
 H=$(dirname "$0")/flatten_effects.py
 P=/usr/bin/python3
 case "$1" in

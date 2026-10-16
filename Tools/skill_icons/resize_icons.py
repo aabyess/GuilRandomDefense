@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """스킬 아이콘 PNG를 128×128로 줄여 Assets/Art/SkillIcons/에 둔다(10-06 구현담당2).
 
-표(Tools/skill_icons/skill_icon_map.csv)의 「png」 열에 적힌 것만, ~/GRD_skill_icons/ 에서 읽어
+표(Tools/skill_icons/skill_icon_map.csv)의 「png」 열에 적힌 것만, ~/grd/GRD_skill_icons/ 에서 읽어
 SkillIconLinker.Safe()와 같은 규칙(# & ! [ ] → _)으로 파일 이름을 바꿔 쓴다. 다시 돌려도 안전(덮어씀).
 실행: /usr/bin/python3 Tools/skill_icons/resize_icons.py   (Pillow 필요)
 """
@@ -9,7 +9,7 @@ import csv, os, sys
 from PIL import Image
 
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-src = os.path.expanduser("~/GRD_skill_icons")
+src = os.path.expanduser("~/grd/GRD_skill_icons")
 dst = os.path.join(root, "Assets/Art/SkillIcons")
 os.makedirs(dst, exist_ok=True)
 

@@ -1,6 +1,6 @@
 """초월 유닛의 「스킬 쓸 때 터지는 이펙트」 목록 조사(2026-10-08, 사장님 지시).
 
-  /usr/bin/python3 Tools/w3x/cast_vfx_survey.py [출력폴더]      (기본 ~/GRD_cast_vfx_trial/)
+  /usr/bin/python3 Tools/w3x/cast_vfx_survey.py [출력폴더]      (기본 ~/grd/GRD_cast_vfx_trial/)
 
 흐름: 초월 로스터(ATTACK_REINSTALL_TABLE의 H코드) → war3map.j의 Trig_AttackHashTable(H코드→공격 트리거) → 그 트리거가 부르는
 스킬 트리거 닫힌 사슬(ConditionalTriggerExecute/TriggerExecute) → 각 트리거 계열(`Trig_<이름>_*` 함수)에서
@@ -25,10 +25,10 @@ import w3a                                                           # noqa: E40
 import w3u                                                           # noqa: E402
 from mpqread import Archive                                          # noqa: E402
 
-OUT = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/GRD_cast_vfx_trial")
+OUT = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/grd/GRD_cast_vfx_trial")
 GRADE = sys.argv[2] if len(sys.argv) > 2 else "초월"                  # 초월(기본)·불멸·영원 — 10-09 확장: 불멸·영원은 ORIGINAL_MATCH_NAMES 표의 원작 유닛 H코드를 쓴다
 os.makedirs(OUT, exist_ok=True)
-MPQ = os.path.expanduser("~/GRD_motion_trial/_work/ord.mpq")
+MPQ = os.path.expanduser("~/grd/GRD_motion_trial/_work/ord.mpq")
 J = open(os.path.join(HERE, "원본/풀린것/war3map.j"), encoding="utf8", errors="replace").read()
 UNITS = {u["id"]: u["mods"] for u in w3u.parse(os.path.join(HERE, "원본/풀린것/war3map.w3u"))}
 ABIL = {a["id"]: {m["field"]: m["value"] for m in a["mods"]} for a in w3a.parse(os.path.join(HERE, "원본/풀린것/war3map.w3a"))}
@@ -405,7 +405,7 @@ def tanim(e):
 lines = []
 w = lines.append
 w("# 초월 유닛 스킬 시전 이펙트 — 원작 MDX 목록 (2026-10-08)\n")
-w("blender 세션 조사(PM 지시·사장님 요청). **코드·Assets 변경 없음.** 생성: `Tools/w3x/cast_vfx_survey.py`(재실행 가능) → `~/GRD_cast_vfx_trial/survey.json`.\n")
+w("blender 세션 조사(PM 지시·사장님 요청). **코드·Assets 변경 없음.** 생성: `Tools/w3x/cast_vfx_survey.py`(재실행 가능) → `~/grd/GRD_cast_vfx_trial/survey.json`.\n")
 w("## 읽는 법·방법·한계\n")
 w("- **유닛 ↔ 원작**: `ATTACK_REINSTALL_TABLE_2026-10-07.tsv`의 H코드(초월 25종 중 21종에 대응). 대응 없음 4종(김건·박민석·엄태웅·이재윤)은 원작 이펙트가 없어 맨 아래 따로 적는다.")
 w("- **원작 스킬 = 트리거 사슬**: `war3map.j`의 `Trig_AttackHashTable`이 H코드 → 공격 트리거(`gg_trg_X_Attack`)를 저장한다. 그 트리거가 `ConditionalTriggerExecute`/`TriggerExecute`로 부르는 스킬 트리거를 끝까지 따라가 (호출자 닫힌 사슬) 각 계열(`Trig_<이름>_*` 함수)에서 이펙트를 뽑았다. **사슬 밖에서 도는 트리거(타이머 등)는 못 잡는다**[한계].")

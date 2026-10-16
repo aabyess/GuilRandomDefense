@@ -1,6 +1,6 @@
 """원작 맵(ORD11.089)에 들어 있는 커스텀 파일 목록 조사 (2026-10-08, PM 지시 「원랜디 창고 ①」).
 
-  /usr/bin/python3 Tools/w3x/original_asset_inventory.py [출력폴더=~/GRD_motion_trial/inventory]
+  /usr/bin/python3 Tools/w3x/original_asset_inventory.py [출력폴더=~/grd/GRD_motion_trial/inventory]
 
 원작은 보호 맵이라 `(listfile)`이 없어 **이름을 알아야** 꺼낸다. 그래서 이름을 여러 곳에서 모은다:
   ① 맵 데이터 파일(w3u w3a w3t w3b w3d w3q w3h w3i wts doo, war3mapSkin/Misc/Extra.txt)의 문자열 전부에서 파일 경로꼴
@@ -26,10 +26,10 @@ import w3u                                                           # noqa: E40
 import wts                                                           # noqa: E402
 from mpqread import Archive                                          # noqa: E402
 
-OUT = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/GRD_motion_trial/inventory")
+OUT = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/grd/GRD_motion_trial/inventory")
 os.makedirs(OUT, exist_ok=True)
 SRC = os.path.join(HERE, "원본", "풀린것")
-ARC = Archive(os.path.expanduser("~/GRD_motion_trial/_work/ord.mpq"))
+ARC = Archive(os.path.expanduser("~/grd/GRD_motion_trial/_work/ord.mpq"))
 EXT = r"mdx|mdl|blp|tga|wav|mp3|mid|midi|flac|ogg|pcx|dds|slk|txt|fdf|toc|w3a|w3u|w3e|jpg|bmp|ini|mpq|j|ai|lua"
 PATH_RE = re.compile(rb"[ -~]{0,200}?\.(?:%s)\b" % EXT.encode(), re.I)
 STR_RE = re.compile(r'"((?:[^"\\]|\\.)*)"')

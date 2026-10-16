@@ -1,12 +1,12 @@
 """고유 동작 전수조사 1단계(2026-10-01): 구랜디스킨모음의 유닛·적 원본을 풀어 **모델 파일 목록(jobs.json)**을 만든다. 시스템 python.
 
-  python3 Tools/blender/survey_extract.py   →  ~/GRD_motion_trial/_work/survey/{x/…(풀린 것), jobs.json}
+  python3 Tools/blender/survey_extract.py   →  ~/grd/GRD_motion_trial/_work/survey/{x/…(풀린 것), jobs.json}
 유닛 이름(Assets/Art/Units/*)이 상대 경로에 들어 있는 파일을 그 유닛의 원본으로 본다(+ 90_적유닛 전부는 경로 이름으로). 압축은 bsdtar로 두 겹까지 푼다.
 """
 import hashlib, json, os, subprocess, sys
 R = os.path.expanduser("~/Desktop/구랜디스킨모음")
 PROJECT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-W = os.path.expanduser("~/GRD_motion_trial/_work/survey")
+W = os.path.expanduser("~/grd/GRD_motion_trial/_work/survey")
 MODEL = (".fbx", ".glb", ".gltf")
 ARCH = (".zip", ".rar", ".7z")
 SKIP_DIRS = ("/00_다운로드원본", "/99_")

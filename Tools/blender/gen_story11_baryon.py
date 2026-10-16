@@ -24,7 +24,7 @@ MIN_ISLAND = 0.02          # 가장 큰 덩어리 면 수 대비 이 비율 미�
 
 def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    out = os.path.expanduser("~/GRD_motion_trial/Story11_바리온")
+    out = os.path.expanduser("~/grd/GRD_motion_trial/Story11_바리온")
     it = iter(args)
     for a in it:
         if a == "--out":

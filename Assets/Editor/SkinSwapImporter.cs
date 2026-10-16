@@ -7,15 +7,15 @@ using UnityEngine;
 
 /// <summary>
 /// 원작 스킨 교체 반입(10-09 사장님 「초월 유닛 겉모습을 원작 모델로」, 범위 (가) = 겉모습·동작·연출만, 스킬 효과·수치·이름은 그대로):
-/// ~/GRD_skin_swap/&lt;유닛&gt;_&lt;원작&gt;/ (blender: model/ FBX·Textures·json · clip_map.json · scripts/ · pairing.csv)를 한 유닛씩 넣는다.
+/// ~/grd/GRD_skin_swap/&lt;유닛&gt;_&lt;원작&gt;/ (blender: model/ FBX·Textures·json · clip_map.json · scripts/ · pairing.csv)를 한 유닛씩 넣는다.
 /// 절차(Docs/process/SKIN_SWAP.md): ①옛 FBX·.meta 삭제(T자 함정) ②새 FBX·Textures·clip_map.json 복사 ③Generic 임포트 + 클립 이름 붙이기(Idle·Move·Attack…·Spell·Death)
 /// ④텍스처 연결 ⑤프리팹 한 개만 다시 짓기(ArtBinder.BindOneUnit) + 숨김 메시 컴포넌트 ⑥연출 대본 반입·짝 연결.
 /// 호출: call SkinSwapImporter.SwapOne  (ClaudeBridge/g2_swap.txt = 「초월_김경현_AP|김경현_상디」) · SwapAll(교체목록.csv의 우리 로스터 ↔ 폴더 자동).
 /// </summary>
 public static class SkinSwapImporter
 {
-    static readonly string PackRoot = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "GRD_skin_swap");
-    public static readonly string SwapScriptRoot = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "GRD_scenes/scripts_swap");
+    static readonly string PackRoot = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "grd/GRD_skin_swap");
+    public static readonly string SwapScriptRoot = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "grd/GRD_scenes/scripts_swap");
     const string UnitRoot = "Assets/Art/Units";
 
     [MenuItem("Tools/아트/원작 스킨 교체 반입(전부)")]

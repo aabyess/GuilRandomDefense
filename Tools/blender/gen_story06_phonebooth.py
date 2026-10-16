@@ -28,7 +28,7 @@ ALBEDO = {"Booth": "phonebooth_Booth_AlbedoTransparency_sRGB.png", "other": "pho
 
 def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    out = os.path.expanduser("~/GRD_motion_trial/Story06_전화부스")
+    out = os.path.expanduser("~/grd/GRD_motion_trial/Story06_전화부스")
     rot = -90.0                                   # 전화기·문 쪽이 원본 +X → 정면 −Y로
     it = iter(args)
     for a in it:

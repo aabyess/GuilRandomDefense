@@ -1,8 +1,8 @@
 """원랜디 창고 16(스킬/이펙트 모델)·15(스킨)용 색인 만들기 (2026-10-08).
 
-  /usr/bin/python3 Tools/w3x/vfx_warehouse_index.py [작업폴더=~/GRD_motion_trial/original_vfx]
+  /usr/bin/python3 Tools/w3x/vfx_warehouse_index.py [작업폴더=~/grd/GRD_motion_trial/original_vfx]
 
-입력: original_asset_inventory.py가 낸 ~/GRD_motion_trial/inventory/inventory.json + 원작 w3u·w3a·war3map.j.
+입력: original_asset_inventory.py가 낸 ~/grd/GRD_motion_trial/inventory/inventory.json + 원작 w3u·w3a·war3map.j.
 산출: <작업폴더>/models.json — 맵 안 모델 전부(캐릭터 182 제외 = 「16」 대상, 캐릭터 = 「15」 대상)의
   파일·모양 묶음·참조처(w3u 더미/투사체 · w3a 능력 · j 트리거)·주인 유닛(H코드+이름)·텍스처 목록.
 모양 묶음: 모델 이름+텍스처 이름 키워드 투표(cast_vfx_survey.SHAPES와 같은 표) — 이름 추정이라 틀릴 수 있다.
@@ -22,11 +22,11 @@ import w3u                                                           # noqa: E40
 import wts                                                           # noqa: E402
 from mpqread import Archive                                          # noqa: E402
 
-W = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/GRD_motion_trial/original_vfx")
+W = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/grd/GRD_motion_trial/original_vfx")
 os.makedirs(W, exist_ok=True)
 SRC = os.path.join(HERE, "원본", "풀린것")
-INV = json.load(open(os.path.expanduser("~/GRD_motion_trial/inventory/inventory.json")))
-ARC = Archive(os.path.expanduser("~/GRD_motion_trial/_work/ord.mpq"))
+INV = json.load(open(os.path.expanduser("~/grd/GRD_motion_trial/inventory/inventory.json")))
+ARC = Archive(os.path.expanduser("~/grd/GRD_motion_trial/_work/ord.mpq"))
 S = wts.parse(os.path.join(HERE, "원본", "war3map_new.wts"))
 strip = lambda v: re.sub(r"\|[cC][0-9a-fA-F]{8}|\|[rR]", "", v)                                  # noqa: E731
 J = open(os.path.join(SRC, "war3map.j"), encoding="utf8", errors="replace").read()

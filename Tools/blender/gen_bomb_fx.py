@@ -1,5 +1,5 @@
 """초월 엄태웅 「폭탄제조」 폭발 이펙트 시안 (blender 세션 2026-10-06). 반경 = 1(게임 반경 500 대응), 지면 Z=0.
-헤드리스(정본): blender -b --factory-startup --python Tools/blender/gen_bomb_fx.py -- ~/GRD_bomb_fx
+헤드리스(정본): blender -b --factory-startup --python Tools/blender/gen_bomb_fx.py -- ~/grd/GRD_bomb_fx
 산출: frames/bomb_NN.png(14장 · 1·14번은 빈 장) · bomb_sheet.png(접사진) · 파츠 설명은 README.md. 유니티 연결은 PM/구현담당.
 구성: ①지면 섬광 ②불덩이(주황→붉은 암색, 부풀다 식음) ③충격파 고리 ④파편 ⑤연기 기둥 ⑥땅 균열 자국.
 """
@@ -7,7 +7,7 @@ import math, os, random, sys
 import bpy
 from mathutils import Vector
 
-out = os.path.expanduser(sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else "~/GRD_bomb_fx")
+out = os.path.expanduser(sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else "~/grd/GRD_bomb_fx")
 os.makedirs(out + "/frames", exist_ok=True)
 random.seed(7)
 N = 12

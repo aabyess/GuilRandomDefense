@@ -7,7 +7,7 @@
 좌표는 게임 단위(1/11.4로 줄여 m). 셰이더·굽기·내보내기는 shops_common 그대로.
 
 화면 없이(정본):  blender --background --factory-startup --python gen_shops_v2.py [-- 상점_도박소 ...]
-결과: ~/GRD_motion_trial/상점_7채/<이름>.fbx, Textures/<재질>.png   (환경변수 SHOPS_OUT으로 바꿈)
+결과: ~/grd/GRD_motion_trial/상점_7채/<이름>.fbx, Textures/<재질>.png   (환경변수 SHOPS_OUT으로 바꿈)
 """
 import math
 import os
@@ -24,7 +24,7 @@ import shops_common  # noqa: E402
 from shops_common import (Builder, _bricks, _link, _math, _mix, _node, _noise, _ramp,  # noqa: E402
                           register_shader, run)
 
-OUT = os.environ.get("SHOPS_OUT") or os.path.expanduser("~/GRD_motion_trial/상점_7채")
+OUT = os.environ.get("SHOPS_OUT") or os.path.expanduser("~/grd/GRD_motion_trial/상점_7채")
 
 # 지붕 색(옛 ROOF_TONES 위에 덮어씀 — 이번 판에서 쓰는 가게만)
 shops_common.ROOF_TONES.update({

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """연출 대본 자동 검사 드라이버(10-09): 대본마다 반입 → 게임 판에서 재생 → 6점 캡처 → 픽셀 판정 → 통과/실패 표.
-사용: /usr/bin/python3 Tools/cinematics/auto_check.py [id ...]   (id 없으면 ~/GRD_scenes/scripts 전부)
+사용: /usr/bin/python3 Tools/cinematics/auto_check.py [id ...]   (id 없으면 ~/grd/GRD_scenes/scripts 전부)
 브리지(ClaudeBridge/inbox·outbox, 접두 g2_)로 에디터를 부른다 — 에디터 순번을 가진 세션에서만 돌릴 것.
 판정(한 대본 6프레임, 같은 판의 재생 전 기준 사진 대비 HUD를 뺀 가운데 영역):
   보임 ≥ 1% 픽셀 변화 · 화면 덮음 ≤ 55%(변화 픽셀 비율 최대) · 검은 판 ≤ 6%(기준에선 밝았는데 어두워진 픽셀).
@@ -11,7 +11,7 @@ from PIL import Image
 
 ROOT = os.getcwd()
 BRIDGE = os.path.join(ROOT, 'ClaudeBridge')
-SCRIPTS = os.path.expanduser('~/GRD_scenes/scripts')
+SCRIPTS = os.path.expanduser('~/grd/GRD_scenes/scripts')
 CROP = (260, 60, 1660, 780)
 COVER_MAX, VISIBLE_MIN, BLACK_MAX = 0.55, 0.01, 0.06
 

@@ -7,7 +7,7 @@
 """
 import csv, glob, json, os, re, shutil, sys
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
-H = os.path.expanduser("~"); T = H + "/GRD_orig_vfx_trial"
+H = os.path.expanduser("~"); T = H + "/grd/GRD_orig_vfx_trial"
 MODE = sys.argv[1]
 src = open(HERE + "/cast_vfx_survey.py", encoding="utf8").read()
 sys.argv = ["x", "/tmp/_lg"]                                         # 조사 도구의 앞 절반(JASS·능력·모델 분석 함수)만 재사용

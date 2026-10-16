@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """blender 컷인 레이어(1920×1080 투명 PNG) → 게임 반입 형식(투명 여백 잘라 낸 작은 PNG + 배치 json).
 
-  /usr/bin/python3 Tools/cutin/import_cutin.py [--src ~/GRD_cutin_swap/layers]  (10-09 스킨 교체판이 정본, ~/GRD_cutin/layers는 옛 원본판 15기 섞임) [--out Assets/Resources/Cutin] [--dry]
+  /usr/bin/python3 Tools/cutin/import_cutin.py [--src ~/grd/GRD_cutin_swap/layers]  (10-09 스킨 교체판이 정본, ~/grd/GRD_cutin/layers는 옛 원본판 15기 섞임) [--out Assets/Resources/Cutin] [--dry]
 
 규칙(PM 10-08 승인):
   · 등급(초월·불멸·영원)마다 같은 레이어(flat·halftone·ring·streak·stripes·band)는 해시로 확인해 한 벌만
@@ -66,7 +66,7 @@ def flat_color(path):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--src", default=os.path.expanduser("~/GRD_cutin_swap/layers"))
+    ap.add_argument("--src", default=os.path.expanduser("~/grd/GRD_cutin_swap/layers"))
     ap.add_argument("--out", default="Assets/Resources/Cutin")
     ap.add_argument("--dry", action="store_true", help="파일을 쓰지 않고 용량만 계산")
     args = ap.parse_args()

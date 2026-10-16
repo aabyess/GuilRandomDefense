@@ -1,6 +1,6 @@
 """첫 화면(로비) 워크3풍 UI 재료 — 단추 9-slice 3종 · 메뉴 틀 9-slice · 제목 판(2026-10-06, blender 세션).
    전부 절차 생성(numpy+Pillow, 외부 에셋 없음). 시스템 파이썬으로 돈다:  /usr/bin/python3 Tools/blender/gen_lobby_ui.py [출력폴더]
-   기본 출력 ~/GRD_lobby_art/ui/  (Assets엔 안 씀)
+   기본 출력 ~/grd/GRD_lobby_art/ui/  (Assets엔 안 씀)
      btn_normal.png · btn_hover.png · btn_pressed.png   512×128   9-slice 테두리(보더) 좌우 40 · 상하 40
      menu_frame.png                                      512×1024  9-slice 테두리 좌우 64 · 상 160 · 하 160
      title_plate.png                                     1400×300 투명 — 글자 없음(유니티 폰트로 얹는다)
@@ -10,7 +10,7 @@ import os, sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
-OUT = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else '~/GRD_lobby_art/ui')
+OUT = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else '~/grd/GRD_lobby_art/ui')
 os.makedirs(OUT, exist_ok=True)
 rng = np.random.RandomState(11)
 

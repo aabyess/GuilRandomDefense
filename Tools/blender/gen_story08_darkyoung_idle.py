@@ -19,7 +19,7 @@ TEX = {"Core": "Core_Color.png", "Dant": "Dant_Color.png"}
 
 def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    out = os.path.expanduser("~/GRD_motion_trial/스토리8_DarkYoung/대기동작판")
+    out = os.path.expanduser("~/grd/GRD_motion_trial/스토리8_DarkYoung/대기동작판")
     if "--out" in args:
         out = args[args.index("--out") + 1]
     bright = float(args[args.index("--bright") + 1]) if "--bright" in args else None   # 정적판과 같은 의미: 거의 검정인 텍스처의 바닥 sRGB 명도

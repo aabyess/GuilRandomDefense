@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """신작(S2) 등급별 매칭 시트(2026-10-09, blender2). /usr/bin/python3 Tools/w3x/match_sheet_s2.py <등급: 초월|불멸|영원|히든|흔함|안흔함|특별함|희귀함|전설적인|변화됨|랜덤|제한|특수함>
 → ~/Desktop/구랜디스킨모음/매칭_신작_<등급>/{원랜디_신작_<등급>_n.png(글자 A… · 모델 기준 캐릭터 이름 · NEW · 옛 ID 이름 회색), 구랜디_<등급>.png(우리 쪽 번호 · 교체 예정 표시), 목록 csv}
-입력: 원랜디_신작_스킨/<NN_등급>/{_items.json,_cells,index.csv}(skin_grade_build_s2.py가 먼저 돌아야 함) · 우리 쪽 칸은 매칭_<등급>/_cells_구랜디(match_sheets2.py가 만든 것; 없으면 먼저 그걸 돌릴 것) · 교체 표시는 ~/GRD_skin_swap/교체목록.csv."""
+입력: 원랜디_신작_스킨/<NN_등급>/{_items.json,_cells,index.csv}(skin_grade_build_s2.py가 먼저 돌아야 함) · 우리 쪽 칸은 매칭_<등급>/_cells_구랜디(match_sheets2.py가 만든 것; 없으면 먼저 그걸 돌릴 것) · 교체 표시는 ~/grd/GRD_skin_swap/교체목록.csv."""
 import csv, glob, json, os, re, sys
 from PIL import Image, ImageDraw, ImageFont
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -17,7 +17,7 @@ def letter(i):
 items = json.load(open(SD + "/_items.json")); cells = SD + "/_cells"
 chk = {r["png"]: r for r in json.load(open(cells + "/skin_check.json")) if "png" in r} if os.path.exists(cells + "/skin_check.json") else {}
 swap = {}
-for r in csv.DictReader(open(H + "/GRD_skin_swap/교체목록.csv", encoding="utf-8-sig")): swap[r["우리 로스터"]] = r["원작 이름"]
+for r in csv.DictReader(open(H + "/grd/GRD_skin_swap/교체목록.csv", encoding="utf-8-sig")): swap[r["우리 로스터"]] = r["원작 이름"]
 def sheets(cdir, n, draw_cell, stem, title, per=30, cols=6, W=300, Hh=360, LAB=112):
     parts = [(a, min(a + per, n)) for a in range(0, n, per)]
     for k, (a, b) in enumerate(parts, 1):

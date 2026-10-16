@@ -1,6 +1,6 @@
 # 초월 스킬 ↔ 원작 이펙트 대응표 (2026-10-08, blender)
 
-전체 표(근거 줄·필드 포함)는 `pairing.csv`(= `Docs/research/TRANSCEND_VFX_PAIRING_2026-10-08.csv`). 생성: `Tools/w3x/transcend_vfx_pairing.py`. 변환: `Tools/blender/export_mdx_anim_fbx.py`. 산출 폴더 `~/GRD_motion_trial/transcend_vfx/`(fbx/<모델>/ FBX·Textures·JSON, preview_sheets/, preview_sheet_N.png).
+전체 표(근거 줄·필드 포함)는 `pairing.csv`(= `Docs/research/TRANSCEND_VFX_PAIRING_2026-10-08.csv`). 생성: `Tools/w3x/transcend_vfx_pairing.py`. 변환: `Tools/blender/export_mdx_anim_fbx.py`. 산출 폴더 `~/grd/GRD_motion_trial/transcend_vfx/`(fbx/<모델>/ FBX·Textures·JSON, preview_sheets/, preview_sheet_N.png).
 
 - 우리 초월 스킬 133개(25유닛) 중 짝 있는 것 13개, 나머지 120개는 사장님 신규 사양이라 원작 대응 없음(패시브·오라 포함).
 - 짝 있는 원작 이펙트 모델 37종: {'변환됨': 31, '변환불가': 4, '입자 전용(메시 없음)': 2}.

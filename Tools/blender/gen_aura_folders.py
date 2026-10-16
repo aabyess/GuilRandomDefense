@@ -1,15 +1,15 @@
 """원작 상시 오라(Sphere 능력 대상 아트) MDX → 유니티용 폴더(2026-10-01). 시스템 python으로:
 
   SCR=<mdx·_tex·_approx.json이 있는 작업폴더(mdxwork)> python3 Tools/blender/gen_aura_folders.py
-산출: ~/GRD_motion_trial/초월_상시오라/<모델>/{설명.md, <모델>_all.fbx, Textures/}  (+ _맵에없는7.md)
+산출: ~/grd/GRD_motion_trial/초월_상시오라/<모델>/{설명.md, <모델>_all.fbx, Textures/}  (+ _맵에없는7.md)
 오라 모델은 통째가 이펙트라 지오셋 전부를 뜯는다. FBX 원점 = 모델 원점(= 유닛 발밑 origin 붙임).
 """
 import csv, json, os, re, shutil, subprocess, sys, collections
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "w3x"))
 import mdx_anim, mdx_geo
-SC = os.environ.get("SCR") or os.path.expanduser("~/GRD_motion_trial/_work/mdxwork")
+SC = os.environ.get("SCR") or os.path.expanduser("~/grd/GRD_motion_trial/_work/mdxwork")
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-OUT = os.path.expanduser("~/GRD_motion_trial/초월_상시오라")
+OUT = os.path.expanduser("~/grd/GRD_motion_trial/초월_상시오라")
 APPROX = set(json.load(open(os.path.join(SC, "_approx.json")))) if os.path.exists(os.path.join(SC, "_approx.json")) else set()
 rows = list(csv.DictReader(open(os.path.join(REPO, "Docs/research/SPHERE_ART_BY_ROSTER.csv"))))
 use = collections.defaultdict(list)                                   # 모델(소문자 파일) → [(로스터, 능력, 붙는곳)]

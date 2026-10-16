@@ -7,17 +7,17 @@
                  어느 스킬에 어느 모델인지는 원작에 없는 대응이라 고르지 않는다(사장님/PM 몫). 근거 = survey 트리거 이름·깊이·모델 출처(w3u 더미·war3map.j 줄).
   - 없음(패시브·수치) : 스킬 이름에 패시브·오라·증가·증폭·감소·방깍·방어 같은 수치 말머리만 있고 시전 연출이 없는 것.
   - 없음(원작 대응 유닛 없음) : 원작 캐릭터(families)가 없는 초월 유닛.
-산출: ~/GRD_motion_trial/transcend_vfx/pairing2.csv(+Docs/research/TRANSCEND_VFX_PAIRING2_2026-10-09.csv) · 후보 모델 목록(candidates.json)
+산출: ~/grd/GRD_motion_trial/transcend_vfx/pairing2.csv(+Docs/research/TRANSCEND_VFX_PAIRING2_2026-10-09.csv) · 후보 모델 목록(candidates.json)
 """
 import csv, json, os, re
 
 GRADE = os.environ.get("GRADE", "초월")                                    # 초월·불멸·영원
 TAG = {"초월": "transcend", "불멸": "immortal", "영원": "eternal"}[GRADE]
 H = os.path.expanduser("~")
-SURVEY = json.load(open(H + ("/GRD_cast_vfx_trial/survey.json" if GRADE == "초월" else f"/GRD_cast_vfx_{GRADE}/survey.json")))
+SURVEY = json.load(open(H + ("/grd/GRD_cast_vfx_trial/survey.json" if GRADE == "초월" else f"/grd/GRD_cast_vfx_{GRADE}/survey.json")))
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
-P1 = list(csv.DictReader(open(H + f"/GRD_motion_trial/{TAG}_vfx/pairing.csv", encoding="utf-8-sig")))
+P1 = list(csv.DictReader(open(H + f"/grd/GRD_motion_trial/{TAG}_vfx/pairing.csv", encoding="utf-8-sig")))
 strong = {}
 for r in P1:
     if "짝 없음" not in r["짝 근거"]:
@@ -44,8 +44,8 @@ for u in SURVEY:
         else:
             rows.append([u["roster"], s["asset"], s["skillName"], "후보(유닛 단위)", "; ".join(sorted(models))]); ncand += 1
 head = ["초월 유닛", "우리 스킬 에셋", "우리 스킬 이름", "구분", "원작 이펙트 모델(후보 포함)"]
-for out in (H + f"/GRD_motion_trial/{TAG}_vfx/pairing2.csv", os.path.join(ROOT, "Docs/research/TRANSCEND_VFX_PAIRING2_2026-10-09.csv" if GRADE == "초월" else f"Docs/research/VFX_PAIRING2_{GRADE}_2026-10-09.csv")):
+for out in (H + f"/grd/GRD_motion_trial/{TAG}_vfx/pairing2.csv", os.path.join(ROOT, "Docs/research/TRANSCEND_VFX_PAIRING2_2026-10-09.csv" if GRADE == "초월" else f"Docs/research/VFX_PAIRING2_{GRADE}_2026-10-09.csv")):
     with open(out, "w", newline="", encoding="utf-8-sig") as fh:
         w = csv.writer(fh); w.writerow(head); w.writerows(rows)
-json.dump(cand, open(H + f"/GRD_motion_trial/{TAG}_vfx/candidates.json", "w"), ensure_ascii=False, indent=1)
+json.dump(cand, open(H + f"/grd/GRD_motion_trial/{TAG}_vfx/candidates.json", "w"), ensure_ascii=False, indent=1)
 print("skills", len(rows), "강한", nstrong, "후보", ncand, "없음", nnone, "후보 모델 종", len({m for v in cand.values() for m in v}))

@@ -36,7 +36,7 @@ def hide_by_geoset_alpha(new, fbx):
     if not os.path.exists(side): return 0
     sd = json.load(open(side)); mdx = None
     for w in ("original_skin", "original_vfx"):
-        p = os.path.expanduser(f"~/GRD_motion_trial/{w}/work/" + sd["model"])
+        p = os.path.expanduser(f"~/grd/GRD_motion_trial/{w}/work/" + sd["model"])
         if os.path.exists(p): mdx = p; break
     if not mdx: return 0
     info = mdx_anim.describe(open(mdx, "rb").read())

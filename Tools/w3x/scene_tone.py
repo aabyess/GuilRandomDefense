@@ -5,8 +5,8 @@
 - tots_R(영원_김정래): 같은 대체 폭발 31건(Sky Ring Black·Malmter Black2 등 어두운 모델 대신)
 - Franky_Skill_Mana1: 전 스폰 baseScale ×0.8(빔 판이 화면 너비를 넘음)"""
 import json, os
-H = os.path.expanduser("~"); A = H + "/GRD_scenes/auto"; O = H + "/GRD_scenes/add_rel_26/out"
-SRC = {"영원_문필환__vivi_Skill_4_Mana": H + "/GRD_scenes/vivi4_rel", "랜덤_카마도_탄지로__Ryougi_Skill_3": O, "초월_박기찬_AD__Franky_Skill_Mana1": O, "영원_김정래__tots_R": A}  # tots_R은 auto 자체(값을 덮어쓰기라 여러 번 돌려도 같음)
+H = os.path.expanduser("~"); A = H + "/grd/GRD_scenes/auto"; O = H + "/grd/GRD_scenes/add_rel_26/out"
+SRC = {"영원_문필환__vivi_Skill_4_Mana": H + "/grd/GRD_scenes/vivi4_rel", "랜덤_카마도_탄지로__Ryougi_Skill_3": O, "초월_박기찬_AD__Franky_Skill_Mana1": O, "영원_김정래__tots_R": A}  # tots_R은 auto 자체(값을 덮어쓰기라 여러 번 돌려도 같음)
 for sid, d0 in SRC.items():
     d = json.load(open(f"{d0}/{sid}.json")); n = 0
     for e in d["timeline"]:

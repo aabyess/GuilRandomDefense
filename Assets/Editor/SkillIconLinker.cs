@@ -6,7 +6,7 @@ using UnityEngine;
 
 /// <summary>
 /// 스킬 아이콘 연결(2026-10-06, 사장님 「스킬 아이콘을 정보 창에」) — Tools/skill_icons/skill_icon_map.csv(에셋 경로·원작 코드·png·확신도)를 읽어
-/// ~/GRD_skill_icons/의 PNG를 Assets/Art/SkillIcons/로 복사(파일 이름의 # & [ ] ! 는 _로)·Sprite로 임포트(128px, 밉맵 없음)하고 SkillData.icon에 꽂는다.
+/// ~/grd/GRD_skill_icons/의 PNG를 Assets/Art/SkillIcons/로 복사(파일 이름의 # & [ ] ! 는 _로)·Sprite로 임포트(128px, 밉맵 없음)하고 SkillData.icon에 꽂는다.
 /// 「계획」 행(에셋 경로 대신 「(예정) 유닛·스킬」)은 사장님 스킬(SkillData_사장님_*)을 스킬 이름 앞부분으로 찾아 연결한다. 확신도 「낮음」도 연결하고 결과 표에 나눠 센다.
 /// 다시 불러도 안전하다(ItemIconLinker와 같은 방식). 호출: call SkillIconLinker.Link (또는 메뉴 Tools/스킬/아이콘 연결)
 /// </summary>
@@ -17,7 +17,7 @@ public static class SkillIconLinker
     const string SkillFolder = "Assets/Data/UnitSkills";
     const string DefaultIconPath = "Tools/skill_icons/default_icon.txt";
 
-    static string SourceFolder => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "GRD_skill_icons");
+    static string SourceFolder => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "grd/GRD_skill_icons");
 
     [MenuItem("Tools/스킬/아이콘 연결")]
     static void LinkMenu() => Debug.Log(Link());

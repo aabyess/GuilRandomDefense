@@ -1,11 +1,11 @@
 """초월 부가 이펙트 로스터별 폴더 생성(2026-10-01) — 시스템 python으로 실행(Blender 아님; FBX는 blender를 하위 호출).
 
   SCR=<analysis.json·_tex가 있는 작업폴더> python3 Tools/blender/gen_trans_extra_folders.py
-산출: ~/GRD_motion_trial/초월_부가이펙트/<로스터>/{설명.md, *.fbx, Textures/}
+산출: ~/grd/GRD_motion_trial/초월_부가이펙트/<로스터>/{설명.md, *.fbx, Textures/}
 """
 import json, os, re, shutil, subprocess, sys
-HOME = os.path.expanduser("~/GRD_motion_trial/초월_부가이펙트")
-SC = os.environ.get("SCR") or os.path.expanduser("~/GRD_motion_trial/_work/transwork")
+HOME = os.path.expanduser("~/grd/GRD_motion_trial/초월_부가이펙트")
+SC = os.environ.get("SCR") or os.path.expanduser("~/grd/GRD_motion_trial/_work/transwork")
 A = json.load(open(os.path.join(SC, "analysis.json")))
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 by_file = {v["file"]: v for v in A.values()}

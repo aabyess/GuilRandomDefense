@@ -1,8 +1,8 @@
 """원작 스킨 교체 모델 Unity 반입용 재수출 (2026-10-09, blender3).
 
-  blender -b --factory-startup --python Tools/blender/swap_refix_b3.py -- <교체 폴더(~/GRD_skin_swap/<유닛>_<원작>)> [<작업폴더 work>]
+  blender -b --factory-startup --python Tools/blender/swap_refix_b3.py -- <교체 폴더(~/grd/GRD_skin_swap/<유닛>_<원작>)> [<작업폴더 work>]
 
-입력: <폴더>/model/<모델>.json(원본 변환 결과) · <폴더>/clip_map.json · 원본 MDX(작업폴더/<모델>.mdx — 기본 ~/GRD_motion_trial/original_skin/work, 없으면 original_vfx/work)
+입력: <폴더>/model/<모델>.json(원본 변환 결과) · <폴더>/clip_map.json · 원본 MDX(작업폴더/<모델>.mdx — 기본 ~/grd/GRD_motion_trial/original_skin/work, 없으면 original_vfx/work)
 산출: <폴더>/model_fixed/<모델>.fbx · Textures/ · <모델>.json(원본 json + fixed 블록) · scale_audit.csv · scale_audit.json
 export_mdx_anim_fbx.py와 달라진 점
   ⓐ 휴식(바인드) 포즈 = Stand 첫 프레임. 뼈 휴식 행렬 = pose0(회전+이동만), 메시 정점 = Σ(1/n)·world0·v 로 굽고,
@@ -41,7 +41,7 @@ J0 = json.load(open([os.path.join(mdir, f) for f in os.listdir(mdir) if f.endswi
 CM = json.load(open(os.path.join(FOLD, "clip_map.json")))
 mdx_name = J0["model"]
 work = None
-for w in ([args[1]] if len(args) > 1 else []) + [H + "/GRD_motion_trial/original_skin/work", H + "/GRD_motion_trial/original_vfx/work", H + "/GRD_motion_trial/s2_skin/work"]:
+for w in ([args[1]] if len(args) > 1 else []) + [H + "/grd/GRD_motion_trial/original_skin/work", H + "/grd/GRD_motion_trial/original_vfx/work", H + "/grd/GRD_motion_trial/s2_skin/work"]:
     if os.path.exists(os.path.join(w, mdx_name)):
         work = w
         break

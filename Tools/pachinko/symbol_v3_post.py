@@ -1,7 +1,7 @@
 """v3 후처리: 세로 모션블러(_blur, 정지판 기준 + 불꽃은 f0) + contact_sheet_v3. /usr/bin/python3 Tools/pachinko/symbol_v3_post.py [폴더]"""
 import os, sys, numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
-D = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/GRD_pachinko_art/symbols_v3")
+D = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/grd/GRD_pachinko_art/symbols_v3")
 def motion_blur(im, px=90, n=41):
     arr = np.asarray(im.convert("RGBA")).astype("float32"); acc = np.zeros(arr.shape[:2] + (3,), "float32"); wsum = np.zeros(arr.shape[:2] + (1,), "float32")
     for k in range(n):

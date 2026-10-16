@@ -7,13 +7,13 @@ using UnityEngine;
 using UnityEngine.Rendering;
 
 /// <summary>
-/// 원작 스킬 연출 반입(10-09): ~/GRD_scenes/scripts/&lt;id&gt;.json(blender 대본) → Assets/Resources/Cinematics/&lt;id&gt;.asset(CinematicScript)
+/// 원작 스킬 연출 반입(10-09): ~/grd/GRD_scenes/scripts/&lt;id&gt;.json(blender 대본) → Assets/Resources/Cinematics/&lt;id&gt;.asset(CinematicScript)
 /// + 쓰는 모델마다 Resources/Cinematics/Models/&lt;모델&gt;.prefab(= 반입한 이펙트 프리팹 복사 + PRE2 입자 자식 ParticleSystem·Pre2Driver).
 /// 호출: call CinematicImporter.ImportAll (4개 전부) / ImportOne(file ClaudeBridge/g2_scene.txt). 다시 불러도 안전하다.
 /// </summary>
 public static class CinematicImporter
 {
-    static readonly string ScriptRoot = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "GRD_scenes/scripts");
+    static readonly string ScriptRoot = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "grd/GRD_scenes/scripts");
     const string OutRoot = "Assets/Resources/Cinematics";
     const string ModelOut = "Assets/Resources/Cinematics/Models";
     const string MatOut = "Assets/Art/Effects/Original/_pre2";

@@ -1,14 +1,14 @@
 """리제로 테마 「보석 숫자」(10-14, blender): 굵은 이탤릭 세리프 + 은색 금속 베벨 테 + 각진 보석 면(패싯). SVG를 헤드리스 Chrome으로 투명 PNG 1024.
-  /usr/bin/python3 Tools/pachinko/symbol_rz.py [숫자 ...]   (없으면 1~9)   출력 ~/GRD_pachinko_art/symbols_rz/
+  /usr/bin/python3 Tools/pachinko/symbol_rz.py [숫자 ...]   (없으면 1~9)   출력 ~/grd/GRD_pachinko_art/symbols_rz/
 홀수 루비(빨강) · 짝수 사파이어(파랑) · 7 금 + 「強」. 산출: symbol_N.png · symbol_N_s0/s1.png(반짝임 2프레임, 별빛 위치만 다름) · symbol_N_blur.png(세로 모션블러)
 폰트: Bodoni Moda(OFL, 가변 wght 900) · Dela Gothic One(OFL, 「強」) — <출력>/fonts/ 에 TTF+OFL.txt"""
 import os, sys, math, random, subprocess
 import numpy as np
 from PIL import Image, ImageFilter
 THEME = os.environ.get("SYM_THEME", "rz")   # rz(리제로 루비/사파이어) · fire(불꽃 소방대 화염 보석) · slime(전생슬 슬라임 크리스털)
-OUT = os.path.expanduser("~/GRD_pachinko_art/" + {"rz": "symbols_rz", "fire": "symbols_fire", "slime": "symbols_slime"}[THEME]); os.makedirs(OUT + "/_html", exist_ok=True)
+OUT = os.path.expanduser("~/grd/GRD_pachinko_art/" + {"rz": "symbols_rz", "fire": "symbols_fire", "slime": "symbols_slime"}[THEME]); os.makedirs(OUT + "/_html", exist_ok=True)
 if not os.path.exists(OUT + "/fonts"):
-    import shutil; shutil.copytree(os.path.expanduser("~/GRD_pachinko_art/symbols_rz/fonts"), OUT + "/fonts")
+    import shutil; shutil.copytree(os.path.expanduser("~/grd/GRD_pachinko_art/symbols_rz/fonts"), OUT + "/fonts")
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 PAL = {  # 어두움 → 밝음
     "ruby": ["#5a0010", "#9a0a1c", "#d6122a", "#ff3a3a", "#ff7a6a", "#ffd0c8"],
@@ -156,7 +156,7 @@ def sheet():
             if os.path.exists(f):
                 im = Image.open(f).convert("RGBA").resize((C, C)); bg.paste(im, ((n - 1) * C, r * (C + 30) + 30), im)
     y = 4 * (C + 30); d.text((8, y + 2), "참고 프레임(원본 영상 캡처)", font=F, fill=(255, 235, 170))
-    ref = Image.open(os.path.expanduser("~/GRD_pachinko_art/rezero_ref/06_numbers_closeup.jpg"))
+    ref = Image.open(os.path.expanduser("~/grd/GRD_pachinko_art/rezero_ref/06_numbers_closeup.jpg"))
     x = 0
     for box in ((640, 0, 1920, 360), (640, 720, 1920, 1080), (0, 360, 640, 720)):
         c = ref.crop(box); k = 330 / c.height; c = c.resize((int(c.width * k), 330)); bg.paste(c, (x, y + 34)); x += c.width + 10

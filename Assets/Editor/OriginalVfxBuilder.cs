@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 
 /// <summary>
-/// 원작 이펙트 모델 반입(10-08): blender가 ~/GRD_orig_vfx_trial/&lt;모델&gt;/ 에 둔 FBX(30fps 뼈 애니)+Textures+json(unity 블록)을
+/// 원작 이펙트 모델 반입(10-08): blender가 ~/grd/GRD_orig_vfx_trial/&lt;모델&gt;/ 에 둔 FBX(30fps 뼈 애니)+Textures+json(unity 블록)을
 /// Assets/Art/Effects/Original/&lt;모델&gt;/ 로 복사하고, 층마다 URP 파티클 재질(Additive/AlphaBlend)을 만들어
 /// Assets/Resources/Effects/Original/&lt;모델&gt;.prefab(OriginalVfxPlayer 달림)을 짓는다. 다시 불러도 안전하다.
 /// 호출: 브리지 `call OriginalVfxBuilder.BuildTrial` (시범 3) 또는 메뉴 Tools/이펙트/원작 이펙트 반입(시범).
@@ -16,7 +16,7 @@ using UnityEngine.Rendering;
 public static class OriginalVfxBuilder
 {
     public static string SourceFolder => SourceRoot;
-    static readonly string SourceRoot = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "GRD_orig_vfx_trial");
+    static readonly string SourceRoot = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "grd/GRD_orig_vfx_trial");
     public const string ArtRoot = "Assets/Art/Effects/Original";
     public const string PrefabRoot = "Assets/Resources/Effects/Original";
     static readonly string[] Trial = { "az_firering1a", "Mdx_Effect_Railgun", "EmpyreanSigil4" };

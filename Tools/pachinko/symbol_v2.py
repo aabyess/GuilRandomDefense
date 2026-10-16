@@ -5,7 +5,7 @@ import bpy, sys, os, math, random, mathutils
 argv = sys.argv[sys.argv.index("--") + 1:]
 OUT = os.path.expanduser(argv[0]); DIGITS = [int(x) for x in argv[1].split(",")]
 SAMPLES = int(argv[2]) if len(argv) > 2 else 64; SIZE = int(argv[3]) if len(argv) > 3 else 1024
-FONT = os.path.expanduser("~/GRD_pachinko_art/_fonts2/Kaushan.ttf"); os.makedirs(OUT, exist_ok=True)
+FONT = os.path.expanduser("~/grd/GRD_pachinko_art/_fonts2/Kaushan.ttf"); os.makedirs(OUT, exist_ok=True)
 def node(nt, t, **kw):
     n = nt.nodes.new(t)
     for k, v in kw.items(): setattr(n, k, v)

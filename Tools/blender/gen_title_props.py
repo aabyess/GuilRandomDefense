@@ -1,13 +1,13 @@
 """첫 화면 클릭 소품 그림(blender 세션 2026-10-06, PM 지시 「선술집 느낌 + 만지면 반응하는 소품」).
 각 소품을 따로 투명 PNG + 그림자 PNG(반투명, 같은 크기·같은 자리)로. 배경(노을 역광 + 횃불 주황 + 달빛)과 같은 조명 문법으로 Cycles(GPU) 렌더.
-blender -b --factory-startup --python Tools/blender/gen_title_props.py -- ~/GRD_title_props   (환경변수 PROPS="barrels,table" 로 일부만)
+blender -b --factory-startup --python Tools/blender/gen_title_props.py -- ~/grd/GRD_title_props   (환경변수 PROPS="barrels,table" 로 일부만)
 스케일: 캔버스 1024px = 3.41m → 300 px/m (모든 소품 같은 척도). 렌더 뒤 PIL로 (소품+그림자) 합집합 상자로 잘라 저장.
 파츠: prop_barrels · prop_table · prop_mug_floor · prop_cat · prop_signpost + prop_signboard(흔들 판, 피벗 README) (+ _shadow). 입자 foam_particle.png(64)·drop.png(32)는 PIL."""
 import os, sys
 if len(sys.argv) > 1 and sys.argv[1] == 'post':          # ---- 후처리(시스템 파이썬): 합집합 상자로 자르고 그림자 만들기 + 입자 PNG
     import json, numpy as np
     from PIL import Image, ImageDraw, ImageFilter
-    OUT = os.path.expanduser(sys.argv[2] if len(sys.argv) > 2 else '~/GRD_title_props')
+    OUT = os.path.expanduser(sys.argv[2] if len(sys.argv) > 2 else '~/grd/GRD_title_props')
     for job in json.load(open(OUT + '/_jobs.json')):
         ims = [Image.open(p).convert('RGBA') for p in job['layers']]; arr = np.asarray(Image.open(job['shadow']).convert('RGBA'), np.float32)
         sh = np.zeros_like(arr); sh[..., 0] = 14; sh[..., 1] = 9; sh[..., 2] = 11; sh[..., 3] = np.clip(arr[..., 3] * .85, 0, 255); sh_im = Image.fromarray(sh.astype(np.uint8))
@@ -32,7 +32,7 @@ import numpy as np
 from mathutils import Vector
 
 argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
-OUT = os.path.expanduser(argv[0] if argv else '~/GRD_title_props'); os.makedirs(OUT + '/_raw', exist_ok=True)
+OUT = os.path.expanduser(argv[0] if argv else '~/grd/GRD_title_props'); os.makedirs(OUT + '/_raw', exist_ok=True)
 PX = 1024; PPM = 300.0; SCALE_M = PX / PPM
 rs = np.random.RandomState(9); TAU = math.tau
 ONLY = os.environ.get('PROPS', 'barrels,table,mug_floor,cat,sign').split(',')

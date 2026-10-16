@@ -1,12 +1,12 @@
 """선술집 문 v3 — v1 구도(door_left/right 각 1920×2160 정면, 투명 배경, 문짝이 프레임을 꽉 채움) 그대로 **문짝 디테일만** 높임(blender 세션 2026-10-06, 사장님·PM 「나무 문 자체의 디테일」).
 PBR 원목(결·옹이·널판 사이 틈·닳은 모서리·손때 얼룩) · 녹슨 쇠띠·리벳·경첩·고리(금속 반사·녹줄기) · 못 자국·미세한 흠집 · 널판 틈과 안쪽 가장자리로만 새는 따뜻한 빛. 외벽·문틀·거리 없음.
-blender -b --factory-startup --python Tools/blender/gen_tavern_door_v3.py -- ~/GRD_tavern_door_v3 [가로 1920] [세로 2160] [샘플 128]
+blender -b --factory-startup --python Tools/blender/gen_tavern_door_v3.py -- ~/grd/GRD_tavern_door_v3 [가로 1920] [세로 2160] [샘플 128]
 산출 door_left.png · door_right.png (+ _45 · _75 안쪽으로 젖힌 각도) · door_gap_light.png(v1과 같은 파일, 있으면 복사)."""
 import bpy, bmesh, math, os, sys, random
 import numpy as np
 from mathutils import Vector
 argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
-OUT = os.path.expanduser(argv[0] if len(argv) > 0 else '~/GRD_tavern_door_v3'); RX = int(argv[1]) if len(argv) > 1 else 1920; RY = int(argv[2]) if len(argv) > 2 else 2160; SAMPLES = int(argv[3]) if len(argv) > 3 else 128
+OUT = os.path.expanduser(argv[0] if len(argv) > 0 else '~/grd/GRD_tavern_door_v3'); RX = int(argv[1]) if len(argv) > 1 else 1920; RY = int(argv[2]) if len(argv) > 2 else 2160; SAMPLES = int(argv[3]) if len(argv) > 3 else 128
 os.makedirs(OUT, exist_ok=True); random.seed(5); rs = np.random.RandomState(5)
 bpy.ops.wm.read_factory_settings(use_empty=True); sc = bpy.context.scene
 W, H = 1.0, 1.125; TAU = math.tau

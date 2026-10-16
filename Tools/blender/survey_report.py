@@ -1,6 +1,6 @@
 """고유 동작 전수조사 3단계(2026-10-01): survey_clips.py 결과(out_*.jsonl·com_*.jsonl)를 읽어 표(고유동작_전수조사.md)를 만든다. 시스템 python.
 
-  python3 Tools/blender/survey_report.py   →  ~/GRD_motion_trial/고유동작_전수조사.md · _work/survey/summary.json
+  python3 Tools/blender/survey_report.py   →  ~/grd/GRD_motion_trial/고유동작_전수조사.md · _work/survey/summary.json
 판정 규칙(숫자는 survey_clips.py가 잰 값 — 뼈 머리 위치의 첫↔끝 RMS ÷ 모델 키 = seam, 최대 이동 ÷ 키 = motion):
   쓸 만함 = Idle 후보(이음새 ≤0.12 · 움직임 ≥0.004)와 Attack 후보(움직임 ≥0.08)가 둘 다 있다(Move 없음은 허용 — 이호준·황길라와 같은 Generic 경로).
   애매    = 클립은 있으나 위가 모자란다(Idle만·Attack만·한 덩어리라 분리 필요·이음새 큼·이름으로 못 가름).
@@ -9,7 +9,7 @@
 """
 import collections, glob, json, os, re
 
-HOME = os.path.expanduser("~/GRD_motion_trial")
+HOME = os.path.expanduser("~/grd/GRD_motion_trial")
 S = HOME + "/_work/survey"
 PROJECT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 GRADE_ORDER = ["영원", "불멸", "초월", "제한", "전설적인", "히든", "희귀함", "특별함", "안흔함", "흔함", "랜덤", "다른세계", "특수함", "변화됨", "초월위습"]
@@ -130,7 +130,7 @@ json.dump(dict(units=units, no_source=nosrc), open(S + "/summary.json", "w"), en
 
 L = ["# 고유 동작 전수조사 (2026-10-01, Blender 세션 · 읽기 전용)", "",
      "사장님 지시 「각 스킨에 고유 스킨이나 모션 있으면 살려도 좋아」 — 구랜디스킨모음 원본을 열어 **지금 안 쓰는 자체 동작·꾸밈**을 쟀다. Assets·에디터는 안 건드렸다.",
-     "", "## 0. 어떻게 쟀나", "- `Tools/blender/survey_extract.py`(압축 풀기 → 모델 파일 %d개) → `survey_clips.py`(Blender로 열어 클립·뼈·메시 측정) → `survey_report.py`(이 표). 산출 원자료: `~/GRD_motion_trial/_work/survey/`." % len(SRC),
+     "", "## 0. 어떻게 쟀나", "- `Tools/blender/survey_extract.py`(압축 풀기 → 모델 파일 %d개) → `survey_clips.py`(Blender로 열어 클립·뼈·메시 측정) → `survey_report.py`(이 표). 산출 원자료: `~/grd/GRD_motion_trial/_work/survey/`." % len(SRC),
      "- 클립마다 **이음새**(끝↔첫 자세, 뼈 머리 RMS ÷ 모델 키) · **움직임**(최대 이동 ÷ 키) · 뿌리 이동 · 최저 뼈 높이를 쟀다. 이름으로 Idle·Move·Attack·Hit·Die를 가렸고 이름이 안 가려지면 「?」.",
      "- 판정: **쓸 만함** = 이음새 ≤0.12·움직임 있는 Idle + 움직임 ≥0.08인 Attack 후보가 둘 다 있음(Move 없음은 허용 — 이호준·황길라처럼 Generic 자체 클립 경로). **애매** = 클립은 있으나 위가 모자람(Idle만·한 덩어리·이음새 큼·이름 불명). **불가** = 쓸 동작 없음. **이미** = 이미 고유 동작.",
      "- ⚠️ 이 표는 **측정과 이름**으로 가른 1차 선별이다. 「쓸 만함」도 렌더로 발 미끄럼·뼈 뒤틀림을 눈으로 본 뒤에야 확정(2단계에서 동작판을 뽑아 렌더). 한 파일만 읽은 압축은 가장 동작 많은 모델을 골랐다.",

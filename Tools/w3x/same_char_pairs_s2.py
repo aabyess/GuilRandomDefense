@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """우리 구랜디 유닛 ↔ 신작(S2) 원랜디 같은 캐릭터 짝 찾기(2026-10-09, blender2; PM 지시). /usr/bin/python3 Tools/w3x/same_char_pairs_s2.py
-→ ~/Desktop/구랜디스킨모음/같은캐릭터_신작비교/짝목록.csv + ~/GRD_motion_trial/s2_skin/same_char_pairs.json
+→ ~/Desktop/구랜디스킨모음/같은캐릭터_신작비교/짝목록.csv + ~/grd/GRD_motion_trial/s2_skin/same_char_pairs.json
 우리 쪽: Assets/Data/Units/Roster/*.asset의 skinAlias·unitName + Assets/Art/Units/<로스터>/SOURCE.txt 앞 3줄 + Docs/research/SKIN_GLB_LICENSES.csv 제목.
 S2 쪽: 원랜디_신작_스킨/<NN_등급>/_items.json(캐릭터 이름 label·모델 토큰·옛 ID 이름). 교체목록.csv에 이미 있는 로스터는 뺀다. 등급은 달라도 된다.
 확신: 높음 = S2 한글 이름이 별명 항목과 같거나(공백·대소문자 무시) 3글자 이상 이름·4글자 이상 영문 토큰이 우리 쪽 글에 낱말로 있음. 낮음 = 그 밖(2글자 이름·옛 ID 이름만 맞음 등)."""
@@ -9,7 +9,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 R = H + "/Desktop/구랜디스킨모음"; OUT = R + "/같은캐릭터_신작비교"; os.makedirs(OUT, exist_ok=True)
 dec = lambda s: re.sub(r"\\u([0-9A-Fa-f]{4})", lambda m: chr(int(m.group(1), 16)), (s or "").strip().strip('"'))
 norm = lambda s: re.sub(r"[\s\-_.·'’\"()\[\]]+", "", (s or "").casefold())
-swap = {r["우리 로스터"] for r in csv.DictReader(open(H + "/GRD_skin_swap/교체목록.csv", encoding="utf-8-sig"))}
+swap = {r["우리 로스터"] for r in csv.DictReader(open(H + "/grd/GRD_skin_swap/교체목록.csv", encoding="utf-8-sig"))}
 lic = {}
 for r in csv.DictReader(open(ROOT + "/Docs/research/SKIN_GLB_LICENSES.csv", encoding="utf-8-sig")):
     m = re.search(r"/([^/]+?)(?:\.glb|\.zip)?(?:/|$)", r["파일"]); k = re.sub(r"\.(glb|zip)$", "", r["파일"].split("/")[-1])
@@ -67,7 +67,7 @@ for o in ours:
         if why and conf == "높음" and o["alias"] and not why.startswith("별명"): conf, why = "낮음", why + " · 별명엔 없음"
         if why: pairs.append(dict(ours=o, s2=s, why=why, conf=conf))
 for p in pairs: p["same_model"] = bool(p["ours"]["mdl_orig"] and p["s2"]["vs"].startswith("동일"))
-json.dump(pairs, open(H + "/GRD_motion_trial/s2_skin/same_char_pairs.json", "w"), ensure_ascii=False, indent=1)
+json.dump(pairs, open(H + "/grd/GRD_motion_trial/s2_skin/same_char_pairs.json", "w"), ensure_ascii=False, indent=1)
 with open(OUT + "/짝목록.csv", "w", encoding="utf-8-sig", newline="") as f:
     w = csv.writer(f); w.writerow(["우리 로스터", "지금 스킨", "S2 ID", "S2 이름", "S2 모델", "일치 근거", "동일모델 여부", "확신", "S2 구버전 대비", "S2 폴더"])
     for p in pairs: w.writerow([p["ours"]["roster"], p["ours"]["src"][:80], ",".join(p["s2"]["ids"][:4]), p["s2"]["label"], p["s2"]["model"], p["why"], "동일(바꿀 이유 없음)" if p["same_model"] else "", p["conf"], p["s2"]["vs"], p["s2"]["grade"]])

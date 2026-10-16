@@ -23,7 +23,7 @@ MAT = "정의문_에니에스"
 
 def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    out = os.path.expanduser("~/GRD_motion_trial/정의문_에니에스로비")
+    out = os.path.expanduser("~/grd/GRD_motion_trial/정의문_에니에스로비")
     tri_limit = 10000
     it = iter(args)
     for a in it:

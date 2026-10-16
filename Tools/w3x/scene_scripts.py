@@ -1,6 +1,6 @@
 """원작 대표 스킬 연출 「대본」 json 생성(2026-10-09, blender) — 샹크스 폭발 · 시키 함대 소환 · 에넬 엘토르 · 드래곤 폭풍.
 
-  /usr/bin/python3 Tools/w3x/scene_scripts.py   → ~/GRD_scenes/scripts/<id>.json (+ README_SCHEMA.md)
+  /usr/bin/python3 Tools/w3x/scene_scripts.py   → ~/grd/GRD_scenes/scripts/<id>.json (+ README_SCHEMA.md)
 각 대본은 war3map.j 트리거(스테이지 머신: TV.SleepForStage(지연, 다음 스테이지))를 사람이 읽어 풀어 쓴 것이다. 근거 줄·함수는 json의 source에.
 형식은 README_SCHEMA.md. 단위 = 워크3 거리(1=0.01m, 우리 지도는 구현담당2 nativeSizes로 환산)·초. 난수는 seed로 고정해 값을 풀어 둠(원작은 매번 다름 — random 필드로 표시).
 """
@@ -10,11 +10,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import mdx_anim, mdx_geo, w3a, w3u                                            # noqa: E402
 from mpqread import Archive                                          # noqa: E402
-H = os.path.expanduser("~"); OUT = H + "/GRD_scenes/scripts"; os.makedirs(OUT, exist_ok=True)
-T = H + "/GRD_orig_vfx_trial"
+H = os.path.expanduser("~"); OUT = H + "/grd/GRD_scenes/scripts"; os.makedirs(OUT, exist_ok=True)
+T = H + "/grd/GRD_orig_vfx_trial"
 U = {u["id"]: u["mods"] for u in w3u.parse(HERE + "/원본/풀린것/war3map.w3u")}
 A = {a["id"]: {m["field"]: m["value"] for m in a["mods"]} for a in w3a.parse(HERE + "/원본/풀린것/war3map.w3a")}
-ARC = Archive(H + "/GRD_motion_trial/_work/ord.mpq")
+ARC = Archive(H + "/grd/GRD_motion_trial/_work/ord.mpq")
 clean = lambda s: re.sub(r"\|c[0-9a-fA-F]{8}|\|r", "", s or "")
 tag = lambda m: os.path.splitext(re.split(r"[\\/]", m)[-1])[0]
 
@@ -30,7 +30,7 @@ def model_block(name):
     t = tag(name); folder = t if os.path.isdir(f"{T}/{t}") else None
     b = dict(folder=folder, inMap=bool(ARC.read(re.sub(r"\.mdl$", ".mdx", name.replace("\\\\", "\\"), flags=re.I)) or ARC.read(re.sub(r"\.mdl$", ".mdx", os.path.basename(name.replace("\\", "/")), flags=re.I))))
     if not folder: b["note"] = "워크3 기본 모델(맵에 없음) — 변환 불가, 우리 쪽 자체 메시/프리팹으로 대체"; return b
-    jd = json.load(open(f"{T}/{t}/{t}.json")); src = next((p for p in (H + f"/GRD_motion_trial/{w}/work/" + jd["model"] for w in ("original_vfx", "transcend_vfx", "grade_extra", "original_skin", "s2_skin")) if os.path.exists(p)), None)
+    jd = json.load(open(f"{T}/{t}/{t}.json")); src = next((p for p in (H + f"/grd/GRD_motion_trial/{w}/work/" + jd["model"] for w in ("original_vfx", "transcend_vfx", "grade_extra", "original_skin", "s2_skin")) if os.path.exists(p)), None)
     raw = open(src, "rb").read(); info = mdx_anim.describe(raw); geo = mdx_geo.parse(raw); workd = os.path.dirname(src)
     def stand_seq():
         for sq in info["sequences"]:
@@ -38,7 +38,7 @@ def model_block(name):
         return info["sequences"][0] if info["sequences"] else dict(name="(없음)", start=0, end=1000)
     ss = stand_seq(); b["playSequence"] = dict(name=ss["name"], startMs=ss["start"], endMs=ss["end"], note="spawn에 anim이 없으면 이 시퀀스(stand, 없으면 첫 시퀀스)가 돈다. pre2[].tracks.keysMsAbs에서 startMs를 빼면 시퀀스 상대 시간")
     b["sequencesMs"] = [dict(name=s["name"], start=s["start"], end=s["end"], loop=s["looping"]) for s in info["sequences"]]
-    b["meshCount"] = len(jd["meshes"]); b["jsonPath"] = f"~/GRD_orig_vfx_trial/{t}/{t}.json"
+    b["meshCount"] = len(jd["meshes"]); b["jsonPath"] = f"~/grd/GRD_orig_vfx_trial/{t}/{t}.json"
     pre = []
     for p in info["pre2"]:
         n = p["node"]; piv = info["pivots"][n["id"]] if n["id"] < len(info["pivots"]) else [0, 0, 0]

@@ -1,8 +1,8 @@
 """초월 원작 평타 피해 문(구현담당1 d28c48c9b) 8스킬 → 원작 이펙트 강한 짝 배정(2026-10-09, blender).
   /usr/bin/python3 Tools/w3x/pending_strong_assign.py   → Docs/research/ORIGINAL_VFX_ASSIGN_초월평타문.csv
-입력: ~/GRD_orig_vfx_trial/pending_strong_pairs.csv(원작 트리거별 이펙트 모델) · SkillData(효과 대상) · 실렌더 커버리지(/tmp/ra/cov.json) · 창고 16 index."""
+입력: ~/grd/GRD_orig_vfx_trial/pending_strong_pairs.csv(원작 트리거별 이펙트 모델) · SkillData(효과 대상) · 실렌더 커버리지(/tmp/ra/cov.json) · 창고 16 index."""
 import csv, json, os, re, yaml
-H = os.path.expanduser("~"); T = H + "/GRD_orig_vfx_trial"; ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+H = os.path.expanduser("~"); T = H + "/grd/GRD_orig_vfx_trial"; ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 MAP = {"SkillData_원작017_H095": "Akainu_01", "SkillData_회수_초월_김만경_AD_0ac0451e": "Akainu_02", "SkillData_원작트리거_초월_김만경_AD_Akainu_03": "Akainu_03",
        "SkillData_게이트_초월_김경현_AP_4266b6e3": "Snake_3_Kingkobra", "SkillData_게이트_초월_김경현_AP_b7ae9b41": "Snake_2",
        "SkillData_원작트리거_초월_황준석_ADAP_Kid_Skill_Mana": "Kid_Skill_Mana", "SkillData_더미채널_초월_황준석_ADAP_79행_01000": "Kid_Skill_3",

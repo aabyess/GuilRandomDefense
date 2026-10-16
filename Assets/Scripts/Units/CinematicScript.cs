@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 원작 스킬 연출 「대본」(10-09, blender ~/GRD_scenes/scripts/*.json → Editor CinematicImporter가 만든다): 시간표(timeline)와 쓰는 모델 목록.
+/// 원작 스킬 연출 「대본」(10-09, blender ~/grd/GRD_scenes/scripts/*.json → Editor CinematicImporter가 만든다): 시간표(timeline)와 쓰는 모델 목록.
 /// 재생은 SkillCinematic이 한다. 단위: 거리는 워크3 단위(월드 = ÷WorldScale), 시간은 초.
 /// </summary>
 public class CinematicScript : ScriptableObject

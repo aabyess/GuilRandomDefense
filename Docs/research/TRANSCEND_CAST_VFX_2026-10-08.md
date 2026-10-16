@@ -2,7 +2,7 @@
 
 ## 시범 3종 — 변환·추정 렌더와 우리 현재 이펙트 비교 (2단계)
 
-비교 그림: `Docs/research/images/transcend_cast_vfx_compare_3.png` (원본 `~/GRD_cast_vfx_trial/compare_3.png`, 렌더 `~/GRD_cast_vfx_trial/render/`, 작업 MDX·텍스처 `~/GRD_cast_vfx_trial/work/`).
+비교 그림: `Docs/research/images/transcend_cast_vfx_compare_3.png` (원본 `~/grd/GRD_cast_vfx_trial/compare_3.png`, 렌더 `~/grd/GRD_cast_vfx_trial/render/`, 작업 MDX·텍스처 `~/grd/GRD_cast_vfx_trial/work/`).
 도구: `Tools/blender/render_cast_vfx.py`(MDX 지오셋 + **뼈 애니메이션(이동·회전·스케일 pivot 합성) + 지오셋/층 알파 + PRE2 입자 시뮬레이션 추정**) · 우리 쪽은 `VFX_*.fbx`를 같은 카메라·가산 재질로(정적, 게임 Layered 크기). 각 칸의 틀은 따로 잡혀 **크기 비교용이 아니다**(사람 기둥 = 90 워크3 단위로 눈금). 🔴 **원작 텍스처·모델은 참고용 — Assets에 넣지 말 것**(원작 제작자·중국 모델러 저작물, `ONE_RANDOM_SKILL_VFX.md`와 같은 규칙).
 
 | # | 모델 | 쓰는 유닛·스킬(원작 트리거) | 모양 | 원작이 하는 일(추정 렌더로 확인) | 지금 우리 게임 | 다시 짜야 할 것 |

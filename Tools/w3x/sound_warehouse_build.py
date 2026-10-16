@@ -23,8 +23,8 @@ from mpqread import Archive                                          # noqa: E40
 
 DST = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/Desktop/구랜디스킨모음/18_원랜디소리")
 SRC = os.path.join(HERE, "원본", "풀린것")
-INV = json.load(open(os.path.expanduser("~/GRD_motion_trial/inventory/inventory.json")))
-ARC = Archive(os.path.expanduser("~/GRD_motion_trial/_work/ord.mpq"))
+INV = json.load(open(os.path.expanduser("~/grd/GRD_motion_trial/inventory/inventory.json")))
+ARC = Archive(os.path.expanduser("~/grd/GRD_motion_trial/_work/ord.mpq"))
 S = wts.parse(os.path.join(HERE, "원본", "war3map_new.wts"))
 strip = lambda v: re.sub(r"\|[cC][0-9a-fA-F]{8}|\|[rR]", "", str(v)).strip()                       # noqa: E731
 J = open(os.path.join(SRC, "war3map.j"), encoding="utf8", errors="replace").read()

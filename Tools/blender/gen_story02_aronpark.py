@@ -52,7 +52,7 @@ def in_box(fs):
 
 def main():
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    out = os.path.expanduser("~/GRD_motion_trial/Story02_아롱파크")
+    out = os.path.expanduser("~/grd/GRD_motion_trial/Story02_아롱파크")
     tri_limit = 10000
     if "--arcade" in args:
         BOX["x"] = (BOX["x"][0], -0.245)

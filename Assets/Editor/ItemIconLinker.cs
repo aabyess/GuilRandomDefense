@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// 아이템 아이콘 연결(2026-10-04) — 원작 맵에서 뽑은 PNG(~/GRD_motion_trial/아이템아이콘/&lt;코드&gt;_&lt;이름&gt;.png)를
+/// 아이템 아이콘 연결(2026-10-04) — 원작 맵에서 뽑은 PNG(~/grd/GRD_motion_trial/아이템아이콘/&lt;코드&gt;_&lt;이름&gt;.png)를
 /// Assets/Art/Items/로 복사해 Sprite로 임포트하고, 같은 코드(I0xx)의 ItemData.icon에 꽂는다. 다시 불러도 안전하다.
 /// 호출: call ItemIconLinker.LinkItemIcons (또는 메뉴 Tools/아이템/아이콘 연결)
 /// </summary>
@@ -13,7 +13,7 @@ public static class ItemIconLinker
     const string ItemFolder = "Assets/Data/Items";
     const string IconFolder = "Assets/Art/Items";
 
-    static string SourceFolder => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "GRD_motion_trial", "아이템아이콘");
+    static string SourceFolder => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "grd/GRD_motion_trial", "아이템아이콘");
 
     [MenuItem("Tools/아이템/아이콘 연결")]
     static void LinkMenu() => Debug.Log(LinkItemIcons());

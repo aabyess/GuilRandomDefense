@@ -8,7 +8,7 @@
   S(스킬 단위) — 우리 스킬 에셋의 설명에 그 소리를 내는 원작 트리거 이름이 적혀 있는 것. 그 스킬이 나갈 때 난다.
   R(캐릭터 단위) — 트리거 앞머리(Zoro·Kaido…)가 가리키는 원작 캐릭터의 로스터. 어느 스킬인지는 우리 데이터로 못 가린다 →
      그 로스터가 S에 없는 스킬을 쓸 때 캐릭터 소리 묶음에서 하나를 낸다(간격 제한은 런타임). ⚠️ 「그 캐릭터의 소리」까지만 원작 근거.
-소리 파일: ~/GRD_original_sounds(맵 임포트 153) + ~/GRD_original_sounds/_확장팩(확장팩 v2.41 zip 에서 꺼낸 것) + 이미 들여온 Summon 폴더.
+소리 파일: ~/grd/GRD_original_sounds(맵 임포트 153) + ~/grd/GRD_original_sounds/_확장팩(확장팩 v2.41 zip 에서 꺼낸 것) + 이미 들여온 Summon 폴더.
 """
 import collections, csv, os, re, shutil, sys
 
@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 import match
 
 ROOT = match.ROOT
-SRC = os.path.expanduser('~/GRD_original_sounds')
+SRC = os.path.expanduser('~/grd/GRD_original_sounds')
 RES = os.path.join(ROOT, 'Assets/Audio/Original/Resources/Sounds')
 SUMMON = os.path.join(RES, 'Summon')
 OUT = os.path.join(RES, 'Skill')

@@ -13,7 +13,7 @@ FILL = {
     "초월_최상호_AD__Jimbe": "사장님_초월_최상호_AD_상호파집결", "초월_최상호_AD__Jimbe_jingak": "사장님_초월_최상호_AD_상호파집결",
 }
 n = 0
-for d in (H + "/GRD_scenes/auto", H + "/GRD_scenes/add_rel_26/out", H + "/GRD_scenes/vivi4_rel"):
+for d in (H + "/grd/GRD_scenes/auto", H + "/grd/GRD_scenes/add_rel_26/out", H + "/grd/GRD_scenes/vivi4_rel"):
     for sid, sk in FILL.items():
         p = f"{d}/{sid}.json"
         if not os.path.exists(p): continue

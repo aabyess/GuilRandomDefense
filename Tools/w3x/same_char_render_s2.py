@@ -4,8 +4,8 @@
 import csv, json, os, re, subprocess, sys
 from PIL import Image, ImageDraw, ImageFont
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE)); H = os.path.expanduser("~")
-OUT = H + "/Desktop/구랜디스킨모음/같은캐릭터_신작비교"; TMP = H + "/GRD_motion_trial/s2_skin/same_char"; os.makedirs(TMP, exist_ok=True)
-pairs = json.load(open(H + "/GRD_motion_trial/s2_skin/same_char_pairs.json"))
+OUT = H + "/Desktop/구랜디스킨모음/같은캐릭터_신작비교"; TMP = H + "/grd/GRD_motion_trial/s2_skin/same_char"; os.makedirs(TMP, exist_ok=True)
+pairs = json.load(open(H + "/grd/GRD_motion_trial/s2_skin/same_char_pairs.json"))
 rost = sorted({p["ours"]["roster"] for p in pairs}); idx = {r: i for i, r in enumerate(rost)}
 items = [dict(model=r, ids=[], names=[], ours=[], fbx=next(p["ours"]["fbx"] for p in pairs if p["ours"]["roster"] == r), status="") for r in rost]
 json.dump(items, open(TMP + "/items.json", "w"), ensure_ascii=False)

@@ -9,7 +9,7 @@ using UnityEngine;
 /// 원작은 같은 소리를 다시 낼 때 StopSoundBJ → PlaySoundBJ(겹치지 않고 처음부터) — 소리마다 소스 하나로 같게 한다(Coin).
 ///
 /// 작은 효과음(2026-10-06, 사장님 「괜찮은듯」) — Coin 뒤에 붙인 자리들. 파일은 Assets/Audio/Sfx/Resources/Sfx/&lt;자리&gt;/ 아래
-/// 여러 개(blender ~/GRD_sfx, 출처·라이선스는 그 README · Assets/Audio/Sfx/Licenses). Coin과 달리:
+/// 여러 개(blender ~/grd/GRD_sfx, 출처·라이선스는 그 README · Assets/Audio/Sfx/Licenses). Coin과 달리:
 ///   · 자리마다 폴더의 클립을 다 읽어 두고 낼 때마다 하나를 무작위로 고른다.
 ///   · 자리별 볼륨(dB, DefaultVolume 기준) — 파일은 전부 피크 −1 dBFS로 같아서 많이 나는 것을 깎는다.
 ///   · 연타 제한 — 같은 자리 최소 간격 + 1초 안 최대 횟수(평타 셋은 한 묶음으로 센다). 한꺼번에 수십 마리가 맞고 죽어도 안 시끄럽게.

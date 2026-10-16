@@ -1,8 +1,8 @@
 """원작(ORD11.089.w3x) 능력·아이템 아이콘을 뽑는다(2026-10-06, blender 세션 · 읽기 전용 — Assets에 안 쓴다).
    w3a 능력마다 aart(기본 아이콘)·arar(연구)·auar(학습 해제)·aret, w3t 아이템마다 iico를 읽고,
-   경로가 맵(MPQ) 안에 있으면 BLP → PNG로 ~/GRD_skill_icons/ 에 꺼낸다. 맵에 없으면(워크3 표준 BTN*.blp — War3.mpq 필요) 「맵 밖」으로만 표시.
+   경로가 맵(MPQ) 안에 있으면 BLP → PNG로 ~/grd/GRD_skill_icons/ 에 꺼낸다. 맵에 없으면(워크3 표준 BTN*.blp — War3.mpq 필요) 「맵 밖」으로만 표시.
    🔴 /usr/bin/python3 로 돌릴 것(mpyq·Pillow가 거기 있다).
-   /usr/bin/python3 Tools/skill_icons/extract_icons.py            → ~/GRD_skill_icons/ + Tools/skill_icons/ability_icons.csv · item_icons.csv
+   /usr/bin/python3 Tools/skill_icons/extract_icons.py            → ~/grd/GRD_skill_icons/ + Tools/skill_icons/ability_icons.csv · item_icons.csv
 """
 import sys, os, csv, re, collections
 sys.path.insert(0, 'Tools/w3x')
@@ -10,7 +10,7 @@ import w3a, w3u, wts
 from mpqread import Archive
 from PIL import Image
 
-OUT = os.path.expanduser('~/GRD_skill_icons')
+OUT = os.path.expanduser('~/grd/GRD_skill_icons')
 os.makedirs(OUT, exist_ok=True)
 src = open('Tools/w3x/원본/ORD11.089.w3x', 'rb').read()
 open('/tmp/ord_icons.mpq', 'wb').write(src[512:])
@@ -71,7 +71,7 @@ for a in A:
         rows.append([aid, name.replace('\n', ' '), kind, p, cat, real, png])
 
 with open('Tools/skill_icons/ability_icons.csv', 'w', encoding='utf-8-sig', newline='') as fh:
-    w = csv.writer(fh); w.writerow(['능력코드', '이름', '아이콘종류', '아이콘경로', '맵안/밖', '맵안실제이름', 'png파일(~/GRD_skill_icons/)']); w.writerows(rows)
+    w = csv.writer(fh); w.writerow(['능력코드', '이름', '아이콘종류', '아이콘경로', '맵안/밖', '맵안실제이름', 'png파일(~/grd/GRD_skill_icons/)']); w.writerows(rows)
 
 irows = []
 for t in T:

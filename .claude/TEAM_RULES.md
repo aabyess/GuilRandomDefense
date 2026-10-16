@@ -4,7 +4,7 @@
 
 - **pm** (리더): 사장님 지시를 직접 받는 유일한 창구. 작업을 쪼개 팀원에게 배정하고, 본인도 코딩·리뷰·push 한다. 사장님이 직접 띄운다.
 - **구현담당1 / 구현담당2** (팀원): PM이 배정한 코딩 작업을 하고 커밋까지 한 뒤 PM에게 보고한다. PM이 요청하면 PM의 코드를 리뷰한다.
-- **blender** (팀원): Blender 모델·스킨·동작. Assets엔 쓰지 않고 `~/GRD_motion_trial/`에 산출, 반영은 PM.
+- **blender** (팀원): Blender 모델·스킨·동작. Assets엔 쓰지 않고 `~/grd/GRD_motion_trial/`에 산출, 반영은 PM.
 - 팀원 셋은 새 PM이 `.claude/team/spawn_team.sh --fresh`로 Orca 탭에 띄운다(CLAUDE.md 「이어받기」).
 
 ## 모르는 원랜디 용어·감각은 나무위키부터 (사장님 2026-10-06)

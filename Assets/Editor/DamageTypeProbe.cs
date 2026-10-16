@@ -33,7 +33,7 @@ public static class DamageTypeProbe
                 sb.AppendLine($"마깎{shred} 방어{armor}: 물리평타(AD) {M(DamageType.AD, false, 0, 1, false):0} | AP평타 {M(DamageType.AP, false, 0, 1, false):0} | AD스킬 {M(DamageType.AD, true, 0, 1, false):0} | 방무60% {M(DamageType.AD, true, .6f, 1, false):0} | 방무100% {M(DamageType.AD, true, 1f, 1, false):0} | 배성령50%(armorScale) {M(DamageType.AD, false, 0, .5f, false):0} | 마법(AP스킬) {M(DamageType.AP, true, 0, 1, false):0} | 폭발형AD {M(DamageType.AD, true, 0, 1, true):0} | 폭발형AD+방무60% {M(DamageType.AD, true, .6f, 1, true):0} | 폭발형AP {M(DamageType.AP, true, 0, 1, true):0} | 고정 {fixedDealt:0}");
             }
         }
-        System.IO.File.WriteAllText(System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "GRD_damage_probe/result.txt"), sb.ToString());
+        System.IO.File.WriteAllText(System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "grd/GRD_damage_probe/result.txt"), sb.ToString());
         Debug.Log("[DamageTypeProbe]\n" + sb);
     }
 }

@@ -1,16 +1,16 @@
 """초월 부가 이펙트·상시 오라 폴더마다 effects.json(기계가 읽는 부품 목록)을 만든다(2026-10-01). 시스템 python으로:
 
   TRANS=<analysis.json·mdx·_tex가 있는 transwork> AURA=<mdxwork> python3 Tools/blender/gen_effects_json.py [폴더이름 …]
-이름을 주면 그 폴더만(예: 초월_구주호_AD), 안 주면 전부. 읽는 폴더: ~/GRD_motion_trial/초월_부가이펙트/* · 초월_상시오라/*.
+이름을 주면 그 폴더만(예: 초월_구주호_AD), 안 주면 전부. 읽는 폴더: ~/grd/GRD_motion_trial/초월_부가이펙트/* · 초월_상시오라/*.
 스키마·단위 환산은 각 루트의 _effects_schema.md. 변환 좌표 = 유니티(-wy, wz, wx)×0.01 m — FBX(export_mdx_parts.py)와 같은 규약.
 """
 import json, math, os, re, shutil, sys, collections
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "w3x"))
 import mdx_anim, mdx_geo, mdx_effect_parts as EP
 
-HOME = os.path.expanduser("~/GRD_motion_trial")
+HOME = os.path.expanduser("~/grd/GRD_motion_trial")
 ROOT_T, ROOT_A = HOME + "/초월_부가이펙트", HOME + "/초월_상시오라"
-_WORK = os.path.expanduser("~/GRD_motion_trial/_work")
+_WORK = os.path.expanduser("~/grd/GRD_motion_trial/_work")
 TRANS, AURA = os.environ.get("TRANS") or _WORK + "/transwork", os.environ.get("AURA") or _WORK + "/mdxwork"
 SC = 0.01
 FM = {0: "blend", 1: "additive", 2: "modulate", 3: "modulate2x", 4: "alphakey"}

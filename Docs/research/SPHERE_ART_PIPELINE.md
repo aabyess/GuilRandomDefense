@@ -1,6 +1,6 @@
 # 부가 이펙트·상시 오라 파이프라인 (구현담당2 구역, 2026-10-01)
 
-원작 모델의 부가 이펙트(초월 모델 날개·소매·입자…)와 상시 오라를 유니티에 붙이는 길. 재료는 Blender 세션이 `~/GRD_motion_trial/초월_부가이펙트/<로스터>/`(+`_미대응/`)와 `초월_상시오라/<모델>/`에 `effects.json`·FBX·Textures로 낸다(스키마 `_effects_schema.md`).
+원작 모델의 부가 이펙트(초월 모델 날개·소매·입자…)와 상시 오라를 유니티에 붙이는 길. 재료는 Blender 세션이 `~/grd/GRD_motion_trial/초월_부가이펙트/<로스터>/`(+`_미대응/`)와 `초월_상시오라/<모델>/`에 `effects.json`·FBX·Textures로 낸다(스키마 `_effects_schema.md`).
 
 ## 흐름
 1. `sh Tools/sphere_art/run_all.sh` (부가 이펙트) · `sh Tools/sphere_art/run_aura.sh` (상시 오라) — `flatten_effects.py`(**/usr/bin/python3**, PIL 필요)가 effects.json을 `Tools/sphere_art/effects/<별칭>.json`(Unity JsonUtility용 납작 꼴)로 펴고 FBX·텍스처를 `Assets/Resources/Effects/Sphere/Src/<로스터|별칭>/`로 복사.
