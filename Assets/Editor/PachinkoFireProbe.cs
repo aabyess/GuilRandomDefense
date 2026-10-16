@@ -59,4 +59,13 @@ public static class PachinkoFireProbe
         PachinkoOverlay.DebugAddMonitor(3, PachinkoPlan.Roll("miss"));
         return "가짜 모니터 2기";
     }
+    // 관전 사진용: 내 판은 첫 룰렛 꽝, 가짜 원격 슬롯 둘은 크리티컬·러쉬까지 판 — 내 판이 끝나면 관전 화면이 떠야 한다
+    public static string SpectateTest()
+    {
+        PachinkoOverlay.Theme = 2;
+        PachinkoOverlay.DebugAddMonitor(2, PachinkoPlan.Roll("win"));
+        PachinkoOverlay.DebugAddMonitor(3, PachinkoPlan.Roll("reach"));
+        PachinkoController.Begin(new[] { "miss" });
+        return "관전 시험";
+    }
 }
