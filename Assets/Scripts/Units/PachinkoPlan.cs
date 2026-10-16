@@ -244,7 +244,7 @@ public struct PachinkoPlan
         if (first && n > 0)
         {
             if (mode == null) { for (int i = 0; i < n; i++) if (Random.value < vt.rushChance) { hit = i; break; } }
-            else if (mode == "jackpot" || mode == "win") hit = DebugRushAt > 0 ? Mathf.Min(DebugRushAt, n) - 1 : Random.Range(0, n);
+            else if (mode == "jackpot" || mode == "win") hit = PachinkoSettings.DebugRushAt > 0 ? Mathf.Min(PachinkoSettings.DebugRushAt, n) - 1 : Random.Range(0, n);
         }
         p.jackpot = false; p.revive = false;
         p.reach = first;
