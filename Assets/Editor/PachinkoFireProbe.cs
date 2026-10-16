@@ -39,6 +39,8 @@ public static class PachinkoFireProbe
     public static string Skip0() { PachinkoSettings.DebugSkipSeconds = 0f; return "skip 0"; }
     public static string SlimeSuccessFx() { PachinkoOverlay.DebugSlimeSuccessFx(); return "성공 효과"; }
     public static string AutoPush() { PachinkoController.AutoPushForTest = true; return "자동 누름"; }
+    public static string TokyoJackpot() => Start("jackpot", 0);
+    public static string RezeroJackpot() => Start("jackpot", 1);
     public static string TokyoWin() => Start("win", 0);
     public static string TokyoMiss() => Start("miss", 0);
     public static string RezeroWin() => Start("win", 1);
