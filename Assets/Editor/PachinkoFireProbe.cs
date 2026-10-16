@@ -63,9 +63,9 @@ public static class PachinkoFireProbe
     public static string SpectateTest()
     {
         PachinkoOverlay.Theme = 2;
+        PachinkoController.Begin(new[] { "miss" });   // Begin이 모니터를 비우므로 가짜 슬롯은 그 뒤에 올린다
         PachinkoOverlay.DebugAddMonitor(2, PachinkoPlan.Roll("win"));
         PachinkoOverlay.DebugAddMonitor(3, PachinkoPlan.Roll("reach"));
-        PachinkoController.Begin(new[] { "miss" });
         return "관전 시험";
     }
 }
