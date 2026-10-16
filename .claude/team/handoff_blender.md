@@ -1,4 +1,4 @@
-# blender 인수인계 (2026-10-14~15, 직전 blender 세션 → 새 blender 세션)
+# blender 인수인계 (2026-10-14~16, 직전 blender 세션 → 새 blender 세션)
 
 새 세션: 이 파일을 먼저 읽고 PM(`pm` — 이름이 둘이면 새 쪽 ref)에게 「[blender → PM] 준비 완료」. 일이 끝나면 이 파일을 비우고 커밋.
 규칙: **Assets엔 안 쓴다**(반입은 PM·구현담당1/2). 산출은 `~/grd/GRD_*/` · `~/Desktop/구랜디스킨모음/` + 정본 스크립트(Tools/blender · Tools/w3x). 🔴 시스템 파이썬 PIL·numpy·yaml·mpyq는 `/usr/bin/python3`(`-I` 주지 말 것). Blender 창(MCP)은 꺼져 있어 전부 헤드리스(`blender -b --factory-startup --python …`). 커밋은 `git add -- <파일>` → `git commit -m … -- <파일>`(경로 없는 커밋·-a 금지), push는 PM. 큰 산출물이 새로 생기면 `Docs/ARCHIVE_INDEX.md`에 한 줄(위치+재생성 도구). 커밋 끝줄 `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. 원작 수치는 j/w3a/w3u 직접 디코드, 유료 에셋 금지. 임시 세션 blender2(S2 스킨 추출)·blender3(닫힘)가 있었다 — 새 일은 PM 지시로.
@@ -6,7 +6,14 @@
 ## 지금 진행 중인 일 없음 — 대기(PM 지시 기다림)
 미커밋 도구 없음(전부 커밋됨).
 
-## 이번 세션(10-09~10-14)에 끝낸 일과 위치
+## 10-15~16 세션에 추가로 끝낸 일 (PM 지시, 전부 반영·커밋됨)
+- **초월_최상호_AD 컷인 title 재제작**(칭호 「킹카가될뻔했던사나이」): 칭호는 컷인 C안 `title` 레이어에 박혀 있다(다른 10층은 불변). PM이 반입·푸시(7404b80d9).
+- 🔴 **컷인 정본 폴더는 `~/grd/GRD_cutin_swap/layers`**(PM이 import_cutin 기본 src를 이걸로 바꿈, c8ad2f0ed). 옛 `~/GRD_cutin/layers`는 10-08 원본판(스킨 교체 전) — 그걸로 import_cutin을 돌리면 교체 15기가 옛 판으로 덮인다. **컷인을 고치면 swap/layers에 반영.** 주의: 홈 폴더 이동 뒤 `~/GRD_cutin`(원본 render/layers/C_all, `_prev_1015` 옛 최상호 백업)이 `~/grd/` 아래에 안 보인다(찾아도 없음) — 필요하면 `Tools/blender/gen_cutin_comp.py`의 CUTIN_HOME=`~/grd/GRD_cutin_swap`(render·layers 있음)으로 돌릴 것. gen_cutin_comp C all <유닛>은 `C_all/`에 still·mp4, `layers/`에 층을 쓴다.
+- **파칭코 불꽃(SymbolsFire)·전생슬(SymbolsSlime) 보석 숫자**: `~/grd/GRD_pachinko_art/symbols_fire/`·`symbols_slime/`(각 45파일, 리제로와 같은 이름·크기·여백, contact_sheet.png). 도구: `SYM_THEME=fire|slime /usr/bin/python3 Tools/pachinko/symbol_rz.py 1 2 3 4 5 6 7 8 9` 와 `--pink 1…9`(인자 없이 돌리면 리제로 시트 단계가 붙음). 팔레트·베벨은 스크립트 상단 PAL·BEVEL·SIDE, 리제로 크기 맞춤 배율 RZ_FIT=0.89. PM 반영 완료(ea7e307bf).
+- 대기 중: 파칭코 4테마 밤샘 작업에서 구현담당2가 그림(告 마름모 카드·둥근 돔 PUSH 버튼·炎 문양·CRITICAL BONUS 로고 등)을 직접 요청할 수 있다 → `~/grd/GRD_pachinko_art/`에 만들어 구현담당2에게 경로, PM에 한 줄.
+- 경로 규칙(10-16): 산출물 폴더는 `~/grd/GRD_*`로 이동했다. 새 산출물도 `~/grd/GRD_<이름>/`.
+
+## 이전 세션(10-09~10-14)에 끝낸 일과 위치
 | 일 | 산출 위치 | 도구(재생성) |
 |---|---|---|
 | **원작 스킨 교체 25기** 팩(model·model_fixed·clip_map·scripts·pairing) · 교체목록.csv(PM 정본) | `~/grd/GRD_skin_swap/<이름>/` (이전 판 `_model_fixed_prev/`, 검증표 `_재수출검증.csv`, 클립 중 알파 `클립중_알파변화.json`, 알파 복구표 `_알파복구.csv`, 재복사 목록 `_재복사목록.csv`) | `Tools/w3x/skin_swap_pack.py [--new]` → `swap_refix_all.py [팩]`(재수출+검증) |
