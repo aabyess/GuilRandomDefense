@@ -1789,27 +1789,50 @@ public class PachinkoOverlay : MonoBehaviour
         }
     }
 
+    TMP_Text rushLabel;
+    void EnsureRushLabel()
+    {
+        if (rushLabel == null)
+        {
+            rushLabel = Label("rushLabel", stage, "ボーナスステージ", 54f, new Color(1f, 0.82f, 0.25f), TextAlignmentOptions.Center, 0.3f);
+            Place(rushLabel.rectTransform, 560, 300, 800, 80);
+        }
+        rushLabel.gameObject.SetActive(true);
+    }
+
+    /// <summary>보너스 스테이지 진입 문구(러쉬 시작) — 한 번 크게 튀고 사라진다.</summary>
+    IEnumerator BonusStageIntro()
+    {
+        EnsureFireWidgets();
+        fireBanner.text = "BONUS STAGE\nボーナスステージ";
+        fireBanner.fontStyle = FontStyles.Italic; fireBanner.color = new Color(1f, 0.82f, 0.25f);
+        fireBanner.outlineColor = new Color32(60, 10, 0, 255); fireBanner.outlineWidth = 0.35f;
+        fireBanner.fontSize = 96f;
+        fireBanner.gameObject.SetActive(true);
+        Play(Slot.Hold);
+        if (!ReduceFlash) StartCoroutine(FlashColor(new Color(1f, 0.9f, 0.45f, 0.45f), 0.1f));
+        yield return PopLabel(fireBanner, 2.0f);
+        fireBanner.fontSize = 118f;
+    }
+
     IEnumerator SequenceVideo(PachinkoPlan p, VideoThemeSpec spec)
     {
         EnsureFireWidgets();
         float t0 = Now - PachinkoSettings.DebugSkipSeconds;   // -pachinkoSkipTo(시험용, 평소 0)
         kanekiRect.gameObject.SetActive(false); heartbeat = false;
         videoTickerMode = true; ApplyTickerStyle(spec);
-        SetFireChrome(false);
+        SetFireChrome(true);   // 3단계 재설계(10-16): 룰렛은 영상 0초부터 영상 위에 뜬다
+        fireBadge.gameObject.SetActive(true);
+        ticker.gameObject.SetActive(false); holdsRect.gameObject.SetActive(false);   // 영상 위라 전광판·구슬은 뺀다
         fireSubtitleCover.gameObject.SetActive(spec.coverSubtitles);
         UseFireVideo(true);
-        LoadImpacts(spec.videoFile, 1, t0);   // 룰렛 전 구간의 번쩍임·흔들림 시각표(Resources/Pachinko/Impacts/<영상>.json)
+        LoadImpacts(spec.videoFile, 1, t0);   // 전 구간의 번쩍임·흔들림 시각표(Resources/Pachinko/Impacts/<영상>.json)
         videoNatural = true;
         videoStopRequested = false;
         if (videoCo != null) StopCoroutine(videoCo);
         videoCo = StartCoroutine(FireVideoRoutine(t0, spec));
 
-        // 1:30 룰렛 회전 시작 — 기계가 튀어나온다
-        yield return WaitUntilVideo(t0, spec.rouletteStart);
-        SetFireChrome(true);
-        fireBadge.gameObject.SetActive(true);
-        ticker.gameObject.SetActive(false); holdsRect.gameObject.SetActive(false);   // 영상 위라 전광판·구슬은 뺀다
-        fireSubtitleCover.gameObject.SetActive(spec.coverSubtitles);
+        // ① 첫 룰렛 0~firstEnd초 — 기계가 튀어나와 처음부터 돈다
         Play(Slot.Open);
         float u = 0f;
         while (u < 0.4f)
@@ -1826,41 +1849,76 @@ public class PachinkoOverlay : MonoBehaviour
         reels[1].liftT = 1f;
         StartCoroutine(SpinLoop(9f));
 
-        // 정지: 왼쪽 → 오른쪽 → 가운데(1:46에 딱 멈춘다)
-        float stopAt = t0 + spec.rouletteStop;
-        float span = spec.rouletteStop - spec.rouletteStart;
-        yield return WaitUntilVideo(t0, spec.rouletteStart + span * 0.45f);
+        // 정지: 왼쪽 → 오른쪽 → 가운데(firstEnd에 딱 멈춘다)
+        float fe = spec.firstEnd;
+        yield return WaitUntilVideo(t0, fe * 0.45f);
         StartCoroutine(StopReel(0, p.left, 1.5f, spinSpeeds[0]));
-        yield return WaitUntilVideo(t0, spec.rouletteStart + span * 0.7f);
+        yield return WaitUntilVideo(t0, fe * 0.7f);
         StartCoroutine(StopReel(2, p.right, 1.9f, spinSpeeds[2]));
         float centerDur = p.reach ? 2.6f : 1.4f;
-        yield return WaitUntilVideo(t0, spec.rouletteStop - centerDur);
+        yield return WaitUntilVideo(t0, fe - centerDur);
         if (p.reach) reels[1].Highlight(new Color(1f, 0.78f, 0.6f));
         StopAllSpin();
         yield return StopReel(1, p.center, centerDur, spinSpeeds[1] * 0.5f);
         reels[1].Highlight(Color.white);
-        yield return WaitUntilVideo(t0, spec.rouletteStop);   // 판정
+        yield return WaitUntilVideo(t0, fe);   // 첫 룰렛 판정
 
         float resultStart;
-        if (!p.win)
+        if (!p.reach)
         {
-            // 꽝: 영상을 멈추고 결과(리치꽝 보상 / 꽝 보상)
+            // 첫 룰렛 꽝: 영상을 멈추고 결과(특별함 위습)
             if (videoPlayer.isPlaying) videoPlayer.Pause();
             dim.color = new Color(0f, 0f, 0f, 0.55f);
             resultStart = Now;
             StartCoroutine(Pop(logoZannen, p.ResultSeconds(false), 3f, keep: true));
-            ShowBand(p.reach ? "아쉬움 보상: 희귀함 위습 ×1" : "아쉬움 보상: 특별함 위습 ×1");
+            ShowBand("아쉬움 보상: 특별함 위습 ×1");
             yield return FireFinish(resultStart + p.ResultSeconds(false));
             yield break;
         }
 
-        // 같은 숫자 셋 = 크리티컬 보너스
+        // ② 보너스 스테이지(러쉬) — 문구 후 룰렛이 아니라 숫자가 2초마다 바로바로 뜬다
+        EnsureRushLabel();
+        StartCoroutine(BonusStageIntro());
+        int rushN = spec.RushCount;
+        byte rl = 0, rc = 0, rr = 0;
+        bool critical = false;
+        for (int i = 0; i < rushN; i++)
+        {
+            float drawT = spec.RushDrawTime(i);
+            p.RushDigits(i, out rl, out rc, out rr);
+            rushLabel.text = $"ボーナスステージ  {i + 1} / {rushN}";
+            // 짧게 휙 돌아 세 숫자가 차례로 선다(drawT에 가운데가 선다)
+            yield return WaitUntilVideo(t0, drawT - 0.75f);
+            StartCoroutine(StopReel(0, rl, 0.55f, 14f));
+            yield return WaitUntilVideo(t0, drawT - 0.6f);
+            StartCoroutine(StopReel(2, rr, 0.55f, 14f));
+            yield return WaitUntilVideo(t0, drawT - 0.45f);
+            StartCoroutine(StopReel(1, rc, 0.45f, 14f));
+            yield return WaitUntilVideo(t0, drawT);
+            if (i == p.RushWinIndex) { critical = true; break; }
+        }
+        rushLabel.gameObject.SetActive(false);
+
+        if (!critical)
+        {
+            // 러쉬 끝까지 크리티컬 없음: 영상을 멈추고 결과(희귀함 위습)
+            if (videoPlayer.isPlaying) videoPlayer.Pause();
+            dim.color = new Color(0f, 0f, 0f, 0.55f);
+            resultStart = Now;
+            StartCoroutine(Pop(logoZannen, p.ResultSeconds(false), 3f, keep: true));
+            ShowBand("보너스 스테이지 보상: 희귀함 위습 ×1");
+            yield return FireFinish(resultStart + p.ResultSeconds(false));
+            yield break;
+        }
+
+        // ③ 러쉬에서 같은 숫자 셋 = 크리티컬 보너스
+        foreach (Reel r in reels) r.Highlight(new Color(1f, 0.85f, 0.45f));
         if (spec.key == "slime") yield return SlimeCriticalIntro();
         else StartCoroutine(FireCriticalFlash());   // 흔들기 없이 줌 펀치로
-        if (spec.key == "fire") ShowFireBanner(p.center == 7 && p.left == 7);
+        if (spec.key == "fire") ShowFireBanner(rc == 7);
         else
         {
-            fireBanner.text = p.center == 7 && p.left == 7 ? "7 7 7  クリティカル ボーナス!!" : "クリティカル ボーナス!";
+            fireBanner.text = rc == 7 ? "7 7 7  クリティカル ボーナス!!" : "クリティカル ボーナス!";
             fireBanner.fontStyle = FontStyles.Normal; fireBanner.color = new Color(1f, 0.82f, 0.25f); fireBanner.outlineColor = new Color32(30, 0, 12, 255); fireBanner.outlineWidth = 0.3f;
         }
         fireBanner.gameObject.SetActive(true);
@@ -1890,7 +1948,7 @@ public class PachinkoOverlay : MonoBehaviour
         if (videoPlayer.isPlaying) videoPlayer.Pause();
         SetFireChrome(true); fireBadge.gameObject.SetActive(false);   // 결과 화면에서 숫자·로고를 다시 보인다
         fireSubtitleCover.gameObject.SetActive(false);
-        bool lost = !pushed && !p.jackpot;   // 777은 PUSH를 놓쳐도 랜덤 유닛은 확정 — 깨짐·흑백 없이 「보너스 놓침」
+        bool lost = !pushed;   // 크리티컬까지 간 뒤 PUSH 실패 — 깨짐·흑백(보상은 전설·히든 위습)
         if (lost)
         {
             // 실패: 화면이 금이 가며 흑백으로 빠지고 조각이 떨어진다(「번쩍임 줄이기」와 무관하게 흑백 유지, 섬광만 끈다)
@@ -1902,26 +1960,18 @@ public class PachinkoOverlay : MonoBehaviour
         float resSecs = p.ResultSeconds(pushed);
         if (pushed && spec.key == "slime") StartCoroutine(SlimeSuccessFx());
         else if (pushed && !ReduceFlash) { StartCoroutine(WinFlashStandard()); shakeUntil = Now + 0.4f; }
-        if (lost && spec.key == "slime") foreach (Reel rl in reels) rl.Highlight(new Color(0.74f, 0.78f, 0.88f));   // 빛 빠진 은색 숫자
-        bool top = PachinkoSettings.VideoSuccessIsTopReward || p.jackpot;   // PUSH 성공 = 제일 좋은 보상(랜덤유닛)
+        if (lost && spec.key == "slime") foreach (Reel rg in reels) rg.Highlight(new Color(0.74f, 0.78f, 0.88f));   // 빛 빠진 은색 숫자
         if (pushed)
-        {
+        {   // 크리티컬 + PUSH 성공 = 제일 좋은 보상(랜덤 유닛)
             StartCoroutine(Confetti(Mathf.Max(5.5f, resSecs - 0.4f)));
-            StartCoroutine(Fireworks(top, spec.theme));
-            StartCoroutine(Pop(top ? logoOoatari : logoAtari, resSecs + 0.5f, 1.2f, keep: true));
-            ShowBand(p.jackpot ? "大当たり 보상: 랜덤 유닛 ×1 + 희귀함 위습 ×1 (PUSH 성공)" : top ? "大当たり 보상: 랜덤 유닛 ×1" : "当たり 보상: 전설·히든 위습 ×1");
-        }
-        else if (p.jackpot)
-        {
-            StartCoroutine(Confetti(Mathf.Max(3f, resSecs - 0.4f)));
+            StartCoroutine(Fireworks(true, spec.theme));
             StartCoroutine(Pop(logoOoatari, resSecs + 0.5f, 1.2f, keep: true));
-            ShowBand("大当たり 보상: 랜덤 유닛 ×1 (PUSH 보너스 놓침)");
+            ShowBand("大当たり 보상: 랜덤 유닛 ×1");
         }
         else
-        {
-            bool failWin = PachinkoSettings.VideoSuccessIsTopReward;   // PUSH 실패 = 당첨 보상(전설·히든 위습)
-            StartCoroutine(Pop(failWin ? logoAtari : logoZannen, resSecs, 3f, keep: true));
-            ShowBand(failWin ? "PUSH 실패… 当たり 보상: 전설·히든 위습 ×1" : "PUSH 실패… 아쉬움 보상: 희귀함 위습 ×1");
+        {   // 크리티컬까지(PUSH 실패) = 전설·히든 위습
+            StartCoroutine(Pop(logoAtari, resSecs, 3f, keep: true));
+            ShowBand("PUSH 실패… 当たり 보상: 전설·히든 위습 ×1");
         }
         yield return FireFinish(resultStart + resSecs);
     }
@@ -2280,14 +2330,8 @@ public class PachinkoOverlay : MonoBehaviour
         PachinkoPlan p = e.plan; bool ok = e.who >= 0 && p.pushWin;
         if (PachinkoSettings.VideoTheme(p.theme) != null)
         {
-            if (p.win)
-            {
-                bool top = PachinkoSettings.VideoSuccessIsTopReward || p.jackpot;
-                if (p.jackpot) return ok ? "<color=#FFD54A>777 + PUSH 성공! 랜덤 유닛 + 희귀함 위습</color>" : "<color=#FFD54A>777 대당첨! 랜덤 유닛</color> · 보너스 놓침";
-                if (ok) return top ? "<color=#FFD54A>PUSH 성공! 랜덤 유닛</color>" : "<color=#FFD54A>PUSH 성공! 전설·히든 위습</color>";
-                return PachinkoSettings.VideoSuccessIsTopReward ? "<color=#FF8A65>PUSH 실패 · 전설·히든 위습</color>" : "<color=#FF8A65>PUSH 실패 · 희귀함 위습</color>";
-            }
-            return p.reach ? "리치 꽝 · 희귀함 위습" : "꽝 · 특별함 위습";
+            if (p.win) return ok ? "<color=#FFD54A>PUSH 성공! 랜덤 유닛</color>" : "<color=#FF8A65>PUSH 실패 · 전설·히든 위습</color>";
+            return p.reach ? "보너스 스테이지 · 희귀함 위습" : "꽝 · 특별함 위습";
         }
         return p.jackpot ? (ok ? "<color=#FFD54A>777 + PUSH 성공! 랜덤 유닛 + 희귀함 위습</color>" : "<color=#FFD54A>777 대당첨! 랜덤 유닛</color> · 보너스 놓침") : p.win ? "<color=#FFD54A>당첨! 전설·히든 위습</color>" : p.reach ? "리치 꽝 · 희귀함 위습" : "꽝 · 특별함 위습";
     }
@@ -2300,9 +2344,9 @@ public class PachinkoOverlay : MonoBehaviour
         string d1 = "?", d2 = "?", d3 = "?";
         VideoThemeSpec spec = PachinkoSettings.VideoTheme(p.theme);
         bool fire = spec != null;
-        float L = fire ? spec.rouletteStart + (spec.rouletteStop - spec.rouletteStart) * 0.45f + 1.5f : P;
-        float R = fire ? spec.rouletteStart + (spec.rouletteStop - spec.rouletteStart) * 0.7f + 1.9f : P;
-        float C = fire ? spec.rouletteStop : P;
+        float L = fire ? spec.firstEnd * 0.45f + 1.5f : P;
+        float R = fire ? spec.firstEnd * 0.7f + 1.9f : P;
+        float C = fire ? spec.firstEnd : P;
         if (el >= L) d1 = p.left.ToString();
         if (el >= R) d2 = p.right.ToString();
         if (el >= C) d3 = p.center.ToString();
@@ -2319,8 +2363,7 @@ public class PachinkoOverlay : MonoBehaviour
         {
             int total = Mathf.RoundToInt(P);
             int bar = Mathf.Clamp(Mathf.RoundToInt(10f * el / Mathf.Max(1f, P)), 0, 10);
-            string status = fire && el >= spec.rouletteStart ? (el < spec.rouletteStop ? "룰렛 회전" : "크리티컬 보너스!") : "영상 재생";
-            if (fire && p.win && el >= spec.rouletteStop) status = "<color=#FFD54A>크리티컬 보너스!</color>";
+            string status = !fire ? "영상 재생" : el < spec.firstEnd ? "룰렛 회전" : !p.reach ? "결과 대기" : p.win && el >= spec.RushDrawTime(p.RushWinIndex) ? "<color=#FFD54A>크리티컬 보너스!</color>" : "보너스 스테이지";
             phase = $"{new string('#', bar)}{new string('-', 10 - bar)} {FmtT(el)}/{FmtT(total)} {status}";
         }
         else if (el < P + push + 0.5f && push > 0f) phase = "<color=#FFD54A>PUSH 대기 중</color>";
