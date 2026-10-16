@@ -2500,6 +2500,7 @@ public class PachinkoOverlay : MonoBehaviour
             SpecDigitsAt(specTarget, vs, el, specD, specSpin); SpecShowGems(specTarget.plan.theme, specD, specSpin);
             specStatus.text = SpecStatusAt(specTarget, vs, el, rank);
             specHint.gameObject.SetActive(cands.Count > 1);
+            if (videoAudio != null) videoAudio.volume = Mathf.Clamp01(AudioPrefs.MusicVolume * 0.35f);   // 내 root가 꺼져 Update의 볼륨 줄이 안 돈다 — 여기서 직접(작게)
             yield return null;
         }
         if (videoPlayer != null && (videoPlayer.isPlaying || videoPlayer.isPrepared)) videoPlayer.Stop();
