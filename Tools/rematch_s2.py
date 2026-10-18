@@ -139,6 +139,10 @@ def j_index(units_s2):
     return amap, umap
 
 
+FOUND_PATH = {}   # 모델 이름(소문자) → S2 MPQ 안 실제 경로(model_pull.py s2 인자)
+RAW_PATH = {}     # 모델 이름(소문자) → 원작 필드·트리거에 적힌 경로
+
+
 def model_status_factory(arch):
     ours = set()
     base = os.path.join(ROOT, 'Assets', 'Art', 'Effects', 'Original')
@@ -155,6 +159,7 @@ def model_status_factory(arch):
         p = path.replace('\\\\', '\\')
         stem = os.path.splitext(os.path.basename(p.replace('\\', '/')))[0]
         key = stem.lower()
+        RAW_PATH.setdefault(key, p)
         if key in cache:
             return cache[key]
         in_map = False
@@ -162,6 +167,7 @@ def model_status_factory(arch):
             try:
                 if arch.read(c):
                     in_map = True
+                    FOUND_PATH[key] = c
                     break
             except Exception:
                 pass
@@ -409,12 +415,17 @@ def main():
                 fx_rows.append((a['name'], k, stem, where, st))
                 fx[stem]['users'].add('%s/%s' % (r['name'], a['name']))
                 fx[stem]['status'], fx[stem]['where'] = st, where
+                fx[stem].setdefault('files', set()).add(r['file'])
+                rg = re.findall(r'범위 : ([^·]+)', a['desc'])
+                if rg:
+                    fx[stem].setdefault('ranges', set()).add('%s: %s' % (a['name'], rg[0].strip()))
             skill_rows.append(dict(grade=r['grade_name'], name=r['name'], file=r['file'], orig=uname(new), aid=a['id'], sname=a['name'], desc=a['desc'], base=a['base'],
                                    fx='; '.join('%s:%s(%s)' % (k, s, st) for (sn, k, s, w, st) in fx_rows if sn == a['name']) or '없음'))
         for m in sorted(unit_models):
             stem, st, where = mstatus(m)
             fx[stem]['users'].add('%s/(유닛 트리거)' % r['name'])
             fx[stem]['status'], fx[stem]['where'] = st, where
+            fx[stem].setdefault('files', set()).add(r['file'])
         fx_summary = Counter(st.split('(')[0] for (_, _, _, _, st) in fx_rows)
         fx_txt = ' · '.join('%s %d' % (k, v) for k, v in fx_summary.items()) if fx_rows else ('원작 아트 필드 없음' if u else '')
         rows.append(dict(
@@ -427,6 +438,7 @@ def main():
     json.dump(rows, open(os.path.join(OUT, 'rematch.json'), 'w'), ensure_ascii=False, indent=1)
     write_xlsx(rows, skill_rows, fx, pool, claimed, U)
     write_md(rows, pool, claimed, U)
+    write_blender_csv(rows, fx)
     print(json.dumps({'rows': len(rows), 'skills': len(skill_rows), 'fx_models': len(fx), 'change': Counter(r['change'] for r in rows),
                       'how': Counter(r['how'] for r in rows)}, ensure_ascii=False, default=str))
 
@@ -460,6 +472,50 @@ def write_xlsx(rows, skill_rows, fx, pool, claimed, U):
             prow.append((EX.GRADE[g], i, u['name_full'] or u['name'], u['grade'] + ' · ' + u['grade_src'], fmt(u['atk']), u['cool'], claimed.get(i, '(미사용)')))
     EX.write_sheet(ws4, head + ' · 등급마다 받을 수 있는 S2 원작과 쓰는 로스터', ['우리 등급', 'S2 id', 'S2 이름', 'S2 등급·근거', '공격력', '공격 주기', '쓰는 로스터'], prow, [9, 8, 34, 30, 12, 10, 26])
     EX.save(wb, os.path.join(OUT, '재매칭_제안.xlsx'))
+
+
+def write_blender_csv(rows, fx):
+    """blender 작업 목록(사장님 10-18 「원작 스킬 이펙트 가져오기」): 이미 들어온 것은 빼고 ①꺼내기만 ②손질 ③제작, 미확정 로스터에만 쓰이면 「보류」."""
+    hold_files = {r['file'] for r in rows if r['how'] in ('중복', '대응 없음') or 'S2에서 평타' in r['note']}
+    old_mpq = os.path.expanduser('~/grd/GRD_motion_trial/_work/ord.mpq')
+    old = D.Archive(old_mpq) if os.path.exists(old_mpq) else None
+
+    def in_old(stem):
+        if old is None:
+            return ''
+        for c in (stem + '.mdx', 'war3mapImported\\' + stem + '.mdx'):
+            try:
+                if old.read(c):
+                    return c
+            except Exception:
+                pass
+        return ''
+    out = []
+    for stem, v in fx.items():
+        st = v['status']
+        if st.startswith('이미') or stem in ('_', '-', ''):
+            continue
+        group = '① 꺼내기만' if st.startswith('꺼내기만') else ('② 꺼내면 깨짐 손질' if st.startswith('꺼내도') else '③ 없음 제작')
+        files = v.get('files', set())
+        hold = bool(files) and files <= hold_files
+        key = stem.lower()
+        src = 's2' if key in FOUND_PATH else ''
+        if not src and v['where'] != '기본 War3':
+            op = in_old(stem)
+            if op:
+                src = 'old'
+                FOUND_PATH[key] = op
+                if group == '③ 없음 제작':
+                    group = '① 꺼내기만'
+        out.append(('보류(매칭 미확정)' if hold else group, stem, FOUND_PATH.get(key) or RAW_PATH.get(key, ''), src or ('기본 War3(맵 밖)' if v['where'] == '기본 War3' else '맵에 없음'),
+                    st, '; '.join(sorted(v['users'])), '; '.join(sorted(v.get('ranges', set()))) or '(툴팁에 범위 없음)', ', '.join(sorted(files))))
+    order = {'① 꺼내기만': 0, '② 꺼내면 깨짐 손질': 1, '③ 없음 제작': 2, '보류(매칭 미확정)': 3}
+    out.sort(key=lambda x: (order[x[0]], x[1].lower()))
+    with open(os.path.join(OUT, 'effects_for_blender.csv'), 'w', encoding='utf-8-sig', newline='') as f:
+        w = csv.writer(f)
+        w.writerow(['묶음', '모델 이름', '원작 경로(model_pull.py 인자)', 'model_pull 판(s2|old)', '상태', '쓰는 유닛/스킬', '툴팁 범위(크기 맞출 때)', '로스터 파일'])
+        w.writerows(out)
+    return Counter(x[0] for x in out)
 
 
 def write_md(rows, pool, claimed, U):
