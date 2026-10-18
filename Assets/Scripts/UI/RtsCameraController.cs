@@ -81,11 +81,10 @@ public class RtsCameraController : MonoBehaviour
     {
         LaneMarker lane = LaneMarker.Get(LocalPlayer.LocalPlayerId);
         if (lane == null || TryGetShopBounds(lane, out _)) yield break;
-        Vector3 framedAt = transform.position;
-        for (float waited = 0f; waited < 30f; waited += 0.5f)
+        for (float waited = 0f; waited < 30f; waited += 0.25f)
         {
-            yield return new WaitForSecondsRealtime(0.5f);
-            if ((transform.position - framedAt).sqrMagnitude > 1f) yield break;   // 사용자가 움직였다 — 건드리지 않는다
+            yield return new WaitForSecondsRealtime(0.25f);
+            if (CurrentSpeed > 0.01f) yield break;   // 사용자가 카메라를 움직였다 — 건드리지 않는다(시작 구도는 게임이 스스로 다시 잡아 위치가 조금씩 바뀐다)
             if (!TryGetShopBounds(lane, out _)) continue;
             FocusOnLocalLane();
             yield break;
