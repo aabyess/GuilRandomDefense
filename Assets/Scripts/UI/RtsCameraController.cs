@@ -284,7 +284,9 @@ public class RtsCameraController : MonoBehaviour
         if (TryGetShopBounds(lane, out Bounds shops))
         {
             Vector3 lo = region.min, hi = region.max;
-            lo.x = Mathf.Min(lo.x, shops.min.x); hi.x = Mathf.Max(hi.x, shops.max.x);
+            // 바깥쪽(서쪽) 끝 건물이 화면 가장자리에 걸려 잘리지 않게 건물 폭의 절반쯤 여백(10-19 ui_상점열_이름표 사진: 영원함 강화소가 잘림).
+            float pad = Mathf.Max(shops.size.x, 1f) * 0.5f;
+            lo.x = Mathf.Min(lo.x, shops.min.x - pad); hi.x = Mathf.Max(hi.x, shops.max.x);
             region.SetMinMax(lo, hi);
         }
         float groundY = island.position.y + island.lossyScale.y * 0.5f;
