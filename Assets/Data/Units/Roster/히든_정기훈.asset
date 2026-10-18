@@ -17,21 +17,23 @@ MonoBehaviour:
   skinAlias: "\uAC00\uBB44\uC758 \uC7AD,Jack the Drought,Jack,\uC7AD"
   personOverride: 
   damageType: 1
-  attackType: 3
+  attackType: 2
   movementAbility: 0
   hp: 583.2
-  attackPower: 20001
+  attackPower: 14501
   attackRange: 143.99
-  attackSpeed: 1.1905
+  attackSpeed: 1.4286
   moveSpeed: 125.3
   skill: {fileID: 0}
-  skills: []
+  skills:
+  - {fileID: 11400000, guid: 586af1be1baa10c730cc324eb756e438, type: 2}
+  - {fileID: 11400000, guid: 3aed84e7bb4146261725776e679ca79d, type: 2}
   trait: {fileID: 0}
   prefab: {fileID: 4383313156331082807, guid: 431a1aa01f1a14ea0878ea3fcff4a240, type: 3}
-  critChance: 0
-  critDamageMultiplier: 1
-  critBonusDamage: 0
-  critStunDuration: 0
+  critChance: 0.15
+  critDamageMultiplier: 3
+  critBonusDamage: 250000
+  critStunDuration: 0.9
   isSystemUnit: 0
   baseStrength: 0
   baseAgility: 0
@@ -53,8 +55,8 @@ MonoBehaviour:
   sellRewardEveryNWoodChance: 1
   primaryStat: 0
   manaRegenPerSecond: 0
-  manaMax: 0
-  manaGaugePerMana: 0
+  manaMax: 100
+  manaGaugePerMana: 1
   lifeGaugeRegenPerSecond: 0
   lifeGaugeMax: 0
   manaGaugeStart: 0
@@ -87,4 +89,4 @@ MonoBehaviour:
   enhanceMaxLevel: 0
   enhanceGoldCost: 0
   enhanceWispCount: 0
-  originalMatchName: 
+  originalMatchName: "\uD788\uB4E0 \uBE44\uC758 \uC2DC\uB958"
