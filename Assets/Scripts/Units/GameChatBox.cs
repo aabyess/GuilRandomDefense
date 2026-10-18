@@ -132,6 +132,17 @@ public class GameChatBox : MonoBehaviour
             return;
         }
 
+        // S2 데비백파이트: 내 특별함 유닛 하나를 고르고 「-데비백」 — 선택은 이 PC라 여기서 대상을 정하고 판정은 호스트.
+        if (text.Trim() == "-데비백")
+        {
+            SelectionManager sm = FindFirstObjectByType<SelectionManager>();
+            Selectable pick = sm != null && sm.Selected.Count > 0 ? sm.Selected[0] : null;
+            if (pick == null) { ShowStatus("데비백파이트에 걸 자신의 '특별' 유닛을 선택하세요."); return; }
+            if (GameAuthority.IsServer) { string err = S2DebeBack.Execute(pick); if (err != null) ShowStatus(err); }
+            else NetCommands.RequestHudUnitAction(NetHudAction.DebeBack, pick, 0);
+            return;
+        }
+
         // 10-03 「시야 N」 카메라 줌 — 이 PC 화면만 바꾸니 호스트로 안 보내고 말로도 안 뿌린다.
         string sight = RtsCameraController.TryHandleSightChat(text);
         if (sight != null)
