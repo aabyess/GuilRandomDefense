@@ -137,19 +137,19 @@ public class DifficultySelectHud : MonoBehaviour
     {
         // 사진: 판 가운데, 폭 ≈33% × 높이 ≈48%(6버튼이라 사진 5버튼보다 조금 높게).
         RectTransform panel = CreatePanel(transform, "DifficultyHostPanel", new Color(0.04f, 0.07f, 0.18f, 1f));
-        SetAnchors(panel, new Vector2(0.335f, 0.20f), new Vector2(0.665f, 0.80f));
+        SetAnchors(panel, new Vector2(0.335f, 0.12f), new Vector2(0.665f, 0.88f));
         UiSkin.Apply(panel.GetComponent<Image>(), "dialog_panel_9s", new Color(0.04f, 0.07f, 0.18f, 1f));
         hostPanel = panel.gameObject;
 
         TMP_Text title = CreateLabel(panel, "Title", "모드를 선택하세요.");
-        SetAnchors(title.rectTransform, new Vector2(0.05f, 0.84f), new Vector2(0.95f, 0.96f));
+        SetAnchors(title.rectTransform, new Vector2(0.05f, 0.88f), new Vector2(0.95f, 0.97f));
         title.fontSize = 30;
         title.color = new Color(1f, 0.84f, 0.25f);
 
         // 버튼 6개 세로(남색+금테). 위에서 아래로 쉬움…악몽.
-        float top = 0.80f;
-        const float height = 0.105f;
-        const float gap = 0.022f;
+        float top = 0.86f;
+        const float height = 0.085f;
+        const float gap = 0.017f;
         for (int i = 0; i < Order.Length; i++)
         {
             DifficultyMode mode = Order[i];
@@ -173,6 +173,34 @@ public class DifficultySelectHud : MonoBehaviour
             label.raycastTarget = false;
             top = bottom - gap;
         }
+
+        // S2 모드 토글(변질·이세계) — 지옥 이상에서만 적용된다(GameModes). 난이도 버튼을 누를 때 이 값이 같이 간다.
+        alteredToggle = BuildToggle(panel, "Toggle_Altered", new Vector2(0.09f, 0.115f), new Vector2(0.91f, 0.195f), () => { altered = !altered; RefreshToggles(); });
+        otherWorldToggle = BuildToggle(panel, "Toggle_OtherWorld", new Vector2(0.09f, 0.02f), new Vector2(0.91f, 0.10f), () => { otherWorld = !otherWorld; RefreshToggles(); });
+        RefreshToggles();
+    }
+
+    bool altered, otherWorld = GameModes.OtherWorldDefaultOn;
+    TMP_Text alteredToggle, otherWorldToggle;
+
+    TMP_Text BuildToggle(RectTransform parent, string name, Vector2 min, Vector2 max, UnityEngine.Events.UnityAction onClick)
+    {
+        RectTransform rect = CreatePanel(parent, name, new Color(0.1f, 0.16f, 0.4f, 1f));
+        SetAnchors(rect, min, max);
+        UiSkin.Apply(rect.GetComponent<Image>(), "button_navy_9s", new Color(0.1f, 0.16f, 0.4f, 1f));
+        Button button = rect.gameObject.AddComponent<Button>();
+        button.onClick.AddListener(onClick);
+        TMP_Text label = CreateLabel(rect, "Label", "");
+        SetAnchors(label.rectTransform, Vector2.zero, Vector2.one);
+        label.fontSize = 20;
+        label.raycastTarget = false;
+        return label;
+    }
+
+    void RefreshToggles()
+    {
+        if (alteredToggle != null) alteredToggle.text = $"<color=#8B3EB4>변질모드</color> {(altered ? "<color=#7CFC00>켜짐</color>" : "꺼짐")} <size=70%>(지옥 이상)</size>";
+        if (otherWorldToggle != null) otherWorldToggle.text = $"<color=#51DDF5>이세계모드</color> {(otherWorld ? "<color=#7CFC00>켜짐</color>" : "꺼짐")} <size=70%>(지옥 이상에서 끌 수 있음)</size>";
     }
 
     void BuildWaitingPanel()
@@ -189,6 +217,7 @@ public class DifficultySelectHud : MonoBehaviour
     void OnModeButtonClicked(DifficultyMode mode)
     {
         if (DifficultyManager.Instance == null) return;
+        GameModes.Choose(mode, altered, otherWorld);   // S2 모드 토글(지옥 이상만 적용)
         DifficultyManager.Instance.SelectMode(mode);
     }
 

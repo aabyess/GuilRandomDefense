@@ -73,6 +73,7 @@ public static class S2Evolution
         S2Dango.ResetMatch();
         S2Treasure.ResetMatch();
         OroSeong.ResetMatch();
+        GameModes.ResetMatch();
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
