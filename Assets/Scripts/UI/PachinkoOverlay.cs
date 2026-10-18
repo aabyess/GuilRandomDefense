@@ -1018,6 +1018,7 @@ public class PachinkoOverlay : MonoBehaviour
             SetExpect(100);
             if (p.jackpot)
             {
+                PlayFx("rainbow", 0.4f, 0.7f); PlayFx("coins", 0.4f, 0.7f);
                 bgTarget = new Color(0.45f, 0.3f, 0f, 0.92f); bgPulse = 3f;
                 Play(Slot.Ooatari);
                 StartCoroutine(Confetti(Mathf.Max(5.5f, p.ResultSeconds() - 0.4f)));
@@ -1639,6 +1640,7 @@ public class PachinkoOverlay : MonoBehaviour
             if (line != null) PlayLine(line);
             if (p.jackpot)
             {
+                PlayFx("rainbow", 0.4f, 0.7f); PlayFx("coins", 0.4f, 0.7f);
                 StartCoroutine(Confetti(Mathf.Max(5.5f, p.ResultSeconds() - 0.4f)));
                 StartCoroutine(Fireworks(true, 1));
                 StartCoroutine(Pop(logoOoatari, p.ResultSeconds() + 0.5f, 1.2f, keep: true));
@@ -1801,6 +1803,46 @@ public class PachinkoOverlay : MonoBehaviour
     }
 
     /// <summary>보너스 스테이지 진입 문구(러쉬 시작) — 한 번 크게 튀고 사라진다.</summary>
+    // ───────── 2차 화면 이펙트(blender 10-18, Resources/Pachinko/Fx/Sheets/<이름>.png = 4×3 시트 12칸, 칸 480×270) ─────────
+    // 사장님 규칙: 전부 일시적(0.3~0.4초 안에 사라짐) · 잔상·루프 금지(집중선만 짧게 반복) · 번쩍임 줄이기면 starburst·rainbow는 약하게.
+    // 더하기 합성은 밝은 영상을 하얗게 날려서 알파 합성(RawImage 기본) + 화면 50~70% 크기.
+    readonly Dictionary<string, Texture2D> fxSheets = new Dictionary<string, Texture2D>();
+    public static int FxPlayed;   // 탐침용(재생 횟수)
+    public static string FxLog = "";   // 탐침용(재생한 이름 순서)
+    /// <summary>시험용: 이펙트 하나를 느리게(seconds) 띄운다 — 사진으로 모양 확인.</summary>
+    public static void DebugPlayFx(string name, float seconds, float size) { var o = Ensure(); o.root.gameObject.SetActive(true); o.PlayFx(name, seconds, size); }
+
+    void PlayFx(string name, float seconds = 0.4f, float size = 0.6f, Vector2 pos = default, int loops = 1)
+    {
+        if (!fxSheets.TryGetValue(name, out Texture2D tex)) { tex = Resources.Load<Texture2D>("Pachinko/Fx/Sheets/" + name); fxSheets[name] = tex; }
+        if (tex == null || root == null) return;
+        float alpha = 1f;
+        if (ReduceFlash && (name == "starburst" || name == "rainbow")) alpha = 0.35f;
+        StartCoroutine(FxRoutine(tex, seconds, size, pos, loops, alpha));
+        FxPlayed++; FxLog += name + "@" + Now.ToString("F1") + " ";
+    }
+
+    IEnumerator FxRoutine(Texture2D tex, float seconds, float size, Vector2 pos, int loops, float alpha)
+    {
+        RectTransform rt = Rt("fx_" + tex.name, root);
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = new Vector2(1920f * size, 1080f * size);
+        rt.anchoredPosition = pos;
+        rt.SetAsLastSibling();
+        RawImage img = rt.gameObject.AddComponent<RawImage>();
+        img.texture = tex; img.raycastTarget = false;
+        img.color = new Color(1f, 1f, 1f, alpha);
+        float total = seconds * Mathf.Max(1, loops), t = 0f;
+        while (t < total)
+        {
+            int frame = Mathf.Min(11, Mathf.FloorToInt((t % seconds) / seconds * 12f));
+            img.uvRect = new Rect((frame % 4) * 0.25f, (2 - frame / 4) / 3f, 0.25f, 1f / 3f);
+            yield return null;
+            t += Dt;
+        }
+        Destroy(rt.gameObject);
+    }
+
     IEnumerator BonusStageIntro()
     {
         EnsureFireWidgets();
@@ -1811,6 +1853,8 @@ public class PachinkoOverlay : MonoBehaviour
         fireBanner.gameObject.SetActive(true);
         Play(Slot.Hold);
         if (!ReduceFlash) StartCoroutine(FlashColor(new Color(1f, 0.9f, 0.45f, 0.45f), 0.1f));
+        PlayFx("shockwave", 0.4f, 0.7f);
+        PlayFx("speedlines", 0.4f, 1f, default, loops: 2);   // 집중선만 짧게 두 번
         yield return PopLabel(fireBanner, 2.0f);
         fireBanner.fontSize = 118f;
     }
@@ -1862,6 +1906,7 @@ public class PachinkoOverlay : MonoBehaviour
         yield return StopReel(1, p.center, centerDur, spinSpeeds[1] * 0.5f);
         reels[1].Highlight(Color.white);
         yield return WaitUntilVideo(t0, fe);   // 첫 룰렛 판정
+        if (p.reach) { PlayFx("starburst", 0.4f, 0.6f); PlayFx("text_chance", 0.4f, 0.6f, new Vector2(0f, 120f)); }
 
         float resultStart;
         if (!p.reach)
@@ -1913,6 +1958,8 @@ public class PachinkoOverlay : MonoBehaviour
 
         // ③ 러쉬에서 같은 숫자 셋 = 크리티컬 보너스
         foreach (Reel r in reels) r.Highlight(new Color(1f, 0.85f, 0.45f));
+        PlayFx("rainbow", 0.4f, 0.7f);
+        PlayFx(rc == 7 ? "text_kakuhen" : "text_geki", 0.4f, 0.6f, new Vector2(0f, 120f));
         if (spec.key == "slime") yield return SlimeCriticalIntro();
         else StartCoroutine(FireCriticalFlash());   // 흔들기 없이 줌 펀치로
         if (spec.key == "fire") ShowFireBanner(rc == 7);
@@ -1958,6 +2005,7 @@ public class PachinkoOverlay : MonoBehaviour
         }
         resultStart = Now;
         float resSecs = p.ResultSeconds(pushed);
+        if (pushed) PlayFx("coins", 0.4f, 0.7f);
         if (pushed && spec.key == "slime") StartCoroutine(SlimeSuccessFx());
         else if (pushed && !ReduceFlash) { StartCoroutine(WinFlashStandard()); shakeUntil = Now + 0.4f; }
         if (lost && spec.key == "slime") foreach (Reel rg in reels) rg.Highlight(new Color(0.74f, 0.78f, 0.88f));   // 빛 빠진 은색 숫자
@@ -3053,6 +3101,8 @@ public class PachinkoOverlay : MonoBehaviour
         if (list != null && list.items != null) impactTrack = list.items;
     }
 
+    float lastThemeFx = -10f;
+
     void ProcessImpacts()
     {
         if (impactIdx >= impactTrack.Length || impactSource == 0) return;
@@ -3068,6 +3118,11 @@ public class PachinkoOverlay : MonoBehaviour
             Color tint = Color.white;
             if (!string.IsNullOrEmpty(it.color)) ColorUtility.TryParseHtmlString(it.color, out tint);
             impactCo = StartCoroutine(ImpactFx(Mathf.Clamp01(it.strength), it.kind == "both", tint));
+            if (it.strength >= 0.8f && (curTheme == 2 || curTheme == 3) && Now - lastThemeFx > 1.5f)
+            {   // 큰 타격만 테마 이펙트(불꽃=fire · 전생슬=slime), 1.5초에 한 번
+                lastThemeFx = Now;
+                PlayFx(curTheme == 2 ? "fire" : "slime", 0.4f, 0.55f, new Vector2(UnityEngine.Random.Range(-300f, 300f), UnityEngine.Random.Range(-120f, 120f)));
+            }
         }
     }
 
@@ -3560,6 +3615,7 @@ public class PachinkoOverlay : MonoBehaviour
     IEnumerator PushWindow()
     {
         Impact(new Color(1f, 0.9f, 0.3f, 0.6f), 0.35f, true);
+        PlayFx("text_push", 0.4f, 0.6f, new Vector2(0f, 260f));
         pushGroup.gameObject.SetActive(true);
         pushBtnImage.sprite = Spr("UI/push_button_normal");
         pushBtnImage.rectTransform.localScale = Vector3.one;
