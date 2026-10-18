@@ -102,11 +102,90 @@ def ability_view(aid, AB, AS):
     head = re.split(r'◎', uber)[0].strip(' /')
     # ◎ 앞의 굵은 소제목(「패기 발산」 등)이 있으면 그것도 살린다
     desc = ' · '.join(p.replace(' / ', ' ') for p in parts) if parts else head
-    ui_only = nm.startswith(('창고로 이동', '특성강화', '유닛 판매', '판매')) or uber.startswith('사용시 유닛을 창고')
+    ui_only = nm.startswith(('창고로 이동', '특성강화', '유닛 판매', '판매', '유닛 모으기')) or uber.startswith('사용시 유닛을 창고')
     tag_only = ui_only or a['name'].startswith('[') or a['name'] in ('판매',) or uber.startswith('◈') or (not uber and not a['tip']) or (a['name'].startswith(('@', '#')) and not uber) or (a['base'] in TAG_ONLY_BASES and not uber)
     if not desc and not tag_only:
         desc = '설명 미확정'
     return dict(id=aid, name=nm or aid, desc=desc, base=a['base'], tag_only=tag_only, raw_name=a['name'], art=a['art'], data=a['data'])
+
+
+# ───────────────────────── 툴팁 → 보스 1기 기준 스킬 기대 피해(대략) ─────────────────────────
+
+def kor_num(s):
+    """「45만」「3만 5000」「180만」「1억」「70,000」 → 수."""
+    s = s.replace(',', '')
+    total, m = 0.0, re.findall(r'(\d+(?:\.\d+)?)\s*(억|만)?', s)
+    for v, unit in m:
+        total += float(v) * (1e8 if unit == '억' else 1e4 if unit == '만' else 1)
+    return total
+
+
+def skill_expect_per_attack(uber, atk, boss_hp):
+    """툴팁 문장에서 (확률, 피해) 짝을 찾아 평타 1회당 기대 추가 피해(보스 1기 기준)를 낸다. 못 읽는 문장은 0으로 둔다(지어내지 않음)."""
+    total = 0.0
+    p = None
+    for seg in re.split(r'◎', uber):
+        m = re.search(r'공격시\s*(\d+(?:\.\d+)?)%\s*확률', seg)
+        if m:
+            p = float(m.group(1)) / 100
+        m = re.search(r'발동조건\s*:\s*마나\s*(\d+)', seg)
+        if m:
+            p = 1.0 / max(1.0, float(m.group(1)))
+        crit = re.search(r'(\d+(?:\.\d+)?)%\s*확률로\s*(\d+(?:\.\d+)?)배\s*크리티컬(?:\s*및\s*([\d만억\s,]+)\s*마법데미지)?', seg)
+        if crit:
+            cp = float(crit.group(1)) / 100
+            total += cp * ((float(crit.group(2)) - 1) * atk + (kor_num(crit.group(3)) if crit.group(3) else 0))
+            continue
+        m = re.search(r'데미지\s*:\s*(.+)', seg)
+        if m and p:
+            txt = m.group(1)
+            if '보스' in uber and '적용 X' in uber and ('현재체력' in txt or '최대체력' in txt):
+                continue
+            dmg = 0.0
+            hpm = re.search(r'(?:전체|최대)체력\s*(\d+(?:\.\d+)?)%', txt)
+            if hpm:
+                dmg += boss_hp * float(hpm.group(1)) / 100
+                txt = txt[:hpm.start()] + txt[hpm.end():]
+            per_sec = '초당' in txt
+            for part in re.split(r'\+', txt):
+                part = re.sub(r'\(x[\d.]+~[\d.]+\)', '', part)
+                mult = re.search(r'\(x([\d.]+)~([\d.]+)\)', m.group(1))
+                v = kor_num(re.sub(r'[^\d만억\s,.]', ' ', part.split('데미지')[0]))
+                if mult:
+                    v *= (float(mult.group(1)) + float(mult.group(2))) / 2
+                dmg += v
+            if per_sec:
+                dur = re.search(r'지속시간\s*:\s*(\d+(?:\.\d+)?)초', uber)
+                dmg *= float(dur.group(1)) if dur else 1
+            total += p * dmg
+    return total
+
+
+def current_skill_dps(skills, atk, spd, boss_hp):
+    """지금 SkillData의 피해 효과로 보스 1기 기준 기대 DPS(대략: 확률·게이지·쿨만, 조건·범위 수·버프 무시)."""
+    tot = 0.0
+    for s in skills:
+        lv = (s.get('levels') or [{}])[0]
+        dmg = 0.0
+        for e in lv.get('effects') or []:
+            if e.get('kind') != 0 or e.get('requiredTargetBuffId'):
+                continue
+            tc, tv = e.get('targetCondition', 0), e.get('targetConditionValue', 0)
+            pv = 200   # 보스 포인트값(원작 보스 분기 PV≥200)
+            if tc and not {1: pv < tv, 2: pv == tv, 3: pv >= tv, 4: pv != tv}.get(tc, True):
+                continue
+            m, b, basis = e.get('multiplier') or 0, e.get('bonus') or 0, e.get('basis', 0)
+            rnd = ((e.get('randMin') or 1) + (e.get('randMax') or 1)) / 2
+            v = {0: m * rnd, 1: boss_hp * m, 2: boss_hp * m * 0.5, 3: atk * m + b, 13: boss_hp * m * 0.5}.get(basis, 0)
+            dmg += v * (e.get('chance') or 1) * max(1, e.get('hitCount') or 1)
+        trig = s.get('triggerType', 0)
+        if trig == 0:
+            tot += dmg * (lv.get('triggerChance') or 0) * spd
+        elif trig == 3:
+            tot += dmg / max(1, lv.get('hitCountThreshold') or 1) * spd
+        elif trig == 1 and lv.get('cooldown'):
+            tot += dmg / lv['cooldown']
+    return tot
 
 
 # ───────────────────────── 이펙트(원작 아트) ─────────────────────────
@@ -282,12 +361,13 @@ def main():
         spec = [s for s in skills if s['_file'].startswith(('SkillData_사장님_', 'SkillData_공용_'))]
         ids = [i for i in a.get('stat_ids', []) if i in Uu]
         cur_vfx = sorted({k for g in sguid for k in vfx_now.get(g, [])})
+        cur_skill_dps = current_skill_dps(skills, d['attackPower'], d['attackSpeed'], 10600000 * 8.25)
         recs.append(dict(
             file=f, name=d['unitName'], grade=d['grade'], grade_name=EX.GRADE.get(d['grade'], '초월위습' if d['grade'] == 13 else str(d['grade'])),
             atk=d['attackPower'], spd=d['attackSpeed'], dps=d['attackPower'] * d['attackSpeed'], rng=d['attackRange'],
             stat_ids=a.get('stat_ids', []), s2_stat_ids=ids, owner_ids=a.get('skill_owner_ids', []), how=a.get('how', ''),
             skills=[EX.clean_skill_name(s['skillName']) for s in skills], spec=len(spec), spec_names=[EX.clean_skill_name(s['skillName']) for s in spec],
-            vfx_now=cur_vfx, n_vfx=sum(1 for g in sguid if vfx_now.get(g)), n_skills=len(skills)))
+            vfx_now=cur_vfx, n_vfx=sum(1 for g in sguid if vfx_now.get(g)), n_skills=len(skills), cur_skill_dps=cur_skill_dps))
 
     for r in recs:
         best = None
@@ -391,6 +471,9 @@ def main():
         elif u:
             diff = 'S2 신규 원작(옛 판에 없음)'
         new_dps = s2dps(new) if u else 0.0
+        BOSS = 10600000 * 8.25
+        skill_per_atk = sum(skill_expect_per_attack(D.ability_info(a['id'], AB, AS)['uber'], u['atk'], BOSS) for a in real) if u else 0.0
+        skill_dps = (skill_per_atk / u['cool']) if u and u['cool'] else 0.0
         if u and u['atk'] < 100 and r['atk'] > 1000:
             why = (why + ' · ' if why else '') + 'S2에서 평타 %s(스킬로 싸우는 유닛) — 공격력이 사실상 0이 됨' % fmt(u['atk'])
         stat_txt = ('%s / 공속 %.3f(주기 %.2f) / %s%s · 사거리 %d · 마나 %d' % (fmt(u['atk']), 1 / u['cool'] if u['cool'] else 0, u['cool'], u['atk_type'],
@@ -433,7 +516,7 @@ def main():
             cur_skill=owners_txt + (' + 사양 %d' % r['spec'] if r['spec'] and r['owner_ids'] else ''), new=uname(new) if u else '-',
             new_stat=stat_txt, new_skills=skills_txt, change=change, how=how, spec=spec_txt, note=why, diff=diff,
             cur_atk=r['atk'], cur_dps=r['dps'], new_atk=u['atk'] if u else 0.0, new_dps=new_dps, new_grade_src=(u['grade'] + ' · ' + u['grade_src']) if u else '',
-            fx=fx_txt, vfx_now=', '.join(r['vfx_now']) or '없음', n_real=len(real)))
+            fx=fx_txt, vfx_now=', '.join(r['vfx_now']) or '없음', n_real=len(real), skill_dps=skill_dps, cur_skill_dps=r['cur_skill_dps']))
 
     json.dump(rows, open(os.path.join(OUT, 'rematch.json'), 'w'), ensure_ascii=False, indent=1)
     write_xlsx(rows, skill_rows, fx, pool, claimed, U)
@@ -532,7 +615,12 @@ def write_md(rows, pool, claimed, U):
     L += ['', '### 랜덤 %d기 — S2 「랜덤전용」 원작은 평타가 18 안팎(스킬로 싸우는 유닛)이라 공격력이 사실상 0이 됨' % len(weak), '',
           'S2에서 옛 「랜덤전용[제한됨]」은 「신비」 등급이 됐다. 같은 신비 원작을 우리 랜덤·다른세계가 나눠 쓰고 있어, 한 원작 = 한 로스터 원칙으로 **다른세계에 신비를 주고 랜덤은 남는 「랜덤전용」 원작으로** 보냈다.',
           '다른 길: (가) 랜덤 쪽이 지금처럼 신비를 쓰고 다른세계가 비켜 줌(다른세계 원작 부족) (나) 랜덤은 중복을 허용해 지금 원작 유지 (다) 이 표대로.', '']
-    L += ['- %s: 지금 공격력 %s → %s(%s)' % (r['roster'], fmt(r['cur_atk']), fmt(r['new_atk']), r['new']) for r in weak]
+    L += ['**사장님 결정(10-18): (다) 원작대로 — S2 랜덤전용 원작 + 그 원작의 확률 스킬(툴팁 수치 그대로).** 스킬이 실제로 붙어야 싸운다.', '',
+          '평타 + 스킬 기대 DPS(보스 1기 기준, 툴팁의 확률×피해만 — 범위 타격 수·스턴·증폭·소환·쿨 스킬은 뺀 대략값, 못 읽는 문장은 0):', '',
+          '| 로스터 | 새 원작 | 지금 DPS(평타) | 새 평타 DPS | 새 스킬 기대 DPS | 새 합 | 지금 대비 |', '|---|---|---:|---:|---:|---:|---:|']
+    for r in weak:
+        tot = r['new_dps'] + r['skill_dps']
+        L.append('| %s | %s | %s | %s | %s | %s | ×%.2f |' % (r['roster'], r['new'], fmt(r['cur_dps']), fmt(r['new_dps']), fmt(r['skill_dps']), fmt(tot), tot / r['cur_dps'] if r['cur_dps'] else 0))
     L += ['']
     # ① 등급별 공격력·DPS 배율
     L += ['## ① 등급별로 공격력이 몇 배 바뀌나 (새 원작 S2 값 ÷ 지금 우리 값, 기하평균)', '', '| 등급 | 로스터 | 공격력 배율 | DPS 배율 | 범위(DPS 최소~최대) |', '|---|---:|---:|---:|---|']
@@ -565,6 +653,19 @@ def write_md(rows, pool, claimed, U):
         c = sum(r['cur_dps'] for r in rs) / len(rs)
         n = sum(r['new_dps'] for r in rs) / len(rs)
         L.append('| %s | %s | %s | %.0f → %.0f |' % (g, fmt(c), fmt(n), hp / c, hp / n))
+    # ④ 신 난이도 등급별 DPS 전후(평타 + S2 툴팁 스킬 기대 DPS)
+    L += ['', '## ④ 「신」 난이도 등급별 DPS 전후 — 새 쪽은 평타 + 스킬 기대 DPS(툴팁 확률×피해, 보스 1기 기준)', '',
+          '지금 쪽 스킬은 SkillData 피해 효과(확률·게이지·쿨), 새 쪽은 S2 툴팁 문장에서 같은 방식으로 셌다. 둘 다 범위 타격 수·스턴·증폭·조건·버프는 뺀 대략값 — 사거리·가동률도 뺐다. R50 신 보스 체력 %s(현재체력 %%는 절반으로 침).' % fmt(hp), '',
+          '| 등급 | 로스터 | 지금 평타 | 지금 스킬 | 지금 합 | 새 평타 | 새 스킬 | 새 합 | 배율 | R50 신 보스(초) 지금 → 새 |', '|---|---:|---:|---:|---:|---:|---:|---:|---:|---|']
+    for g in [EX.GRADE[k] for k in EX.GRADE_ORDER]:
+        rs = by.get(g)
+        if not rs:
+            continue
+        c = sum(r['cur_dps'] for r in rs) / len(rs)
+        n = sum(r['new_dps'] for r in rs) / len(rs)
+        s = sum(r.get('skill_dps', 0) for r in rs) / len(rs)
+        cs = sum(r.get('cur_skill_dps', 0) for r in rs) / len(rs)
+        L.append('| %s | %d | %s | %s | %s | %s | %s | %s | ×%.2f | %.0f → %.0f |' % (g, len(rs), fmt(c), fmt(cs), fmt(c + cs), fmt(n), fmt(s), fmt(n + s), (n + s) / (c + cs) if c + cs else 0, hp / (c + cs) if c + cs else 0, hp / (n + s) if n + s else 0))
     # 매칭 개요
     L += ['', '## 매칭 개요', '', '| 등급 | 유지 | 스킬만 바뀜 | 원작 바뀜 | 중복 | 대응 없음 |', '|---|---:|---:|---:|---:|---:|']
     cc = defaultdict(Counter)
