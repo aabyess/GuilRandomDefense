@@ -48,3 +48,4 @@
 - 리제로 보석 숫자 1~9(+반짝임·블러·분홍): ~/grd/GRD_pachinko_art/symbols_rz/ — 재생성 `/usr/bin/python3 Tools/pachinko/symbol_rz.py`
 - ~/grd/GRD_pachinko_fx/ — 파칭코 화면 이펙트 스프라이트 11종(<효과>/rgba 투명·add 검정배경, meta.json). 재생성 `Tools/blender/run_pachinko_fx_all.sh [효과…]` ← gen_pachinko_fx.py
 - ~/grd/GRD_pachinko_cabinet/ — 파칭코 기계 정면 3D 1차(취소된 방향, 보관만). Tools/blender/gen_pachinko_cabinet.py
+- ~/grd/GRD_s2_models/ — S2 신규 기능용 원작 모델 추출(오로성 3·샨도라 종·룸바 영혼·엘리베이터·kineticfield). <모델>/fbx·Textures·json, _verify.json(부품 대조), _render/, sheet_s2_models.png. 재생성 `Tools/w3x/model_pull.py s2 ~/grd/GRD_s2_models <모델…>` → verify_mdx_fbx.py · render_mdx.py
