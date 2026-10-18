@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -72,6 +73,23 @@ public class RtsCameraController : MonoBehaviour
         WidenBoundsToMap();
         CalibrateViewHeights();
         FocusOnLocalLane();
+        StartCoroutine(RefocusWhenShopsAppear());
+    }
+
+    // 상점 건물이 Start 뒤에 서면(10-19 실측: 시작 구도 로그 「상점 못 찾음」) 가로 여백이 안 들어간다 — 처음 나타났을 때 한 번만, 아직 손 안 댔으면 다시 잡는다.
+    IEnumerator RefocusWhenShopsAppear()
+    {
+        LaneMarker lane = LaneMarker.Get(LocalPlayer.LocalPlayerId);
+        if (lane == null || TryGetShopBounds(lane, out _)) yield break;
+        Vector3 framedAt = transform.position;
+        for (float waited = 0f; waited < 30f; waited += 0.5f)
+        {
+            yield return new WaitForSecondsRealtime(0.5f);
+            if ((transform.position - framedAt).sqrMagnitude > 1f) yield break;   // 사용자가 움직였다 — 건드리지 않는다
+            if (!TryGetShopBounds(lane, out _)) continue;
+            FocusOnLocalLane();
+            yield break;
+        }
     }
 
     // 맵 S2 카피(10-19) 안전망: 이동 범위(boundsMin/Max)는 씬에 박힌 값(MapGenerator.SetUpCamera가 생성 때 씀)이라, 맵을 다시 생성하지 않고 섬이 더 커지면 옛 범위에 잘린다.
