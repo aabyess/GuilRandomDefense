@@ -18,6 +18,35 @@ public static class S2Evolution
 
     public static WispData Wisp => Resources.Load<WispData>(WispResource);
 
+    /// <summary>
+    /// 진화 포탈(원작 rect CH, 일반 위습 포탈 셋 바로 옆)을 맵 재생성 없이 코드로 세운다: 랜덤위습 포탈(유닛랜덤)을 복제해 그 북동쪽 빈 자리(금화 포탈의 x, 유닛랜덤의 z)에 둔다.
+    /// 모든 PC가 만든다(트리거 판정은 호스트만 — EvolutionPortal). 이미 있으면 안 만든다.
+    /// </summary>
+    public static void EnsurePortal()
+    {
+        if (GameObject.Find("Portal_진화체") != null) return;
+        GameObject north = GameObject.Find("Portal_유닛랜덤"), east = GameObject.Find("Portal_금화랜덤");
+        if (north == null) { Debug.LogWarning("[진화체] Portal_유닛랜덤을 못 찾아 진화 포탈을 못 세웁니다."); return; }
+        GameObject clone = Object.Instantiate(north, north.transform.parent);
+        clone.name = "Portal_진화체";
+        foreach (UnitPortal old in clone.GetComponents<UnitPortal>()) Object.Destroy(old);
+        Vector3 p = north.transform.position;
+        if (east != null) p.x = east.transform.position.x;
+        else p.x += north.transform.lossyScale.x * 2f;
+        clone.transform.position = p;
+        var tint = new MaterialPropertyBlock();
+        foreach (Renderer r in clone.GetComponentsInChildren<Renderer>(true)) { r.GetPropertyBlock(tint); tint.SetColor("_BaseColor", new Color(0.75f, 0.45f, 1f, 1f)); r.SetPropertyBlock(tint); }
+        clone.AddComponent<EvolutionPortal>();
+        var label = new GameObject("진화체 글자");
+        label.transform.SetParent(clone.transform, false);
+        label.transform.localPosition = new Vector3(0f, 3f, 0f);
+        var tm = label.AddComponent<TextMesh>();
+        tm.text = "진화체"; tm.anchor = TextAnchor.MiddleCenter; tm.characterSize = 1.2f; tm.fontSize = 48; tm.color = new Color(0.8f, 0.6f, 1f);
+        label.transform.localScale = new Vector3(1f / Mathf.Max(0.01f, clone.transform.localScale.x), 1f / Mathf.Max(0.01f, clone.transform.localScale.y), 1f / Mathf.Max(0.01f, clone.transform.localScale.z));
+        label.transform.rotation = Quaternion.Euler(90f, 0f, 0f);   // 위에서 내려다보는 카메라에 읽히게 바닥에 눕힌다
+        Debug.Log($"[진화체] 포탈을 세웠습니다: {p}");
+    }
+
     /// <summary>RewardDistributor.Start: 시작 위습 지급(호스트).</summary>
     public static void GrantStarting(RewardDistributor distributor)
     {

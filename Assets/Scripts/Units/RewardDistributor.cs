@@ -72,6 +72,7 @@ public class RewardDistributor : MonoBehaviour
     void Start()
     {
         GrantStartingWisps();
+        S2Evolution.EnsurePortal();   // 모든 PC(클라 포함)가 진화 포탈 겉모습을 만든다
         S2Evolution.GrantStarting(this);
         S2MapObjectives.Install();   // S2 맵 목표물(황금 종·룸바 영혼)
         OroSeong.OnMatchStart();   // S2 오로성 저주(신·악몽): 실루엣
