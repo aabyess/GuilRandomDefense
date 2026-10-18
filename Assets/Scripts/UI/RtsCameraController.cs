@@ -281,7 +281,8 @@ public class RtsCameraController : MonoBehaviour
         bool hasPen = TryGetPenBounds(lane, out Bounds pen);
         if (hasPen) region.Encapsulate(pen);
         // 상점 건물이 레인 옆(서쪽 열 등)에 서면 섬+우리 밖이라 화면 밖에 선다 — 가로 폭만 상점까지 넓힌다(앞뒤 z는 그대로 — 지금 맵처럼 우리 아래 줄이면 아무것도 안 바뀐다).
-        if (TryGetShopBounds(lane, out Bounds shops))
+        bool hasShops = TryGetShopBounds(lane, out Bounds shops);
+        if (hasShops)
         {
             Vector3 lo = region.min, hi = region.max;
             // 바깥쪽(서쪽) 끝 건물이 화면 가장자리에 걸려 잘리지 않게 건물 폭의 절반쯤 여백(10-19 ui_상점열_이름표 사진: 영원함 강화소가 잘림).
@@ -340,7 +341,7 @@ public class RtsCameraController : MonoBehaviour
         transform.position = clamped;
         targetHeight = transform.position.y;
 
-        string report = $"[카메라] 레인 {lane.LaneIndex} 시작 구도 — 섬{(hasPen ? "+우리" : "(우리 못 찾음)")} z {region.min.z:F0}~{region.max.z:F0} · " +
+        string report = $"[카메라] 레인 {lane.LaneIndex} 시작 구도 — 섬{(hasPen ? "+우리" : "(우리 못 찾음)")} x {region.min.x:F0}~{region.max.x:F0}{(hasShops ? "(상점 열 포함)" : "(상점 못 찾음)")} z {region.min.z:F0}~{region.max.z:F0} · " +
                         $"보이는 띠 뷰포트 {bottom:F2}~{top:F2}({hudSource}) · 높이 {transform.position.y:F0} · 위치 {transform.position} · 반복 {iteration + 1}";
         if (!converged || clamped != unclamped)
             Debug.LogWarning(report + (converged ? "" : $" — ⚠️ {FrameIterations}번 안에(또는 최대 높이 {maxHeight:F0}에서) 다 못 담았다") +
