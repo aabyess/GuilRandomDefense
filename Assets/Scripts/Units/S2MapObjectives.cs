@@ -39,8 +39,9 @@ public class S2MapObjectives : MonoBehaviour
     {
         yield return new WaitForSeconds(3f);   // NavMesh·레인 준비 뒤
         if (!BuildPlan(out Vector3 swSpot, out Vector3 neSpot)) yield break;
-        bell = SpawnObjective("샨도라 황금 종", BellHp, 24f, swSpot);
-        soul = SpawnObjective("룸바 해적단의 영혼", SoulHp, 12f, neSpot);
+        bell = SpawnObjective("샨도라 황금 종", BellHp, 24f, swSpot, "S2/Enemy_S2_GoldenBell");
+        soul = SpawnObjective("룸바 해적단의 영혼", SoulHp, 12f, neSpot, "S2/Enemy_S2_RumbaSoul");
+        SpawnElevators(neSpot);
         BellPosition = swSpot; SoulPosition = neSpot;
         Debug.Log($"[S2 목표물] 황금 종 {swSpot} · 영혼 {neSpot}");
     }
@@ -70,14 +71,32 @@ public class S2MapObjectives : MonoBehaviour
 
     static Vector3 Snap(Vector3 p) => NavMesh.SamplePosition(p, out NavMeshHit hit, 40f, NavMesh.AllAreas) ? hit.position : p;
 
-    EnemyDummy SpawnObjective(string label, float hp, float scale, Vector3 at)
+    // 원작 룸바 영혼(9280,6528) 둘레 엘리베이터 장식 3개 — 상대 위치 (−192,0)·(0,−192)·(−64,−128) ÷ 4.167. 모델(ElevatorDisc)이 Resources/S2에 있을 때만.
+    static void SpawnElevators(Vector3 soulSpot)
     {
-        EnemyData template = Resources.Load<EnemyData>(TemplateEnemy);
-        if (template == null || template.prefab == null) { Debug.LogWarning("[S2 목표물] 템플릿 적 자산이 없습니다."); return null; }
-        EnemyData data = Instantiate(template);
-        data.name = "S2_" + label; data.enemyName = label; data.hp = hp; data.armor = 0f; data.hpRegenPerSecond = 0f;
-        data.isBoss = false; data.goldReward = 0; data.visualScale = scale; data.moveSpeed = 0f;
-        GameObject go = Instantiate(template.prefab, at, Quaternion.identity);
+        GameObject prefab = Resources.Load<GameObject>("S2/ElevatorDisc");
+        if (prefab == null) return;
+        foreach (Vector2 off in new[] { new Vector2(-192f, 0f), new Vector2(0f, -192f), new Vector2(-64f, -128f) })
+        {
+            GameObject g = Instantiate(prefab, soulSpot + new Vector3(off.x, 0.3f, off.y) / WorldScale.Value, Quaternion.identity);
+            g.name = "S2엘리베이터";
+        }
+    }
+
+    // enemyAsset: 에셋으로 있는 적 데이터(멀티 카탈로그 대상). 없으면 템플릿을 런타임 복제(클라엔 안 보임).
+    EnemyDummy SpawnObjective(string label, float hp, float scale, Vector3 at, string enemyAsset)
+    {
+        EnemyData data = Resources.Load<EnemyData>(enemyAsset);
+        if (data == null)
+        {
+            EnemyData template = Resources.Load<EnemyData>(TemplateEnemy);
+            if (template == null || template.prefab == null) { Debug.LogWarning("[S2 목표물] 템플릿 적 자산이 없습니다."); return null; }
+            data = Instantiate(template);
+            data.name = "S2_" + label; data.enemyName = label; data.hp = hp; data.armor = 0f; data.hpRegenPerSecond = 0f;
+            data.isBoss = false; data.goldReward = 0; data.visualScale = scale; data.moveSpeed = 0f;
+            Debug.LogWarning($"[S2 목표물] {enemyAsset} 자산이 없어 런타임 복제를 씁니다(멀티 클라에 안 보임).");
+        }
+        GameObject go = Instantiate(data.prefab, at, Quaternion.identity);
         go.name = "S2목표물_" + label;
         if (!go.TryGetComponent(out EnemyDummy dummy)) { Destroy(go); return null; }
         dummy.Initialize(data);

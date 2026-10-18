@@ -37,6 +37,8 @@ public static class S2Evolution
         var tint = new MaterialPropertyBlock();
         foreach (Renderer r in clone.GetComponentsInChildren<Renderer>(true)) { r.GetPropertyBlock(tint); tint.SetColor("_BaseColor", new Color(0.75f, 0.45f, 1f, 1f)); r.SetPropertyBlock(tint); }
         clone.AddComponent<EvolutionPortal>();
+        GameObject field = Resources.Load<GameObject>("S2/KineticField");   // 원작 kineticfield 바닥(blender) — 있으면 포탈 자리에 깐다
+        if (field != null) { GameObject f = Object.Instantiate(field, clone.transform.parent); f.name = "진화체 필드"; f.transform.position = p + Vector3.up * 0.4f; }
         var label = new GameObject("진화체 글자");
         label.transform.SetParent(clone.transform, false);
         label.transform.localPosition = new Vector3(0f, 3f, 0f);

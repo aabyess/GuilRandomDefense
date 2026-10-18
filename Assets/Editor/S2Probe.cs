@@ -236,4 +236,32 @@ public static class S2Probe
         typeof(StoryManager).GetMethod("Spawn", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Invoke(sm, new object[] { egg });
         return $"   에그헤드 소환 · 제한 남은 {sm.SecondsLeftInLimit:F0}초 · 이름 {StoryManager.DisplayNameForEnemy(egg.building)}";
     }
+
+    // ── 진화 포탈 실측 ──
+    public static string CamPortal() { GameObject g = GameObject.Find("Portal_진화체"); if (g == null) return "   ❌ 진화 포탈 없음"; Cam(g.transform.position + Vector3.forward * 90f); Collider c = g.GetComponent<Collider>(); return $"   포탈 {g.transform.position} · 콜라이더 {(c != null ? c.GetType().Name + " trigger=" + c.isTrigger : "없음")} · 필드 {(GameObject.Find("진화체 필드") != null ? "있음" : "없음")}"; }
+    public static string WarpEvoWisp()
+    {
+        GameObject g = GameObject.Find("Portal_진화체"); Wisp w = Wisp.Active.FirstOrDefault(x => x.Data != null && x.Data.isEvolution);
+        if (g == null || w == null) return "   ❌ 포탈/위습 없음";
+        int units = UnitIdentity.Active.Count;
+        if (w.TryGetComponent(out UnityEngine.AI.NavMeshAgent a)) a.Warp(g.transform.position); else w.transform.position = g.transform.position;
+        return $"   위습을 포탈 위로 옮김 (유닛 {units})";
+    }
+    public static string EvoState() => $"   진화 위습 남음 {Wisp.Active.Count(x => x.Data != null && x.Data.isEvolution)} · 실루엣 {(GameObject.Find("진화체 실루엣") != null ? "있음" : "없음")} · 유닛 {UnitIdentity.Active.Count}";
+
+    public static string StoryDecor()
+    {
+        Vector3 c = Object.FindFirstObjectByType<StoryManager>().SpawnPosition; var sb = new StringBuilder();
+        foreach (Renderer r in Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None))
+            if (Vector2.Distance(new Vector2(r.bounds.center.x, r.bounds.center.z), new Vector2(c.x, c.z)) < 60f && r.bounds.size.y > 15f)
+                sb.AppendLine($"   {r.transform.root.name}/{r.gameObject.name} 키 {r.bounds.size.y:F0} 폭 {r.bounds.size.x:F0} 중심 {r.bounds.center}");
+        return sb.ToString();
+    }
+    public static string HideDice()
+    {
+        Vector3 c = Object.FindFirstObjectByType<StoryManager>().SpawnPosition; int n = 0;
+        foreach (Renderer r in Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None))
+            if (r.transform.root.name != "S2목표물_샨도라 황금 종" && !r.transform.root.name.Contains("진화") && Vector2.Distance(new Vector2(r.bounds.center.x, r.bounds.center.z), new Vector2(c.x, c.z)) < 60f && r.bounds.size.y > 15f && !r.transform.root.name.Contains("Mob_")) { var rootName = r.transform.root.name; if (rootName.Contains("Egg") || rootName.Contains("에그")) continue; r.enabled = false; n++; }
+        return $"   가린 렌더러 {n}";
+    }
 }
