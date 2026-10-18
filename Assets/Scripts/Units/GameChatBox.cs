@@ -117,6 +117,42 @@ public class GameChatBox : MonoBehaviour
             return;
         }
 
+        // S2 자원 전송: 「-골드 N」「-목재 N」 — 고른 유닛의 주인에게. 표적은 이 PC의 선택이라 여기서 정하고, 판정은 호스트.
+        if (ResourceTransfer.TryParse(text, out ResourceTransfer.Kind xferKind, out int xferAmount))
+        {
+            int target = ResourceTransfer.SelectedOwner();
+            if (xferAmount <= 0) { ShowStatus("전송량은 1 이상이어야 합니다."); return; }
+            if (target < 0 || target == local.PlayerId) { ShowStatus("자원을 받을 다른 플레이어의 유닛을 선택하세요."); return; }
+            if (GameAuthority.IsServer)
+            {
+                string err = ResourceTransfer.ExecuteOnAuthority(local.PlayerId, target, xferKind, xferAmount);
+                if (err != null) ShowStatus(err);
+            }
+            else NetCommands.RequestTransfer(xferKind, xferAmount, target);
+            return;
+        }
+
+        // S2 경단먹이기: 남(또는 내) 유닛을 고르고 「-경단」 — 선택은 이 PC라 여기서 대상을 정하고 판정은 호스트.
+        if (text.Trim() == "-경단")
+        {
+            SelectionManager dm = FindFirstObjectByType<SelectionManager>();
+            Selectable dpick = dm != null && dm.Selected.Count > 0 ? dm.Selected[0] : null;
+            if (GameAuthority.IsServer) { string derr = S2Dango.Request(local.PlayerId, dpick); if (derr != null) ShowStatus(derr); }
+            else NetCommands.RequestDango(dpick);
+            return;
+        }
+
+        // S2 데비백파이트: 내 특별함 유닛 하나를 고르고 「-데비백」 — 선택은 이 PC라 여기서 대상을 정하고 판정은 호스트.
+        if (text.Trim() == "-데비백")
+        {
+            SelectionManager sm = FindFirstObjectByType<SelectionManager>();
+            Selectable pick = sm != null && sm.Selected.Count > 0 ? sm.Selected[0] : null;
+            if (pick == null) { ShowStatus("데비백파이트에 걸 자신의 '특별' 유닛을 선택하세요."); return; }
+            if (GameAuthority.IsServer) { string err = S2DebeBack.Execute(pick); if (err != null) ShowStatus(err); }
+            else NetCommands.RequestHudUnitAction(NetHudAction.DebeBack, pick, 0);
+            return;
+        }
+
         // 10-03 「시야 N」 카메라 줌 — 이 PC 화면만 바꾸니 호스트로 안 보내고 말로도 안 뿌린다.
         string sight = RtsCameraController.TryHandleSightChat(text);
         if (sight != null)
@@ -160,6 +196,10 @@ public class GameChatBox : MonoBehaviour
     //     「인식할 수 없는 코드입니다」가 뜨지 않게, PM 09-26). 결과 문구가 있으면 코드로 인식된 것이다.
     public string TryExecuteCode(int playerId, string text)
     {
+        string dangoReply = S2Dango.TryRespond(playerId, text);
+        if (dangoReply != null) return dangoReply.Length > 0 ? dangoReply : null;
+        if (text.Trim() == "-운세") return S2Fortune.Cast(playerId);   // 오류(쿨)만 문구로 돌려준다 — 결과는 알림으로
+
         if (chatUnlockManager != null)
         {
             chatUnlockManager.TryUnlockByPhrase(playerId, text, out string chatMessage);

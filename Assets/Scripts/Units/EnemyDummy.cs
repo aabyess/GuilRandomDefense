@@ -154,7 +154,7 @@ public class EnemyDummy : MonoBehaviour
     // moveSpeed=0(고정형 20종)도 0×무엇=0으로 그대로 유지된다.
     public float MoveSpeed => IsReplica ? replicaMoveSpeed   // MP: 클라 겉모습은 호스트 실효값
         : data != null
-        ? data.moveSpeed * Mathf.Max(MoveSpeedFloorRatio, 1f - moveSpeedShredPercent)
+        ? data.moveSpeed * Mathf.Max(MoveSpeedFloorRatio, 1f - moveSpeedShredPercent) * OroSeong.EnemyMoveSpeedFactor
         : 0f;
 
     // 워크3 엔진 하드 클램프(맵 설정 불가, 전 버전 공통) 220~522의 **비율**만 가져온다 —
@@ -377,6 +377,7 @@ public class EnemyDummy : MonoBehaviour
     public void SetLane(int laneIndex)
     {
         LaneIndex = laneIndex;
+        RefreshOroSeong();   // 라인몹 여부가 이제 정해졌다(S2 나스쥬로)
     }
 
     /// <summary>스토리 적 전용 — 켜면 플레이어별 누적 피해(ContributionDamage)와 마지막 타격자(LastHitPlayer)를 센다.</summary>
@@ -455,6 +456,19 @@ public class EnemyDummy : MonoBehaviour
     /// <summary>난이도 방어력 가산(원작 R00J·R00O, DifficultyTable.MobArmorBonus/BossArmorBonus) — 스폰한 쪽이 넣는다.</summary>
     public float DifficultyArmorBonus { get; set; }
 
+    // S2 오로성 저주가 더한 최대 체력·재생(걸리거나 풀릴 때 차이만 반영한다 — 여러 번 불려도 한 번만 더해진다).
+    float oroHpApplied, oroRegenApplied;
+    public void RefreshOroSeong()
+    {
+        if (data == null || MaxHp <= 0f) return;
+        float wantHp = OroSeong.EnemyHpBonus(data.isBoss, LaneIndex >= 0 && !data.isBoss);
+        float wantRegen = OroSeong.EnemyRegenBonus;
+        float dHp = wantHp - oroHpApplied;
+        if (dHp != 0f) { MaxHp += dHp; hp = Mathf.Clamp(hp + dHp, 1f, MaxHp); oroHpApplied = wantHp; }
+        float dRegen = wantRegen - oroRegenApplied;
+        if (dRegen != 0f) { regenBonus += dRegen; oroRegenApplied = wantRegen; }
+    }
+
     public void Initialize(EnemyData enemyData, float startHpMultiplier = 1f)
     {
         data = enemyData;
@@ -468,6 +482,7 @@ public class EnemyDummy : MonoBehaviour
         }
 
         if (TeamBuffs.EnemySlowMultiplier < 1f) ApplySlow();   // 냉철함 발동 뒤에 나온 적도 같은 이감
+        RefreshOroSeong();   // S2 오로성 저주가 걸려 있으면 체력·재생 가산
 
         // Instantiate는 동기 호출이라(Awake가 그 안에서 바로 돈다) Update가 끼어들 틈이 없다 —
         // 지금 CurrentRound가 곧 이 적을 내보낸 웨이브의 라운드다. WaveSpawner를 거치지 않고
@@ -792,7 +807,7 @@ public class EnemyDummy : MonoBehaviour
 
     /// <summary>방깎을 적용한 실효 방어력. 하한 없음(원작).</summary>
     public float EffectiveArmor => IsReplica ? replicaArmor :   // MP: 클라 겉모습은 호스트 실효값
-        (data != null ? data.armor : 0f) + DifficultyArmorBonus - armorShred - aid1Shred - AuraArmorShred + TableStackedArmorShred();
+        (data != null ? data.armor : 0f) + DifficultyArmorBonus + OroSeong.EnemyArmorBonus - armorShred - aid1Shred - AuraArmorShred + TableStackedArmorShred();
 
     public ArmorType ArmorType => data != null ? data.armorType : ArmorType.Normal;
 
@@ -911,7 +926,7 @@ public class EnemyDummy : MonoBehaviour
         get
         {
             // 폭증(LaneExplosiveAmp, 사장님 10-08): 이 적이 속한 라인에 서 있는 유닛들이 주는 추가 A11S 레벨. 보스(라운드·신세계)도 같은 식으로 받는다.
-            int laneLevels = UnitAttacker.LaneExplosiveAmpLevels(LaneIndex);
+            int laneLevels = UnitAttacker.LaneExplosiveAmpLevels(LaneIndex) + S2Treasure.ExtraExplosiveLevels(LaneIndex);   // + S2 원피스(폭발형 +10%)
             if (a11sStackLevels == 0 && laneLevels == 0 && a11sBaseOverride < 0) return data != null ? data.percentDamageTaken : 1f;
             int level = Mathf.Min(A11SCapLevel, A11SBaseLevel + a11sStackLevels + laneLevels);
             return A11SLevelConst + A11SLevelStep * level;
@@ -958,11 +973,11 @@ public class EnemyDummy : MonoBehaviour
         Mathf.Max(0f, (data != null ? data.magicArmorMultiplier : 1f) + DifficultyAegrLevelOffset * AegrLevelStep
             + magicArmorShred
             + Mathf.Min(aegrStackLevels, Mathf.Max(0, AegrKinkLevel - AegrBaseLevel)) * AegrLevelStep)
-        * EffectiveMagicDamageAmplifier;
+        * EffectiveMagicDamageAmplifier * OroSeong.EnemyMagicTakenFactor;   // S2 워큐리: 마저항 +N%
 
     /// <summary>마법저항(난이도 기본값)만 — 마깎(Aegr 스택·마방깍)·마뎀증폭(AIsr)은 뺀 것. 폭발형 피해가 받는 마저항(사장님 10-08).</summary>
     public float BaseMagicResistMultiplier =>
-        Mathf.Max(0f, (data != null ? data.magicArmorMultiplier : 1f) + DifficultyAegrLevelOffset * AegrLevelStep);
+        Mathf.Max(0f, (data != null ? data.magicArmorMultiplier : 1f) + DifficultyAegrLevelOffset * AegrLevelStep) * OroSeong.EnemyMagicTakenFactor;
 
     /// <summary>마방깍을 건다. 조합표의 `마방깍오라(9%)`가 0.09로 들어온다.</summary>
     public void AddMagicArmorShred(float amount) => magicArmorShred += amount;

@@ -264,6 +264,11 @@ public class CombineSystem : MonoBehaviour
         if (GamePause.Blocks(ResolveOwnerId())) return false;   // 일시정지 중엔 조합 불가(채팅 조합 포함)
         if (!GameAuthority.IsServer) return false;
         if (recipe == null) return false;
+        if (GameModes.IsBanned(recipe))   // S2 변질모드: 밴된 조합식
+        {
+            PlayerNotification.ShowFailure(ResolveOwnerId(), $"<color=#8B3EB4>[변질모드]</color> {recipe.result?.unitName}은(는) 밴입니다. 조합할 수 없습니다.", 4f);
+            return false;
+        }
 
         if (!CanAfford(recipe, pickForExecution: true, out List<UnitIdentity> unitsToRemove, out List<ItemData> itemsToRemove))
         {

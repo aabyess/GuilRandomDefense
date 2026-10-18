@@ -57,7 +57,7 @@ public class ResourcePortal : MonoBehaviour
     {
         if (!GameAuthority.IsServer) return;
         if (!other.TryGetComponent(out Wisp wisp)) return;
-        if (wisp.IsConsumed || wisp.Data == null) return;
+        if (wisp.IsConsumed || wisp.Data == null || wisp.Data.isEvolution) return;
 
         int ownerId = wisp.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
 

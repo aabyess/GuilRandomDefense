@@ -129,7 +129,7 @@ public class UnitAttacker : MonoBehaviour
             // 기존 attackSpeedBuffs(수동 Add/Remove, SupportShop 전용)와 별도 축이다 — 곱은
             // 순서 무관이라 그냥 같이 곱한다.
             float product = ResearchSpeedMultiplier * HeroAttackSpeedMultiplier * SkillAttackSpeedBuffMultiplier * AuraAttackSpeedMultiplier * TalentAttackSpeedMultiplier * OtherWorldSpeedFactor
-                            * (1f + TeamBuffs.AttackSpeedPercent);
+                            * (1f + TeamBuffs.AttackSpeedPercent) * OroSeong.AllyAttackSpeedFactor;
             foreach (float buff in attackSpeedBuffs) product *= buff;
             return product > 0f ? product : 1f;
         }
@@ -398,7 +398,7 @@ public class UnitAttacker : MonoBehaviour
     {
         get
         {
-            float sum = AuraBonusTotal(SkillEffectKind.AttackPowerBuffPercent, false) + TeamBuffs.AttackPowerPercent + TalentAttackPercent;
+            float sum = AuraBonusTotal(SkillEffectKind.AttackPowerBuffPercent, false) + TeamBuffs.AttackPowerPercent + TalentAttackPercent + OroSeong.AllyAttackPowerPercent;
             if (activeBuffs.Count > 0)
             {
                 PruneExpiredBuffs();
@@ -3540,7 +3540,7 @@ public class UnitAttacker : MonoBehaviour
             return;
         }
         float amount = ResolveSkillEffectValue(effect, target, recentAttackDamage) * chainDamageScale
-            * (effect.explosive ? target.PercentDamageTakenMultiplier : 1f);
+            * (effect.explosive ? target.PercentDamageTakenMultiplier * OroSeong.AllyExplosiveFactor : 1f);
         // 원작 realD = 0.03×버프개수(SkillEffect.casterBuffCountFactor 주석 참고). 기존
         // 227개 효과는 이 필드가 직렬화에 없어 C# 기본값 0f로 읽힌다 — (1+0×count)=1이라
         // 배율이 완전히 무효, 회귀 없음. ⚠️ 2026-09-06: CountCasterBuffs()가 이제 버프
