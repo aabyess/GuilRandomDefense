@@ -807,7 +807,7 @@ public static class MapLayout
     public const float ShopColumnFirstDz = 716f / Scale;     // 171.8
     public const float ShopColumnStepZ = 300f / Scale;       // 72.0
     public const int ShopColumnCount = 6;
-    const float ShopColumnReach = ShopColumnOffsetX + 60f;   // 레인 서쪽 변에서 땅 끝까지
+    public const float ShopColumnReach = ShopColumnOffsetX + 60f;   // 레인 서쪽 변에서 땅 끝까지
 
     public static Vector2 LaneShopColumnSlot(Island lane, int slot)
         => new Vector2(lane.center.x - lane.size.x * 0.5f - ShopColumnOffsetX,

@@ -1220,9 +1220,11 @@ public static class MapGenerator
         float overallMinZ = bottomLeft.center.y - bottomLeft.size.y * 0.5f;
         float overallMaxZ = topLeft.center.y + topLeft.size.y * 0.5f;
 
+        // 10-19 S2 카피: 오른쪽 레인 서쪽에 상점 열 땅이 붙으므로 세로벽은 그 앞에서 끝낸다.
+        float wallRightEdge = rightColLeftEdge - MapLayout.ShopColumnReach - InterLaneWallMargin;
         yield return new MapLayout.Island("레인간_세로벽",
-            (leftColRightEdge + rightColLeftEdge) * 0.5f, (overallMinZ + overallMaxZ) * 0.5f,
-            rightColLeftEdge - leftColRightEdge + InterLaneWallMargin, overallMaxZ - overallMinZ, "rock");
+            (leftColRightEdge + wallRightEdge) * 0.5f, (overallMinZ + overallMaxZ) * 0.5f,
+            wallRightEdge - leftColRightEdge + InterLaneWallMargin, overallMaxZ - overallMinZ, "rock");
 
         yield return new MapLayout.Island("레인간_가로벽",
             (overallMinX + overallMaxX) * 0.5f, (topRowBottomEdge + bottomRowTopEdge) * 0.5f,
