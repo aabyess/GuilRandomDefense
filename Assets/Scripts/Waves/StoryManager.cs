@@ -134,8 +134,17 @@ public class StoryManager : MonoBehaviour
         activeEnemy.TakeDamage(amount, DamageType.AP, AttackType.Spells, killerPlayerId);
     }
 
+    // S2 2.323 에그헤드(14번째 스토리, j:55270~55470·CRB): 13번 클리어 120초 뒤 신·악몽에서만 등장, 240초 안에 못 깨면 전원 패배.
+    // 씬의 스토리 목록을 건드리지 않으려고 Resources에서 끝에 붙인다(체력은 우리 13번 대비 S2 비율 288.8M/190M = ×1.52).
+    void AppendS2Stories()
+    {
+        StoryData egghead = Resources.Load<StoryData>("S2/Story14_에그헤드");
+        if (egghead != null && !stories.Contains(egghead)) stories.Add(egghead);
+    }
+
     void Start()
     {
+        AppendS2Stories();
         Queue(0, firstStoryDelay);
     }
 
