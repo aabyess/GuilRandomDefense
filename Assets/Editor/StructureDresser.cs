@@ -317,6 +317,30 @@ public static class StructureDresser
         blocker.AddComponent<BoxCollider>().size = bounds.size;
     }
 
+    // ───────────────────────── S2 맵 장식(10-19 단계 3 모델) ─────────────────────────
+    // blender 추출본(~/grd/GRD_s2_models/map): fbx 1m = 워크3 100 단위. 원작 도두드 배율 s → 우리 월드 배율 = s × 100 ÷ Scale.
+    public static string PlaceMapLandmarks(Transform parent)
+    {
+        MapLayout.Island story = System.Array.Find(MapLayout.Zones, z => z.name == "StoryZone");
+        float k = 100f / MapLayout.Scale;
+        // (모델, 이름, 자리, 원작 각도 rad, 원작 배율)
+        var items = new (string model, string name, Vector3 at, float angle, float scale)[]
+        {
+            ("장식_룸바배", "S2_룸바배", new Vector3(MapLayout.RumbaSoulCenter.x + 150f, 0f, MapLayout.RumbaSoulCenter.y + 20f), 2.48f, 1.8f),
+            ("장식_포네글리프", "S2_포네글리프", new Vector3(MapLayout.PoneglyphCenter.x, MapLayout.IslandTop, MapLayout.PoneglyphCenter.y), 5.33f, 1.2f),
+            ("장식_고잉메리", "S2_고잉메리", new Vector3(story.center.x - story.size.x * 0.5f - 180f, 0f, story.center.y + story.size.y * 0.5f + 140f), 3.92f, 1.05f),
+        };
+        string report = "";
+        foreach (var item in items)
+        {
+            GameObject placed = Place(parent, item.model, item.name, item.at, -item.angle * Mathf.Rad2Deg,
+                                      item.scale * k);
+            if (placed == null) { report += $"\n  ⚠️ {item.model} 모델 없음"; continue; }
+            if (TryMeasure(placed, out Bounds b)) report += $"\n  {item.name} 크기 {b.size.x:0.#}×{b.size.y:0.#}×{b.size.z:0.#}";
+        }
+        return "\nS2 장식 모델(룸바 배·포네글리프·고잉메리호):" + report;
+    }
+
     // ───────────────────────── 펑크해저드 ─────────────────────────
 
     static readonly string[] IceModels = { "펑크_얼음가시_01", "펑크_얼음가시_02", "펑크_얼음가시_03" };

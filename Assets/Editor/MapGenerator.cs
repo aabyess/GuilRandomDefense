@@ -148,7 +148,7 @@ public static class MapGenerator
         string storyReport = BuildStoryZone(root.transform);
         BuildStoryReturnPortal(root.transform);
         string sealReport = BuildSealSpawners(root.transform);
-        string seaKingReport = BuildSeaKing(root.transform) + BuildTreasureHunt(root.transform);
+        string seaKingReport = BuildSeaKing(root.transform) + BuildTreasureHunt(root.transform) + StructureDresser.PlaceMapLandmarks(root.transform);
         string questReport = BuildPirateQuestManager() +
             $"\n해적단 퀘스트: {pirateQuests.Count}개 — 도박소 「해적단 ▶」 쪽에 연결(레인당 1벌, 재고·보충은 PirateQuestShop이 스스로 관리)." +
             (pirateQuests.Count == 0 ? $"\n  ⚠️ {PirateQuestFolder}에서 PirateQuestData를 하나도 못 찾았습니다." : "");
