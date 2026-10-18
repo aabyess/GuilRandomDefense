@@ -30,7 +30,7 @@ MonoBehaviour:
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.14285715
+    triggerChance: 0.16
     range: 500
     hitCountThreshold: 0
     resetTo: 0
@@ -41,10 +41,10 @@ MonoBehaviour:
     effects:
     - kind: 0
       basis: 0
-      target: 2
+      target: 3
       damageType: 2
-      attackType: 6
-      multiplier: 100000
+      attackType: 1
+      multiplier: 250000
       bonus: 0
       chance: 1
       hitCount: 1
@@ -80,7 +80,7 @@ MonoBehaviour:
       grantSkill: {fileID: 0}
       minAllyTier: 5
       armorIgnoreRatio: 0
-      armorIgnoreRequiresBuff: 
+      armorIgnoreRequiresBuff:
       talentStunScaled: 0
       stackPerHit: 0.01
       stackCap: 1
@@ -91,8 +91,8 @@ MonoBehaviour:
       basis: 0
       target: 3
       damageType: 2
-      attackType: 7
-      multiplier: 305000
+      attackType: 1
+      multiplier: 2500000
       bonus: 0
       chance: 1
       hitCount: 1
@@ -100,59 +100,11 @@ MonoBehaviour:
       casterBuffCountFactor: 0
       buffId: 
       randMin: 1
-      randMax: 3
+      randMax: 1
       buffHitCharges: 0
       requiredTargetBuffId: 
       forbiddenTargetBuffId: 
-      targetCondition: 0
-      targetConditionValue: 0
-      cascadeGroup: 0
-      skipDamageTakenMultiplier: 0
-      triggerDamageAbove: 0
-      heroDuration: 0
-      maxTargets: 0
-      chainDamageStep: 0
-      zoneTickInterval: 0
-      zoneRadius: 0
-      zoneSpacing: 0
-      zoneAtCaster: 0
-      lineLength: 0
-      lineStartRadius: 0
-      lineEndRadius: 0
-      perHighGradeUnitBonus: 0
-      perHighGradeUnitBonusCap: 0
-      summonUnits: []
-      summonLifetime: 20
-      summonFanDegrees: 35
-      summonRadius: 70
-      grantSkill: {fileID: 0}
-      minAllyTier: 5
-      armorIgnoreRatio: 0
-      armorIgnoreRequiresBuff: 
-      talentStunScaled: 0
-      stackPerHit: 0.01
-      stackCap: 1
-      stackResetSeconds: 3
-      attackSpeedScale: 0
-      attackSpeedScaleCap: 0
-    - kind: 0
-      basis: 0
-      target: 3
-      damageType: 2
-      attackType: 7
-      multiplier: 765000
-      bonus: 0
-      chance: 1
-      hitCount: 1
-      duration: 0
-      casterBuffCountFactor: 0
-      buffId: 
-      randMin: 1
-      randMax: 3
-      buffHitCharges: 0
-      requiredTargetBuffId: 
-      forbiddenTargetBuffId: 
-      targetCondition: 2
+      targetCondition: 3
       targetConditionValue: 200
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
@@ -176,7 +128,7 @@ MonoBehaviour:
       grantSkill: {fileID: 0}
       minAllyTier: 5
       armorIgnoreRatio: 0
-      armorIgnoreRequiresBuff: 
+      armorIgnoreRequiresBuff:
       talentStunScaled: 0
       stackPerHit: 0.01
       stackCap: 1
@@ -187,8 +139,8 @@ MonoBehaviour:
       basis: 1
       target: 3
       damageType: 2
-      attackType: 7
-      multiplier: 0.1
+      attackType: 1
+      multiplier: 0.18
       bonus: 0
       chance: 1
       hitCount: 1
@@ -198,12 +150,12 @@ MonoBehaviour:
       randMin: 1
       randMax: 1
       buffHitCharges: 0
-      requiredTargetBuffId: B06B
+      requiredTargetBuffId: "B06B"
       forbiddenTargetBuffId: 
-      targetCondition: 4
-      targetConditionValue: 200
+      targetCondition: 0
+      targetConditionValue: 0
       cascadeGroup: 0
-      skipDamageTakenMultiplier: 1
+      skipDamageTakenMultiplier: 0
       triggerDamageAbove: 0
       heroDuration: 0
       maxTargets: 0
@@ -224,13 +176,14 @@ MonoBehaviour:
       grantSkill: {fileID: 0}
       minAllyTier: 5
       armorIgnoreRatio: 0
-      armorIgnoreRequiresBuff: 
+      armorIgnoreRequiresBuff:
       talentStunScaled: 0
       stackPerHit: 0.01
       stackCap: 1
       stackResetSeconds: 3
       attackSpeedScale: 0
       attackSpeedScaleCap: 0
+      fixedDamage: 1
     - kind: 1
       basis: 0
       target: 3
@@ -240,7 +193,7 @@ MonoBehaviour:
       bonus: 0
       chance: 1
       hitCount: 1
-      duration: 2.25
+      duration: 2.75
       casterBuffCountFactor: 0
       buffId: 
       randMin: 1
@@ -253,7 +206,7 @@ MonoBehaviour:
       cascadeGroup: 0
       skipDamageTakenMultiplier: 0
       triggerDamageAbove: 0
-      heroDuration: 2.25
+      heroDuration: 0
       maxTargets: 0
       chainDamageStep: 0
       zoneTickInterval: 0
@@ -272,7 +225,7 @@ MonoBehaviour:
       grantSkill: {fileID: 0}
       minAllyTier: 5
       armorIgnoreRatio: 0
-      armorIgnoreRequiresBuff: 
+      armorIgnoreRequiresBuff:
       talentStunScaled: 0
       stackPerHit: 0.01
       stackCap: 1
