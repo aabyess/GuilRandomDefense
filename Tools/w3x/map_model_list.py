@@ -33,7 +33,7 @@ sh.save(M + "/sheet_map_models.png"); print("목록", len(out), "· 시트", sh.
 # ---- 베껴 만든 워크3 기본 모델(gen_s2_stock_decor.py) 시트 ----
 import glob, json as _j
 gens = sorted(glob.glob(M + "/gen_*/preview.png"))
-gens = [g for g in gens if os.path.basename(os.path.dirname(g)) not in ("gen_Egghead",)]
+gens = [g for g in gens if os.path.basename(os.path.dirname(g)) not in ("gen_Egghead", "gen_ArcaneSanctum_Egghead")]
 if gens:
     W2, H2, C2 = 420, 380, 5
     sh2 = Image.new("RGB", (W2 * C2, 50 + H2 * ((len(gens) + C2 - 1) // C2)), (28, 30, 36)); d2 = ImageDraw.Draw(sh2)

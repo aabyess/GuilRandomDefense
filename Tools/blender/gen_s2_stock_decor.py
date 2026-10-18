@@ -143,20 +143,34 @@ class Ctx:
 
 
 # ---------- 모델 ----------
+def tex_wall(n=256):
+    """영상(구획 테두리) 모습: 밝은 회백 돌 + 위쪽 줄무늬 띠(어두운 새김)."""
+    img = tex_stone(n, base=(0.82, 0.8, 0.75)); y, x = np.mgrid[0:n, 0:n]
+    band = (y > n * 0.12) & (y < n * 0.32); pat = ((x // 12) % 2 == 0) | (((y // 6) % 2) == 0)
+    img[band & pat, :3] *= 0.55; img[band & ~pat, :3] *= 0.8
+    return img
+
+
+def wall(c, along_x):
+    st = c.mat("stone", tex_wall()); dx, dy = (128, 32) if along_x else (32, 128)
+    c.prim("box", (0, 0, 28), (dx, dy, 56), st, uvs=1.2)
+    c.prim("box", (0, 0, 60), (dx + 8 if along_x else dy + 8 - 32 + 40, dy + 8 if not along_x else dx + 8 - 128 + 40, 8), st, uvs=1.5) if False else None
+    cap = (136, 40, 8) if along_x else (40, 136, 8); c.prim("box", (0, 0, 60), cap, st, uvs=1.5)
+
+
 def m_CityLowWall0(c):
-    st = c.mat("stone", tex_stone()); c.prim("box", (0, 0, 28), (128, 32, 56), st, uvs=1.5); c.prim("box", (0, 0, 60), (136, 40, 8), st, uvs=1.5)
-    c.note = "도시 낮은 벽 X방향 한 칸(128×32×64)"
+    wall(c, True); c.note = "도시 낮은 벽 X방향 한 칸(128×32×64) — 영상 구획 테두리: 밝은 돌 + 줄무늬 띠"
 
 
 def m_CityLowWall90(c):
-    st = c.mat("stone", tex_stone()); c.prim("box", (0, 0, 28), (32, 128, 56), st, uvs=1.5); c.prim("box", (0, 0, 60), (40, 136, 8), st, uvs=1.5)
-    c.note = "도시 낮은 벽 Y방향 한 칸(32×128×64)"
+    wall(c, False); c.note = "도시 낮은 벽 Y방향 한 칸(32×128×64)"
 
 
 def m_TallEndCap(c):
-    st = c.mat("stone", tex_stone()); c.prim("box", (0, 0, 8), (56, 56, 16), st); c.prim("box", (0, 0, 64), (40, 40, 100), st, uvs=1.5)
-    c.prim("box", (0, 0, 120), (52, 52, 12), st); c.prim("cone", (0, 0, 140), (44, 44, 30), c.mat("roof", tex_stone(base=(0.35, 0.3, 0.5))), verts=4)
-    c.note = "낮은 벽 끝의 키 큰 기둥"
+    st = c.mat("stone", tex_wall())
+    c.prim("box", (0, 0, 8), (52, 52, 16), st); c.prim("box", (0, 0, 52), (36, 36, 72), st, uvs=1.5)
+    c.prim("box", (0, 0, 92), (48, 48, 10), st); c.prim("box", (0, 0, 102), (30, 30, 10), st)
+    c.note = "낮은 벽 사이 사각 기둥 포스트(영상: 일정 간격, 벽보다 높고 머리가 넓은 사각 마개)"
 
 
 def m_Waterfall(c):
