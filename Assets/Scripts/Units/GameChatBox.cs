@@ -175,6 +175,8 @@ public class GameChatBox : MonoBehaviour
     //     「인식할 수 없는 코드입니다」가 뜨지 않게, PM 09-26). 결과 문구가 있으면 코드로 인식된 것이다.
     public string TryExecuteCode(int playerId, string text)
     {
+        if (text.Trim() == "-운세") return S2Fortune.Cast(playerId);   // 오류(쿨)만 문구로 돌려준다 — 결과는 알림으로
+
         if (chatUnlockManager != null)
         {
             chatUnlockManager.TryUnlockByPhrase(playerId, text, out string chatMessage);
