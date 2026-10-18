@@ -80,6 +80,7 @@ public static class S2Evolution
         GameObject silhouette = Object.Instantiate(special.prefab, at, Quaternion.identity);
         EvolutionBody body = EvolutionBody.Strip(silhouette);
         body.Init(ownerId, special, spawner);
+        body.SpecialUnit = special;
         states[ownerId] = new State { body = body };
 
         S2Notify.Show(ownerId, $"<color=#9553EC>[진화체]</color> {special.unitName} 을(를) 획득했습니다.", 5f);
@@ -93,7 +94,45 @@ public static class S2Evolution
         if (states.TryGetValue(ownerId, out State s) && s.body != null) s.body.AddKill();
     }
 
-    public static void Reset() => states.Clear();
+    public static void Reset()
+    {
+        states.Clear();
+        foreach (EvolutionBody b in clientBodies.Values) if (b != null) Object.Destroy(b.gameObject);
+        clientBodies.Clear();
+    }
+
+    // ---- 멀티 복제(NetGameState) ----
+    /// <summary>호스트: 이 슬롯 진화체의 지금 킬 수(없으면 −1).</summary>
+    public static int HostKills(int slot) => states.TryGetValue(slot, out State s) && s.body != null ? s.body.Kills : -1;
+
+    /// <summary>호스트: 이 슬롯 진화체가 깨어날 특별함 유닛의 NetCatalog 번호(없으면 −1).</summary>
+    public static int HostUnitIndex(int slot) =>
+        states.TryGetValue(slot, out State s) && s.body != null && s.body.SpecialUnit != null && NetLauncher.Catalog != null ? NetLauncher.Catalog.IndexOf(s.body.SpecialUnit) : -1;
+
+    static readonly Dictionary<int, EvolutionBody> clientBodies = new Dictionary<int, EvolutionBody>();
+
+    /// <summary>클라(호스트 아님): 복제된 슬롯별 값으로 같은 실루엣을 세우고 킬 수·색 차오름을 따라간다. 실물 유닛은 호스트가 만들어 거울로 온다.</summary>
+    public static void ClientSync(int slot, int kills, int unitIndex)
+    {
+        clientBodies.TryGetValue(slot, out EvolutionBody body);
+        if (unitIndex < 0 || kills < 0)   // 호스트 쪽 진화체가 없어졌다(깨어남 끝)
+        {
+            if (body != null) { clientBodies.Remove(slot); body.SetKills(S2Evolution.NeededKills); }   // 아직 안 찼으면 지금 채워 사라지게(채우는 중이면 그대로)
+            return;
+        }
+        if (body == null)
+        {
+            NetCatalog cat = NetLauncher.Catalog;
+            if (cat == null || unitIndex >= cat.units.Count || cat.units[unitIndex] == null || cat.units[unitIndex].prefab == null) return;
+            LaneMarker lane = LaneMarker.Get(slot);
+            Vector3 at = lane != null ? lane.LaneCenter : Vector3.zero;
+            GameObject go = Object.Instantiate(cat.units[unitIndex].prefab, at, Quaternion.identity);
+            body = EvolutionBody.Strip(go);
+            body.Init(slot, cat.units[unitIndex], null);
+            clientBodies[slot] = body;
+        }
+        body.SetKills(kills);
+    }
 
     /// <summary>판이 새로 시작될 때(씬 로드 직전) 이 판 한정 상태를 모두 지운다 — S2 기능 다섯의 static 상태가 새 판에 남아 「이미 사용했습니다」가 뜨지 않게(10-17 파칭코 두 번째 판 버그와 같은 꼴).</summary>
     public static void ResetAllMatchState()
@@ -126,6 +165,8 @@ public static class S2Evolution
 public class EvolutionBody : MonoBehaviour
 {
     int ownerId, kills;
+    public int Kills => kills;
+    public UnitData SpecialUnit { get; set; }
     bool filling;
     float fill;
     UnitData unit;
@@ -172,10 +213,13 @@ public class EvolutionBody : MonoBehaviour
 
     void Paint(float t) => sil.Paint(t);
 
-    public void AddKill()
+    public void AddKill() => SetKills(kills + 1);
+
+    /// <summary>킬 수를 정한다(호스트는 +1씩, 클라는 복제값으로). 다 차면 색이 차오른다.</summary>
+    public void SetKills(int value)
     {
         if (filling) return;
-        kills++;
+        kills = Mathf.Max(kills, value);
         RefreshLabel();
         if (kills >= S2Evolution.NeededKills) filling = true;
     }
@@ -188,8 +232,8 @@ public class EvolutionBody : MonoBehaviour
         if (fill < 1f) return;
         filling = false;
         Vector3 at = transform.position;
-        spawner.Spawn(unit, at, ownerId);
-        S2Notify.Show(ownerId, "<color=#04FFC4>[알림]</color> 진화체 경험치 획득 완료! 유닛이 활성화됩니다.", 6f);
+        if (spawner != null) spawner.Spawn(unit, at, ownerId);   // 클라(spawner 없음)는 실루엣만 지운다 — 실물은 호스트가 만든 거울
+        if (spawner != null) S2Notify.Show(ownerId, "<color=#04FFC4>[알림]</color> 진화체 경험치 획득 완료! 유닛이 활성화됩니다.", 6f);
         Destroy(gameObject);
     }
 }

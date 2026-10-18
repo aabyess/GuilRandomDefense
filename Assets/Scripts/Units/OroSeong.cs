@@ -10,7 +10,7 @@ using UnityEngine;
 ///   공통 난이도 추가: 신은 모든 적 체력 +500만·재생 +25만, 악몽은 +1000만·+50만.
 /// 해제: 누가 「니카(기어 피프스)」를 얻으면 에메트가 나와 오로성을 퇴치한다(걸려 있었으면 효과가 풀린다). 우리에 니카 유닛이 아직 없어
 ///   UnitSpawner가 부르는 OnUnitSpawned가 이름에 「니카」가 든 유닛을 알아본다(유닛이 생기면 그대로 작동).
-/// 실루엣은 이 PC에서만 보이는 껍데기(멀티 클라엔 안 보임 — 효과와 공지는 호스트가 전원에게). 원작 모델(Saint_*.mdl)은 Resources/S2/Saint_<이름> 프리팹이 있으면 쓰고 없으면 캡슐.
+/// 실루엣은 모든 PC가 자기 화면에 세운다 — 호스트가 NetGameState(S2Saint·S2OroPhase·S2OroNightmare)로 알리면 클라가 ClientSync로 같은 오로성을 세우고, 색 차오름·에메트 퇴치 사라짐도 따라간다(효과 계산·공지는 호스트 몫, 공지는 알림 경로로 전원에게). 원작 모델(Saint_*.mdl)은 Resources/S2/Saint_<이름> 프리팹이 있으면 쓰고 없으면 캡슐.
 /// </summary>
 public static class OroSeong
 {
@@ -21,12 +21,13 @@ public static class OroSeong
     public static bool Dismissed { get; private set; }
     static bool nightmare;
     static OroSeongSilhouette silhouette;
+    static bool fillStarted, clientRetired;
 
     public static string Name(Saint s) => s == Saint.Warcury ? "워큐리" : s == Saint.Saturn ? "새턴" : s == Saint.Nasjuro ? "나스쥬로" : "";
 
     public static void ResetMatch()
     {
-        Chosen = Saint.None; Active = false; Dismissed = false; nightmare = false;
+        Chosen = Saint.None; Active = false; Dismissed = false; nightmare = false; fillStarted = false; clientRetired = false;
         if (silhouette != null) Object.Destroy(silhouette.gameObject);
         silhouette = null;
     }
@@ -78,6 +79,21 @@ public static class OroSeong
         Debug.Log($"[오로성] 이번 판: {Name(Chosen)} ({mode})");
     }
 
+    // ---- 멀티 복제(NetGameState) ----
+    /// <summary>호스트가 싣는 값: 0 없음 · 1 실루엣 대기 · 2 색 차오름(신세계 진입) · 3 퇴치됨.</summary>
+    public static byte HostPhase => Chosen == Saint.None ? (byte)0 : Dismissed ? (byte)3 : fillStarted ? (byte)2 : (byte)1;
+    public static bool HostNightmare => nightmare;
+
+    /// <summary>클라(호스트 아님): 복제된 값으로 같은 실루엣을 세우고 색 차오름·퇴치를 따라간다. 효과(Active)는 호스트만 건다.</summary>
+    public static void ClientSync(byte saint, byte phase, bool isNightmare)
+    {
+        if (saint == 0 || clientRetired) return;
+        Chosen = (Saint)saint; nightmare = isNightmare; Dismissed = phase == 3;
+        if (silhouette == null) silhouette = OroSeongSilhouette.Create(Chosen);
+        if (phase == 2 && !fillStarted) { fillStarted = true; silhouette.StartFill(true); }   // true = 효과는 안 건다(호스트 몫)
+        if (phase == 3) { silhouette.Vanish(); silhouette = null; clientRetired = true; }
+    }
+
     /// <summary>탐침 전용(Assets/Editor/S2Probe): 난이도 선택 없이 이 오로성·난이도로 판을 세팅한다.</summary>
     public static void ForceForTest(Saint saint, bool isNightmare)
     {
@@ -91,6 +107,7 @@ public static class OroSeong
     public static void OnNewWorldEnter()
     {
         if (!GameAuthority.IsServer || Chosen == Saint.None || Active || silhouette == null) return;
+        fillStarted = true;
         silhouette.StartFill(Dismissed);
     }
 

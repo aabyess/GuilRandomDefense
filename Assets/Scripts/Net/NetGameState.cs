@@ -55,6 +55,11 @@ public class NetGameState : NetworkBehaviour
     [Networked] public NetworkBool FullCountVisible { get; set; }
     [Networked] public int S2SharedMask { get; set; }   // S2 미션판 공유 미션 완료 비트(S2Missions)
     [Networked] public int S2Flags { get; set; }        // 1 히든 해금 · 2 포네그리프 완료 · 4 해석자
+    [Networked] public byte S2Saint { get; set; }        // 오로성 저주: 0 없음 · 1 워큐리 · 2 새턴 · 3 나스쥬로
+    [Networked] public byte S2OroPhase { get; set; }     // 0 없음 · 1 실루엣 대기 · 2 색 차오름(신세계) · 3 퇴치됨
+    [Networked] public NetworkBool S2OroNightmare { get; set; }
+    [Networked, Capacity(4)] public NetworkArray<int> S2EvoKills => default;       // 진화체 슬롯별 킬 수(−1 없음)
+    [Networked, Capacity(4)] public NetworkArray<int> S2EvoUnit => default;        // 진화체 슬롯별 NetCatalog 유닛 번호 + 1(0 없음 — 배열 기본값 0이 「0번 유닛」으로 읽히지 않게)
     [Networked] public float S2PoneLeft { get; set; }   // 포네그리프 해독 남은 초(0 = 해독 중 아님)
 
     RoundManager roundManager;
@@ -124,6 +129,16 @@ public class NetGameState : NetworkBehaviour
         if (S2SharedMask != S2Missions.HostSharedMask) S2SharedMask = S2Missions.HostSharedMask;
         if (S2Flags != S2Missions.HostFlags) S2Flags = S2Missions.HostFlags;
         S2PoneLeft = PoneglyphSite.SecondsLeft;
+        // S2 오로성 저주·진화체 실루엣 — 클라가 같은 모습을 세우게 값만 싣는다(효과 계산은 호스트)
+        if (S2Saint != (byte)OroSeong.Chosen) S2Saint = (byte)OroSeong.Chosen;
+        if (S2OroPhase != OroSeong.HostPhase) S2OroPhase = OroSeong.HostPhase;
+        if (S2OroNightmare != OroSeong.HostNightmare) S2OroNightmare = OroSeong.HostNightmare;
+        for (int i = 0; i < 4; i++)
+        {
+            int k = S2Evolution.HostKills(i), u = S2Evolution.HostUnitIndex(i) + 1;
+            if (S2EvoKills.Get(i) != k) S2EvoKills.Set(i, k);
+            if (S2EvoUnit.Get(i) != u) S2EvoUnit.Set(i, u);
+        }
 
         StoryManager story = StoryManager.Instance;
         if (story != null)
@@ -185,6 +200,11 @@ public class NetGameState : NetworkBehaviour
     {
         if (Started || Paused) GamePause.ApplyNetworked(Paused, PausedBy);
         if (!HasStateAuthority) GamePause.ApplyNetworkedCutin(CutinHold);
+        if (!HasStateAuthority && Started)   // S2 오로성 실루엣·진화체 실루엣(클라 화면)
+        {
+            OroSeong.ClientSync(S2Saint, S2OroPhase, S2OroNightmare);
+            for (int i = 0; i < 4; i++) S2Evolution.ClientSync(i, S2EvoKills.Get(i), S2EvoUnit.Get(i) - 1);
+        }
         if (!HasStateAuthority && Started && StoryManager.Instance != null)
         {
             StoryManager.Instance.ApplyReplicated(StoryRunning, StoryWaiting, StoryLabel.ToString(), StorySeconds, StoryInterlude.ToString());
