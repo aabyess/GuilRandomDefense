@@ -78,16 +78,16 @@ public class DoorTransition : MonoBehaviour
         var br = (RectTransform)block.transform; br.anchorMin = Vector2.zero; br.anchorMax = Vector2.one; br.offsetMin = br.offsetMax = Vector2.zero;
         block.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
 
-        leftImage = Leaf("Left", "UI/Door/door_left", new Vector2(0f, 0.5f), out left);
-        rightImage = Leaf("Right", "UI/Door/door_right", new Vector2(1f, 0.5f), out right);
+        leftImage = Leaf("Left", "door_left", new Vector2(0f, 0.5f), out left);
+        rightImage = Leaf("Right", "door_right", new Vector2(1f, 0.5f), out right);
 
         var g = new GameObject("GapLight", typeof(RectTransform), typeof(RawImage));
         g.transform.SetParent(transform, false);
         var gr = (RectTransform)g.transform; gr.anchorMin = Vector2.zero; gr.anchorMax = Vector2.one; gr.offsetMin = gr.offsetMax = Vector2.zero;
         gap = g.GetComponent<RawImage>();
-        gap.texture = Resources.Load<Texture2D>("UI/Door/door_gap_light");
+        gap.texture = MenuTheme.DoorTexture("door_gap_light");
         gap.raycastTarget = false;
-        gap.color = new Color(1f, 0.85f, 0.6f, 0f);
+        gap.color = new Color(MenuTheme.DoorGapLight.r, MenuTheme.DoorGapLight.g, MenuTheme.DoorGapLight.b, 0f);
 
         audioSource = gameObject.AddComponent<AudioSource>();
         audioSource.playOnAwake = false;
@@ -114,7 +114,7 @@ public class DoorTransition : MonoBehaviour
         rect.anchoredPosition = Vector2.zero;
         rect.sizeDelta = new Vector2(0f, 1080f);
         var img = go.GetComponent<RawImage>();
-        img.texture = Resources.Load<Texture2D>(path);
+        img.texture = MenuTheme.DoorTexture(path);
         img.raycastTarget = false;
         return img;
     }
@@ -162,7 +162,7 @@ public class DoorTransition : MonoBehaviour
                 float k = Mathf.Clamp01(t / OpenSeconds);
                 float e = 1f - (1f - k) * (1f - k) * (1f - k);   // 확 열리다 천천히 멈춤
                 SetOpenAmount(e, half);
-                gap.color = new Color(1f, 0.85f, 0.6f, Mathf.Sin(Mathf.Clamp01(k * 2.2f) * Mathf.PI) * 0.9f);   // 틈이 벌어질 때 불빛
+                gap.color = new Color(MenuTheme.DoorGapLight.r, MenuTheme.DoorGapLight.g, MenuTheme.DoorGapLight.b, Mathf.Sin(Mathf.Clamp01(k * 2.2f) * Mathf.PI) * 0.9f);   // 틈이 벌어질 때 불빛
                 if (k >= 1f) Destroy(gameObject);
                 break;
             }
