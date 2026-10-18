@@ -176,12 +176,14 @@ public class OroSeongSilhouette : MonoBehaviour
     public static OroSeongSilhouette Create(OroSeong.Saint saint)
     {
         Vector3 center = Vector3.zero; int n = 0;
+        bool onIsland = S2Anchors.TryIsland("OroSeongIsland", out Vector3 islandCenter, out _);   // 맵 생성기의 오로성 섬 가운데(없으면 레인 평균 — 옛 맵)
         foreach (PlayerContext c in PlayerContext.All)
         {
             LaneMarker lane = c != null ? LaneMarker.Get(c.PlayerId) : null;
             if (lane != null) { center += lane.LaneCenter; n++; }
         }
-        if (n > 0) center /= n;
+        if (onIsland) { center = islandCenter; n = 1; }
+        else if (n > 0) center /= n;
 
         GameObject prefab = Resources.Load<GameObject>("S2/Saint_" + saint);
         GameObject go = prefab != null ? Object.Instantiate(prefab) : GameObject.CreatePrimitive(PrimitiveType.Capsule);

@@ -31,7 +31,8 @@ public static class S2Evolution
         clone.name = "Portal_진화체";
         foreach (UnitPortal old in clone.GetComponents<UnitPortal>()) Object.Destroy(old);
         Vector3 p = north.transform.position;
-        if (east != null) p.x = east.transform.position.x;
+        if (S2Anchors.TryIsland("OroSeongIsland", out Vector3 ic, out Vector2 isz)) { p = S2Anchors.OnGround(new Vector3(ic.x, ic.y, ic.z - isz.y * 0.28f)); }   // 오로성 섬 가운데 남쪽(실루엣과 안 겹치게)
+        else if (east != null) p.x = east.transform.position.x;
         else p.x += north.transform.lossyScale.x * 2f;
         clone.transform.position = p;
         var tint = new MaterialPropertyBlock();

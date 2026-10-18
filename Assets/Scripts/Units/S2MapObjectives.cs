@@ -64,8 +64,9 @@ public class S2MapObjectives : MonoBehaviour
         StoryManager story = Object.FindFirstObjectByType<StoryManager>();
         if (story == null) { Debug.LogWarning("[S2 목표물] StoryManager가 없어 스토리존 자리를 못 압니다."); return false; }
         Vector3 c = story.SpawnPosition;
+        // 황금 종: 스토리존 섬 7시 모서리(설계서에 별도 섬 없음). 영혼: 맵 생성기의 RumbaIsland 가운데(없으면 스토리존 1시 모서리).
         sw = Snap(new Vector3(c.x - StoryZoneHalfX + Inset, c.y, c.z - StoryZoneHalfZ + Inset));
-        ne = Snap(new Vector3(c.x + StoryZoneHalfX - Inset, c.y, c.z + StoryZoneHalfZ - Inset));
+        ne = S2Anchors.TryIsland("RumbaIsland", out Vector3 rc, out _) ? Snap(rc) : Snap(new Vector3(c.x + StoryZoneHalfX - Inset, c.y, c.z + StoryZoneHalfZ - Inset));
         return true;
     }
 
