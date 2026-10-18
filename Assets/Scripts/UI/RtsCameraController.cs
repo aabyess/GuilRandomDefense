@@ -85,17 +85,7 @@ public class RtsCameraController : MonoBehaviour
         {
             yield return new WaitForSecondsRealtime(0.25f);
             if (CurrentSpeed > 0.01f) yield break;   // 사용자가 카메라를 움직였다 — 건드리지 않는다(시작 구도는 게임이 스스로 다시 잡아 위치가 조금씩 바뀐다)
-            if (!TryGetShopBounds(lane, out _))
-            {
-                if (waited == 10f)
-                {
-                    var sb = new System.Text.StringBuilder();
-                    foreach (MonoBehaviour b in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
-                        if (b is ILaneShop) sb.Append(b.name).Append('<').Append(b.transform.parent != null ? b.transform.parent.name : "-").Append("> ");
-                    Debug.Log($"[카메라] 상점 탐색 진단(레인 {lane.LaneIndex}): {sb}");
-                }
-                continue;
-            }
+            if (!TryGetShopBounds(lane, out _)) continue;
             FocusOnLocalLane();
             yield break;
         }
@@ -406,12 +396,19 @@ public class RtsCameraController : MonoBehaviour
             Transform building = behaviour.transform;
             while (building != null && !building.name.StartsWith(prefix)) building = building.parent;
             if (building == null) continue;
+            // 맵 S2: 컴포넌트가 붙은 「LaneN_이름」 오브젝트엔 렌더러가 없고 모양은 형제(「…_모양」)에 있다 — 그 경우 건물 위치를 건물 폭(간격 72)만큼 부풀려 쓴다.
+            bool drawn = false;
             foreach (Renderer r in building.GetComponentsInChildren<Renderer>())
             {
                 if (!(r is MeshRenderer || r is SkinnedMeshRenderer) || !r.enabled) continue;
+                drawn = true;
                 if (!any) { bounds = r.bounds; any = true; }
                 else bounds.Encapsulate(r.bounds);
             }
+            if (drawn) continue;
+            Bounds point = new Bounds(building.position, new Vector3(72f, 1f, 72f));
+            if (!any) { bounds = point; any = true; }
+            else bounds.Encapsulate(point);
         }
         return any;
     }
