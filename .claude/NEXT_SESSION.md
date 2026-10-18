@@ -6,6 +6,13 @@
 
 ---
 
+## ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐ PM 16 밤샘 결과 (10-19 04:45) — 🔴 아침 보고 페이지 https://claude.ai/artifact/KLacy3t9YmiR77EW5heeze
+- **끝**: S2 맵 카피 map/s2(4151af358, 44커밋: 레인·상점 세로 열·창고·봉인섬·바다 틈+오로성·룸바/포네글리프 섬·장식 7종·바닥 줄, R30 autoloop 통과) · 성 테마 ui/castle(c58973287, 18커밋: MenuTheme 스위치·인트로/시작/같이/설정/로딩·문 전환 A쇠문/B쇠창살 CastleDoorStyle·음악 후보 3) · main에는 UI 안전망만 합침(838e35fed: 구현담당2 카메라·이름표 4건+핸드오프). **map/s2·ui/castle은 사장님 승인 전 main 병합 금지.**
+- 시험 앱 ~/Desktop/GRD_밤샘시험_1019.app = tmp/s2-castle(main+map/s2+ui/castle, 빌드 폴더 GuilRandomDefense-build에 체크아웃). 사장님이 아침에 직접 눌러 봄.
+- 🔴 사장님 답 대기 7건(페이지 §4): ①map/s2 병합 ②ui/castle 병합 ③레인 사이 바다 틈(비행·수상 부작용, 되돌리기 S2OpenGap=false+OroSeongIsland 줄) ④문 A/B ⑤음악(그대로/1 Dread Castle/2/3) ⑥김경현 스네이크맨 ⑦흔함 스킨 6.
+- 산출물: ~/grd/GRD_s2_map/결과_1019/(최종_*.png·후_미니맵_최종·바뀐값_표.md·남은것.md·기준선_R30) · ~/grd/GRD_title_castle/(비교_*.png·door3/·music/·README.md·페이지문구.md·촬영법.md) · ~/grd/GRD_s2_models/map/(README 용도표·단계 3 배치표) · ~/grd/GRD_s2_map/영상분석_2.md · 페이지 원본 scratchpad → ~/grd/GRD_night_report_1019/.
+- 함정(이 밤): gameshot은 click 뒤 0.5초 대기라 문 전환(0.45초)이 안 찍힘 → DoorPreview.Frozen*/Step10/SkipIntro(에디터 도구)로 시간 정지 스텝 촬영 · S2 맵에서 상점 「LaneN_이름」 오브젝트엔 렌더러 없음(모양은 형제 「…_모양」) · PM 창에서 임시 브랜치 체크아웃 → 끝나면 map/s2 복귀+refresh 2번 · 팀원 handoff 넷 갱신됨(구현담당1·2·3·4).
+
 ## ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐ PM 16 진행 (10-19 02:40) — 🔴 사장님 취침, 08:00 웹 보고
 - 🔴 **사장님 02:35: 「8시까지 진행, 늦을 것 같으면 세션 더 열어도 됨, 토큰 다 쓰면 재할당 기다려 계속, 아침 8시에 바뀐 것 정리해서 웹으로 보고」**(메모리 overnight-autonomy-web-report). 승인 대기 없이 기본안으로 진행하고, 아침 보고에 「정한 것」을 적는다.
 - **구현담당4(임시, 10-19 02:30 새로 띄움)** = 시작 흐름 UI/UX 「옛 중세 성·회색 석조」 테마(인트로·시작 화면·혼자/같이하기·문·설정판). 지시문 .claude/team/구현담당4.md. worktree ../GuilRandomDefense-ui 브랜치 `ui/castle`(main 기준). 옛 테마(섬·선술집) 불변, 테마 스위치 상수로. 배경 영상은 안 바꿈(정적 성 배경 1장). 음악 후보 2~3곡 → 사장님. 전/후 그림 ~/grd/GRD_title_castle/. 에디터는 구현담당1 허락받은 창에서만. 병합은 사장님 승인 뒤.
