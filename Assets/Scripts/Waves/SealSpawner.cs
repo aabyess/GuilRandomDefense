@@ -62,6 +62,7 @@ public class SealSpawner : MonoBehaviour
             if (!Spawn(stage, true)) yield break;
             yield return new WaitUntil(() => current == null);
         }
+        if (ownerIndex >= 0 && laterStages.Count > 0) S2Missions.Complete(S2Missions.Mission.Creep, ownerIndex);   // S2 미션판 개인 칸(3단계까지 처치)
     }
 
     // restrictToOwner: 2·3단계만 주인 외 피해 금지(원작은 2·3단계 유닛에만 피해 이벤트를 건다 — 1단계 물범 제한은 j에서 미확정이라 걸지 않음).

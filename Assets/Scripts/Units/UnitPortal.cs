@@ -75,6 +75,26 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
         return entry?.pool;
     }
 
+    /// <summary>S2 「-점수판흔함」(StatsChatCommands) — 이 플레이어가 랜덤위습으로 받은 흔함 종류별 수(읽기 전용, 호스트 값).
+    /// order = MainGachaTable 흔함 pool 순서, counts[i] = order[i] 지급 수(포탈 여럿이면 합). 흔함 pool을 가진 포탈이 없으면 false.</summary>
+    public static bool TryGetCommonPullCounts(int playerId, out List<UnitData> order, out int[] counts)
+    {
+        order = null; counts = null;
+        foreach (UnitPortal portal in FindObjectsByType<UnitPortal>(FindObjectsSortMode.None))
+        {
+            List<UnitData> o = portal.CommonPityOrder();
+            if (o == null || o.Count == 0) continue;
+            if (order == null) { order = o; counts = new int[o.Count]; }
+            if (!portal.commonPityByPlayer.TryGetValue(playerId, out CommonPityState state)) continue;
+            for (int i = 0; i < state.pullCounts.Count && i < o.Count; i++)
+            {
+                int at = order.IndexOf(o[i]);
+                if (at >= 0) counts[at] += state.pullCounts[i];
+            }
+        }
+        return order != null;
+    }
+
     // 해적선이 아닌 정상 흔함 지급일 때만 부른다 — 카운터·집계는 여기서만 움직인다.
     UnitData RollCommonWithPity(int ownerId)
     {
@@ -284,6 +304,7 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
         }
 
         wisp.MarkConsumed();
+        if (IsChoicePortal && wisp.Data != null && wisp.Data.name.Contains("흔함선택")) RunStats.OnChoiceWispUsed(ownerId);   // S2 오늘만산다·-점수판(kB)
         if (wisp.NewWorldReward) FullCountScore.OnNewWorldRewardUsed(ownerId);   // 원작 Trig_Story_Tier6_Legend: 신세계 보상 표식 위습을 쓰면 풀카운트 −625×배수
         Destroy(wisp.gameObject);
 

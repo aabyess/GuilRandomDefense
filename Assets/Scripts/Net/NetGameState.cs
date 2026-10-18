@@ -53,6 +53,9 @@ public class NetGameState : NetworkBehaviour
     /// <summary>풀카운트(원작 멀티보드 3번째 행) — 호스트가 판정한 점수를 클라 점수판에 보인다. 신세계 진입 전엔 숨김.</summary>
     [Networked, Capacity(4)] public NetworkArray<int> FullCounts => default;
     [Networked] public NetworkBool FullCountVisible { get; set; }
+    [Networked] public int S2SharedMask { get; set; }   // S2 미션판 공유 미션 완료 비트(S2Missions)
+    [Networked] public int S2Flags { get; set; }        // 1 히든 해금 · 2 포네그리프 완료 · 4 해석자
+    [Networked] public float S2PoneLeft { get; set; }   // 포네그리프 해독 남은 초(0 = 해독 중 아님)
 
     RoundManager roundManager;
     int notificationsLogged;
@@ -118,6 +121,9 @@ public class NetGameState : NetworkBehaviour
         if (FullCountVisible != FullCountScore.HostVisible) FullCountVisible = FullCountScore.HostVisible;
         for (int i = 0; i < FullCountScore.Players; i++)
             if (FullCounts.Get(i) != FullCountScore.HostGet(i)) FullCounts.Set(i, FullCountScore.HostGet(i));
+        if (S2SharedMask != S2Missions.HostSharedMask) S2SharedMask = S2Missions.HostSharedMask;
+        if (S2Flags != S2Missions.HostFlags) S2Flags = S2Missions.HostFlags;
+        S2PoneLeft = PoneglyphSite.SecondsLeft;
 
         StoryManager story = StoryManager.Instance;
         if (story != null)
@@ -313,6 +319,13 @@ public class NetGameState : NetworkBehaviour
 
     /// <summary>클라가 받은 한 번짜리 이펙트 수(두 창 확인용 로그).</summary>
     public static int ReceivedVfx;
+
+    /// <summary>이모티콘(S2): 호스트가 전원에게 (보낸 슬롯, 번호) — 각자 EmotePanel이 띄운다(끈 사람 것은 각자 숨김).</summary>
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_Emote(byte slot, byte emote)
+    {
+        EmotePanel.Show(slot, emote);
+    }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     public void RPC_HostClosing()

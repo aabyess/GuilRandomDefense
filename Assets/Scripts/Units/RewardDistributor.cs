@@ -507,6 +507,7 @@ public class RewardDistributor : MonoBehaviour
 
         PlayerContext best = top >= 0 ? PlayerContext.GetOccupied(top) : null;
         if (best == null || best.IsDead) return;
+        RunStats.OnStoryMvp(best.PlayerId);   // S2 MVP 선정(기여도 1등 횟수 mX)
         string name = PlayerDisplayName.Of(top);
         bool multi = PlayerContext.OccupiedCount > 1;
         var rewards = new List<WispReward>();
@@ -620,6 +621,7 @@ public class RewardDistributor : MonoBehaviour
         // 조기 클리어 보너스(원작 j:13510 스토리2 udg_Level<9 · j:13614 스토리10 udg_Level<30) — 클리어 시점의 라운드로 판정한다.
         RoundManager roundForBonus = storyReward.earlyClearBeforeRound > 0 ? FindFirstObjectByType<RoundManager>() : null;
         bool earlyClear = roundForBonus != null && roundForBonus.CurrentRound < storyReward.earlyClearBeforeRound;
+        S2Missions.OnStoryCleared(storyReward.order, earlyClear);   // S2 미션판: 신속한 철거(2)·파괴왕(11)
 
         foreach (PlayerContext context in PlayerContext.All)
         {
@@ -871,6 +873,7 @@ public class RewardDistributor : MonoBehaviour
 
         context.FastUniqueGranted = true;
         GrantWisps(context, new List<WispReward> { new WispReward { wisp = saveRewardCommonChoiceWisp, count = 1 } });
+        S2Missions.Complete(S2Missions.Mission.FastUnique, ownerId);   // S2 미션판 개인 칸
         PlayerNotification.Show(ownerId, "<color=#959595>도전과제 -패스트 유니크 완료!</color>\n<color=#DB7093>보상-흔함 선택 위습 1기를 획득합니다!</color>", 5f);
     }
 

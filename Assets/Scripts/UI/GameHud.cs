@@ -589,12 +589,14 @@ public class GameHud : MonoBehaviour
         EnsureEventSystem();
         BuildUI();
         AlliancePanel.Install(transform);   // 동맹 창(F11, 10-08)
+        MissionBoardPanel.Install(transform);   // 기록지침(미션판·개인 퀘스트, S2 10-18) — 「퀘스트 (F9)」
     }
 
     void Update()
     {
         // 상단 바 「메뉴 (F10)」 — 워크3 기본 단축키
-        if (HotkeyAlias.Pressed(Keyboard.current, Key.F11) && !ChatInputGate.IsOpen) AlliancePanel.Toggle();   // 동맹 (F11 / 맥 Opt+-)
+        if (HotkeyAlias.Pressed(Keyboard.current, Key.F11) && !ChatInputGate.IsOpen) AlliancePanel.Toggle();
+        if (Keyboard.current != null && Keyboard.current.f9Key.wasPressedThisFrame && !ChatInputGate.IsOpen) MissionBoardPanel.Toggle();   // 기록지침(F9)   // 동맹 (F11 / 맥 Opt+-)
         if (HotkeyAlias.Pressed(Keyboard.current, Key.F10, !ChatInputGate.IsOpen) && gameMenu != null)
         {
             if (gameMenu.activeSelf) CloseGameMenu(); else OpenGameMenu();
@@ -1393,10 +1395,9 @@ public class GameHud : MonoBehaviour
         layout.childForceExpandWidth = false;
         layout.childForceExpandHeight = true;
 
-        // 퀘스트: 원작 맵이 퀘스트 로그를 안 쓴다(j에 CreateQuest 0건) → 버튼만 두고 흐리게(사진의 첫 버튼도 흐림).
-        TMP_Text questLabel = CreateTopBarButton(menuButtonsPanel, "QuestButton", "퀘스트", 130f);
-        questLabel.alpha = 0.45f;
-        questLabel.transform.parent.GetComponent<Button>().interactable = false;
+        // 퀘스트: 11.089 원작은 퀘스트 로그를 안 썼지만(j에 CreateQuest 0건) S2 2.323의 기록지침(미션판·개인 퀘스트)을 여기서 연다(10-18).
+        TMP_Text questLabel = CreateTopBarButton(menuButtonsPanel, "QuestButton", "퀘스트 (F9)", 130f);
+        questLabel.transform.parent.GetComponent<Button>().onClick.AddListener(MissionBoardPanel.Toggle);
         TMP_Text menuLabel = CreateTopBarButton(menuButtonsPanel, "MenuButton", "메뉴 (" + HotkeyAlias.Label("F10") + ")", 130f);
         menuLabel.enableAutoSizing = true; menuLabel.fontSizeMin = 10f; menuLabel.fontSizeMax = 18f;   // 맥 병기 라벨이 길어도 단추 폭 그대로(옆 항법 단추를 안 민다)
         menuLabel.transform.parent.GetComponent<Button>().onClick.AddListener(OpenGameMenu);
@@ -2656,6 +2657,7 @@ public class GameHud : MonoBehaviour
                 PlayerNotification.Show(seller, $"<color=#20B2AA>{identity.Data.sellRewardWood}개의 추가목재 획득!</color>", 4f);   // j:13153/13165
             }
 
+            if (identity.Data.grade == UnitGrade.Common) RunStats.OnCommonSold(seller);   // S2 리사이클·-점수판(누적 LY)
             // 흔함 9종 판매 누적(A09G) — 플레이어 전체 공유 카운터가 N번째에 도달할 때만
             // 위습을 준다(UnitUpgrades.RegisterCommonSell 참고). RewardDistributor.
             // GrantWisps는 count를 1로 고정 — 이 보상은 항상 위습 1기다.

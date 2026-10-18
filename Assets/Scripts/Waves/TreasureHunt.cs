@@ -265,6 +265,7 @@ public class TreasureHunt : MonoBehaviour
 
     void CompleteTreasureHunterQuest()
     {
+        S2Missions.Complete(S2Missions.Mission.TreasureHunter);   // S2 미션판
         foreach (PlayerContext context in PlayerContext.Occupied)
         {
             context.ResourceWallet?.Add(ResourceType.Wood, questWood);

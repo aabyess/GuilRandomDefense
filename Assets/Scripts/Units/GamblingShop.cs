@@ -748,6 +748,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
             if (!bonusHit && option.grantsUniqueRerollOnGenericSuccess)
                 UniqueRerollAbility.Attach(spawned, uniqueRerollAbilityData, unitSpawner);
             AnnounceUnitGamble(option, owner.OwnerId, reward);
+            RunStats.OnUnitGamble(owner.OwnerId, option, true, reward);   // S2 개인 퀘스트·-점수판(도박 시도·성공 수)
             GameSound.PlayFor(owner.OwnerId, GameSoundId.Gacha);   // 뽑기음(10-06) — 당첨만. 실패는 「실패 !」 알림이 말한다
         }
         else
@@ -761,6 +762,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
                     PlayerNotification.Show(owner.OwnerId, "<color=#FFD700>항법효과:</color> + <color=#20B2AA>나무 1개</color> <color=#FF8200>+행운의 토큰 1개</color>를 돌려받습니다!", 10f);
             }
             AnnounceUnitGamble(option, owner.OwnerId, null);
+            RunStats.OnUnitGamble(owner.OwnerId, option, false, null);
         }
 
         return true;
