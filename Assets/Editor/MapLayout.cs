@@ -268,12 +268,25 @@ public static class MapLayout
                           (maxX - minX) / Scale, (maxY - minY) / Scale, "warehouse");
     }
 
+    // 🔴 10-19 S2 신작 카피(단계 3①): 창고 네 칸 = 같은 크기 정사각 1024²(÷Scale 245.7), 중심 간격 1280(307.2).
+    //    묶음 왼쪽 위 모서리 = 레인2 오른쪽 변(−220)에서 +453.1, 레인2 윗변에서 −445.4 (S2 오른쪽 위 구역).
+    //    위 OriginalWarehouse(옛 원작 rect 평행이동)는 더 안 쓴다 — 지우지 않고 둔다(옛 기록).
+    const float WarehouseSide = 1024f / Scale;       // 245.7
+    const float WarehousePitch = 1280f / Scale;      // 307.2
+    public const float WarehouseBundleLeftX = LaneRightEdgeX + 453.1f;                 // 233.1
+    public const float WarehouseBundleTopZ = LaneTopRowZ + LaneSizeZ * 0.5f - 445.4f;   // 위 행 레인 윗변(2217.8) − 445.4
+    static Island S2Warehouse(string name, int column, int row)
+        => new Island(name,
+            WarehouseBundleLeftX + WarehouseSide * 0.5f + WarehousePitch * column,
+            WarehouseBundleTopZ - WarehouseSide * 0.5f - WarehousePitch * row,
+            WarehouseSide, WarehouseSide, "warehouse");
+
     public static readonly Island[] Warehouses =
     {
-        OriginalWarehouse("Warehouse1", 3488f, 3456f, 5312f, 4736f),
-        OriginalWarehouse("Warehouse2", 5632f, 3424f, 7424f, 4768f),
-        OriginalWarehouse("Warehouse3", 3584f, 1824f, 5376f, 3168f),
-        OriginalWarehouse("Warehouse4", 5632f, 1824f, 7360f, 3168f),
+        S2Warehouse("Warehouse1", 0, 0),
+        S2Warehouse("Warehouse2", 1, 0),
+        S2Warehouse("Warehouse3", 0, 1),
+        S2Warehouse("Warehouse4", 1, 1),
     };
 
     // 🔴 2026-09-24 사장님 지시 「레인 밑에 스토리존·위습뽑기섬·조합판 왼쪽으로 좀 이동좀하자,
