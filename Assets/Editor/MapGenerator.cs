@@ -2448,7 +2448,7 @@ public static class MapGenerator
                         continue;
                     }
                     PlaceRecipeSlot(parent, x, z, IngredientName(ingredient), IngredientColor(ingredient),
-                                    $"재료_{label}", ingredient.unit);
+                                    $"재료_{label}", ingredient.unit, ingredient.item);
                     x += SlotW + GapW;
                 }
             }
@@ -2771,7 +2771,7 @@ public static class MapGenerator
     // 모델이 붙은 유닛은 조합표에도 그 모습으로 세운다 — 색 큐브만 있으면 무엇이 재료인지
     // 이름표를 눌러봐야 안다. 모델이 없는 유닛은 예전처럼 등급 색 큐브다.
     static void PlaceRecipeSlot(Transform parent, float x, float z, string label, Color color, string prefix,
-                                UnitData unit = null)
+                                UnitData unit = null, ItemData item = null)
     {
         Vector3 ground = new Vector3(x, MapLayout.IslandTop, z);
 
@@ -2806,6 +2806,48 @@ public static class MapGenerator
         PaintSolid(slot, color);
         // 표 위를 걸어다녀야 하므로 통과시킨다.
         Object.DestroyImmediate(slot.GetComponent<Collider>());
+        ShowItemIcon(slot, item);
+    }
+
+    /// <summary>
+    /// 아이템 재료 칸(제한_박성호의 분실된지갑)은 인형이 없어 색 상자로 섰다 — 사장님 10-18 「제한됨 줄에 갈색 상자」.
+    /// 상자 대신 아이템 그림(ItemData.icon)을 세워 둔다. 그림이 없으면 상자 그대로.
+    /// </summary>
+    internal static bool ShowItemIcon(GameObject slot, ItemData item, float height = 22f)
+    {
+        if (slot == null || item == null || item.icon == null) return false;
+        float groundY = slot.transform.position.y - slot.transform.localScale.y * 0.5f;
+        foreach (Renderer r in slot.GetComponents<Renderer>()) Object.DestroyImmediate(r);
+        MeshFilter mf = slot.GetComponent<MeshFilter>();
+        if (mf != null) Object.DestroyImmediate(mf);
+        slot.transform.localScale = Vector3.one;
+        Vector3 pos = slot.transform.position; pos.y = groundY; slot.transform.position = pos;
+        Transform old = slot.transform.Find("아이템그림");
+        if (old != null) Object.DestroyImmediate(old.gameObject);
+        GameObject pic = new GameObject("아이템그림");
+        pic.transform.SetParent(slot.transform, false);
+        pic.transform.localPosition = new Vector3(0f, height * 0.5f, 0f);
+        float s = height / Mathf.Max(0.0001f, item.icon.bounds.size.y);
+        pic.transform.localScale = new Vector3(s, s, s);
+        SpriteRenderer sr = pic.AddComponent<SpriteRenderer>();
+        sr.sprite = item.icon;
+        return true;
+    }
+
+    [MenuItem("Tools/맵/조합표 아이템 재료 그림 입히기")]
+    static void FixItemIngredientSlots()
+    {
+        int n = 0;
+        foreach (GameObject go in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None).Select(t => t.gameObject))
+        {
+            int i = go.name.IndexOf("_ItemData_", System.StringComparison.Ordinal);
+            if (i < 0 || !go.name.StartsWith("재료_")) continue;
+            string itemName = go.name.Substring(i + 1);
+            ItemData item = AssetDatabase.FindAssets("t:ItemData " + itemName, new[] { "Assets/Data/Items" })
+                .Select(g => AssetDatabase.LoadAssetAtPath<ItemData>(AssetDatabase.GUIDToAssetPath(g))).FirstOrDefault(d => d != null && d.name == itemName);
+            if (ShowItemIcon(go, item)) { n++; EditorSceneManager.MarkSceneDirty(go.scene); }
+        }
+        Debug.Log($"[조합표 아이템 재료] 그림을 입힌 칸 {n}개");
     }
 
     /// <summary>
