@@ -147,6 +147,13 @@ def parse_damage(v, blk, unit_atk_type):
         if per_sec:
             e['perSec'] = True
         out.append(e)
+    if re.search(r'라인\s*몬스터', main):
+        # 「대상이 라인 몬스터일 경우 …」 — 포인트값 200 미만(일반 적)만
+        for e in out:
+            e['targetCondition'], e['targetConditionValue'] = 1, 200
+    elif '광폭화' in main and '경우' in main:
+        for e in out:
+            e['requiredTargetBuffId'] = 'B06B'
     for x in extras:
         m = re.search(r'단일 적(?:에게|은)?\s*(?:추가\s*)?([\d만억,\s]+)\s*(?:추가\s*)?(물리|마법)?\s*데미지', x)
         pct = re.search(r'단일 적(?:에게는|에게)?\s*(\d+)%\s*추가\s*(물리|마법)?\s*데미지', x)

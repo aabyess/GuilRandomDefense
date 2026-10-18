@@ -434,6 +434,14 @@ def main():
         claimed[pick] = r['file']
         result[r['file']] = (pick, '새로', why + ' · 미사용 원작 중 DPS가 가장 가까운 것')
 
+    # 적용(10-18) 뒤엔 대응을 고정한다 — 다시 돌릴 때 바뀐 로스터 수치로 DPS 근접 고르기가 달라지지 않게(S2_ROSTER_MAP이 정본).
+    lock = sorted(glob.glob(ROOT + '/Docs/reference/S2_ROSTER_MAP_*.csv'))
+    if lock:
+        for row in csv.DictReader(open(lock[-1], encoding='utf-8-sig')):
+            if row['S2 원작 id'] and row['로스터'] in result:
+                old = result[row['로스터']]
+                result[row['로스터']] = (row['S2 원작 id'], old[1], old[2])
+
     # ── 행 만들기 ──
     rows, skill_rows, fx = [], [], defaultdict(lambda: dict(users=set(), status=None, where=None))
     for r in sorted(recs, key=lambda r: (EX.GRADE_ORDER.index(r['grade']) if r['grade'] in EX.GRADE_ORDER else 99, r['file'])):
