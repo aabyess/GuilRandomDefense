@@ -41,7 +41,7 @@ public static class SummonVoice
         { "영원_조세민", new[] { "hancock" } },
         { "영원_최상호", new[] { "mihawk", "cavendish" } },
         { "초월_강재규_AP", new[] { "Robin" } },
-        { "초월_강주혁_AP", new[] { "Nami", "Zoro_2" } },
+        { "초월_강주혁_AP", new[] { "Juhyuk_boss" } },   // 10-18 사장님 녹음 파일(원작 Nami·Zoro_2 대신, Assets/Audio/Custom)
         { "초월_구주호_AD", new[] { "kizaru", "jinbe", "yamato" } },   // 원작 + PM 추가 · 10-06 사장님: 료쿠규 ↔ 징베 맞바꿈(최상호 AD와)
         { "초월_김경현_AP", new[] { "snakeman" } },
         { "초월_김만경_AD", new[] { "Akainu" } },
