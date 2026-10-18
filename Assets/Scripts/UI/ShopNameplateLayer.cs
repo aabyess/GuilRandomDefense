@@ -52,6 +52,8 @@ public class ShopNameplateLayer : MonoBehaviour
         public TMP_Text text;
         public SupportShop support;          // 도움소만: 머리 위 마나 막대(사장님 10-07 「도움소 마나 얼마나 찼는지」)
         public Image manaFill, manaBack;
+        public Vector2 screen, placed;       // 이번 프레임 화면 좌표(원래 자리 / 겹침 피해 놓은 자리)
+        public bool shown;
     }
 
     static ShopNameplateLayer instance;
@@ -255,8 +257,48 @@ public class ShopNameplateLayer : MonoBehaviour
 
             if (plate.root == null) CreateLabel(plate);
             if (!plate.root.gameObject.activeSelf) plate.root.gameObject.SetActive(true);
-            plate.root.position = new Vector3(screen.x, screen.y, 0f);
+            plate.screen = new Vector2(screen.x, screen.y);
+            plate.shown = true;
             UpdateManaBar(plate);
+        }
+        PlaceWithoutOverlap();
+    }
+
+    // 맵 S2 카피(10-19): 상점이 깊이 방향 세로 열로 서면 화면 간격이 좁아 이름표가 서로 덮는다(가로 배치 간격은 약 130px). 위(먼 쪽)부터 놓으며
+    // 이미 놓은 것과 겹치면 가로로 번갈아 밀어 빈 곳에 둔다. 안 겹치면 제자리라 지금 맵에선 아무것도 안 바뀐다.
+    const float LabelWidth = 112f, LabelHeight = 60f;   // 캔버스 1920×1080 기준 대략(두 줄 이름 + 도움소 막대)
+    readonly List<Plate> shownScratch = new List<Plate>();
+    void PlaceWithoutOverlap()
+    {
+        shownScratch.Clear();
+        foreach (Plate plate in plates)
+        {
+            if (plate.root == null) continue;
+            if (plate.shown) shownScratch.Add(plate);
+            plate.shown = false;
+        }
+        shownScratch.Sort((a, b) => b.screen.y.CompareTo(a.screen.y));
+        float scale = canvasRect != null ? Mathf.Max(0.01f, canvasRect.lossyScale.x) : 1f;
+        float w = LabelWidth * scale, h = LabelHeight * scale;
+        for (int i = 0; i < shownScratch.Count; i++)
+        {
+            Plate plate = shownScratch[i];
+            Vector2 at = plate.screen;
+            for (int attempt = 0; attempt < 7; attempt++)
+            {
+                float dx = ((attempt + 1) / 2) * w * (attempt % 2 == 1 ? -1f : 1f);   // 0, -1w, +1w, -2w, +2w ...
+                Vector2 candidate = plate.screen + new Vector2(dx, 0f);
+                bool clash = false;
+                for (int j = 0; j < i && !clash; j++)
+                {
+                    Vector2 other = shownScratch[j].placed;
+                    clash = Mathf.Abs(other.x - candidate.x) < w && Mathf.Abs(other.y - candidate.y) < h;
+                }
+                at = candidate;
+                if (!clash) break;
+            }
+            plate.placed = at;
+            plate.root.position = new Vector3(at.x, at.y, 0f);
         }
     }
 
