@@ -540,8 +540,15 @@ public static class MapLayout
         (LaneLeftColumnX + LaneSizeX * 0.5f + LaneRightColumnX - LaneSizeX * 0.5f) * 0.5f - 0f,
         (LaneBottomRowZ + LaneSizeZ * 0.5f + LaneTopRowZ - LaneSizeZ * 0.5f) * 0.5f);
 
+    // 🔴 10-19 단계 3⑤: 위 두 모서리 섬. 룸바 영혼 = 오른쪽 위(원작 레인2 오른쪽 위 모서리 기준 +(1328.5, +107.5)),
+    //    포네글리프 = 왼쪽 위(원작 −3632·+814 ÷Scale = −871.6·+195.4 → 바다 경계 −3333에 붙어 안쪽 −3000으로 조정). 구현담당3이 읽는 상수.
+    public static readonly Vector2 RumbaSoulCenter = new Vector2(LaneRightEdgeX + 1328.5f, LaneTopRowZ + LaneSizeZ * 0.5f + 107.5f);
+    public static readonly Vector2 PoneglyphCenter = new Vector2(-3000f, LaneTopRowZ + LaneSizeZ * 0.5f + 195.4f);
+
     public static readonly Island[] Zones =
     {
+        new Island("RumbaIsland", RumbaSoulCenter.x, RumbaSoulCenter.y, 220f, 160f, "story"),
+        new Island("PoneglyphIsland", PoneglyphCenter.x, PoneglyphCenter.y, 160f, 160f, "story"),
         new Island("OroSeongIsland", OroSeongCenter.x, OroSeongCenter.y, OroSeongSizeX, OroSeongSizeZ, "story"),
         // 이벤트 존이 위, 그 아래 불멸·초월 전시가 가로로 나란히.
         new Island("PunkHazard",         0f * Scale, 130f * Scale, 90f * Scale, 60f * Scale, "event"),
