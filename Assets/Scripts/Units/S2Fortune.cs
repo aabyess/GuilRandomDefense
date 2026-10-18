@@ -43,7 +43,7 @@ public static class S2Fortune
         {
             Grant(context, "Wisp_전설히든");
             foreach (PlayerContext c in PlayerContext.Occupied)
-                PlayerNotification.Show(c.PlayerId, $"<color=#FF69B4>대길!</color> {name}님이 <color=#FF0000>전설위습</color>을 획득!", 10f);
+                S2Notify.Show(c.PlayerId, $"<color=#FF69B4>대길!</color> {name}님이 <color=#FF0000>전설위습</color>을 획득!", 10f);
             result = "대길";
         }
         else if (d100() <= 3) { Grant(context, "Wisp_희귀함"); result = "<color=#FF69B4>길한 기운이 모여듭니다!</color> <color=#FF00FF>희귀함위습</color> 1개 획득!"; }
@@ -58,7 +58,7 @@ public static class S2Fortune
             nextAllowed[idx] = 0f;
             result += "\n<color=#C6FBFB>한번 더 점을 칠 수 있습니다.</color>";
         }
-        if (result != "대길") PlayerNotification.Show(playerId, result, 5f);
+        if (result != "대길") S2Notify.Show(playerId, result, 5f);
         LastResult = result;
         return null;
     }

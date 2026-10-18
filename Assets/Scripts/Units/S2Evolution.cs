@@ -33,7 +33,7 @@ public static class S2Evolution
         if (table == null || spawner == null) return false;
         if (states.TryGetValue(ownerId, out State old) && old.body != null)
         {
-            PlayerNotification.Show(ownerId, "이미 진화체가 자라는 중입니다.", 4f);
+            S2Notify.Show(ownerId, "이미 진화체가 자라는 중입니다.", 4f);
             return false;
         }
 
@@ -51,8 +51,8 @@ public static class S2Evolution
         body.Init(ownerId, special, spawner);
         states[ownerId] = new State { body = body };
 
-        PlayerNotification.Show(ownerId, $"<color=#9553EC>[진화체]</color> {special.unitName} 을(를) 획득했습니다.", 5f);
-        PlayerNotification.Show(ownerId, $"<color=#FF0000>◈</color> 라인몹을 처치하고 <color=#9553EC>경험치</color>를 획득하면 유닛이 활성화됩니다!", 5f);
+        S2Notify.Show(ownerId, $"<color=#9553EC>[진화체]</color> {special.unitName} 을(를) 획득했습니다.", 5f);
+        S2Notify.Show(ownerId, $"<color=#FF0000>◈</color> 라인몹을 처치하고 <color=#9553EC>경험치</color>를 획득하면 유닛이 활성화됩니다!", 5f);
         return true;
     }
 
@@ -99,9 +99,7 @@ public class EvolutionBody : MonoBehaviour
     UnitData unit;
     UnitSpawner spawner;
     TextMesh label;
-    Renderer[] renderers;
-    MaterialPropertyBlock block;
-    static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
+    S2Silhouette sil;
 
     public static EvolutionBody Strip(GameObject root)
     {
@@ -110,7 +108,6 @@ public class EvolutionBody : MonoBehaviour
             if (c == null || c is Transform || c is Renderer || c is MeshFilter || c is SkinnedMeshRenderer || c is Animator) continue;
             if (c is Behaviour b) b.enabled = false;
             if (c is Collider col) col.enabled = false;
-            if (c is UnityEngine.AI.NavMeshAgent agent) Object.Destroy(agent);
         }
         foreach (Animator a in root.GetComponentsInChildren<Animator>(true)) a.enabled = false;
         root.name = "진화체 실루엣";
@@ -120,8 +117,7 @@ public class EvolutionBody : MonoBehaviour
     public void Init(int owner, UnitData data, UnitSpawner unitSpawner)
     {
         ownerId = owner; unit = data; spawner = unitSpawner;
-        renderers = GetComponentsInChildren<Renderer>(true);
-        block = new MaterialPropertyBlock();
+        sil = new S2Silhouette(GetComponentsInChildren<Renderer>(true));
         Paint(0f);
 
         var go = new GameObject("진화체 글자");
@@ -142,16 +138,7 @@ public class EvolutionBody : MonoBehaviour
 
     void RefreshLabel() { if (label != null) label.text = $"{kills} / {S2Evolution.NeededKills}"; }
 
-    void Paint(float t)
-    {
-        foreach (Renderer r in renderers)
-        {
-            if (r == null) continue;
-            r.GetPropertyBlock(block);
-            block.SetColor(BaseColor, new Color(t, t, t, 1f));
-            r.SetPropertyBlock(block);
-        }
-    }
+    void Paint(float t) => sil.Paint(t);
 
     public void AddKill()
     {
@@ -170,7 +157,7 @@ public class EvolutionBody : MonoBehaviour
         filling = false;
         Vector3 at = transform.position;
         spawner.Spawn(unit, at, ownerId);
-        PlayerNotification.Show(ownerId, "<color=#04FFC4>[알림]</color> 진화체 경험치 획득 완료! 유닛이 활성화됩니다.", 6f);
+        S2Notify.Show(ownerId, "<color=#04FFC4>[알림]</color> 진화체 경험치 획득 완료! 유닛이 활성화됩니다.", 6f);
         Destroy(gameObject);
     }
 }

@@ -57,13 +57,13 @@ public static class S2DebeBack
         triesDone[idx]++;
         if (lose)
         {
-            PlayerNotification.Show(pid, "<color=#FF0000>[알림]</color> 데비백파이트에서 패배하여 동료를 빼앗깁니다.", 5f);
+            S2Notify.Show(pid, "<color=#FF0000>[알림]</color> 데비백파이트에서 패배하여 동료를 빼앗깁니다.", 5f);
             identity.Consume();
             if (triesDone[idx] >= MaxTries)
             {
                 PlayerContext c = PlayerContext.Get(pid);
                 if (c != null && c.ResourceWallet != null) c.ResourceWallet.Add(ResourceType.Wood, 1);
-                PlayerNotification.Show(pid, "<color=#04FFC4>[알림]</color> 위로 보상: 목재 1", 5f);
+                S2Notify.Show(pid, "<color=#04FFC4>[알림]</color> 위로 보상: 목재 1", 5f);
             }
             LastResult = "패배";
         }
@@ -73,7 +73,7 @@ public static class S2DebeBack
             identity.Consume();
             spawner.Spawn(got, at, pid, combined: true);
             won[idx] = true;
-            PlayerNotification.Show(pid, $"<color=#04FFC4>[알림]</color><color=#FF8200>'데비백파이트' 승리로 {got.unitName}을(를) 빼앗아 옵니다.</color>", 6f);
+            S2Notify.Show(pid, $"<color=#04FFC4>[알림]</color><color=#FF8200>'데비백파이트' 승리로 {got.unitName}을(를) 빼앗아 옵니다.</color>", 6f);
             LastResult = "승리:" + got.name;
         }
         return null;

@@ -175,8 +175,8 @@ public class DifficultySelectHud : MonoBehaviour
         }
 
         // S2 모드 토글(변질·이세계) — 지옥 이상에서만 적용된다(GameModes). 난이도 버튼을 누를 때 이 값이 같이 간다.
-        alteredToggle = BuildToggle(panel, "Toggle_Altered", new Vector2(0.09f, 0.115f), new Vector2(0.91f, 0.195f), () => { altered = !altered; RefreshToggles(); });
-        otherWorldToggle = BuildToggle(panel, "Toggle_OtherWorld", new Vector2(0.09f, 0.02f), new Vector2(0.91f, 0.10f), () => { otherWorld = !otherWorld; RefreshToggles(); });
+        alteredToggle = BuildToggle(panel, "Toggle_Altered", new Vector2(0.09f, 0.135f), new Vector2(0.91f, 0.215f), () => { altered = !altered; RefreshToggles(); });
+        otherWorldToggle = BuildToggle(panel, "Toggle_OtherWorld", new Vector2(0.09f, 0.045f), new Vector2(0.91f, 0.125f), () => { otherWorld = !otherWorld; RefreshToggles(); });
         RefreshToggles();
     }
 
