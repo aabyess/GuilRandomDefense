@@ -18,6 +18,31 @@ MPQ = {"s2": H + "/grd/GRD_motion_trial/_work/s2.mpq", "old": H + "/grd/GRD_moti
 BLENDER = "/opt/homebrew/bin/blender"
 
 
+def opaque_none_textures(mdir, work):
+    """필터 none(불투명) 층만 쓰는 텍스처는 알파를 255로 채운다.
+    워크3는 none 층에서 알파를 안 보는데, 중국 모델러 텍스처 일부는 알파에 워터마크만 있고 나머지가 0이다
+    (10-18 S2 새턴: 알파 0 이 98% → Blender 그림이 검고, 우리 _cut 재질로는 몸이 사라진다)."""
+    from PIL import Image
+    js = [f for f in os.listdir(mdir) if f.endswith(".json")]
+    if not js:
+        return
+    side = json.load(open(os.path.join(mdir, js[0])))
+    use = {}
+    for m in side.get("meshes", []):
+        if m.get("textureFile"):
+            use.setdefault(m["textureFile"], set()).add(m.get("filter"))
+    for tf, filters in use.items():
+        if filters != {"none"}:
+            continue
+        for p in (os.path.join(mdir, "Textures", tf), os.path.join(work, "_tex", tf)):
+            if os.path.exists(p):
+                im = Image.open(p).convert("RGBA")
+                if im.getchannel("A").getextrema()[0] < 255:
+                    im.putalpha(255)
+                    im.save(p)
+                    print("  알파 채움(none 층 전용):", tf)
+
+
 def main():
     which, out, names = sys.argv[1], os.path.expanduser(sys.argv[2]), sys.argv[3:]
     names = [re.sub(r"\.mdl$", ".mdx", n, flags=re.I) for n in names]
@@ -37,6 +62,7 @@ def main():
                        check=True, stdout=subprocess.DEVNULL)
     for n in ok:
         base = os.path.splitext(n.replace("\\", "__").replace("/", "__"))[0]
+        opaque_none_textures(os.path.join(out, base), work)
         print("OK" if os.path.exists(os.path.join(out, base, base + ".fbx")) else "FBX 없음", n)
     for n in miss:
         print("맵에 없음", n)
