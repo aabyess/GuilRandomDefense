@@ -219,6 +219,7 @@ public class DoorTransition : MonoBehaviour
 
     // ───────────── 이징 ─────────────
     static float Seg(float t, float a, float b) => Mathf.Clamp01((t - a) / (b - a));
+    static float Tri(float k, float center, float halfWidth) => Mathf.Clamp01(1f - Mathf.Abs(k - center) / halfWidth);   // 삼각 펄스
     static float EaseIn(float k, float p) => Mathf.Pow(Mathf.Clamp01(k), p);
     static float EaseOutCubic(float k) { k = Mathf.Clamp01(k); return 1f - (1f - k) * (1f - k) * (1f - k); }
     static float EaseInOutCubic(float k) { k = Mathf.Clamp01(k); return k < 0.5f ? 4f * k * k * k : 1f - Mathf.Pow(-2f * k + 2f, 3f) / 2f; }
@@ -297,21 +298,23 @@ public class DoorTransition : MonoBehaviour
                     float rattle = k < 0.12f ? 0.012f * Mathf.Sin(k / 0.12f * Mathf.PI * 3f) : 0f;   // 걸쇠가 풀리며 덜컹
                     float e = k < 0.12f ? Mathf.Max(0f, rattle) : Mathf.Lerp(0.0f, 1f, EaseInOutCubic(Seg(k, 0.1f, 1f)));   // 묵직하게 시작 → 가속 → 천천히 멈춤
                     SetOpenAmount(e, half);
-                    float pulse = Mathf.Sin(Seg(k, 0.08f, 0.5f) * Mathf.PI);   // 틈에서 번쩍
-                    gap.color = new Color(MenuTheme.DoorGapLight.r, MenuTheme.DoorGapLight.g, MenuTheme.DoorGapLight.b, Mathf.Clamp01(pulse * 1.1f));
-                    gap.rectTransform.localScale = new Vector3(1f + 2.2f * Seg(k, 0.08f, 0.5f), 1f, 1f);   // 열릴수록 빛이 옆으로 퍼진다
-                    SetFlash(0.32f * pulse);
+                    // 틈 빛은 Classic처럼 문이 벌어지는 동안 틈을 따라 넓어졌다 사라진다(문짝은 계속 보인다). 전체 화면 번쩍임은 짧고 약한 한 번(피크 ≈0.08초·30%).
+                    float pulse = Mathf.Sin(Mathf.Clamp01(k * 2.2f) * Mathf.PI);
+                    gap.color = new Color(MenuTheme.DoorGapLight.r, MenuTheme.DoorGapLight.g, MenuTheme.DoorGapLight.b, pulse * 0.75f);
+                    gap.rectTransform.localScale = new Vector3(1f + 1.0f * e, 1f, 1f);
+                    SetFlash(0.3f * Tri(k, 0.16f, 0.05f));
                     block.color = new Color(0f, 0f, 0f, 0.5f * (1f - EaseOutCubic(k)));            // 게임 화면이 어둠에서 서서히 밝아진다
                 }
                 else
                 {
                     float rattle = k < 0.1f ? 7f * Mathf.Sin(k / 0.1f * Mathf.PI * 4f) : 0f;       // 사슬이 팽팽해지며 덜컹
-                    float gy = k < 0.1f ? Mathf.Max(0f, rattle) : GrateTravel * EaseIn(Seg(k, 0.1f, 0.62f), 2.2f);   // 천천히 떨며 올라가다 빨라진다
-                    float zs = Mathf.Lerp(1f, 1.7f, EaseIn(Seg(k, 0.45f, 1f), 2f));
-                    float fa = 1f - Seg(k, 0.55f, 1f);
-                    float ba = 1f - Seg(k, 0.4f, 0.9f);
+                    // 창살이 올라가는 1초 가까이 아치와 창살이 계속 보이고(뒤로 게임 화면이 비쳐 드러난다), 아치가 다가오며 사라지는 건 맨 끝 0.3초만.
+                    float gy = k < 0.08f ? Mathf.Max(0f, rattle) : GrateTravel * EaseIn(Seg(k, 0.08f, 0.68f), 2f);   // 떨며 시작해 점점 빨라진다
+                    float zs = Mathf.Lerp(1f, 1.7f, EaseIn(Seg(k, 0.7f, 1f), 2f));
+                    float fa = 1f - Seg(k, 0.72f, 1f);
+                    float ba = 1f - Seg(k, 0.2f, 0.7f);
                     SetGate(gy, zs, fa, ba);
-                    SetFlash(0.4f * Mathf.Sin(Seg(k, 0.12f, 0.6f) * Mathf.PI));
+                    SetFlash(0.28f * Tri(k, 0.16f, 0.05f));   // 걸쇠가 풀리는 순간 짧은 번쩍
                 }
                 if (k >= 1f) Destroy(gameObject);
                 break;
