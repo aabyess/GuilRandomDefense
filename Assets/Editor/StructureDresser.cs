@@ -326,7 +326,7 @@ public static class StructureDresser
         // (모델, 이름, 자리, 원작 각도 rad, 원작 배율)
         var items = new (string model, string name, Vector3 at, float angle, float scale)[]
         {
-            ("장식_룸바배", "S2_룸바배", new Vector3(MapLayout.RumbaSoulCenter.x + 150f, 0f, MapLayout.RumbaSoulCenter.y + 20f), 2.48f, 1.8f),
+            ("장식_룸바배", "S2_룸바배", new Vector3(MapLayout.RumbaSoulCenter.x + 200f, 0f, MapLayout.RumbaSoulCenter.y + 20f), 2.48f, 1.8f),
             ("장식_포네글리프", "S2_포네글리프", new Vector3(MapLayout.PoneglyphCenter.x, MapLayout.IslandTop, MapLayout.PoneglyphCenter.y), 5.33f, 1.2f),
             ("장식_고잉메리", "S2_고잉메리", new Vector3(story.center.x - story.size.x * 0.5f - 180f, 0f, story.center.y + story.size.y * 0.5f + 140f), 3.92f, 1.05f),
         };
