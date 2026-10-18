@@ -132,6 +132,16 @@ public class GameChatBox : MonoBehaviour
             return;
         }
 
+        // S2 경단먹이기: 남(또는 내) 유닛을 고르고 「-경단」 — 선택은 이 PC라 여기서 대상을 정하고 판정은 호스트.
+        if (text.Trim() == "-경단")
+        {
+            SelectionManager dm = FindFirstObjectByType<SelectionManager>();
+            Selectable dpick = dm != null && dm.Selected.Count > 0 ? dm.Selected[0] : null;
+            if (GameAuthority.IsServer) { string derr = S2Dango.Request(local.PlayerId, dpick); if (derr != null) ShowStatus(derr); }
+            else NetCommands.RequestDango(dpick);
+            return;
+        }
+
         // S2 데비백파이트: 내 특별함 유닛 하나를 고르고 「-데비백」 — 선택은 이 PC라 여기서 대상을 정하고 판정은 호스트.
         if (text.Trim() == "-데비백")
         {
@@ -186,6 +196,8 @@ public class GameChatBox : MonoBehaviour
     //     「인식할 수 없는 코드입니다」가 뜨지 않게, PM 09-26). 결과 문구가 있으면 코드로 인식된 것이다.
     public string TryExecuteCode(int playerId, string text)
     {
+        string dangoReply = S2Dango.TryRespond(playerId, text);
+        if (dangoReply != null) return dangoReply.Length > 0 ? dangoReply : null;
         if (text.Trim() == "-운세") return S2Fortune.Cast(playerId);   // 오류(쿨)만 문구로 돌려준다 — 결과는 알림으로
 
         if (chatUnlockManager != null)

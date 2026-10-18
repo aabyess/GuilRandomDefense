@@ -484,6 +484,12 @@ public class NetPlayer : NetworkBehaviour
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_Dango(NetworkId unit)
+    {
+        NetCommands.ExecuteDango(this, unit);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     public void RPC_Chat(string text)
     {
         NetCommands.ExecuteChat(this, text);
