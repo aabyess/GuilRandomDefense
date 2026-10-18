@@ -185,7 +185,7 @@ def build_plan():
     rows = json.load(open(os.path.join(OUT, 'rematch.json')))
     U, AB, AS, US = D.load_s2()
     plan = []
-    amap, _umap = R.j_index(D.load_s2_models())
+    amap, umap = R.j_index(D.load_s2_models())
     for r in rows:
         if r['how'] == '대응 없음' or r['file'] in SKIP or r['roster'] in FIXED_STATS or r['file'] in HOLD:
             continue
@@ -200,7 +200,8 @@ def build_plan():
         before = dict(attackPower=d['attackPower'], attackSpeed=d['attackSpeed'], attackType=d['attackType'], attackSplashRadius=d.get('attackSplashRadius', 0))
         omn = '%s %s' % (GRADE_SHORT.get(d['grade'], ''), u['name'])
         item = dict(file=r['file'], roster=r['roster'], grade=r['grade'], s2=sid, s2name=u['name_full'] or u['name'], stats=stats, before=before,
-                    omn=omn, replace=False, skills=[], patch={}, lost=[], keep=[], remove=[])
+                    omn=omn, replace=False, skills=[], patch={}, lost=[], keep=[], remove=[],
+                    unit_vfx=sorted({os.path.splitext(os.path.basename(m.replace('\\\\', '/').replace('\\', '/')))[0] for m in umap.get(sid, set())}))
         if r['change'] in ('스킬만 바뀜', '원작 바뀜', '스킬 추가') or r['roster'] in HIDDEN4:
             item['replace'] = True
             for g in EX.skill_guids(d):
@@ -262,29 +263,43 @@ def report(plan):
     return len(chg), len(rep)
 
 
+ORIGINAL_PREFABS = os.path.join(ROOT, 'Assets', 'Resources', 'Effects', 'Original')
+
+
 def write_vfx_csv(plan, grades):
-    """새 스킬의 원작 이펙트 → Docs/research/ORIGINAL_VFX_ASSIGN_S2재매칭.csv(SkillVfxTableBuilder·OriginalVfxBuilder가 읽는 「원작:모델」 칸)."""
+    """새 스킬의 원작 이펙트 → Docs/research/ORIGINAL_VFX_ASSIGN_S2재매칭.csv(SkillVfxTableBuilder가 읽는 「원작:모델」 칸).
+    반입된 프리팹(Resources/Effects/Original/<모델>.prefab)이 있는 모델만 넣는다.
+    ① 그 능력의 아트 필드·같은 함수 트리거 모델 → 칸(대상 아트=적중시, 시전자 아트=시전자, 나머지=범위/적중시)
+    ② 능력 쪽에 없으면 그 원작 유닛 트리거 모델(난독화 j에서 유닛 rawcode와 같은 함수)을 이펙트 없는 발동 스킬에 차례로 나눠 준다(근사)."""
     import csv
+    have = {os.path.splitext(f)[0].lower(): os.path.splitext(f)[0] for f in os.listdir(ORIGINAL_PREFABS) if f.endswith('.prefab')} if os.path.isdir(ORIGINAL_PREFABS) else {}
     p = os.path.join(ROOT, 'Docs', 'research', 'ORIGINAL_VFX_ASSIGN_S2재매칭.csv')
     rows = []
     for it in plan:
         if not it['replace'] or ('all' not in grades and it['grade'] not in grades):
             continue
+        pool = [have[m.lower()] for m in it.get('unit_vfx', []) if m.lower() in have]
+        k = 0
         for s in it['skills']:
-            v = s.get('vfx') or {}
+            v = {slot: have[m.lower()] for slot, m in (s.get('vfx') or {}).items() if m.lower() in have}
+            how = '자동(S2 능력 아트·트리거)'
+            if not v and pool and s['block']['trigger'] != 2:
+                v = {'범위' if s['block']['range'] else '적중시': pool[k % len(pool)]}
+                k += 1
+                how = '자동(원작 유닛 트리거 근사)'
             if not v:
                 continue
             hit = v.get('적중시') or (v.get('범위') if not s['block']['range'] else '')
             area = v.get('범위') if s['block']['range'] else ''
             cast = v.get('시전자', '')
             rows.append(['Assets/Data/UnitSkills/%s.asset' % s['name'], ('원작:' + hit) if hit else '', ('원작:' + area) if area else '', ('원작:' + cast) if cast else '',
-                         '맞은 적 몸' if hit else ('범위 중심' if area else '시전자 위치'), '적중시' if hit else ('범위' if area else '시전자'), '자동(S2 아트 필드·트리거)',
+                         '맞은 적 몸' if hit else ('범위 중심' if area else '시전자 위치'), '적중시' if hit else ('범위' if area else '시전자'), how,
                          'S2 %s %s' % (it['s2'], s['aid'])])
     old = []
     if os.path.exists(p):
         old = [r for r in csv.reader(open(p, encoding='utf-8')) if r and r[0] != 'asset_path']
     keep = {r[0] for r in rows}
-    allrows = [r for r in old if r[0] not in keep] + rows
+    allrows = ([r for r in old if r[0] not in keep] if 'all' not in grades else []) + rows   # 전부 다시 만들 땐 옛 줄(반입 안 된 모델) 버림
     with open(p, 'w', encoding='utf-8', newline='') as f:
         w = csv.writer(f)
         w.writerow(['asset_path', '적중시_프리팹', '범위_지면_프리팹', '시전자_프리팹', '발동지점', '권장칸', '검수', '근거'])
@@ -363,6 +378,8 @@ def main():
     json.dump(plan, open(os.path.join(OUT, 'apply_plan.json'), 'w'), ensure_ascii=False, indent=1)
     n_chg, n_rep = report(plan)
     print('계획: 대상 %d · 능력치 바뀜 %d · 스킬 교체 %d · 새 스킬 %d' % (len(plan), n_chg, n_rep, sum(len(p['skills']) for p in plan)))
+    if cmd == 'vfx':
+        print(write_vfx_csv(plan, {'all'}))
     if cmd == 'apply':
         grades = set(sys.argv[2:]) or {'all'}
         w = apply(plan, grades)
