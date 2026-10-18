@@ -46,7 +46,7 @@ public static class SummonVoice
         { "초월_김경현_AP", new[] { "snakeman" } },
         { "초월_김만경_AD", new[] { "Akainu" } },
         { "초월_김민준_AP", new[] { "tashigi" } },
-        { "초월_노태현_AP", new[] { "Brook" } },
+        { "초월_노태현_AP", new[] { "Taehyun_boss" } },   // 10-18 사장님 녹음 파일(원작 Brook 대신, Assets/Audio/Custom)
         { "초월_두유찬_AD", new[] { "sabo" } },
         { "초월_박기찬_AD", new[] { "Franky" } },
         { "초월_박민수_AD", new[] { "Minsu_boss" } },   // 10-07 사장님 녹음 파일(원작 Zoro 대신, Assets/Audio/Custom)
