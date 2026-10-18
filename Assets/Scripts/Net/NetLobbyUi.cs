@@ -25,7 +25,7 @@ public class NetLobbyUi : MonoBehaviour
     static readonly Color Card = MenuTheme.Card;            // 그림이 없을 때 물러나는 색
     static readonly Color Row = MenuTheme.Row;
     static readonly Color ButtonNormal = Color.white;
-    static readonly Color ButtonAccent = Color.white;                              // 시안엔 으뜸 단추 표식이 없다(호버 때 금테 그림으로 바뀐다)
+    static readonly Color ButtonAccent = MenuTheme.ButtonAccent;                              // 시안엔 으뜸 단추 표식이 없다(호버 때 금테 그림으로 바뀐다)
     static readonly Color ButtonDanger = MenuTheme.ButtonDanger;
     static readonly Color Selected = MenuTheme.Selected;
     static readonly Color Gold = MenuTheme.Gold;
@@ -192,7 +192,8 @@ public class NetLobbyUi : MonoBehaviour
             SetAccent(readyButton, !local.Ready);
         }
         startButton.interactable = launcher.CanStartMatch;
-        startHint.text = isHost ? launcher.StartBlockedReason : "";
+        // 손님도 다음에 무엇을 하면 되는지 한 줄로(방장은 시작 불가 사유)
+        startHint.text = isHost ? launcher.StartBlockedReason : (local != null && local.Ready ? "방장이 시작하면 바로 게임이 열립니다" : "준비를 누르면 방장에게 알려집니다");
         roomStatus.text = launcher.Status;
     }
 
@@ -706,7 +707,9 @@ public class NetLobbyUi : MonoBehaviour
         button.targetGraphic = image;
         button.transition = UnityEngine.UI.Selectable.Transition.None;   // 그림 교체는 LobbyButtonFx
 
-        TMP_Text text = CreateText(image.rectTransform, "Label", label, fontSize, boldFont, ButtonText, TextAlignmentOptions.Center);
+        // 으뜸 단추(ButtonAccent가 ButtonNormal과 다른 테마에서만)는 글자를 더 밝게 — 어느 단추를 먼저 눌러야 하는지 한눈에
+        bool accent = ButtonAccent != ButtonNormal && color == ButtonAccent;
+        TMP_Text text = CreateText(image.rectTransform, "Label", label, fontSize, boldFont, accent ? MenuTheme.ButtonTextAccent : ButtonText, TextAlignmentOptions.Center);
         text.enableWordWrapping = false;
         Stretch(text.rectTransform);
 

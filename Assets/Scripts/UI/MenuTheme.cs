@@ -54,6 +54,7 @@ public static class MenuTheme
     public static readonly Color Row = Pick(new Color(0.10f, 0.07f, 0.05f, 0.88f), new Color(0.08f, 0.09f, 0.11f, 0.88f));
     public static readonly Color RowMe = Pick(new Color(0.34f, 0.22f, 0.08f, 0.95f), new Color(0.24f, 0.28f, 0.34f, 0.95f));
     public static readonly Color Highlight = Pick(new Color(0.42f, 0.30f, 0.12f, 0.95f), new Color(0.30f, 0.35f, 0.43f, 0.95f));
+    public static readonly Color ButtonAccent = Pick(Color.white, new Color(1f, 1f, 1f, 0.99f));   // Tavern은 으뜸 표식이 없다(ButtonNormal과 같음), Castle은 글자색으로 구분
     public static readonly Color ButtonDanger = Pick(new Color(1f, 0.70f, 0.66f, 1f), new Color(1f, 0.70f, 0.66f, 1f));
     public static readonly Color Selected = Pick(new Color(1f, 0.84f, 0.25f, 1f), new Color(0.78f, 0.88f, 1f, 1f));                   // 방장 표시·캐럿
     public static readonly Color Gold = Pick(new Color(0.79f, 0.64f, 0.29f, 1f), new Color(0.62f, 0.67f, 0.74f, 1f));                // 슬라이더 채움 등 포인트색
