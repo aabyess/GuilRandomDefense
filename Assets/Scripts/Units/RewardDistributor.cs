@@ -73,6 +73,7 @@ public class RewardDistributor : MonoBehaviour
     {
         GrantStartingWisps();
         S2Evolution.GrantStarting(this);
+        OroSeong.OnMatchStart();   // S2 오로성 저주(신·악몽): 실루엣
         GrantStartingSpecialUnits();
         GrantStartingSpecialGradeUnit();
         GrantStartingTraitPoints();

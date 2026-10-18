@@ -20,6 +20,7 @@ public class UnitSpawner : MonoBehaviour
         }
 
         GameObject instance = Instantiate(data.prefab, position, Quaternion.identity);
+        OroSeong.OnUnitSpawned(data);   // S2 오로성: 니카를 얻으면 에메트가 퇴치
 
         if (!instance.TryGetComponent(out OwnedByPlayer owner))
             owner = instance.AddComponent<OwnedByPlayer>();

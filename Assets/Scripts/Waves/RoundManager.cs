@@ -536,6 +536,7 @@ public class RoundManager : MonoBehaviour
             if (totalRounds > 60)
             {
                 FullCountScore.OnNewWorldEnter();
+                OroSeong.OnNewWorldEnter();   // S2 오로성 저주 발동(걸려 있었다면)
                 if (DifficultyManager.Instance != null) RewardDistributor.Instance?.GrantNewWorldWisps(DifficultyManager.Instance.Current);   // e015 신세계 보상 위습
             }   // 원작 Stage 11: 전원 1250점·full_C 0, 점수판 풀카운트 행이 처음 뜬다
         }
