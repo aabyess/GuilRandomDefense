@@ -90,4 +90,7 @@ public static class PachinkoFireProbe
         UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
         return "씬 다시 불러옴 · " + PachinkoController.DebugState();
     }
+    // 파칭코 도중(투표 중) 씬을 다시 불러온다 — 실제 판처럼 결과 고정 없이 시작
+    public static string VoteThenReload() { PachinkoController.Begin(null); return ReloadScene(); }
+    public static string PickGod() { if (DifficultyManager.Instance == null) return "난이도 매니저 없음"; DifficultyManager.Instance.SelectMode(DifficultyMode.God); return "신 선택"; }
 }
