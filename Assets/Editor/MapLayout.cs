@@ -532,8 +532,17 @@ public static class MapLayout
         SealIsland(1, 0), SealIsland(2, 1), SealIsland(3, 2), SealIsland(4, 3),
     };
 
+    // 🔴 10-19 S2 신작 카피(단계 3④): 레인 사이 십자 대지(옛 협곡 벽)를 걷고 **바다 틈 + 가운데 오로성 섬**으로 바꾼다.
+    //    섬 중심 = 레인 무리 가운데 틈(레인1·2 사이 x, 위·아래 행 사이 z) 한복판, 크기 336×300(틈 668×437 안에서 오른쪽 상점 열을 피함).
+    public static readonly bool S2OpenGap = true;
+    const float OroSeongSizeX = 336f, OroSeongSizeZ = 300f;
+    public static readonly Vector2 OroSeongCenter = new Vector2(
+        (LaneLeftColumnX + LaneSizeX * 0.5f + LaneRightColumnX - LaneSizeX * 0.5f) * 0.5f - 0f,
+        (LaneBottomRowZ + LaneSizeZ * 0.5f + LaneTopRowZ - LaneSizeZ * 0.5f) * 0.5f);
+
     public static readonly Island[] Zones =
     {
+        new Island("OroSeongIsland", OroSeongCenter.x, OroSeongCenter.y, OroSeongSizeX, OroSeongSizeZ, "story"),
         // 이벤트 존이 위, 그 아래 불멸·초월 전시가 가로로 나란히.
         new Island("PunkHazard",         0f * Scale, 130f * Scale, 90f * Scale, 60f * Scale, "event"),
         // (2026-09-23, 원작 비율 4단계, PM 지시) 옛 90×26/90×50은 SlotSpacing이 6이던 시절

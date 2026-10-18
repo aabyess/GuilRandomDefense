@@ -793,6 +793,7 @@ public static class MapGenerator
 
     static void BuildInterLaneWalls(Transform parent)
     {
+        if (MapLayout.S2OpenGap) return;   // 10-19 S2 카피: 십자 대지 대신 바다 틈 + 오로성 섬
         MapLayout.Island topLeft = MapLayout.Lanes[0];
         MapLayout.Island topRight = MapLayout.Lanes[1];
         MapLayout.Island bottomLeft = MapLayout.Lanes[2];
@@ -1206,6 +1207,7 @@ public static class MapGenerator
     /// </summary>
     static IEnumerable<MapLayout.Island> InterLaneWallFootprints()
     {
+        if (MapLayout.S2OpenGap) yield break;
         MapLayout.Island topLeft = MapLayout.Lanes[0];
         MapLayout.Island topRight = MapLayout.Lanes[1];
         MapLayout.Island bottomLeft = MapLayout.Lanes[2];
