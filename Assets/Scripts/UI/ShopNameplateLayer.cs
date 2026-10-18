@@ -282,6 +282,18 @@ public class ShopNameplateLayer : MonoBehaviour
         return Mathf.Min(corners[0].y, corners[2].y) - HintLineHeight * scale;
     }
 
+    static readonly Vector3[] keepOutCorners = new Vector3[4];
+    static bool TryGetKeepOut(out Rect rect)
+    {
+        rect = default;
+        if (!EmotePanel.TryGetButtonRect(out RectTransform r)) return false;
+        r.GetWorldCorners(keepOutCorners);
+        float x0 = Mathf.Min(keepOutCorners[0].x, keepOutCorners[2].x), x1 = Mathf.Max(keepOutCorners[0].x, keepOutCorners[2].x);
+        float y0 = Mathf.Min(keepOutCorners[0].y, keepOutCorners[2].y), y1 = Mathf.Max(keepOutCorners[0].y, keepOutCorners[2].y);
+        rect = Rect.MinMaxRect(x0, y0, x1, y1);
+        return true;
+    }
+
     readonly List<Plate> shownScratch = new List<Plate>();
     void PlaceWithoutOverlap()
     {
@@ -297,6 +309,7 @@ public class ShopNameplateLayer : MonoBehaviour
         float w = LabelWidth * scale, h = LabelHeight * scale;
         // 먼 쪽 상점(레인 위쪽)은 지붕이 화면 맨 위 상단 바·「항법을 선택하세요」 안내줄까지 올라간다(10-19 후2_play 사진) — 그 아래로 눌러 둔다.
         float topLimit = TopLimitY(scale);
+        bool hasKeepOut = TryGetKeepOut(out Rect keepOut);
         for (int i = 0; i < shownScratch.Count; i++)
         {
             Plate plate = shownScratch[i];
@@ -306,6 +319,10 @@ public class ShopNameplateLayer : MonoBehaviour
                 float dx = ((attempt + 1) / 2) * w * (attempt % 2 == 1 ? -1f : 1f);   // 0, -1w, +1w, -2w, +2w ...
                 Vector2 candidate = plate.screen + new Vector2(dx, 0f);
                 if (candidate.y + h > topLimit) candidate.y = topLimit - h;
+                // 왼쪽 위 HUD 아이콘(이모트 버튼) 위에 얹히면 그 오른쪽으로 비킨다.
+                if (hasKeepOut && Mathf.Abs(candidate.x - keepOut.center.x) < (w + keepOut.width) * 0.5f
+                    && candidate.y < keepOut.yMax && candidate.y + h > keepOut.yMin)
+                    candidate.x = keepOut.xMax + w * 0.5f;
                 bool clash = false;
                 for (int j = 0; j < i && !clash; j++)
                 {

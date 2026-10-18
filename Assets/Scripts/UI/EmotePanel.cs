@@ -18,6 +18,13 @@ public class EmotePanel : MonoBehaviour
     static readonly string[] FallbackShort = { "파이팅!", "GG", "운 없네", "ㅋㅋ", "?", "화남" };
 
     static EmotePanel instance;
+
+    /// <summary>왼쪽 위 이모트 버튼(루피 아이콘)의 사각형 — 이름표 같은 월드 앵커 UI가 가리지 않게 피할 때 쓴다.</summary>
+    public static bool TryGetButtonRect(out RectTransform rect)
+    {
+        rect = instance != null ? instance.toggleButton : null;
+        return rect != null && rect.gameObject.activeInHierarchy;
+    }
     Canvas canvas;
     RectTransform toggleButton, picker;
     readonly RectTransform[] shown = new RectTransform[4];
