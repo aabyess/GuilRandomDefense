@@ -63,7 +63,7 @@ public static class SummonVoice
         { "초월_황준석_ADAP", new[] { "kid" } },
         { "영원_김영원", new[] { "hancock" } },   // PM 배정
         { "초월_김건_AP", new[] { "Choppa" } },   // PM 배정
-        { "초월_박민석_ADAP", new[] { "Shanks" } },   // PM 배정
+        { "초월_박민석_ADAP", new[] { "Minseok_boss" } },   // 10-18 사장님 녹음 파일(원작 Shanks 대신, Assets/Audio/Custom)
         { "초월_엄태웅_AD", new[] { "Sanji" } },   // PM 배정
         { "초월_이재윤_AD", new[] { "hawkins" } },   // PM 배정
         { "제한_전법규", new[] { "enel" } },   // PM 배정
