@@ -70,4 +70,24 @@ public static class PachinkoFireProbe
         return "관전 시험";
     }
     public static string SpecAudio() => PachinkoOverlay.DebugSpecAudio();
+    // 신 R30 보스 시험: 레인 보스를 실제 사망 경로(TakeDamage → GrantKillReward → GrantBossReward)로 잡고 파칭코 상태를 문자열로 낸다
+    public static string KillLaneBosses()
+    {
+        int n = 0; string info = "";
+        foreach (EnemyDummy e in new System.Collections.Generic.List<EnemyDummy>(EnemyDummy.Active))
+        {
+            if (e == null || !e.IsBoss || e.LaneIndex < 0) continue;
+            info += $"{e.name}(R{e.SpawnRound},레인{e.LaneIndex}) ";
+            e.TakeDamage(1e12f, DamageType.AD, AttackType.Normal, e.LaneIndex, 1f, false, 1f, false, true);
+            n++;
+        }
+        return $"보스 {n}기 처치 시도: {info}";
+    }
+    public static string PachinkoState() => PachinkoController.DebugState();
+    // 두 번째 판 시험: 같은 앱 실행 안에서 씬을 다시 불러온다(타이틀 → 다시 시작과 같은 static 상태)
+    public static string ReloadScene()
+    {
+        UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+        return "씬 다시 불러옴 · " + PachinkoController.DebugState();
+    }
 }

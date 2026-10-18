@@ -147,6 +147,7 @@ public class RoundManager : MonoBehaviour
 
     void Start()
     {
+        PachinkoController.ResetForNewRun();   // 판 사이에 남은 파칭코 static(한 판 하고 다시 하면 안 뜸)
         for (int i = 0; i < MaxTrackedLanes; i++)
         {
             laneDeathCount[i] = startingDeathCount;
