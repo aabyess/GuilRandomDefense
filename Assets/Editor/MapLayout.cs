@@ -193,12 +193,13 @@ public static class MapLayout
     // 크기다(PM 정정 2026-09-23). 우리는 앞치마(상점 줄 26 + 유닛 우리 20)를 레인 섬 안에
     // 넣어 두고 그 **전체**를 3256×2712에 맞췄던 탓에, 정작 필드가 781.4×459.2(비 1.70)로
     // 납작해져 있었다. 필드 쪽을 781.4×650.9(비 1.20)로 놓고 앞치마를 그 아래에 덧붙인다.
-    const float LaneFieldSizeX = 781.4f;               // 원작 3256 ÷ Scale
+    // 🔴 2026-10-19 S2 2.323 카피(사장님 「구랜디 맵을 원랜디 신작처럼」): 레인 필드 원작 3232×3296(옛 판 3256×2712)을 ÷ Scale — 근거 ~/grd/GRD_s2_map/S2_구역지도.md(rect #53·60·67·74)
+    const float LaneFieldSizeX = 3232f / Scale;        // 775.6 (옛 781.4)
     /// <summary>
     /// 원작 비례 필드 세로. **순찰 사각형을 이 값으로 한 번 계산한 뒤 얼린다**(TrackHalfZ).
     /// 2026-09-24부터 실제 필드 세로는 이것이 아니다 — 아래 <see cref="LaneFieldSizeZ"/> 참고.
     /// </summary>
-    const float LaneFieldSizeZOriginal = 650.9f;        // 원작 2712 ÷ Scale — 비 1.20
+    const float LaneFieldSizeZOriginal = 3296f / Scale; // 791.0 (옛 650.9 = 원작 2712 ÷ Scale) — S2 레인은 정사각에 가깝다. 순찰 사각형(TrackInsetZ·TrackHalfZ)이 이 값에서 유도된다
 
     /// <summary>
     /// 실제 필드 세로 = 북쪽 inset + 순찰 깊이 + **남쪽 초록 여백**.
@@ -214,8 +215,8 @@ public static class MapLayout
     const float LaneSizeX = LaneFieldSizeX;
     const float LaneSizeZ = LaneFieldSizeZ;
 
-    const float LaneGapX = 230.4f;
-    const float LaneGapZ = 337.9f;
+    const float LaneGapX = 2784f / Scale;   // 668.2 (옛 230.4 = 원작 960) — S2 레인 사이 틈 6016−3232
+    const float LaneGapZ = 1824f / Scale;   // 437.7 (옛 337.9 = 원작 1408) — S2 5120−3296
     const float LaneSpacingX = LaneSizeX + LaneGapX;   // 1011.8 — 레인 중심간 x거리
     const float LaneSpacingZ = LaneSizeZ + LaneGapZ;   // 1180.5 — 레인 중심간 z거리
 
@@ -238,8 +239,9 @@ public static class MapLayout
     //    사장님이 줄이라 하신 것은 하단 초록이고, 위쪽은 말씀하지 않으셨다. 그래서 기준을
     //    「아래변 z=300」에서 **「윗변 z=950.9」**로 옮겼다(= 옛 300 + 원작 비례 세로 650.9).
     //    남쪽 변은 필드 세로에서 따라 나온다 — 초록을 줄이면 그만큼 올라오고, 앞치마도 같이 온다.
-    const float LaneFieldTopZ = 300f + LaneFieldSizeZOriginal;   // 950.9 — 고정
-    const float LaneFieldBottomZ = LaneFieldTopZ - LaneFieldSizeZ;
+    // 🔴 10-19 고정점 = 아래 행 레인의 **아래 변 z=367.7**(옛 값 그대로)과 오른쪽 변 x=−220. S2 크기로 키우면 왼쪽·위로 자란다 — 아래 섬 무리(스토리존·뽑기섬·조합판)와 오른쪽(펑크해저드·창고)이 안 움직여 겹침 0이 유지된다.
+    const float LaneFieldBottomZ = 367.7f;
+    const float LaneFieldTopZ = LaneFieldBottomZ + LaneFieldSizeZ;
     const float LaneBottomRowZ = LaneFieldBottomZ + LaneSizeZ * 0.5f;  // 625.45
     const float LaneTopRowZ = LaneBottomRowZ + LaneSpacingZ;           // 1614.25
 
