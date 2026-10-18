@@ -36,3 +36,9 @@
 ## 이전(10-16)
 - 특수함 6기 짝 스킬 · 노태현 돌발행동 700 · 강화소 원작 대조 · attackType 원작 연구 종류 64기 · 파칭코 멀티 검증(하네스 `~/grd/GRD_pachinko_mp/run_mp.sh`, 대기 루프에 `pgrep -f GRD_new.app` 금지).
 - 미해결 메모: 공속 연구×타입 곱 · 모몬가 R02T · 우솝 R017.
+
+## 10-19 밤: S2 맵 카피(브랜치 map/s2, 사장님 확인 전 — main 병합은 PM)
+- 커밋 흐름: a92fdfd8c(레인 크기·간격) → 상점 세로 열 9b03d949f·1aadb851e → 창고·봉인섬·바다 틈·오로성·모서리 섬 → 장식 3종 50bfa83e4. 표·그림·남은 것: `~/grd/GRD_s2_map/결과_1019/`(바뀐값_표.md·남은것.md).
+- 상수: `MapLayout.S2OpenGap`(레인 사이 십자 대지 제거) · `OroSeongCenter`·`RumbaSoulCenter`·`PoneglyphCenter` · `ShopColumn*`(상점 열) · `Warehouses`(S2Warehouse) · `SealIslands`(SealIsland). 되돌리기: S2OpenGap=false + Zones의 OroSeongIsland 줄 삭제 + 맵 재생성.
+- 함정: 코드를 고친 뒤 **refresh를 먼저**(안 하면 옛 코드로 생성돼 그림이 안 바뀐다). 설계서 좌표 일부는 레인 윗변을 2387로 잘못 잡았음(실제 2217.8).
+- 장식: `StructureDresser.PlaceMapLandmarks`(배율 = 원작 배율 × 100 ÷ Scale). 못 한 것: 대형 스토리 포탈·위습 동상·화로·바닥 줄 외형·둥근 섬.
