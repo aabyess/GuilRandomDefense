@@ -198,7 +198,7 @@ def build_plan():
         omn = '%s %s' % (GRADE_SHORT.get(d['grade'], ''), u['name'])
         item = dict(file=r['file'], roster=r['roster'], grade=r['grade'], s2=sid, s2name=u['name_full'] or u['name'], stats=stats, before=before,
                     omn=omn, replace=False, skills=[], patch={}, lost=[], keep=[], remove=[])
-        if r['change'] in ('스킬만 바뀜', '원작 바뀜') or r['roster'] in HIDDEN4:
+        if r['change'] in ('스킬만 바뀜', '원작 바뀜', '스킬 추가') or r['roster'] in HIDDEN4:
             item['replace'] = True
             for g in EX.skill_guids(d):
                 s = EX.skill_of(g)

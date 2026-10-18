@@ -362,12 +362,13 @@ def main():
         ids = [i for i in a.get('stat_ids', []) if i in Uu]
         cur_vfx = sorted({k for g in sguid for k in vfx_now.get(g, [])})
         cur_skill_dps = current_skill_dps(skills, d['attackPower'], d['attackSpeed'], 10600000 * 8.25)
+        cur_spec_dps = current_skill_dps(spec, d['attackPower'], d['attackSpeed'], 10600000 * 8.25)
         recs.append(dict(
             file=f, name=d['unitName'], grade=d['grade'], grade_name=EX.GRADE.get(d['grade'], '초월위습' if d['grade'] == 13 else str(d['grade'])),
             atk=d['attackPower'], spd=d['attackSpeed'], dps=d['attackPower'] * d['attackSpeed'], rng=d['attackRange'],
             stat_ids=a.get('stat_ids', []), s2_stat_ids=ids, owner_ids=a.get('skill_owner_ids', []), how=a.get('how', ''),
             skills=[EX.clean_skill_name(s['skillName']) for s in skills], spec=len(spec), spec_names=[EX.clean_skill_name(s['skillName']) for s in spec],
-            vfx_now=cur_vfx, n_vfx=sum(1 for g in sguid if vfx_now.get(g)), n_skills=len(skills), cur_skill_dps=cur_skill_dps))
+            vfx_now=cur_vfx, n_vfx=sum(1 for g in sguid if vfx_now.get(g)), n_skills=len(skills), cur_skill_dps=cur_skill_dps, cur_spec_dps=cur_spec_dps))
 
     for r in recs:
         best = None
@@ -444,6 +445,8 @@ def main():
         owners_txt = ', '.join(uname(i) for i in r['owner_ids']) if r['owner_ids'] else ('사양 스킬뿐' if r['spec'] else '스킬 없음')
         if not u:
             change = '대응 없음'
+        elif how == '유지' and r['n_skills'] == 0 and real:
+            change = '스킬 추가'
         elif how == '유지':
             other = [i for i in r['owner_ids'] if i.upper() != (r['cur'] or '').upper() and not i.upper().startswith('E')]
             change = '스킬만 바뀜' if (other or not r['owner_ids']) and r['spec'] < r['n_skills'] else '유지'
@@ -516,7 +519,7 @@ def main():
             cur_skill=owners_txt + (' + 사양 %d' % r['spec'] if r['spec'] and r['owner_ids'] else ''), new=uname(new) if u else '-',
             new_stat=stat_txt, new_skills=skills_txt, change=change, how=how, spec=spec_txt, note=why, diff=diff,
             cur_atk=r['atk'], cur_dps=r['dps'], new_atk=u['atk'] if u else 0.0, new_dps=new_dps, new_grade_src=(u['grade'] + ' · ' + u['grade_src']) if u else '',
-            fx=fx_txt, vfx_now=', '.join(r['vfx_now']) or '없음', n_real=len(real), skill_dps=skill_dps, cur_skill_dps=r['cur_skill_dps']))
+            fx=fx_txt, vfx_now=', '.join(r['vfx_now']) or '없음', n_real=len(real), skill_dps=skill_dps, cur_skill_dps=r['cur_skill_dps'], cur_spec_dps=r['cur_spec_dps']))
 
     json.dump(rows, open(os.path.join(OUT, 'rematch.json'), 'w'), ensure_ascii=False, indent=1)
     write_xlsx(rows, skill_rows, fx, pool, claimed, U)
@@ -653,18 +656,32 @@ def write_md(rows, pool, claimed, U):
         c = sum(r['cur_dps'] for r in rs) / len(rs)
         n = sum(r['new_dps'] for r in rs) / len(rs)
         L.append('| %s | %s | %s | %.0f → %.0f |' % (g, fmt(c), fmt(n), hp / c, hp / n))
-    # ④ 신 난이도 등급별 DPS 전후(평타 + S2 툴팁 스킬 기대 DPS)
-    L += ['', '## ④ 「신」 난이도 등급별 DPS 전후 — 새 쪽은 평타 + 스킬 기대 DPS(툴팁 확률×피해, 보스 1기 기준)', '',
-          '지금 쪽 스킬은 SkillData 피해 효과(확률·게이지·쿨), 새 쪽은 S2 툴팁 문장에서 같은 방식으로 셌다. 둘 다 범위 타격 수·스턴·증폭·조건·버프는 뺀 대략값 — 사거리·가동률도 뺐다. R50 신 보스 체력 %s(현재체력 %%는 절반으로 침).' % fmt(hp), '',
+    # ④ 신 난이도 등급별 DPS 전후 — 실제로 적용될 모습(사양 스킬 유지·고정 6기·대응 없음·상붕카 그대로)
+    FIXED6 = {'주호리얼', '보스의앞잡이', '만물통달', '구일최강의여성', '상호파와채민파의아버지', '전전교회장'}
+    HID4 = {'맥주만땅', '푸은서', '감탄떡볶이', '이삭토스트'}
+
+    def after(r):
+        if r['how'] == '대응 없음' or r['file'] == '흔함_상붕카' or r['roster'] in FIXED6:
+            return r['cur_dps'], r['cur_skill_dps']
+        replace = r['change'] in ('스킬만 바뀜', '원작 바뀜', '스킬 추가') or r['roster'] in HID4
+        sk = (r['skill_dps'] + r['cur_spec_dps']) if replace else r['cur_skill_dps']
+        return r['new_dps'], sk
+    L += ['', '## ④ 「신」 난이도 등급별 DPS 전후 — 실제로 적용될 모습', '',
+          '새 쪽 = 2단계 적용 뒤 실제 상태: 사양 스킬(초월·불멸·영원·제한)은 지금 SkillData 그대로, 「능력치도 고정」 6기·대응 없음 7기·상붕카는 평타·스킬 다 그대로, 스킬 교체 유닛만 S2 툴팁 스킬(+남는 사양 스킬). '
+          '지금 스킬은 SkillData 피해 효과, 새 S2 스킬은 툴팁 문장에서 같은 방식(확률·게이지·쿨 × 피해, 보스 1기 기준)으로 셌다 — 범위 타격 수·스턴·증폭·버프·가동률은 뺀 대략값. R50 신 보스 체력 %s(현재체력 %%는 절반으로 침).' % fmt(hp), '',
           '| 등급 | 로스터 | 지금 평타 | 지금 스킬 | 지금 합 | 새 평타 | 새 스킬 | 새 합 | 배율 | R50 신 보스(초) 지금 → 새 |', '|---|---:|---:|---:|---:|---:|---:|---:|---:|---|']
+    allg = defaultdict(list)
+    for r in rows:
+        allg[r['grade']].append(r)
     for g in [EX.GRADE[k] for k in EX.GRADE_ORDER]:
-        rs = by.get(g)
+        rs = allg.get(g)
         if not rs:
             continue
         c = sum(r['cur_dps'] for r in rs) / len(rs)
-        n = sum(r['new_dps'] for r in rs) / len(rs)
-        s = sum(r.get('skill_dps', 0) for r in rs) / len(rs)
-        cs = sum(r.get('cur_skill_dps', 0) for r in rs) / len(rs)
+        cs = sum(r['cur_skill_dps'] for r in rs) / len(rs)
+        ap = [after(r) for r in rs]
+        n = sum(a for a, _ in ap) / len(rs)
+        s = sum(b for _, b in ap) / len(rs)
         L.append('| %s | %d | %s | %s | %s | %s | %s | %s | ×%.2f | %.0f → %.0f |' % (g, len(rs), fmt(c), fmt(cs), fmt(c + cs), fmt(n), fmt(s), fmt(n + s), (n + s) / (c + cs) if c + cs else 0, hp / (c + cs) if c + cs else 0, hp / (n + s) if n + s else 0))
     # 매칭 개요
     L += ['', '## 매칭 개요', '', '| 등급 | 유지 | 스킬만 바뀜 | 원작 바뀜 | 중복 | 대응 없음 |', '|---|---:|---:|---:|---:|---:|']
