@@ -57,7 +57,7 @@ public static class MapGenerator
         { "sea",       new Surface("water", new Color(0.78f, 0.90f, 1.00f), 0.080f, 0.92f) },
         { "rock",      new Surface("rock",  Color.white,                    0.140f, 0.10f) },
         { "dirt",      new Surface("dirt",  Color.white,                    0.180f, 0.05f) },
-        { "ice",       new Surface("rock",  new Color(0.62f, 0.82f, 1.00f), 0.140f, 0.10f) },   // 10-19 S2: 유닛 우리 얼음파랑 타일 바닥
+        { "ice",       new Surface("water", new Color(0.80f, 0.93f, 1.00f), 0.060f, 0.35f) },   // 10-19 S2: 유닛 우리 얼음파랑 타일 바닥
         { "lane",      new Surface("grass", Color.white,                    0.120f, 0.05f) },
         { "warehouse", new Surface("grass", new Color(1.00f, 0.94f, 0.78f), 0.120f, 0.05f) },
         { "seal",      new Surface("grass", new Color(0.82f, 1.00f, 0.94f), 0.160f, 0.05f) },
