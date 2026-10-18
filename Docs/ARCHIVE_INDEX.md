@@ -46,3 +46,5 @@
 - 원작 모델 회전 키는 쿼터니언 부호 연속으로 다시 구워야 유니티 보간이 안 튄다(`swap_refix_b3.py`).
 - 파칭코 이펙트 그림 재료(카구네 촉수·붓 획·빛줄기·집중선·시계 문양·나비·불똥): ~/grd/GRD_pachinko_art/fx/ — 재생성 `/usr/bin/python3 Tools/pachinko/fx_art.py`
 - 리제로 보석 숫자 1~9(+반짝임·블러·분홍): ~/grd/GRD_pachinko_art/symbols_rz/ — 재생성 `/usr/bin/python3 Tools/pachinko/symbol_rz.py`
+- ~/grd/GRD_pachinko_fx/ — 파칭코 화면 이펙트 스프라이트 11종(<효과>/rgba 투명·add 검정배경, meta.json). 재생성 `Tools/blender/run_pachinko_fx_all.sh [효과…]` ← gen_pachinko_fx.py
+- ~/grd/GRD_pachinko_cabinet/ — 파칭코 기계 정면 3D 1차(취소된 방향, 보관만). Tools/blender/gen_pachinko_cabinet.py
