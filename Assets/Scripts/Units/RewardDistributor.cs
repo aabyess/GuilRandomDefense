@@ -72,6 +72,7 @@ public class RewardDistributor : MonoBehaviour
     void Start()
     {
         GrantStartingWisps();
+        S2Evolution.GrantStarting(this);
         GrantStartingSpecialUnits();
         GrantStartingSpecialGradeUnit();
         GrantStartingTraitPoints();
@@ -230,6 +231,7 @@ public class RewardDistributor : MonoBehaviour
         // 레인 소유자에게만 간다 — 누가 마지막 타격을 넣었는지는 안 본다(원작 그대로).
         PlayerContext owner = PlayerContext.Get(laneIndex);
         if (owner == null || !owner.IsOccupied) return;
+        S2Evolution.OnLaneKill(owner.PlayerId);   // S2 진화체: 라인몹 처치 152번에 깨어난다
 
         // 현상수배(초월 유재헌 SlowRewardBonus): 죽은 적이 이감을 받고 있었으면 이감 1%당 +N% — 골드·목재에 곱한다.
         float slowBonus = slowPercent > 0f ? UnitAttacker.SlowRewardPerPercent(owner.PlayerId) * slowPercent : 0f;

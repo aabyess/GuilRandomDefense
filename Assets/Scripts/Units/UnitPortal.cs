@@ -227,6 +227,7 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
         if (!other.TryGetComponent(out Wisp wisp)) return;
         if (wisp.IsConsumed) return;
         if (wisp.Data == null) return;
+        if (wisp.Data.isEvolution) return;   // 진화 위습은 진화 포탈(EvolutionPortal)만
         if (IsChoicePortal && !AimedAtMe(wisp)) return;
 
         UnitGrade grade = wisp.Data.targetGrade;
