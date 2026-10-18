@@ -289,6 +289,8 @@ def effect_text(e, lv):
         return '%s 초당 %s 게이지 재생 +%s' % (where, '마나' if k == 'ManaRegenBuff' else '체력', num(m))
     if k == 'DesignateAlly':
         return '아군 1기를 지정'
+    if k == 'GrantRandomWisp':
+        return '랜덤·흔함·안흔함·특별함·희귀함 위습 중 1개 획득'
     if k == 'LaneExplosiveAmp':
         return '내 라인 적이 받는 폭발형 피해 증폭 %s단계' % num(m)
     return '%s(%s)' % (k, num(m))
@@ -345,7 +347,7 @@ def all_zero(s):
     for e in effs:
         gs = e.get('grantSkill') or {}
         if (e.get('multiplier') or 0) or (e.get('bonus') or 0) or (e.get('duration') or 0) or e.get('buffId') \
-                or e.get('summonUnits') or e.get('lootItems') or (isinstance(gs, dict) and gs.get('guid')):
+                or e.get('summonUnits') or e.get('lootItems') or e.get('rewardWispPool') or (isinstance(gs, dict) and gs.get('guid')):
             return False
     return True
 
