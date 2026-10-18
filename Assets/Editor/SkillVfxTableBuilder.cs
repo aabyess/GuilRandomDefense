@@ -32,6 +32,7 @@ public static class SkillVfxTableBuilder
         int cHit = System.Array.IndexOf(header, "적중시_프리팹");
         int cArea = System.Array.IndexOf(header, "범위_지면_프리팹");
         int cCaster = System.Array.IndexOf(header, "시전자_프리팹");
+        int cUncap = System.Array.IndexOf(header, "범위_상한없음");   // 선택 열 — 1이면 범위 그림에 전역 상한을 안 건다(SkillVfxTable.Entry.areaUncapped)
         if (cAsset < 0 || cHit < 0 || cArea < 0 || cCaster < 0) return "❌ CSV 열 이름이 다름: " + string.Join(",", header);
 
         Dictionary<string, string> prefabByName = AssetDatabase.FindAssets("t:Prefab", new[] { PackRoot, OwnRoot, OriginalVfxBuilder.PrefabRoot })
@@ -57,6 +58,7 @@ public static class SkillVfxTableBuilder
                 hit = Slot(table, r[cHit], prefabByName, unknown),
                 area = Slot(table, r[cArea], prefabByName, unknown),
                 caster = Slot(table, r[cCaster], prefabByName, unknown),
+                areaUncapped = cUncap >= 0 && r.Length > cUncap && r[cUncap].Trim() == "1",
             };
             if (!e.hit.IsSet && !e.area.IsSet && !e.caster.IsSet) continue;
             table.entries.Add(e);
@@ -70,7 +72,7 @@ public static class SkillVfxTableBuilder
             List<string[]> arows = ReadCsv(File.ReadAllLines(file).Where(l => !l.StartsWith("#")));
             string[] ah = arows[0];
             int aAsset = System.Array.IndexOf(ah, "asset_path"), aHit = System.Array.IndexOf(ah, "적중시_프리팹"),
-                aArea = System.Array.IndexOf(ah, "범위_지면_프리팹"), aCaster = System.Array.IndexOf(ah, "시전자_프리팹");
+                aArea = System.Array.IndexOf(ah, "범위_지면_프리팹"), aCaster = System.Array.IndexOf(ah, "시전자_프리팹"), aUncap = System.Array.IndexOf(ah, "범위_상한없음");
             if (aAsset < 0 || aHit < 0 || aArea < 0 || aCaster < 0) { unknown.Add("열 이름 다름: " + Path.GetFileName(file)); continue; }
             foreach (string[] r in arows.Skip(1))
             {
@@ -84,6 +86,7 @@ public static class SkillVfxTableBuilder
                 if (hit.IsSet) e.hit = hit;
                 if (area.IsSet) e.area = area;
                 if (caster.IsSet) e.caster = caster;
+                if (aUncap >= 0 && r.Length > aUncap && r[aUncap].Trim() == "1") e.areaUncapped = true;
                 if (isNewEntry && (e.hit.IsSet || e.area.IsSet || e.caster.IsSet)) { table.entries.Add(e); withAny++; }
                 assigned++;
             }

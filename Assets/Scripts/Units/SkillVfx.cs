@@ -82,7 +82,7 @@ public static class SkillVfx
         if (Enabled && CasterAllowsVfx && currentSkill != null) SkillCinematic.OnCast(currentSkill, casterPosition, aoeCenter);   // 원작 스킬 연출(10-09)
         if (!Enabled || !CasterAllowsVfx || currentEntry == null) return;
         if (currentEntry.area.IsSet)
-            PlaySlot(currentEntry.area, aoeCenter, Mathf.Clamp(worldRange * 2f, MinAreaDiameter, MaxAreaDiameter), ground: true);
+            PlaySlot(currentEntry.area, aoeCenter, currentEntry.areaUncapped ? Mathf.Max(worldRange * 2f, MinAreaDiameter) : Mathf.Clamp(worldRange * 2f, MinAreaDiameter, MaxAreaDiameter), ground: true);   // 「상한 없음」 표시(areaUncapped)가 있는 스킬만 실제 반경대로
         if (currentEntry.caster.IsSet)
             PlaySlot(currentEntry.caster, casterPosition, CasterDiameter, ground: true);
     }

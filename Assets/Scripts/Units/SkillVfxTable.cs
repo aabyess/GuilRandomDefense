@@ -22,6 +22,8 @@ public class SkillVfxTable : ScriptableObject
         public Slot hit = new Slot();      // 맞은 적마다(스킬 피해 적중 이펙트를 바꾼다)
         public Slot area = new Slot();     // 범위 중심 땅 위에 한 번(반경에 맞춰 키운다)
         public Slot caster = new Slot();   // 시전자 발밑에 한 번
+        // ⚠️ 맨 뒤(10-18) — true면 범위 이펙트 그림을 SkillVfx의 전역 상한(MaxAreaDiameter) 없이 실제 반경×2로 그린다(사양 큰 범위 스킬: 노태현 돌발행동 반경 168 = 지름 336).
+        public bool areaUncapped;
     }
 
     public List<GameObject> prefabs = new List<GameObject>();
