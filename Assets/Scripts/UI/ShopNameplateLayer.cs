@@ -267,6 +267,21 @@ public class ShopNameplateLayer : MonoBehaviour
     // 맵 S2 카피(10-19): 상점이 깊이 방향 세로 열로 서면 화면 간격이 좁아 이름표가 서로 덮는다(가로 배치 간격은 약 130px). 위(먼 쪽)부터 놓으며
     // 이미 놓은 것과 겹치면 가로로 번갈아 밀어 빈 곳에 둔다. 안 겹치면 제자리라 지금 맵에선 아무것도 안 바뀐다.
     const float LabelWidth = 112f, LabelHeight = 60f;   // 캔버스 1920×1080 기준 대략(두 줄 이름 + 도움소 막대)
+    RectTransform topBar;
+    const float HintLineHeight = 32f;   // 상단 바 아래 안내줄(캔버스 px)
+    float TopLimitY(float scale)
+    {
+        if (topBar == null)
+        {
+            GameObject found = GameObject.Find("TopBar");
+            topBar = found != null ? found.transform as RectTransform : null;
+        }
+        if (topBar == null) return Screen.height;
+        var corners = new Vector3[4];
+        topBar.GetWorldCorners(corners);
+        return Mathf.Min(corners[0].y, corners[2].y) - HintLineHeight * scale;
+    }
+
     readonly List<Plate> shownScratch = new List<Plate>();
     void PlaceWithoutOverlap()
     {
@@ -280,6 +295,8 @@ public class ShopNameplateLayer : MonoBehaviour
         shownScratch.Sort((a, b) => b.screen.y.CompareTo(a.screen.y));
         float scale = canvasRect != null ? Mathf.Max(0.01f, canvasRect.lossyScale.x) : 1f;
         float w = LabelWidth * scale, h = LabelHeight * scale;
+        // 먼 쪽 상점(레인 위쪽)은 지붕이 화면 맨 위 상단 바·「항법을 선택하세요」 안내줄까지 올라간다(10-19 후2_play 사진) — 그 아래로 눌러 둔다.
+        float topLimit = TopLimitY(scale);
         for (int i = 0; i < shownScratch.Count; i++)
         {
             Plate plate = shownScratch[i];
@@ -288,6 +305,7 @@ public class ShopNameplateLayer : MonoBehaviour
             {
                 float dx = ((attempt + 1) / 2) * w * (attempt % 2 == 1 ? -1f : 1f);   // 0, -1w, +1w, -2w, +2w ...
                 Vector2 candidate = plate.screen + new Vector2(dx, 0f);
+                if (candidate.y + h > topLimit) candidate.y = topLimit - h;
                 bool clash = false;
                 for (int j = 0; j < i && !clash; j++)
                 {
