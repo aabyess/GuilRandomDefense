@@ -16,7 +16,7 @@ public static class CinematicImporter
     static readonly string ScriptRoot = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "grd/GRD_scenes/scripts");
     const string OutRoot = "Assets/Resources/Cinematics";
     const string ModelOut = "Assets/Resources/Cinematics/Models";
-    const string MatOut = "Assets/Art/Effects/Original/_pre2";
+    public const string MatOut = "Assets/Art/Effects/Original/_pre2";
 
     [MenuItem("Tools/이펙트/연출 대본 반입(전부)")]
     static void Menu() => Debug.Log(ImportAll());

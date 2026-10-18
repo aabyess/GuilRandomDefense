@@ -147,6 +147,7 @@ public static class OriginalVfxBuilder
         { model.animationType = ModelImporterAnimationType.Generic; model.SaveAndReimport(); }
 
         GameObject fbx = AssetDatabase.LoadAssetAtPath<GameObject>(fbxAsset);
+        if (fbx == null && raw.ContainsKey("pre2Unity")) return BuildParticleOnly(name, root, (List<object>)raw["pre2Unity"]);
         if (fbx == null) return $"❌ {name}: FBX를 못 읽음";
         string clipName = root.unity.clips != null && root.unity.clips.Count > 0 ? root.unity.clips[0].name : null;
         AnimationClip clip = AssetDatabase.LoadAllAssetsAtPath(fbxAsset).OfType<AnimationClip>()
@@ -212,10 +213,40 @@ public static class OriginalVfxBuilder
         }
         player.layers = layers.ToArray();
 
+        // 원작 입자(PRE2): 모델 json의 "pre2Unity"(연출 대본 models[이름].pre2와 같은 형식, 10-18) → 자식 ParticleSystem
+        int particles = 0;
+        if (raw.TryGetValue("pre2Unity", out object pre2) && pre2 is List<object> pre2List)
+        {
+            Directory.CreateDirectory(CinematicImporter.MatOut);
+            for (int i = 0; i < pre2List.Count; i++)
+                if (Pre2Builder.Build(wrapper.transform, (Dictionary<string, object>)pre2List[i], name, i, CinematicImporter.MatOut)) particles++;
+            sb.Append($" · 입자 {particles}/{pre2List.Count}");
+        }
+
         string prefabPath = $"{PrefabRoot}/{name}.prefab";
         PrefabUtility.SaveAsPrefabAsset(wrapper, prefabPath);
         Object.DestroyImmediate(wrapper);
         return $"✅ {name}: 층 {layers.Count}/{root.unity.layers.Count} · 클립 {(clip != null ? clip.name + $" {clip.length:0.00}s" : "없음")} · {root.unity.durationSec:0.00}s{sb} → {prefabPath}";
+    }
+
+    /// <summary>메시 없는 입자 전용 모델(kineticfield 등): 재생기만 달린 빈 루트 + 입자 자식.</summary>
+    static string BuildParticleOnly(string name, Root root, List<object> pre2List)
+    {
+        var wrapper = new GameObject(name);
+        var player = wrapper.AddComponent<OriginalVfxPlayer>();
+        float duration = root.unity.durationSec > 0f ? root.unity.durationSec : 1f;
+        player.duration = duration;
+        player.loop = root.unity.loop;
+        player.layers = new OriginalVfxPlayer.Layer[0];
+        player.clips = new OriginalVfxPlayer.ClipEntry[0];
+        Directory.CreateDirectory(CinematicImporter.MatOut);
+        int particles = 0;
+        for (int i = 0; i < pre2List.Count; i++)
+            if (Pre2Builder.Build(wrapper.transform, (Dictionary<string, object>)pre2List[i], name, i, CinematicImporter.MatOut)) particles++;
+        string prefabPath = $"{PrefabRoot}/{name}.prefab";
+        PrefabUtility.SaveAsPrefabAsset(wrapper, prefabPath);
+        Object.DestroyImmediate(wrapper);
+        return $"✅ {name}: 입자 전용 · 입자 {particles}/{pre2List.Count} · {duration:0.00}s → {prefabPath}";
     }
 
     static bool RendererMatches(Renderer x, string mesh)
