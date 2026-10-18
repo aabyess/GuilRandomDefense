@@ -264,4 +264,15 @@ public static class S2Probe
             if (r.transform.root.name != "S2목표물_샨도라 황금 종" && !r.transform.root.name.Contains("진화") && Vector2.Distance(new Vector2(r.bounds.center.x, r.bounds.center.z), new Vector2(c.x, c.z)) < 60f && r.bounds.size.y > 15f && !r.transform.root.name.Contains("Mob_")) { var rootName = r.transform.root.name; if (rootName.Contains("Egg") || rootName.Contains("에그")) continue; r.enabled = false; n++; }
         return $"   가린 렌더러 {n}";
     }
+
+    /// 1번 스토리(10초에 자동 등장)를 치워 두고 에그헤드만 단상에 세운다 — 실제 판에선 한 번에 한 스토리만 서 있다.
+    public static string ClearStory()
+    {
+        StoryManager sm = Object.FindFirstObjectByType<StoryManager>();
+        var f = typeof(StoryManager).GetField("activeEnemy", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var e = f.GetValue(sm) as EnemyDummy; if (e != null) e.RemoveInstantly();
+        typeof(StoryManager).GetField("running", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(sm, null);
+        f.SetValue(sm, null);
+        return "   현재 스토리 치움: " + (e != null);
+    }
 }
