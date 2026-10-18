@@ -319,6 +319,13 @@ public static class StructureDresser
 
     // ───────────────────────── S2 맵 장식(10-19 단계 3 모델) ─────────────────────────
     // blender 추출본(~/grd/GRD_s2_models/map): fbx 1m = 워크3 100 단위. 원작 도두드 배율 s → 우리 월드 배율 = s × 100 ÷ Scale.
+    static bool OnAnyIsland(float x, float z)
+    {
+        foreach (MapLayout.Island island in MapLayout.Zones.Concat(MapLayout.Warehouses).Concat(MapLayout.SealIslands).Concat(MapLayout.Lanes))
+            if (Mathf.Abs(x - island.center.x) < island.size.x * 0.5f && Mathf.Abs(z - island.center.y) < island.size.y * 0.5f) return true;
+        return false;
+    }
+
     public static string PlaceMapLandmarks(Transform parent)
     {
         MapLayout.Island story = System.Array.Find(MapLayout.Zones, z => z.name == "StoryZone");
@@ -329,12 +336,19 @@ public static class StructureDresser
             ("장식_룸바배", "S2_룸바배", new Vector3(MapLayout.RumbaSoulCenter.x + 200f, 0f, MapLayout.RumbaSoulCenter.y + 20f), 2.48f, 1.8f),
             ("장식_포네글리프", "S2_포네글리프", new Vector3(MapLayout.PoneglyphCenter.x, MapLayout.IslandTop, MapLayout.PoneglyphCenter.y), 5.33f, 1.2f),
             ("장식_대형스토리포탈", "S2_대형스토리포탈", new Vector3(story.center.x - 239f, 0f, story.center.y + story.size.y * 0.5f + 171f), 4.71f, 1f),
+            ("장식_위습동상", "S2_위습동상1", new Vector3(story.center.x - 239f + 778f, 0f, story.center.y + story.size.y * 0.5f + 171f - 372f), 3.14f, 1f),
+            ("장식_위습동상", "S2_위습동상2", new Vector3(story.center.x - 239f + 778f, 0f, story.center.y + story.size.y * 0.5f + 171f - 540f), 3.14f, 1f),
+            ("장식_위습동상", "S2_위습동상3", new Vector3(story.center.x - 239f + 778f, 0f, story.center.y + story.size.y * 0.5f + 171f - 704f), 3.14f, 1f),
+            ("장식_위습동상", "S2_위습동상4", new Vector3(story.center.x - 239f + 778f, 0f, story.center.y + story.size.y * 0.5f + 171f - 875f), 3.14f, 1f),
+            ("장식_불타는화로", "S2_불타는화로", new Vector3(story.center.x - 239f + 2560f, 0f, story.center.y + story.size.y * 0.5f + 171f - 974f), 3.69f, 1.5f),
             ("장식_고잉메리", "S2_고잉메리", new Vector3(story.center.x - story.size.x * 0.5f - 180f, 0f, story.center.y + story.size.y * 0.5f + 140f), 3.92f, 1.05f),
         };
         string report = "";
         foreach (var item in items)
         {
-            GameObject placed = Place(parent, item.model, item.name, item.at, -item.angle * Mathf.Rad2Deg,
+            Vector3 at = item.at;
+            if (OnAnyIsland(at.x, at.z)) at.y = MapLayout.IslandTop;
+            GameObject placed = Place(parent, item.model, item.name, at, -item.angle * Mathf.Rad2Deg,
                                       item.scale * k);
             if (placed == null) { report += $"\n  ⚠️ {item.model} 모델 없음"; continue; }
             if (TryMeasure(placed, out Bounds b)) report += $"\n  {item.name} 크기 {b.size.x:0.#}×{b.size.y:0.#}×{b.size.z:0.#}";
