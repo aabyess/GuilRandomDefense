@@ -63,6 +63,9 @@ public class Warehouse : MonoBehaviour
             return false;
         }
 
+        // 10-18 사장님: 도박소·강화소·항해일지 같은 건물이 B로 창고에 가서 「이동됐다」 뜨고 클릭이 안 되던 버그 — 유닛(UnitIdentity)만 보낸다.
+        if (!unit.TryGetComponent(out UnitIdentity unitCheck) || unitCheck.Data == null) return false;
+
         // 원작 창고(A07Y)는 희귀함 이하 유닛에만 붙어 있다 — 그보다 위 등급은 창고 버튼 자체가 없다(GAP 09-27 7번).
         if (unit.TryGetComponent(out UnitIdentity identity) && identity.Data != null && identity.Data.grade > UnitGrade.Rare)
         {
