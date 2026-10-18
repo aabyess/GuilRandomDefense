@@ -175,7 +175,7 @@ def m_TallEndCap(c):
 
 def m_Waterfall(c):
     w = c.mat("water", tex_water(), alpha=True); st = c.mat("stone", tex_stone(base=(0.45, 0.45, 0.42)))
-    c.prim("box", (0, 0, 100), (160, 12, 200), w, uvs=1.0); c.prim("box", (-86, 4, 100), (16, 36, 200), st); c.prim("box", (86, 4, 100), (16, 36, 200), st)
+    c.prim("box", (0, -6, 100), (160, 12, 200), w, uvs=1.0, rot=(0.12, 0, 0)); c.prim("box", (0, 10, 196), (150, 40, 10), w, uvs=1.0); c.prim("box", (-86, 4, 100), (16, 36, 200), st); c.prim("box", (86, 4, 100), (16, 36, 200), st)
     c.prim("cyl", (0, -20, 8), (150, 40, 16), c.mat("foam", tex_glow(rgb=(0.9, 0.97, 1.0)), alpha=False), verts=16)
     c.note = "절벽 폭포(세로 물판 + 바위 양옆 + 아래 물보라)"
 
@@ -271,13 +271,39 @@ def m_BubbleGeyser(c):
     c.note = "물거품 분출구"
 
 
+def tex_ice(n=256):
+    """얼음파랑 바닥 타일: 연한 하늘색 + 가는 이음매."""
+    img = noise(n, 5, 6)[..., None].repeat(4, 2) if False else tex_stone(n, base=(0.55, 0.78, 0.95))
+    img[..., :3] = np.clip(img[..., :3] * 0.5 + np.array([0.3, 0.45, 0.5]), 0, 1)
+    img[:3, :, :3] *= 0.6; img[:, :3, :3] *= 0.6; img[-3:, :, :3] *= 0.6; img[:, -3:, :3] *= 0.6
+    return img
+
+
+def m_IceTile(c):
+    c.prim("box", (0, 0, 4), (128, 128, 8), c.mat("ice", tex_ice()), uvs=1.0)
+    c.note = "얼음파랑 바닥 타일 한 칸(128×128×8) — 위습 줄 판 바닥, 여러 장 깔기"
+
+
+def divider(c, along_x):
+    st = c.mat("white", tex_stone(256, base=(0.93, 0.93, 0.9))); dx, dy = (128, 24) if along_x else (24, 128)
+    c.prim("box", (0, 0, 40), (dx, dy, 80), st, uvs=1.2); cap = (134, 32, 8) if along_x else (32, 134, 8); c.prim("box", (0, 0, 84), cap, st, uvs=1.5)
+
+
+def m_WhiteDivider0(c):
+    divider(c, True); c.note = "흰 돌 칸막이 X방향 한 칸(128×24×88) — 유닛 줄 사이"
+
+
+def m_WhiteDivider90(c):
+    divider(c, False); c.note = "흰 돌 칸막이 Y방향 한 칸(24×128×88)"
+
+
 def m_CircleOfPower(c):
     gl = c.mat("ring", tex_glow(rgb=(0.9, 0.9, 1.0)), emit=1.5); c.prim("torus", (0, 0, 3), (180, 180, 14), gl); c.prim("cyl", (0, 0, 1), (150, 150, 2), c.mat("floor", flat((0.4, 0.45, 0.8), jit=0.2), emit=0.3), verts=24)
     c.note = "배치 더미 마법진(색만 다른 4종 — 분홍·빨강·노랑·파랑은 Unity에서 틴트)"
 
 
 ALL = ["CityLowWall0", "CityLowWall90", "TallEndCap", "Waterfall", "PotofGold", "Blacksmith", "PowerGenerator", "MagicVault", "Seaweed", "AshenShrooms",
-       "CatTail", "LilyPad", "AshenRock", "Rowboat", "RuinsFlower", "Battleship", "BubbleGeyser", "CircleOfPower"]
+       "CatTail", "LilyPad", "AshenRock", "Rowboat", "RuinsFlower", "Battleship", "BubbleGeyser", "CircleOfPower", "IceTile", "WhiteDivider0", "WhiteDivider90"]
 
 if __name__ == "__main__":
     a = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
