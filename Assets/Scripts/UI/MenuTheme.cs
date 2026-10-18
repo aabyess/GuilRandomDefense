@@ -14,6 +14,16 @@ public static class MenuTheme
     static bool Castle => Current == Kind.Castle;
     static T Pick<T>(T tavern, T castle) => Castle ? castle : tavern;
 
+    /// <summary>문 전환 방식(DoorTransition 머리 주석). Classic = 선술집 쌍여닫이(종전 그대로).</summary>
+    public enum DoorKind { Classic, Doors, Portcullis }
+
+    /// <summary>Castle일 때 쓸 문 방식 — 한 줄로 고른다: Doors(쇠문 쌍여닫이 다듬은 판) / Portcullis(성문 쇠창살).</summary>
+    public const DoorKind CastleDoorStyle = DoorKind.Doors;
+
+    /// <summary>촬영 전용 덮어쓰기(에디터 DoorPreview). 음수면 안 쓴다.</summary>
+    public static int DoorStyleOverride = -1;
+    public static DoorKind DoorStyle => DoorStyleOverride >= 0 ? (DoorKind)DoorStyleOverride : (Castle ? CastleDoorStyle : DoorKind.Classic);
+
     public static readonly string LobbyDir = Pick("UI/Lobby/", "UI/LobbyCastle/");
     public static readonly string DoorDir = Pick("UI/Door/", "UI/DoorCastle/");
     public static readonly string SettingsDir = Pick("UI/Settings/", "UI/SettingsCastle/");
