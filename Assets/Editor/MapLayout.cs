@@ -519,12 +519,17 @@ public static class MapLayout
     // 8이던 게 14(섬 크기 26의 절반쯤)가 된다. StoryZone 중심(-250)에 맞춰 다시 배치했다 —
     // 예전 배치(중심 -229)를 그대로 넓히면 스토리존 오른쪽 경계(-160, 1.5배 키운 뒤 폭
     // 180 기준)를 넘어간다. 이 배치는 양옆 다 17만큼 여유를 두고 안에 들어간다.
+    // 🔴 10-19 S2 신작 카피(단계 3③): 봉인섬 4개 = 한 변 512²(÷Scale 122.9), 중심 간격 1152(276.5), 스토리존 중심 기준 좌우 대칭.
+    //    z는 옛 자리 그대로(−180×Scale + DownShift).
+    const float SealSide = 512f / Scale;       // 122.9
+    const float SealPitch = 1152f / Scale;     // 276.5
+    static Island SealIsland(int n, int index)
+        => new Island("SealIsland" + n, StoryZoneCenterX + SealPitch * (index - 1.5f),
+                      -180f * Scale + DownShift, SealSide, SealSide, "seal");
+
     public static readonly Island[] SealIslands =
     {
-        new Island("SealIsland1", -362f * Scale + LeftShift, -180f * Scale + DownShift, 26f * Scale, 26f * Scale, "seal"),
-        new Island("SealIsland2", -314f * Scale + LeftShift, -180f * Scale + DownShift, 26f * Scale, 26f * Scale, "seal"),
-        new Island("SealIsland3", -266f * Scale + LeftShift, -180f * Scale + DownShift, 26f * Scale, 26f * Scale, "seal"),
-        new Island("SealIsland4", -218f * Scale + LeftShift, -180f * Scale + DownShift, 26f * Scale, 26f * Scale, "seal"),
+        SealIsland(1, 0), SealIsland(2, 1), SealIsland(3, 2), SealIsland(4, 3),
     };
 
     public static readonly Island[] Zones =
