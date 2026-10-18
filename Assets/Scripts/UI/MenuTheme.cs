@@ -48,6 +48,17 @@ public static class MenuTheme
         return t != null || dir == fallbackDir ? t : Resources.Load<Texture2D>(fallbackDir + name);
     }
 
+    /// <summary>판 들어가기 전 로딩 화면 그림(Castle은 LoadingScreenCastle.jpg, 없으면 옛 사진).</summary>
+    public static Texture2D LoadingTexture()
+    {
+        if (Castle)
+        {
+            Texture2D t = Resources.Load<Texture2D>("UI/LoadingScreenCastle");
+            if (t != null) return t;
+        }
+        return Resources.Load<Texture2D>("UI/LoadingScreen");
+    }
+
     // ───────────── 색 ─────────────
     // Tavern = 갈색 가죽·금빛. Castle = 푸른기 도는 회색 돌·쇠, 글자는 은/회색 + 어두운 쇠 테두리.
     public static readonly Color Card = Pick(new Color(0.14f, 0.10f, 0.07f, 0.97f), new Color(0.12f, 0.13f, 0.15f, 0.97f));       // 그림이 없을 때 물러나는 색
@@ -81,6 +92,9 @@ public static class MenuTheme
     public static readonly Color TitleBottom = Pick(new Color(0.90f, 0.62f, 0.18f, 1f), new Color(0.58f, 0.63f, 0.71f, 1f));
     public static readonly Color SubTop = Pick(new Color(0.94f, 0.88f, 0.70f, 1f), new Color(0.90f, 0.93f, 0.97f, 1f));
     public static readonly Color SubBottom = Pick(new Color(0.78f, 0.67f, 0.43f, 1f), new Color(0.60f, 0.65f, 0.73f, 1f));
+
+    // 로딩 화면 진행 막대(Tavern = 금색, Castle = 차가운 은청색)
+    public static readonly Color LoadingBar = Pick(new Color(0.95f, 0.78f, 0.25f), new Color(0.66f, 0.76f, 0.92f));
 
     // 문 틈 사이로 비치는 빛(Tavern = 따뜻한 주황, Castle = 차가운 횃불/달빛)
     public static readonly Color DoorGapLight = Pick(new Color(1f, 0.85f, 0.6f, 1f), new Color(0.72f, 0.82f, 1f, 1f));

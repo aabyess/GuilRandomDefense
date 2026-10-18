@@ -83,7 +83,7 @@ public class LoadingScreen : MonoBehaviour
 
         RawImage picture = NewChild<RawImage>("그림", transform);
         Stretch(picture.rectTransform);
-        picture.texture = Resources.Load<Texture2D>(ImagePath);
+        picture.texture = MenuTheme.LoadingTexture();
         picture.raycastTarget = false;
         AspectRatioFitter fitter = picture.gameObject.AddComponent<AspectRatioFitter>();
         fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;   // 전체 화면(남는 쪽은 잘림)
@@ -117,7 +117,7 @@ public class LoadingScreen : MonoBehaviour
         barFill.anchorMax = new Vector2(0f, 1f);
         barFill.offsetMin = new Vector2(3f, 3f);
         barFill.offsetMax = new Vector2(-3f, -3f);
-        fill.color = new Color(0.95f, 0.78f, 0.25f);   // 금색
+        fill.color = MenuTheme.LoadingBar;   // Tavern 금색 / Castle 은청색
 
         caption = NewLabel("글자", transform, font, 26f);
         RectTransform captionRect = caption.rectTransform;
