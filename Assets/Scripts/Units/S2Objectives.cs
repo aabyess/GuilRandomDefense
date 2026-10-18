@@ -7,6 +7,9 @@ public static class S2Objectives
     public static event System.Action<int> GoldenBellDestroyed;
     public static event System.Action<int> RumbarSoulFreed;
 
+    /// <summary>구독자는 판마다 새로 걸어야 하니 지우지 않는다 — 구독은 static 이벤트라 호출부가 한 번만 건다.</summary>
+    public static void ResetMatch() { }
+
     public static void RaiseGoldenBellDestroyed(int byPlayer) => GoldenBellDestroyed?.Invoke(byPlayer);
     public static void RaiseRumbarSoulFreed(int byPlayer) => RumbarSoulFreed?.Invoke(byPlayer);
 }

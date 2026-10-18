@@ -73,6 +73,7 @@ public class RewardDistributor : MonoBehaviour
     {
         GrantStartingWisps();
         S2Evolution.GrantStarting(this);
+        S2MapObjectives.Install();   // S2 맵 목표물(황금 종·룸바 영혼)
         OroSeong.OnMatchStart();   // S2 오로성 저주(신·악몽): 실루엣
         GrantStartingSpecialUnits();
         GrantStartingSpecialGradeUnit();

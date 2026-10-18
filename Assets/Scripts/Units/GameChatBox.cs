@@ -198,6 +198,7 @@ public class GameChatBox : MonoBehaviour
     {
         string dangoReply = S2Dango.TryRespond(playerId, text);
         if (dangoReply != null) return dangoReply.Length > 0 ? dangoReply : null;
+        if (text.Trim() == "-황금종") return S2MapObjectives.BellHpText();   // S2: 황금 종 체력 %
         if (text.Trim() == "-운세") return S2Fortune.Cast(playerId);   // 오류(쿨)만 문구로 돌려준다 — 결과는 알림으로
 
         if (chatUnlockManager != null)
