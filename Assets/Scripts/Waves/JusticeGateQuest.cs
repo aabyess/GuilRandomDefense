@@ -60,6 +60,7 @@ public class JusticeGateQuest : MonoBehaviour
 
     void GrantDoorRewards()
     {
+        S2Missions.Complete(S2Missions.Mission.JusticeGate);   // S2 미션판(+아이템 발굴)
         var wisp = commonChoiceWisp != null
             ? new List<WispReward> { new WispReward { wisp = commonChoiceWisp, count = DoorWispCount } }
             : null;
@@ -100,6 +101,7 @@ public class JusticeGateQuest : MonoBehaviour
 
     void GrantDogRewards(int kind)
     {
+        S2Missions.Complete(S2Missions.Mission.Admiral);   // S2 미션판(+목재 1 — S2엔 있고 우리 보상엔 빠져 있었다)
         string text;
         switch (kind)
         {

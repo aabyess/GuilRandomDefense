@@ -344,6 +344,7 @@ public class CombineSystem : MonoBehaviour
             PlayerNotification.Show(ownerId, $"<color=#FFD54F>{recipe.result.unitName}이(가) {Mathf.CeilToInt(recipe.resultDelaySeconds)}초 뒤에 나타납니다.</color>", 8f);
         }
         else { spawner.Spawn(recipe.result, resultPosition, ownerId, combined: true); GrantAcquireGold(recipe, ownerId); }
+        RunStats.OnCombined(ownerId, recipe.result, recipe);   // S2 조합 퀘스트·트리플/콰트로·포네그리프 해석자
         GameSound.PlayFor(ownerId, GameSoundId.Combine);   // 조합 성공음(10-06) — 조합한 사람에게만(멀티 친구면 NetGameState가 넘긴다)
         if (IsTransformRecipe(recipe)) OwnerContext?.TryConsumeTransformUse();   // 원작: 변화 성공 때 토큰 1기 제거
 

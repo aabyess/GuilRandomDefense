@@ -561,7 +561,7 @@ public static class NetCommands
         if (commandsLogged++ < 30) Debug.Log($"[MP] 항법 요청 수행: 슬롯 {sender.Slot} {choice} → {(ok ? "성공" : "실패(이미 고름)")}");
     }
 
-    static bool TryGetOwnedReal(NetPlayer sender, NetworkId target, string what, out GameObject real, bool allowShared = false)
+    internal static bool TryGetOwnedReal(NetPlayer sender, NetworkId target, string what, out GameObject real, bool allowShared = false)
     {
         real = null;
         if (sender == null || sender.Runner == null || !sender.Runner.IsServer) return false;

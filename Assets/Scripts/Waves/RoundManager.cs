@@ -148,6 +148,8 @@ public class RoundManager : MonoBehaviour
     void Start()
     {
         PachinkoController.ResetForNewRun();   // 판 사이에 남은 파칭코 static(한 판 하고 다시 하면 안 뜸)
+        RunStats.ResetForNewRun();             // S2 판 통계(도박·위습·조합 수)
+        S2Missions.ResetForNewRun();           // S2 미션판·개인 퀘스트·포네그리프
         for (int i = 0; i < MaxTrackedLanes; i++)
         {
             laneDeathCount[i] = startingDeathCount;
@@ -507,8 +509,15 @@ public class RoundManager : MonoBehaviour
     }
 #endif
 
+    /// <summary>라운드가 시작될 때(인자 = 그 라운드 번호, 원작 X3가 바뀌는 순간) — 서버.</summary>
+    public static event System.Action<int> RoundStartedEvent;
+    /// <summary>라운드가 끝날 때(인자 = 끝난 라운드, 원작 l0) — 서버.</summary>
+    public static event System.Action<int> RoundEndedEvent;
+
     void AdvanceRound()
     {
+        if (currentRound == totalRounds) RunStats.SnapshotFinalUnitCounts();   // -점수판 「최종 유닛 카운트」(원작 jv)
+        RoundEndedEvent?.Invoke(currentRound);
         GrantRoundClearWisps(currentRound);
         FullCountScore.OnRoundEnd(currentRound, finalClear: totalRounds > 60 && currentRound == totalRounds);   // 풀카운트 라운드 끝 가산(원작 Round_10ver Stage 20)
         // 아이템 도박 재고는 라운드가 아니라 스토리 6·9 클리어 때 +1 — RewardDistributor.GrantStoryReward(원작 Item_Int+1, j:13555·13603).
@@ -675,6 +684,7 @@ public class RoundManager : MonoBehaviour
 
     void StartRound(int roundNumber)
     {
+        RoundStartedEvent?.Invoke(roundNumber);
         WaveData waveData = GetWaveData(roundNumber);
 
         roundTimer = ResolveRoundDuration(roundNumber, waveData);

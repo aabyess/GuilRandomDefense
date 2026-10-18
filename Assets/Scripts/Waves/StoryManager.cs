@@ -26,6 +26,8 @@ public class StoryManager : MonoBehaviour
     int finished;
 
     public StoryData Running => running;
+    /// <summary>지금 필드에 나와 있는 스토리 적(호스트·싱글만, 없으면 null) — 유틸보드 실시간 기여도(UtilBoardPanel)가 읽는다.</summary>
+    public EnemyDummy ActiveStoryEnemy => activeEnemy;
 
     /// <summary>스토리존 한가운데(스토리 건물이 서는 자리) — S2 맵 목표물이 같은 섬을 찾는 데 쓴다.</summary>
     public Vector3 SpawnPosition => spawnPoint != null ? spawnPoint.position : transform.position;
@@ -195,6 +197,7 @@ public class StoryManager : MonoBehaviour
         running = null;
         activeEnemy = null;
         finished++;
+        StoryRecords.Add(stories.IndexOf(story), Time.time - spawnedAt, deadStory);   // S2 「-스토리」 기록(시간·MVP·%)
         foreach (PlayerContext pc in PlayerContext.All)   // 퇴치 의뢰 해금(거프 ureq R029): 원작은 살아있는 플레이어에게만 연구시킨다
             if (pc != null && pc.IsOccupied && !pc.IsDead) pc.QuestStoriesCleared.Add(story.order);
 
