@@ -45,7 +45,7 @@ def menu_frame():
         sl = slice(y0, y0 + 160)
         light = np.asarray(band, np.float32) / 255
         rgb[sl] = rgb[sl] * (1 - 0.35 * np.roll(sh, 3, 0)[..., None]) 
-        rgb[sl] = rgb[sl] * (1 - light[..., None]) + (np.array([88, 94, 104], np.float32)[None, None, :] * (0.7 + 0.5 * np.linspace(1, 0, 160)[:, None, None] * (1 if not flip else 0) + 0.3)) * light[..., None]
+        rgb[sl] = rgb[sl] * (1 - light[..., None]) + (np.array([62, 66, 74], np.float32)[None, None, :] * (0.7 + 0.5 * np.linspace(1, 0, 160)[:, None, None] * (1 if not flip else 0) + 0.3)) * light[..., None]
         yy = 130 if not flip else 28
         rgb[y0 + yy:y0 + yy + 4, 14:w - 14] = np.array([120, 126, 138])
         rgb[y0 + yy + 4:y0 + yy + 7, 14:w - 14] = np.array([30, 32, 36])
