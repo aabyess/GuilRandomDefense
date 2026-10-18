@@ -25,8 +25,11 @@ public class DoorTransition : MonoBehaviour
     static MenuTheme.DoorKind Kind => MenuTheme.DoorStyle;
     static float CloseSeconds => Kind == MenuTheme.DoorKind.Classic ? 0.45f : Kind == MenuTheme.DoorKind.Doors ? 0.55f : 0.65f;
 
-    /// <summary>촬영 전용(에디터 DoorPreview): 1보다 작으면 전환 전체가 그만큼 느려져 gameshot snap 간격으로 연속 프레임을 뽑을 수 있다. 게임에선 늘 1.</summary>
+    /// <summary>촬영 전용(에디터 DoorPreview) — 게임에선 늘 꺼짐. PreviewTimeScale<1이면 전환이 그만큼 느려지고,
+    /// PreviewFrozen이면 시간이 멈춰 있다가 PreviewStep(초)만큼씩만 흐른다(snap이 몇 초씩 걸려도 프레임 간격이 정확히 같다).</summary>
     public static float PreviewTimeScale = 1f;
+    public static bool PreviewFrozen;
+    public static float PreviewStep;
 
     static DoorTransition active;
     public static bool Busy => active != null;
@@ -225,6 +228,7 @@ public class DoorTransition : MonoBehaviour
     {
         float dt = Mathf.Min(Time.unscaledDeltaTime, 0.05f);   // 씬 로드 중 긴 프레임에 애니가 건너뛰지 않게
         dt *= PreviewTimeScale;
+        if (PreviewFrozen) { dt = PreviewStep; PreviewStep = 0f; }
         t += dt;
         // 화면 가로 절반(캔버스 단위) — 세로 1080 기준이라 넓은 화면이면 절반이 960보다 크다
         float canvasW = ((RectTransform)transform).rect.width;
