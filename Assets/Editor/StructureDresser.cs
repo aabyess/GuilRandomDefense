@@ -144,7 +144,7 @@ public static class StructureDresser
     public const float LaneShopClickPad = 1.3f;
 
     /// <summary>상점 상자 자리에 건물 모델을 세우고, 클릭 판정 상자를 건물 크기로 늘린다.</summary>
-    public static void DressLaneShop(GameObject body)
+    public static void DressLaneShop(GameObject body, float yaw = 90f)
     {
         string model = LaneShopModels.FirstOrDefault(entry => body.name.EndsWith("_" + entry.suffix)).model;
         if (model == null) return;
@@ -152,7 +152,7 @@ public static class StructureDresser
         Vector3 ground = new Vector3(body.transform.position.x, MapLayout.IslandTop, body.transform.position.z);
         // 원작 비율 5단계(PM 지시 2026-09-23) — 모델은 실제 치수로 지어졌고 이 호출이 Scale을
         // 안 넘기면 항상 1배(Blender 그대로)로 서서, 맵이 커진 만큼 건물이 상대적으로 쪼그라든다.
-        GameObject building = Place(body.transform.parent, model, body.name + "_모양", ground, 0f, MapLayout.Scale * LaneShopModelScale);
+        GameObject building = Place(body.transform.parent, model, body.name + "_모양", ground, yaw, MapLayout.Scale * LaneShopModelScale);
         if (building == null) return;
 
         // 상자의 부모는 Map 루트(배율 1)라 월드 크기 = 로컬 크기. 건물 어디를 눌러도 선택되게 맞춘다.

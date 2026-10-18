@@ -1291,16 +1291,12 @@ public static class MapGenerator
 
     static void BuildLaneShopStrip(Transform parent, MapLayout.Island lane)
     {
-        MapLayout.Island strip = MapLayout.LaneShopStrip(lane);
-
+        // 10-19 S2 카피: 상점 줄 → 레인 서쪽 세로 열. 땅 + 바닥 판.
+        MapLayout.Island column = MapLayout.LaneShopColumn(lane);
+        BuildIsland(parent, column);
         BuildDecor(parent, $"{lane.name}_상점바닥",
-            new Vector3(strip.center.x, MapLayout.IslandTop + 0.05f, strip.center.y),
-            new Vector3(strip.size.x - 2f, 0.1f, strip.size.y - 2f), "rock");
-
-        BuildDecor(parent, $"{lane.name}_상점벽",
-            new Vector3(strip.center.x, MapLayout.IslandTop + WallHeight * 0.5f,
-                        strip.center.y + strip.size.y * 0.5f),
-            new Vector3(strip.size.x, WallHeight, GateThickness), "rock");
+            new Vector3(column.center.x, MapLayout.IslandTop + 0.05f, column.center.y),
+            new Vector3(column.size.x - 2f, 0.1f, column.size.y - 2f), "rock");
     }
 
     // 레인 섬에 붙은 LaneMarker에 우리를 물려준다 — 포탈·도박소·조합이 전부 여기로 소환한다.
@@ -1322,11 +1318,8 @@ public static class MapGenerator
 
     static Vector3 LaneShopSlotAt(MapLayout.Island lane, int slot, int count)
     {
-        MapLayout.Island strip = MapLayout.LaneShopStrip(lane);
-        // 10-14 사장님 「간격도 넓게(양옆이 잔디라 넓혀도 됨)」: 우리 줄 폭의 1.15배를 칸 수로 나눠 가운데 정렬(옛: 폭÷(칸+1), 양 끝 한 칸 비움).
-        float step = strip.size.x * 1.15f / count;
-        return new Vector3(strip.center.x + (slot - (count - 1) * 0.5f) * step,
-                           MapLayout.IslandTop + 1.5f, strip.center.y);
+        Vector2 at = MapLayout.LaneShopColumnSlot(lane, slot);
+        return new Vector3(at.x, MapLayout.IslandTop + 1.5f, at.y);
     }
 
     static GameObject BuildLaneShopBody(Transform parent, string name, Vector3 at, int laneIndex, string surface)
@@ -1349,7 +1342,7 @@ public static class MapGenerator
     static void BuildGamblingShop(Transform parent, MapLayout.Island lane, int laneIndex)
     {
         GameObject shop = BuildLaneShopBody(parent, $"{lane.name}_도박소",
-            LaneShopSlot(lane, 0), laneIndex, "event");
+            LaneShopSlot(lane, 1), laneIndex, "event");
 
         GamblingShop gambling = shop.AddComponent<GamblingShop>();
         SerializedObject so = new SerializedObject(gambling);
@@ -1424,7 +1417,7 @@ public static class MapGenerator
 
     static void BuildUnitUpgradeShop(Transform parent, MapLayout.Island lane, int laneIndex)
     {
-        BuildUpgradeShop(parent, lane, laneIndex, "유닛강화소", 1, "display", UnitUpgradeTrackNames);
+        BuildUpgradeShop(parent, lane, laneIndex, "유닛강화소", 3, "display", UnitUpgradeTrackNames);
     }
 
     // (10-08 다른세계강화소 건물 삭제 — 트랙 에셋 UnitUpgrade_다른세계 강화는 NetCatalog 인덱스 때문에 남겨 둔다. 다른세계는 랜덤유닛 강화 트랙이 같이 맡는다.)
@@ -1432,7 +1425,7 @@ public static class MapGenerator
     static void BuildEternalUpgradeShop(Transform parent, MapLayout.Island lane, int laneIndex)
     {
         // 10-06 사장님: 영원함은 등급 공통이 아니라 유닛 전용 트랙 8종(EternalUpgradeApply가 에셋을 만든다 — 원작 h06R과 같은 8칸).
-        BuildUpgradeShop(parent, lane, laneIndex, "영원함강화소", 2, "combine",
+        BuildUpgradeShop(parent, lane, laneIndex, "영원함강화소", 5, "combine",
                          new[] { "영원_김영원", "영원_조세민", "영원_이지원", "영원_문필환", "영원_서민성", "영원_김정래", "영원_윤현모", "영원_최상호" });
     }
 
@@ -1442,7 +1435,7 @@ public static class MapGenerator
     static void BuildAttackTypeUpgradeShop(Transform parent, MapLayout.Island lane, int laneIndex)
     {
         GameObject shop = BuildLaneShopBody(parent, $"{lane.name}_공격타입강화소",
-            LaneShopSlot(lane, 4), laneIndex, "display");
+            LaneShopSlot(lane, 2), laneIndex, "display");
 
         AttackTypeUpgradeShop attackShop = shop.AddComponent<AttackTypeUpgradeShop>();
         SerializedObject so = new SerializedObject(attackShop);
@@ -1500,7 +1493,7 @@ public static class MapGenerator
     static void BuildSupportShop(Transform parent, MapLayout.Island lane, int laneIndex)
     {
         GameObject shop = BuildLaneShopBody(parent, $"{lane.name}_도움소",
-            LaneShopSlot(lane, 3), laneIndex, "warehouse");
+            LaneShopSlot(lane, 4), laneIndex, "warehouse");
         SupportShop supportShop = shop.AddComponent<SupportShop>();
         SerializedObject so = new SerializedObject(supportShop);
         SerializedProperty skillsProp = so.FindProperty("skills");
@@ -1551,7 +1544,7 @@ public static class MapGenerator
     static void BuildVoyageLogShop(Transform parent, MapLayout.Island lane, int laneIndex)
     {
         GameObject shop = BuildLaneShopBody(parent, $"{lane.name}_항해일지",
-            LaneShopSlot(lane, 5), laneIndex, "gacha");
+            LaneShopSlot(lane, 0), laneIndex, "gacha");
 
         VoyageLogShop voyageLog = shop.AddComponent<VoyageLogShop>();
         SerializedObject so = new SerializedObject(voyageLog);
@@ -4621,7 +4614,7 @@ public static class MapGenerator
     {
         var shops = new (string suffix, int oldSlot, int newSlot)[]
         {
-            ("도박소", 0, 0), ("유닛강화소", 1, 1), ("다른세계강화소", 2, 2), ("영원함강화소", 3, 3),
+            ("도박소", 0, 0), ("유닛강화소", 3, 1), ("다른세계강화소", 2, 2), ("영원함강화소", 3, 3),
             ("도움소", 4, 4), ("공격타입강화소", 6, 5), ("항해일지", 7, 6),
         };
         List<PirateQuestData> quests = LoadPirateQuests();
@@ -4716,7 +4709,7 @@ public static class MapGenerator
     {
         var shops = new (string suffix, int oldSlot, int newSlot)[]
         {
-            ("도박소", 0, 0), ("유닛강화소", 1, 1), ("영원함강화소", 3, 2), ("도움소", 4, 3), ("공격타입강화소", 5, 4), ("항해일지", 6, 5),
+            ("도박소", 0, 0), ("유닛강화소", 3, 1), ("영원함강화소", 3, 2), ("도움소", 4, 3), ("공격타입강화소", 5, 4), ("항해일지", 6, 5),
         };
         var lines = new List<string>();
         UnityEngine.SceneManagement.Scene scene = default;
@@ -5717,7 +5710,7 @@ public static class MapGenerator
     {
         List<MapLayout.Island> ground = new List<MapLayout.Island>();
         ground.AddRange(MapLayout.Lanes);
-        foreach (MapLayout.Island lane in MapLayout.Lanes) ground.Add(MapLayout.LaneApron(lane));
+        foreach (MapLayout.Island lane in MapLayout.Lanes) { ground.Add(MapLayout.LaneApron(lane)); ground.Add(MapLayout.LaneShopColumn(lane)); }
         ground.AddRange(MapLayout.Warehouses);
         ground.AddRange(MapLayout.SealIslands);
         ground.AddRange(MapLayout.Zones);

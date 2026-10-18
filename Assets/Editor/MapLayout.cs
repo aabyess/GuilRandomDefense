@@ -753,7 +753,7 @@ public static class MapLayout
     public const float UnitRowWidthRatio = 0.74f;
 
     /// <summary>필드 아래로 내려 붙는 앞치마 전체 깊이(간격 + 우리 줄 + 상점 줄).</summary>
-    public const float LaneApronDepth = ApronGap + UnitPenDepth + ShopStripDepth;
+    public const float LaneApronDepth = ApronGap + UnitPenDepth;
 
     /// <summary>
     /// 적이 도는 필드. **이제 레인 섬이 곧 필드다**(2026-09-23, 6단계).
@@ -799,16 +799,27 @@ public static class MapLayout
     }
 
     /// <summary>
-    /// 상점이 서는 줄 — 우리 줄 바로 아래. ⚠️ 원작 `.j`에는 상점 좌표가 없다(선배치로 보인다).
-    /// 근거가 없으므로 배치 방식은 우리 것을 유지하고, 폭만 우리 줄과 맞춘다(PM 지시 2026-09-23).
+    /// 상점 세로 열 — **레인 서쪽**(S2 신작 구조, 10-19 사장님 「최대한 카피」). 원작: 레인 서쪽 변에서
+    /// 384 떨어진 x, 레인 윗변에서 716 아래부터 300 간격으로 6채(÷Scale).
+    /// 땅은 레인 서쪽 변에 붙여 깔고(사이가 바다가 되면 걸어갈 수 없다) 폭은 열 중심에서 양쪽 여유를 둔다.
     /// </summary>
-    public static Island LaneShopStrip(Island lane)
+    public const float ShopColumnOffsetX = 384f / Scale;     // 92.2
+    public const float ShopColumnFirstDz = 716f / Scale;     // 171.8
+    public const float ShopColumnStepZ = 300f / Scale;       // 72.0
+    public const int ShopColumnCount = 6;
+    const float ShopColumnReach = ShopColumnOffsetX + 60f;   // 레인 서쪽 변에서 땅 끝까지
+
+    public static Vector2 LaneShopColumnSlot(Island lane, int slot)
+        => new Vector2(lane.center.x - lane.size.x * 0.5f - ShopColumnOffsetX,
+                       lane.center.y + lane.size.y * 0.5f - ShopColumnFirstDz - ShopColumnStepZ * slot);
+
+    public static Island LaneShopColumn(Island lane)
     {
-        Island pen = LaneUnitPenRow(lane);
-        float penBottom = pen.center.y - pen.size.y * 0.5f;
-        return new Island(lane.name,
-            lane.center.x, penBottom - ShopStripDepth * 0.5f,
-            pen.size.x, ShopStripDepth, lane.tint);
+        float top = lane.center.y + lane.size.y * 0.5f - ShopColumnFirstDz + 40f;
+        float bottom = lane.center.y + lane.size.y * 0.5f - ShopColumnFirstDz - ShopColumnStepZ * (ShopColumnCount - 1) - 40f;
+        return new Island(lane.name + "_상점열",
+            lane.center.x - lane.size.x * 0.5f - ShopColumnReach * 0.5f, (top + bottom) * 0.5f,
+            ShopColumnReach, top - bottom, lane.tint);
     }
 
     /// <summary>
