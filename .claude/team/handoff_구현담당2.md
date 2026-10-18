@@ -162,3 +162,9 @@
 - 모델 배선 메뉴(Tools/아트/모델 배선)는 돌리지 말 것(403개 Prefab/Generated 재직렬화) — PM 확인 뒤에만, 내 경로만 커밋.
 - 작업트리 미커밋 잔여(Materials·Fonts·UI/Skin .meta, `.check_entries_out/`)는 유니티 재직렬화·blender 산출 — 내 것 아니다, 건드리지 말 것.
 - GameHud·UnitAttacker는 공용 — 커밋 전 `git diff -- 파일 | grep "^@@"`로 내 hunk만인지 확인, 커밋은 `git add -- 경로` + `git commit -- 경로`만.
+
+## 10-19 밤 (S2 맵 카피 UI) — 끝난 일·함정
+- **끝**: `-mpTestClear 초`·`-mpCamAt 초 x z`(NetLauncher) · 카메라 이동 범위 맵에 맞춰 넓힘(WidenBoundsToMap) · 상점 이름표 겹침 회피 + 상단 바 클램프 + 왼쪽 위 이모트 아이콘(EmotePanel.TryGetButtonRect) 회피(ShopNameplateLayer) · 시작 구도 가로를 상점 열까지(+바깥 건물 폭 절반 여백) · 커밋 fa86a815d 4695a6099 bb9f43b44 e199b1680 e4de2ca69 c63d5d060 faeb5bd40 9b972e675 4c40c6efc 3c8dfa3d4. 사진·로그 ~/grd/GRD_s2_map/결과_1019/ui_*.png, 시험 앱 ~/Desktop/GRD_밤샘시험_1019.app.
+- **함정**: S2 맵 상점은 컴포넌트가 붙은 `LaneN_이름` 오브젝트에 **렌더러가 없다**(모양은 형제 `…_모양`). 렌더러로만 경계를 재면 조용히 「못 찾음」 — 카메라 TryGetShopBounds는 위치±36 폴백으로 고침(ShopNameplateLayer.Roof도 같은 이유로 폴백 높이 +2를 쓴다). 시작 구도 로그에 「(상점 열 포함/못 찾음)」이 찍힌다.
+- **남은 것**: 폴백 폭 72는 상수 박음 — MapLayout의 상점 간격에서 끌어올 것(PM 지적) · 이름표 LabelWidth 112×60은 눈대중(TMP preferredWidth로) · 도박소 이름표가 건물(화면 위로 잘림) 위 바다에 떠 보임 · 6칸 클릭·리롤·이모트·미션판·포네글리프·유닛 클리어 세이브·「베리 = N」 줄·파칭코 관전은 손 클릭 미확인.
+- 빌드: 빌드 폴더(../GuilRandomDefense-build)는 tmp/s2-castle 체크아웃, `Unity -batchmode -quit -projectPath … -buildTarget OSXUniversal -executeMethod BuildBeta.Mac` 약 30초(앱 이름은 GameVersion 라벨 「GuRandi 0.3.26v.app」). 솔로(-mpSolo)는 난이도 창이 안 닫혀 검은 화면 — 실측은 `-mpHost -mpAutoStart 1 -mpDifficulty Easy`로.
