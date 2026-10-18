@@ -57,6 +57,7 @@ public static class MapGenerator
         { "sea",       new Surface("water", new Color(0.78f, 0.90f, 1.00f), 0.080f, 0.92f) },
         { "rock",      new Surface("rock",  Color.white,                    0.140f, 0.10f) },
         { "dirt",      new Surface("dirt",  Color.white,                    0.180f, 0.05f) },
+        { "ice",       new Surface("rock",  new Color(0.62f, 0.82f, 1.00f), 0.140f, 0.10f) },   // 10-19 S2: 유닛 우리 얼음파랑 타일 바닥
         { "lane",      new Surface("grass", Color.white,                    0.120f, 0.05f) },
         { "warehouse", new Surface("grass", new Color(1.00f, 0.94f, 0.78f), 0.120f, 0.05f) },
         { "seal",      new Surface("grass", new Color(0.82f, 1.00f, 0.94f), 0.160f, 0.05f) },
@@ -1245,7 +1246,7 @@ public static class MapGenerator
 
         BuildDecor(parent, $"{lane.name}_유닛우리_바닥",
             new Vector3(centerX, MapLayout.IslandTop + 0.05f, centerZ),
-            new Vector3(unitPenWidth, 0.1f, penDepth), "dirt");
+            new Vector3(unitPenWidth, 0.1f, penDepth), "ice");
 
         // 좌·우·아래만 막는다. 위가 열려 있어야 플레이어가 유닛을 필드로 꺼낸다.
         BuildWall(parent, $"{lane.name}_유닛우리_왼벽",
@@ -1259,6 +1260,10 @@ public static class MapGenerator
             new Vector3(unitPenWidth, WallHeight, GateThickness));
 
         BuildUnitPenPartitions(parent, lane, unitPenWidth, penDepth, centerX, centerZ);
+        // 10-19 S2: 앞(레인 쪽) 돌 난간 — 낮은 흰 돌띠. 유닛은 위가 열려 있어야 하므로 콜라이더 없는 장식만.
+        BuildDecor(parent, $"{lane.name}_유닛우리_난간",
+            new Vector3(centerX, MapLayout.IslandTop + 0.7f, centerZ + halfZ),
+            new Vector3(unitPenWidth, 1.4f, 1.2f), "rock");
 
         // 기준점(LaneMarker.SlotPosition의 첫 줄) = 칸 한가운데 + MapLayout.CommonStandOffset.
         //    09-25엔 원작 기본(칸 위 225, 레인 아래 끝)이었고, 2026-09-26 사장님 지시로 **칸 안**(오프셋 0)이다 — 흔함이 제 칸 안에 선다.
@@ -1290,6 +1295,13 @@ public static class MapGenerator
             BuildWall(parent, $"{lane.name}_유닛우리_칸막이{column}",
                 new Vector3(centerX + boundaryX, MapLayout.IslandTop + WallHeight * 0.5f, centerZ),
                 new Vector3(UnitPenPartitionThickness, WallHeight, penDepth + UnitPenPartitionThickness));
+            // 10-19 S2: 보이는 낮은 흰 돌 칸막이 + 앞쪽 사각 기둥(콜라이더 없음 — 위 칸막이가 막는다)
+            BuildDecor(parent, $"{lane.name}_유닛우리_흰칸막이{column}",
+                new Vector3(centerX + boundaryX, MapLayout.IslandTop + 0.9f, centerZ),
+                new Vector3(1.4f, 1.8f, penDepth), "rock");
+            BuildDecor(parent, $"{lane.name}_유닛우리_기둥{column}",
+                new Vector3(centerX + boundaryX, MapLayout.IslandTop + 1.6f, centerZ + penDepth * 0.5f),
+                new Vector3(2.4f, 3.2f, 2.4f), "rock");
         }
     }
 
