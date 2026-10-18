@@ -192,8 +192,8 @@ public class NetLobbyUi : MonoBehaviour
             SetAccent(readyButton, !local.Ready);
         }
         startButton.interactable = launcher.CanStartMatch;
-        // 손님도 다음에 무엇을 하면 되는지 한 줄로(방장은 시작 불가 사유)
-        startHint.text = isHost ? launcher.StartBlockedReason : (local != null && local.Ready ? "방장이 시작하면 바로 게임이 열립니다" : "준비를 누르면 방장에게 알려집니다");
+        // 손님은 준비한 뒤에만 한 줄(준비 전 안내는 roomStatus가 이미 말한다). 방장은 시작 불가 사유
+        startHint.text = isHost ? launcher.StartBlockedReason : (local != null && local.Ready ? "준비 완료 — 방장이 시작하면 게임이 열립니다" : "");
         roomStatus.text = launcher.Status;
     }
 
