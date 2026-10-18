@@ -531,7 +531,10 @@ def match_rows(roster, audit, master, names):
         a = audit.get(d['_file'])
         ou = orig_units(d, a, master, names)
         sm = s2map.get(d['_file'])
-        if sm and sm.get('S2 원작 id'):
+        if sm and sm.get('상태', '').startswith('원작 없음'):
+            orig = '원작 없음(사장님 창작)'
+            ou = []
+        elif sm and sm.get('S2 원작 id'):
             orig = '%s(%s) · S2 2.323' % (sm['S2 원작 이름'], sm['S2 원작 id'])
             ou = [(sm['S2 원작 id'].upper(), sm['S2 원작 이름'])]
         elif ou:

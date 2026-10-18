@@ -31,6 +31,7 @@ SKILLDATA_SCRIPT = '9457f64cd84d34fd095791a069c0adc6'
 ATK = {'normal': 1, 'pierce': 2, 'siege': 3, 'hero': 4, 'chaos': 5, 'magic': 6, 'spells': 7}
 GRADE_SHORT = {0: '흔함', 1: '안흔함', 2: '특별함', 3: '희귀함', 4: '히든', 5: '전설', 6: '제한', 7: '초월', 8: '불멸', 9: '영원', 10: '랜덤', 11: '다른세계', 12: '특수', 14: '변화'}
 SKIP = {'흔함_상붕카', '변화됨_박은석'}   # 박은석: 합친 대응(장군좀비+캐럿) 유지 — 메모리 merged-originals-stay-merged
+NO_MATCH = R.NO_MATCH   # 사장님 10-18: 초월 노태현_AP·최상호_AD·최상호_AP는 원랜디 매칭 안 함
 FIXED_STATS = {'주호리얼', '보스의앞잡이', '만물통달', '구일최강의여성', '상호파와채민파의아버지', '전전교회장'}
 HIDDEN4 = {'맥주만땅', '푸은서', '감탄떡볶이', '이삭토스트'}
 HOLD = set(os.environ.get('REMATCH_HOLD', '').split(',')) - {''}   # PM 답 대기(원작에 피해 스킬 없음)
@@ -320,6 +321,8 @@ def write_s2_map(plan):
             st = '적용(능력치+스킬)' if planned[r['file']]['replace'] else '적용(능력치·스킬 주인 같음)'
         elif r['file'] in HOLD:
             st, sid, name = '보류(PM 답 대기)', '', ''
+        elif r['file'] in NO_MATCH:
+            st, sid, name = '원작 없음(사장님 창작)', '', ''
         elif r['roster'] in FIXED_STATS:
             st = '사양 고정(능력치·스킬 그대로)'
         elif r['file'] in SKIP:

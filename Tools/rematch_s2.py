@@ -317,6 +317,7 @@ def our_vfx_state():
 
 # ───────────────────────── 본체 ─────────────────────────
 
+NO_MATCH = {'초월_노태현_AP', '초월_최상호_AD', '초월_최상호_AP'}   # 사장님 10-18: 원랜디 매칭 안 함(창작) — 몇 번을 돌려도 대응 없음으로 고정
 NO_ORIGINAL_KEEP = True   # 지금 원작이 없는 로스터(사장님 창작·특수 지급)는 새 원작을 붙이지 않고 「대응 없음」 유지 — 사장님 확인 대상
 
 
@@ -441,6 +442,10 @@ def main():
             if row['S2 원작 id'] and row['로스터'] in result:
                 old = result[row['로스터']]
                 result[row['로스터']] = (row['S2 원작 id'], old[1], old[2])
+
+    for f in NO_MATCH:
+        if f in result:
+            result[f] = (None, '대응 없음', '사장님 10-18: 원랜디 매칭 안 함(창작)')
 
     # ── 행 만들기 ──
     rows, skill_rows, fx = [], [], defaultdict(lambda: dict(users=set(), status=None, where=None))
