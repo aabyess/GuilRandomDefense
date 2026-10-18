@@ -197,4 +197,43 @@ public static class S2Probe
         new GameObject("DifficultySelectHud(probe)").AddComponent<DifficultySelectHud>();
         return "   난이도 대화상자 새로 세움";
     }
+
+    // ── 맵 목표물·에그헤드 ──
+    public static string Objectives()
+    {
+        S2MapObjectives o = S2MapObjectives.Instance;
+        if (o == null) return "   ❌ S2MapObjectives 없음";
+        var sb = new StringBuilder();
+        sb.AppendLine($"   황금 종 {o.BellPosition} · 영혼 {o.SoulPosition} · {S2MapObjectives.BellHpText()}");
+        foreach (PlayerContext c in PlayerContext.All) { LaneMarker l = LaneMarker.Get(c.PlayerId); if (l != null) sb.AppendLine($"   레인{c.PlayerId} 중심 {l.LaneCenter} (종까지 {Vector3.Distance(l.LaneCenter, o.BellPosition):F0} · 영혼까지 {Vector3.Distance(l.LaneCenter, o.SoulPosition):F0})"); }
+        foreach (string n in new[] { "S2목표물_샨도라 황금 종", "S2목표물_룸바 해적단의 영혼" })
+        {
+            GameObject g = GameObject.Find(n);
+            sb.AppendLine($"   {n}: {(g != null ? "있음 " + g.transform.position : "없음")}");
+            if (g != null && g.TryGetComponent(out EnemyDummy d)) sb.AppendLine($"      체력 {d.Hp:N0}/{d.MaxHp:N0} · 방어 {d.EffectiveArmor}");
+        }
+        return sb.ToString();
+    }
+    public static string CamStory() { Cam(Object.FindFirstObjectByType<StoryManager>().SpawnPosition); return "   카메라 → 스토리존"; }
+    public static string CamBell() { Vector3 p = S2MapObjectives.Instance.BellPosition; Cam(p); return "   카메라 → 황금 종 " + p; }
+    public static string CamSoul() { Vector3 p = S2MapObjectives.Instance.SoulPosition; Cam(p); return "   카메라 → 영혼 " + p; }
+    static string hitLog = "";
+    public static string KillSoul()
+    {
+        S2Objectives.RumbarSoulFreed += p => hitLog += "영혼:" + p + " "; S2Objectives.GoldenBellDestroyed += p => hitLog += "종:" + p + " ";
+        GameObject g = GameObject.Find("S2목표물_룸바 해적단의 영혼");
+        if (g == null) return "   영혼 없음";
+        EnemyDummy d = g.GetComponent<EnemyDummy>();
+        d.TakeDamage(20000f, DamageType.AP, AttackType.Spells, 0);
+        return $"   영혼에 2만 피해 → 남은 체력 {(d != null ? d.Hp.ToString("N0") : "파괴")} · (이벤트는 다음 프레임)";
+    }
+    public static string KillReport() => $"   영혼 오브젝트 {(GameObject.Find("S2목표물_룸바 해적단의 영혼") != null ? "아직 있음" : "사라짐")} · 종 이벤트 로그 「{hitLog}」";
+    public static string BellDamage() { EnemyDummy d = GameObject.Find("S2목표물_샨도라 황금 종").GetComponent<EnemyDummy>(); d.TakeDamage(1_300_000f, DamageType.AP, AttackType.Spells, 0); return "   황금 종 130만 피해 → " + S2MapObjectives.BellHpText(); }
+    public static string EggheadSpawn()
+    {
+        StoryManager sm = Object.FindFirstObjectByType<StoryManager>();
+        StoryData egg = Resources.Load<StoryData>("S2/Story14_에그헤드");
+        typeof(StoryManager).GetMethod("Spawn", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Invoke(sm, new object[] { egg });
+        return $"   에그헤드 소환 · 제한 남은 {sm.SecondsLeftInLimit:F0}초 · 이름 {StoryManager.DisplayNameForEnemy(egg.building)}";
+    }
 }

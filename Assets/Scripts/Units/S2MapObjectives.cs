@@ -1,12 +1,11 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
 /// <summary>
 /// S2 2.323 맵 목표물 둘(j:14582~14584 파괴물 생성, w3b B005·B008): 7시 구석 「샨도라 황금 종」(체력 650만, 모델 D\modelPR (10)) ·
 /// 1시 구석 「룸바 해적단의 영혼」(체력 1만, SmallLight + 엘리베이터 장식 3). 부수면 S2Objectives 이벤트를 낸다(보상·표시는 구현담당2 미션판).
-/// 맵 재생성 없이 판 시작 때 코드로 세운다 — 원작 좌표(−9152,−10432)·(9280,6528)는 우리 맵이 재배치라 그대로 못 쓰고, **NavMesh 섬 덩어리**를
-/// 찾아 레인(플레이어 필드)이 아닌 섬 중 가장 7시(좌하)·1시(우상)에 있는 섬의 그 모서리 안쪽에 놓는다. 모델은 원작 모델이 Resources/S2에 들어오면 교체(지금은 스토리 건물 임시 모델).
+/// 맵 재생성 없이 판 시작 때 코드로 세운다 — 원작 좌표(−9152,−10432)·(9280,6528)는 우리 맵이 재배치라 그대로 못 쓴다. 레인 유닛은 스토리존 포탈로만 다른 섬에
+/// 가므로(StoryZonePortal) **스토리존 섬**(NavMesh 덩어리)의 7시(좌하)·1시(우상) 모서리 안쪽에 놓는다(스토리존을 못 찾으면 레인이 아닌 섬 중 가장 구석 섬). 모델은 원작 모델이 Resources/S2에 들어오면 교체(지금은 스토리 건물 임시 모델).
 /// 호스트만 세운다. 체력은 원작 값 그대로(w3b bhps).
 /// </summary>
 public class S2MapObjectives : MonoBehaviour
@@ -25,15 +24,23 @@ public class S2MapObjectives : MonoBehaviour
         new GameObject("S2MapObjectives").AddComponent<S2MapObjectives>();
     }
 
-    void OnEnable() => Instance = this;
-    void OnDisable() { if (Instance == this) Instance = null; }
+    void OnEnable() { Instance = this; EnemyDummy.OnAnyEnemyDied += OnEnemyDied; }
+    void OnDisable() { if (Instance == this) Instance = null; EnemyDummy.OnAnyEnemyDied -= OnEnemyDied; }
+
+    // 목표물이 죽음 확정된 순간 — 마지막으로 때린 플레이어(모르면 −1)와 함께 이벤트를 낸다.
+    void OnEnemyDied(EnemyDummy dead)
+    {
+        if (!GameAuthority.IsServer || dead == null) return;
+        if (dead == bell) { bell = null; S2Objectives.RaiseGoldenBellDestroyed(dead.LastHitPlayer); }
+        else if (dead == soul) { soul = null; S2Objectives.RaiseRumbarSoulFreed(dead.LastHitPlayer); }
+    }
 
     System.Collections.IEnumerator Start()
     {
         yield return new WaitForSeconds(3f);   // NavMesh·레인 준비 뒤
         if (!BuildPlan(out Vector3 swSpot, out Vector3 neSpot)) yield break;
-        bell = SpawnObjective("샨도라 황금 종", BellHp, 24f, swSpot, S2ObjectiveKind.Bell);
-        soul = SpawnObjective("룸바 해적단의 영혼", SoulHp, 12f, neSpot, S2ObjectiveKind.Soul);
+        bell = SpawnObjective("샨도라 황금 종", BellHp, 24f, swSpot);
+        soul = SpawnObjective("룸바 해적단의 영혼", SoulHp, 12f, neSpot);
         BellPosition = swSpot; SoulPosition = neSpot;
         Debug.Log($"[S2 목표물] 황금 종 {swSpot} · 영혼 {neSpot}");
     }
@@ -46,73 +53,24 @@ public class S2MapObjectives : MonoBehaviour
     }
 
     // ---- 자리 찾기 ----
-    class Cluster { public Bounds bounds; public List<Vector3> verts = new List<Vector3>(); public int id; }
+    // NavMesh는 바다까지 한 덩어리라(10-18 실측: 군집 경계가 맵 전체) 섬 모서리를 NavMesh에서 못 읽는다. 스토리존 섬은 MapLayout.StoryZone = 180×150 × WorldScale(750.1×625.1)이고
+    // 중심은 StoryManager의 스토리 건물 자리다 — 그 섬의 7시·1시 모서리에서 Inset 안쪽에 놓는다(사거리 있는 유닛이 가장자리에서 못 닿지 않게).
+    const float StoryZoneHalfX = 180f * WorldScale.Value * 0.5f, StoryZoneHalfZ = 150f * WorldScale.Value * 0.5f, Inset = 70f;
 
     bool BuildPlan(out Vector3 sw, out Vector3 ne)
     {
         sw = ne = default;
-        NavMeshTriangulation tri = NavMesh.CalculateTriangulation();
-        if (tri.vertices == null || tri.vertices.Length == 0) { Debug.LogWarning("[S2 목표물] NavMesh가 비어 있어 못 세웁니다."); return false; }
-
-        // 같은 자리 정점을 하나로(삼각형 사이가 이어지게) → 이어진 삼각형끼리 한 덩어리
-        var key = new Dictionary<Vector3Int, int>();
-        var pos = new List<Vector3>();
-        int Id(Vector3 v) { var k = new Vector3Int(Mathf.RoundToInt(v.x * 2f), Mathf.RoundToInt(v.y * 2f), Mathf.RoundToInt(v.z * 2f)); if (!key.TryGetValue(k, out int i)) { i = pos.Count; key[k] = i; pos.Add(v); } return i; }
-        int[] map = new int[tri.vertices.Length];
-        for (int i = 0; i < map.Length; i++) map[i] = Id(tri.vertices[i]);
-        int[] parent = new int[pos.Count];
-        for (int i = 0; i < parent.Length; i++) parent[i] = i;
-        int Find(int x) { while (parent[x] != x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; }
-        for (int t = 0; t + 2 < tri.indices.Length; t += 3)
-        {
-            int a = Find(map[tri.indices[t]]), b = Find(map[tri.indices[t + 1]]), c = Find(map[tri.indices[t + 2]]);
-            parent[b] = a; parent[Find(c)] = a;
-        }
-        var clusters = new Dictionary<int, Cluster>();
-        for (int i = 0; i < pos.Count; i++)
-        {
-            int r = Find(i);
-            if (!clusters.TryGetValue(r, out Cluster cl)) { cl = new Cluster { id = r, bounds = new Bounds(pos[i], Vector3.zero) }; clusters[r] = cl; }
-            cl.verts.Add(pos[i]); cl.bounds.Encapsulate(pos[i]);
-        }
-
-        // 플레이어 레인이 든 덩어리·너무 작은 덩어리는 뺀다
-        var laneRoots = new HashSet<int>();
-        foreach (PlayerContext c in PlayerContext.All)
-        {
-            LaneMarker lane = c != null ? LaneMarker.Get(c.PlayerId) : null;
-            if (lane == null) continue;
-            foreach (Cluster cl in clusters.Values) if (cl.bounds.Contains(new Vector3(lane.LaneCenter.x, cl.bounds.center.y, lane.LaneCenter.z))) laneRoots.Add(cl.id);
-        }
-        var cand = new List<Cluster>();
-        foreach (Cluster cl in clusters.Values)
-            if (!laneRoots.Contains(cl.id) && cl.bounds.size.x * cl.bounds.size.z > 4000f) cand.Add(cl);
-        if (cand.Count == 0) { Debug.LogWarning("[S2 목표물] 레인이 아닌 섬을 못 찾았습니다."); return false; }
-
-        Cluster swC = null, neC = null;
-        foreach (Cluster cl in cand)
-        {
-            float s = cl.bounds.center.x + cl.bounds.center.z;
-            if (swC == null || s < swC.bounds.center.x + swC.bounds.center.z) swC = cl;
-            if (neC == null || s > neC.bounds.center.x + neC.bounds.center.z) neC = cl;
-        }
-        sw = CornerSpot(swC, -1f);
-        ne = CornerSpot(neC, +1f);
+        StoryManager story = Object.FindFirstObjectByType<StoryManager>();
+        if (story == null) { Debug.LogWarning("[S2 목표물] StoryManager가 없어 스토리존 자리를 못 압니다."); return false; }
+        Vector3 c = story.SpawnPosition;
+        sw = Snap(new Vector3(c.x - StoryZoneHalfX + Inset, c.y, c.z - StoryZoneHalfZ + Inset));
+        ne = Snap(new Vector3(c.x + StoryZoneHalfX - Inset, c.y, c.z + StoryZoneHalfZ - Inset));
         return true;
     }
 
-    // 덩어리에서 방향(−1=7시 · +1=1시) 끝에 가장 가까운 정점을 안쪽(중심 쪽)으로 조금 당기고 NavMesh에 붙인다.
-    static Vector3 CornerSpot(Cluster cl, float dir)
-    {
-        Vector3 best = cl.verts[0]; float bestScore = float.NegativeInfinity;
-        foreach (Vector3 v in cl.verts) { float s = dir * (v.x + v.z); if (s > bestScore) { bestScore = s; best = v; } }
-        Vector3 toCenter = cl.bounds.center - best; toCenter.y = 0f;
-        float inset = Mathf.Min(40f, toCenter.magnitude * 0.5f);
-        Vector3 p = best + toCenter.normalized * inset;
-        return NavMesh.SamplePosition(p, out NavMeshHit hit, 60f, NavMesh.AllAreas) ? hit.position : best;
-    }
+    static Vector3 Snap(Vector3 p) => NavMesh.SamplePosition(p, out NavMeshHit hit, 40f, NavMesh.AllAreas) ? hit.position : p;
 
-    EnemyDummy SpawnObjective(string label, float hp, float scale, Vector3 at, S2ObjectiveKind kind)
+    EnemyDummy SpawnObjective(string label, float hp, float scale, Vector3 at)
     {
         EnemyData template = Resources.Load<EnemyData>(TemplateEnemy);
         if (template == null || template.prefab == null) { Debug.LogWarning("[S2 목표물] 템플릿 적 자산이 없습니다."); return null; }
@@ -126,23 +84,7 @@ public class S2MapObjectives : MonoBehaviour
         dummy.EnableContributionTracking();
         dummy.SetLane(-1);
         if (go.TryGetComponent(out WaypointMover mover)) mover.enabled = false;
-        go.AddComponent<S2ObjectiveWatch>().Init(dummy, kind);
         return dummy;
     }
 }
 
-public enum S2ObjectiveKind { Bell, Soul }
-
-/// <summary>목표물 체력이 0이 돼 파괴되면(EnemyDummy는 죽을 때 GameObject를 지운다) 마지막으로 때린 플레이어와 함께 S2Objectives 이벤트를 낸다.</summary>
-public class S2ObjectiveWatch : MonoBehaviour
-{
-    EnemyDummy dummy; S2ObjectiveKind kind; int lastHit = -1;
-    public void Init(EnemyDummy d, S2ObjectiveKind k) { dummy = d; kind = k; }
-    void Update() { if (dummy != null) lastHit = dummy.LastHitPlayer; }
-    void OnDestroy()
-    {
-        if (dummy != null || !GameAuthority.IsServer || !gameObject.scene.isLoaded) return;   // 씬이 내려가며 지워진 건 파괴가 아니다
-        if (kind == S2ObjectiveKind.Bell) S2Objectives.RaiseGoldenBellDestroyed(lastHit);
-        else S2Objectives.RaiseRumbarSoulFreed(lastHit);
-    }
-}
