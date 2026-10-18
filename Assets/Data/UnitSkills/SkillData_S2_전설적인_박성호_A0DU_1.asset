@@ -10,30 +10,28 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_\uC6D0\uC791\uC624\uB77C_\uC804\uC124\uC801\uC778_\uAE40\uC6A9\uD0DC_A0ST"
-  m_EditorClassIdentifier: 
-  skillName: "A0ST \uB4DC\uB798\uACE4\uC804\uC124 \uC774\uB3D9\uC18D\uB3C4\uAC10\uC18C
-    \u2014 \uC801 \uC774\uC18D -10% \uC624\uB77C"
-  description: "\uC6D0\uC791 h02W uabi A0ST(Aasl, abuf B04F \xB7 Slo1 -0.1 \xB7 aare
-    800, atar \uBE48\uCE78). 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91(Tools/apply_uabi_passives.py)."
-  triggerType: 2
+  m_Name: "SkillData_S2_\uC804\uC124\uC801\uC778_\uBC15\uC131\uD638_A0DU_1"
+  m_EditorClassIdentifier:
+  skillName: "\uC624\uC774\uB780 \uB108\uD074"
+  description: "S2 2.323 \uC6D0\uC791 \uB2A5\uB825 \uC624\uC774\uB780 \uB108\uD074(A0DU) \u2014 \uD234\uD301\uC5D0 \uC788\uB294\uB370 \uC6B0\uB9AC\uC5D0 \uC5C6\uB358 \uD6A8\uACFC(0.3.27 \uC720\uC9C0 \uB300\uC870\uC5D0\uC11C \uCD94\uAC00)"
+  triggerType: 0
   levels:
   - cooldown: 0
     triggerChance: 1
-    range: 800
+    range: 375
     hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId: 
-    forbiddenBuffId: 
-    selfBuffId: 
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
     effects:
-    - kind: 13
-      basis: 0
+    - kind: 0
+      basis: 3
       target: 2
-      damageType: 0
-      attackType: 0
-      multiplier: 0.9
+      damageType: 2
+      attackType: 1
+      multiplier: 0.5
       bonus: 0
       chance: 1
       hitCount: 1
@@ -69,29 +67,16 @@ MonoBehaviour:
       grantSkill: {fileID: 0}
       minAllyTier: 5
       armorIgnoreRatio: 0
-      armorIgnoreRequiresBuff: 
+      armorIgnoreRequiresBuff:
       talentStunScaled: 0
       stackPerHit: 0.01
       stackCap: 1
       stackResetSeconds: 3
       attackSpeedScale: 0
       attackSpeedScaleCap: 0
-      formSelfAttackSpeed: 0
-      killMostLostHp: 0
-      lootItems: []
-      lootAlways: 0
-      hitCountScale: 0
-      hitCountScaleCap: 0
-      castCountBonus: 0
-      castCountCap: 0
-      gambleGate: 0
-      enhanceScale: 0
-      rewardWisp: {fileID: 0}
-      bossBerserkDamageScale: 0
-      explosive: 0
-      fixedDamage: 0
-    requiredTargetBuffId: 
-    forbiddenTargetBuffId: 
+      explosive: 1
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
@@ -102,10 +87,3 @@ MonoBehaviour:
     enterRange: 0
     requireNormalEnemyInRange: 0
     needsTargetClick: 0
-    toggleMode: 0
-    laneCountWindow: 0
-    needsAllyClick: 0
-    needsPointClick: 0
-    requiredEnhanceLevel: 0
-    ownLaneOnly: 0
-  icon: {fileID: 21300000, guid: 671b4794b2bfb4da8b5ec02926e00950, type: 3}

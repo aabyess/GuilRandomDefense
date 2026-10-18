@@ -10,32 +10,28 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_\uC6D0\uC791\uB2A5\uB825_\uC804\uC124\uC801\uC778_\uC9C4\uC5F0\uC11C_Legend7_stomp"
-  m_EditorClassIdentifier: 
-  skillName: "Legend7 MANA115 \uC2A4\uD1B0\uD504"
-  description: "\uC6D0\uC791 Trig_Legend7(h03A = \uC804\uC124\uC801\uC778_\uC9C4\uC5F0\uC11C)
-    MANA==115 \uB54C\uC758 e00J \uC2A4\uD1B0\uD504(A07L AOws \uAD11\uC5ED 500 1000000).
-    \uC6D0\uC791\uB2A5\uB825_\uC804\uC124\uC801\uC778_\uC9C4\uC5F0\uC11C\uC640 \uAC19\uC740
-    \uB9C8\uB098 \uAC8C\uC774\uC9C0(115)\uB77C \uAC19\uC740 \uD0C0\uC5D0 \uD568\uAED8
-    \uB098\uAC04\uB2E4. 2026-09-30 \uAD6C\uD604\uB2F4\uB2F91(\uC911\uBCF5 \uAC80\uC0AC)."
-  triggerType: 3
+  m_Name: "SkillData_S2_\uC804\uC124\uC801\uC778_\uC774\uC720\uC120_A072_1"
+  m_EditorClassIdentifier:
+  skillName: "\uAD70\uB9BC\uD558\uB294 \uC815\uC758"
+  description: "S2 2.323 \uC6D0\uC791 \uB2A5\uB825 \uAD70\uB9BC\uD558\uB294 \uC815\uC758(A072) \u2014 \uD234\uD301\uC5D0 \uC788\uB294\uB370 \uC6B0\uB9AC\uC5D0 \uC5C6\uB358 \uD6A8\uACFC(0.3.27 \uC720\uC9C0 \uB300\uC870\uC5D0\uC11C \uCD94\uAC00)"
+  triggerType: 2
   levels:
   - cooldown: 0
     triggerChance: 1
-    range: 500
-    hitCountThreshold: 115
+    range: 800
+    hitCountThreshold: 0
     resetTo: 0
     gaugeKind: 0
-    requiredBuffId: 
-    forbiddenBuffId: 
-    selfBuffId: 
+    requiredBuffId:
+    forbiddenBuffId:
+    selfBuffId:
     effects:
-    - kind: 0
+    - kind: 13
       basis: 0
       target: 2
-      damageType: 2
-      attackType: 7
-      multiplier: 1000000
+      damageType: 0
+      attackType: 0
+      multiplier: 0.8
       bonus: 0
       chance: 1
       hitCount: 1
@@ -71,15 +67,15 @@ MonoBehaviour:
       grantSkill: {fileID: 0}
       minAllyTier: 5
       armorIgnoreRatio: 0
-      armorIgnoreRequiresBuff: 
+      armorIgnoreRequiresBuff:
       talentStunScaled: 0
       stackPerHit: 0.01
       stackCap: 1
       stackResetSeconds: 3
       attackSpeedScale: 0
       attackSpeedScaleCap: 0
-    requiredTargetBuffId: 
-    forbiddenTargetBuffId: 
+    requiredTargetBuffId:
+    forbiddenTargetBuffId:
     hitCountFloor: 0
     gaugeSpendAmount: 0
     aoeCenter: 0
@@ -90,4 +86,3 @@ MonoBehaviour:
     enterRange: 0
     requireNormalEnemyInRange: 0
     needsTargetClick: 0
-  icon: {fileID: 21300000, guid: bdb80f8478ead4d2bb0cd502fab9f79b, type: 3}
