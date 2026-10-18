@@ -18,6 +18,7 @@ public static class S2Dango
     static float pendingUntil;
 
     public static string LastResult { get; private set; }
+    public static void ResetMatch() { for (int i = 0; i < used.Length; i++) used[i] = false; pendingUnit = null; pendingCaster = pendingTarget = -1; pendingUntil = 0f; LastResult = null; }
 
     static bool Pending => pendingUnit != null && pendingCaster >= 0 && Time.time < pendingUntil;
 
@@ -78,6 +79,13 @@ public static class S2Dango
         }
 
         UnitIdentity identity = unit != null ? unit.GetComponent<UnitIdentity>() : null;
+        // 30초 사이에 조합·창고·주인 변경으로 달라졌을 수 있다 — 아직 살아 있고 주인이 그대로인지 다시 본다.
+        if (unit == null || identity == null || !unit.TryGetComponent(out OwnedByPlayer nowOwner) || nowOwner.OwnerId != target || !unit.gameObject.activeInHierarchy)
+        {
+            PlayerNotification.Show(caster, "<color=#FF0000>[오류]</color> 경단먹이기 대상 유닛이 달라져 취소되었습니다.", 5f);
+            PlayerNotification.Show(target, "경단먹이기 대상 유닛이 달라져 취소되었습니다.", 4f);
+            return "";
+        }
         PlayerContext c = PlayerContext.GetOccupied(caster), t2 = PlayerContext.GetOccupied(target);
         UnitSpawner spawner = Object.FindFirstObjectByType<UnitSpawner>();
         if (identity == null || identity.Data == null || c == null || t2 == null || spawner == null)

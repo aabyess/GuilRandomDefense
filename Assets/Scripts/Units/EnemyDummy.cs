@@ -911,7 +911,7 @@ public class EnemyDummy : MonoBehaviour
         get
         {
             // 폭증(LaneExplosiveAmp, 사장님 10-08): 이 적이 속한 라인에 서 있는 유닛들이 주는 추가 A11S 레벨. 보스(라운드·신세계)도 같은 식으로 받는다.
-            int laneLevels = UnitAttacker.LaneExplosiveAmpLevels(LaneIndex);
+            int laneLevels = UnitAttacker.LaneExplosiveAmpLevels(LaneIndex) + S2Treasure.ExtraExplosiveLevels(LaneIndex);   // + S2 원피스(폭발형 +10%)
             if (a11sStackLevels == 0 && laneLevels == 0 && a11sBaseOverride < 0) return data != null ? data.percentDamageTaken : 1f;
             int level = Mathf.Min(A11SCapLevel, A11SBaseLevel + a11sStackLevels + laneLevels);
             return A11SLevelConst + A11SLevelStep * level;

@@ -142,6 +142,13 @@ public class TreasureHunt : MonoBehaviour
             chests.Add(RandomPointInZones());
     }
 
+    /// <summary>S2 보물지도(원작 BeM): 맵에 탐색할 보물을 n개 더 숨긴다(호스트).</summary>
+    public void AddChests(int count)
+    {
+        if (!GameAuthority.IsServer || chestZones.Count == 0) return;
+        for (int i = 0; i < count; i++) chests.Add(RandomPointInZones());
+    }
+
     // 원작 rect 하나 안에서 균등 무작위. 우리 구역은 여러 사각형이라 넓이 비례로 골라 균등을 지킨다.
     Vector2 RandomPointInZones()
     {

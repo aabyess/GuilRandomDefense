@@ -63,6 +63,29 @@ public static class S2Evolution
     }
 
     public static void Reset() => states.Clear();
+
+    /// <summary>판이 새로 시작될 때(씬 로드 직전) 이 판 한정 상태를 모두 지운다 — S2 기능 다섯의 static 상태가 새 판에 남아 「이미 사용했습니다」가 뜨지 않게(10-17 파칭코 두 번째 판 버그와 같은 꼴).</summary>
+    public static void ResetAllMatchState()
+    {
+        Reset();
+        S2Fortune.ResetMatch();
+        S2DebeBack.ResetMatch();
+        S2Dango.ResetMatch();
+        S2Treasure.ResetMatch();
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void RegisterReset()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+        ResetAllMatchState();
+    }
+
+    static void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+    {
+        if (mode == UnityEngine.SceneManagement.LoadSceneMode.Single) ResetAllMatchState();
+    }
 }
 
 /// <summary>검은 실루엣 껍데기: 프리팹에서 게임 컴포넌트를 모두 떼고 모델만 남겨 까맣게 칠한 뒤 「N / 152」를 머리 위에 띄운다.</summary>

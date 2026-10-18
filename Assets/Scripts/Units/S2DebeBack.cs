@@ -18,6 +18,7 @@ public static class S2DebeBack
     static readonly bool[] won = { false, false, false, false };
 
     public static string LastResult { get; private set; }
+    public static void ResetMatch() { for (int i = 0; i < 4; i++) { triesDone[i] = 0; won[i] = false; } LastResult = null; }
 
     public static int TriesLeft(int playerId)
     {

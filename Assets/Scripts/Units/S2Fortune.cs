@@ -11,6 +11,7 @@ public static class S2Fortune
 {
     public const float CooldownSeconds = 30f;
     static readonly float[] nextAllowed = { 0f, 0f, 0f, 0f };
+    public static void ResetMatch() { for (int i = 0; i < nextAllowed.Length; i++) nextAllowed[i] = 0f; LastResult = null; }
 
     static WispData FindWisp(string assetName)
     {
