@@ -85,7 +85,17 @@ public class RtsCameraController : MonoBehaviour
         {
             yield return new WaitForSecondsRealtime(0.25f);
             if (CurrentSpeed > 0.01f) yield break;   // 사용자가 카메라를 움직였다 — 건드리지 않는다(시작 구도는 게임이 스스로 다시 잡아 위치가 조금씩 바뀐다)
-            if (!TryGetShopBounds(lane, out _)) continue;
+            if (!TryGetShopBounds(lane, out _))
+            {
+                if (waited == 10f)
+                {
+                    var sb = new System.Text.StringBuilder();
+                    foreach (MonoBehaviour b in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
+                        if (b is ILaneShop) sb.Append(b.name).Append('<').Append(b.transform.parent != null ? b.transform.parent.name : "-").Append("> ");
+                    Debug.Log($"[카메라] 상점 탐색 진단(레인 {lane.LaneIndex}): {sb}");
+                }
+                continue;
+            }
             FocusOnLocalLane();
             yield break;
         }
