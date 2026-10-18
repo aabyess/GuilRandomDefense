@@ -9,6 +9,7 @@ COPIED, MISSING = [], []
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import mdx_anim, mdx_geo, w3a, w3u                                            # noqa: E402
+import pre2_unity as P2                                              # noqa: E402  (입자 목록은 model_pull·vfx_unity_block과 같은 함수)
 from mpqread import Archive                                          # noqa: E402
 H = os.path.expanduser("~"); OUT = H + "/grd/GRD_scenes/scripts"; os.makedirs(OUT, exist_ok=True)
 T = H + "/grd/GRD_orig_vfx_trial"
@@ -32,27 +33,11 @@ def model_block(name):
     if not folder: b["note"] = "워크3 기본 모델(맵에 없음) — 변환 불가, 우리 쪽 자체 메시/프리팹으로 대체"; return b
     jd = json.load(open(f"{T}/{t}/{t}.json")); src = next((p for p in (H + f"/grd/GRD_motion_trial/{w}/work/" + jd["model"] for w in ("original_vfx", "transcend_vfx", "grade_extra", "original_skin", "s2_skin")) if os.path.exists(p)), None)
     raw = open(src, "rb").read(); info = mdx_anim.describe(raw); geo = mdx_geo.parse(raw); workd = os.path.dirname(src)
-    def stand_seq():
-        for sq in info["sequences"]:
-            if "stand" in sq["name"].lower(): return sq
-        return info["sequences"][0] if info["sequences"] else dict(name="(없음)", start=0, end=1000)
-    ss = stand_seq(); b["playSequence"] = dict(name=ss["name"], startMs=ss["start"], endMs=ss["end"], note="spawn에 anim이 없으면 이 시퀀스(stand, 없으면 첫 시퀀스)가 돈다. pre2[].tracks.keysMsAbs에서 startMs를 빼면 시퀀스 상대 시간")
+    ss = P2.stand_seq(info); b["playSequence"] = dict(name=ss["name"], startMs=ss["start"], endMs=ss["end"], note="spawn에 anim이 없으면 이 시퀀스(stand, 없으면 첫 시퀀스)가 돈다. pre2[].tracks.keysMsAbs에서 startMs를 빼면 시퀀스 상대 시간")
     b["sequencesMs"] = [dict(name=s["name"], start=s["start"], end=s["end"], loop=s["looping"]) for s in info["sequences"]]
     b["meshCount"] = len(jd["meshes"]); b["jsonPath"] = f"~/grd/GRD_orig_vfx_trial/{t}/{t}.json"
-    pre = []
-    for p in info["pre2"]:
-        n = p["node"]; piv = info["pivots"][n["id"]] if n["id"] < len(info["pivots"]) else [0, 0, 0]
-        tp = geo["textures"][p["tex"]]["path"] if p["tex"] < len(geo["textures"]) else ""
-        png = tp.replace("\\", "_").replace("/", "_") + ".png" if tp else ""
-        if png and not os.path.exists(f"{T}/{t}/Textures/{png}") and os.path.exists(f"{workd}/_tex/{png}"):
-            os.makedirs(f"{T}/{t}/Textures", exist_ok=True); shutil.copy(f"{workd}/_tex/{png}", f"{T}/{t}/Textures/{png}"); COPIED.append(f"{t}/{png}")
-        if png and not os.path.exists(f"{T}/{t}/Textures/{png}"): MISSING.append(f"{t}/{png}")
-        d = dict(textureFile=png or None, textureSourcePath=tp, sequenceStartMs=ss["start"], node=n["name"], nodeFlags=n.get("flags"), parentId=n.get("parent"), pivot=list(piv), speed=p["speed"], variation=p["variation"], latitude=p["latitude"], gravity=p["gravity"], lifespanSec=p["lifespan"],
-                 emissionRate=p["rate"], width=p["width"], length=p["length"], filterMode={0: "blend", 1: "additive", 2: "modulate", 3: "modulate2x", 4: "alphakey"}.get(p["filter"], p["filter"]), rows=p["rows"], cols=p["cols"],
-                 headOrTail={0: "head", 1: "tail", 2: "both"}.get(p["head"], p["head"]), tailLength=p["tail_len"], midTime=p["mid"], colorsRGB01=p["colors"], alpha255=p["alpha"], scale3=p["scale"], squirt=p["squirt"], textureIndex=p["tex"],
-                 tracks={k: dict(interp=v.get("interp"), keysMsAbs=[[x[0], list(x[1])] for x in v["keys"]]) for k, v in p["tracks"].items()})
-        pre.append(d)
-    b["pre2"] = pre; b["pre2Note"] = "keysMsAbs = MDX 전체 시간 ms(시퀀스 start 기준으로 빼서 쓸 것). KP2E=방출률 KP2V=가시(0/1) KP2S=속도 KP2G=중력 KP2L=위도 KP2W/N=폭/길이 …. 모델 공간/월드 공간 구분 비트는 nodeFlags에 있다(원작은 거의 월드 공간 = 부모를 따라가지 않음)"
+    pre = P2.pre2_entries(info, geo, f"{T}/{t}", workd, ss["start"], COPIED, MISSING, t)
+    b["pre2"] = pre; b["pre2Note"] = P2.NOTE
     return b
 
 SPAWN = lambda t, id, d, at, **k: {**dict(t=round(t, 3), op="spawn", id=id), **d, "at": at, **k}

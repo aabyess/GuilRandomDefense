@@ -7,6 +7,7 @@
           <출력루트>/_work/  (mdx_extract 결과: mdx + _tex + _approx.json)
   - 스킬 이펙트 → ~/grd/GRD_skill_vfx/   유닛·구조물 → ~/grd/GRD_s2_models/
   - 텍스처 BLP 는 blp_decode.decode 로 풀린다(JPEG 알파 함정 회피). 맵 밖 워크3 기본 텍스처는 approx 표시.
+  - 끝에 vfx_unity_block.py를 돌려 json에 unity(OriginalVfxBuilder)·pre2Unity(Pre2Builder) 블록을 붙이고 입자 텍스처를 Textures/로 복사한다.
   - 후속 검수: Tools/blender 의 skin 검수 도구(check_entries 등) — 유닛은 swap_refix_all 와 같은 규칙.
   - 🔴 원작 저작물 — Assets 반입은 PM·사장님 판단.
 """
@@ -66,6 +67,8 @@ def main():
         print("OK" if os.path.exists(os.path.join(out, base, base + ".fbx")) else "FBX 없음", n)
     for n in miss:
         print("맵에 없음", n)
+    if ok:   # 유니티 반입 블록(unity·pre2Unity) + 입자 텍스처 복사 — Tools/w3x/vfx_unity_block.py
+        subprocess.run([sys.executable, HERE + "/vfx_unity_block.py", out], check=True, stdout=subprocess.DEVNULL)
 
 
 if __name__ == "__main__":
