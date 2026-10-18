@@ -478,6 +478,12 @@ public class NetPlayer : NetworkBehaviour
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_Transfer(byte kind, int amount, sbyte target)
+    {
+        NetCommands.ExecuteTransfer(this, kind, amount, target);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     public void RPC_Chat(string text)
     {
         NetCommands.ExecuteChat(this, text);

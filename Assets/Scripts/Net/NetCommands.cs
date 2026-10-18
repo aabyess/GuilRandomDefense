@@ -464,6 +464,19 @@ public static class NetCommands
         Debug.Log($"[MP] 일시정지 {(pause ? "멈춤" : "재개")}: 슬롯 {slot} {who}");
     }
 
+    /// <summary>클라: 자원 전송(S2 「-골드 N」) 요청 — 표적 슬롯은 이 PC 선택에서, 검사는 호스트.</summary>
+    public static void RequestTransfer(ResourceTransfer.Kind kind, int amount, int targetSlot)
+    {
+        if (NetPlayer.Local == null) return;
+        NetPlayer.Local.RPC_Transfer((byte)kind, amount, (sbyte)targetSlot);
+    }
+
+    public static void ExecuteTransfer(NetPlayer sender, byte kind, int amount, sbyte target)
+    {
+        string err = ResourceTransfer.ExecuteOnAuthority(sender.Slot, target, (ResourceTransfer.Kind)kind, amount);
+        if (err != null) PlayerNotification.ShowFailure(sender.Slot, "<color=#FF0000>[오류]</color> " + err, 5f);
+    }
+
     /// <summary>클라: 채팅 한 줄을 호스트로(대기실·게임 모두). 연타는 보내는 쪽(PlayerChat.AllowLocalSend)에서 먼저 막는다.</summary>
     public static void RequestChat(string text)
     {

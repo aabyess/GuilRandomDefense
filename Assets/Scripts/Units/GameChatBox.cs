@@ -117,6 +117,21 @@ public class GameChatBox : MonoBehaviour
             return;
         }
 
+        // S2 자원 전송: 「-골드 N」「-목재 N」 — 고른 유닛의 주인에게. 표적은 이 PC의 선택이라 여기서 정하고, 판정은 호스트.
+        if (ResourceTransfer.TryParse(text, out ResourceTransfer.Kind xferKind, out int xferAmount))
+        {
+            int target = ResourceTransfer.SelectedOwner();
+            if (xferAmount <= 0) { ShowStatus("전송량은 1 이상이어야 합니다."); return; }
+            if (target < 0 || target == local.PlayerId) { ShowStatus("자원을 받을 다른 플레이어의 유닛을 선택하세요."); return; }
+            if (GameAuthority.IsServer)
+            {
+                string err = ResourceTransfer.ExecuteOnAuthority(local.PlayerId, target, xferKind, xferAmount);
+                if (err != null) ShowStatus(err);
+            }
+            else NetCommands.RequestTransfer(xferKind, xferAmount, target);
+            return;
+        }
+
         // 10-03 「시야 N」 카메라 줌 — 이 PC 화면만 바꾸니 호스트로 안 보내고 말로도 안 뿌린다.
         string sight = RtsCameraController.TryHandleSightChat(text);
         if (sight != null)
