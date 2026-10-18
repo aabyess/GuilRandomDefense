@@ -18,6 +18,7 @@ using UnityEngine.SceneManagement;
 ///   -mpHost | -mpJoin        바로 방 만들기/참가
 ///   -mpSolo                  바로 「혼자 하기」
 ///   -mpSaveDir 폴더           세이브 폴더(같은 PC 두 창이 같은 player_0.json을 안 쓰게) — 테스트용
+///   -mpTestClear 초          (호스트) 그 초에 실제 클리어 끝맺음(RoundManager.TestForceClear: 클리어 베리·ClearRewardHook·유닛 클리어·FinishRun(true)·클라 세이브 RPC)
 ///   -mpTestFinishRun 초      (호스트) 그 초에 살아 있는 전원 +5점 뒤 FinishRun(클리어 아님) — 판 끝 세이브 경로 확인용
 ///   -mpSession 코드           방 코드(호스트는 발급 대신 이 코드로 연다)
 ///   -mpRegion 지역            Photon 지역(기본 kr) — 방장과 친구가 같아야 서로 보인다
@@ -150,6 +151,7 @@ public class NetLauncher : MonoBehaviour
     float testCommandsDelay = -1f;
     float testEconomyDelay = -1f;
     float testFinishRunDelay = -1f;
+    float testClearDelay = -1f;
     float camWispDelay = -1f;
     float testPortraitsDelay = -1f;
     string testPortraitsDir;
@@ -233,6 +235,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpSolo": solo = true; break;
                 case "-mpSaveDir": PersistentSave.SaveRootOverride = Arg(i + 1); break;
                 case "-mpTestFinishRun": testFinishRunDelay = Seconds(i + 1); break;
+                case "-mpTestClear": testClearDelay = Seconds(i + 1); break;
                 case "-mpCamWisp": camWispDelay = Seconds(i + 1); break;
                 case "-mpToken": cliToken = Arg(i + 1); break;
                 case "-mpTestGap": testGapDelay = Seconds(i + 1); break;
@@ -793,6 +796,7 @@ public class NetLauncher : MonoBehaviour
         if (testBerserkDelay >= 0f) { var bt = gameObject.AddComponent<NetBerserkTest>(); bt.startAt = testBerserkDelay; }
         if (testMainDelay >= 0f) { var mt = gameObject.AddComponent<NetMainTest>(); mt.startAt = testMainDelay; mt.shotPrefix = testMainShot; }
         if (testFinishRunDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestFinishRunAfter(testFinishRunDelay));
+        if (testClearDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestClearAfter(testClearDelay));
         LogSeatAtGameScene();
         if (camWispDelay >= 0f) StartCoroutine(CamWispAfter(camWispDelay));
         if (GameAuthority.IsServer && (testNoticesDelay >= 0f || testGapDelay >= 0f))
@@ -1392,6 +1396,15 @@ public class NetLauncher : MonoBehaviour
             context.PersistentSave.FinishRun(false);
             Debug.Log($"[MP] 테스트 판 끝: 슬롯 {context.PlayerId} +5점 FinishRun");
         }
+    }
+
+    IEnumerator TestClearAfter(float seconds)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        RoundManager round = FindFirstObjectByType<RoundManager>();
+        if (round == null) { Debug.LogWarning("[MP] -mpTestClear: RoundManager 없음"); yield break; }
+        Debug.Log("[MP] 테스트 클리어: TestForceClear");
+        round.TestForceClear();
     }
 
     IEnumerator CamWispAfter(float seconds)

@@ -465,6 +465,15 @@ public class RoundManager : MonoBehaviour
     /// <summary>클리어 판에서 플레이어마다 FinishRun(세이브 쓰기) 직전에 부른다 — 클리어 때 주는 세이브 보상(베리·기록)을 여기 건다.</summary>
     public static event System.Action<PlayerContext> ClearRewardHook;
 
+    /// <summary>빌드 시험용(-mpTestClear): 마지막 라운드를 깬 것과 같은 클리어 끝맺음(공지·베리·클리어 기록·세이브)을 지금 탄다. 호스트만.</summary>
+    public void TestForceClear()
+    {
+        if (isGameOver) return;
+        isGameOver = true;
+        AnnounceClear();
+        FinishPersistentSave(cleared: true);
+    }
+
     void FinishPersistentSave(bool cleared)
     {
         foreach (PlayerContext context in PlayerContext.Occupied)
