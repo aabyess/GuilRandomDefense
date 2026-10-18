@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -72,6 +73,22 @@ public class RtsCameraController : MonoBehaviour
         WidenBoundsToMap();
         CalibrateViewHeights();
         FocusOnLocalLane();
+        StartCoroutine(RefocusWhenShopsAppear());
+    }
+
+    // 상점 건물이 Start 뒤에 서면(10-19 실측: 시작 구도 로그 「상점 못 찾음」) 가로 여백이 안 들어간다 — 처음 나타났을 때 한 번만, 아직 손 안 댔으면 다시 잡는다.
+    IEnumerator RefocusWhenShopsAppear()
+    {
+        LaneMarker lane = LaneMarker.Get(LocalPlayer.LocalPlayerId);
+        if (lane == null || TryGetShopBounds(lane, out _)) yield break;
+        for (float waited = 0f; waited < 30f; waited += 0.25f)
+        {
+            yield return new WaitForSecondsRealtime(0.25f);
+            if (CurrentSpeed > 0.01f) yield break;   // 사용자가 카메라를 움직였다 — 건드리지 않는다(시작 구도는 게임이 스스로 다시 잡아 위치가 조금씩 바뀐다)
+            if (!TryGetShopBounds(lane, out _)) continue;
+            FocusOnLocalLane();
+            yield break;
+        }
     }
 
     // 맵 S2 카피(10-19) 안전망: 이동 범위(boundsMin/Max)는 씬에 박힌 값(MapGenerator.SetUpCamera가 생성 때 씀)이라, 맵을 다시 생성하지 않고 섬이 더 커지면 옛 범위에 잘린다.
@@ -281,7 +298,8 @@ public class RtsCameraController : MonoBehaviour
         bool hasPen = TryGetPenBounds(lane, out Bounds pen);
         if (hasPen) region.Encapsulate(pen);
         // 상점 건물이 레인 옆(서쪽 열 등)에 서면 섬+우리 밖이라 화면 밖에 선다 — 가로 폭만 상점까지 넓힌다(앞뒤 z는 그대로 — 지금 맵처럼 우리 아래 줄이면 아무것도 안 바뀐다).
-        if (TryGetShopBounds(lane, out Bounds shops))
+        bool hasShops = TryGetShopBounds(lane, out Bounds shops);
+        if (hasShops)
         {
             Vector3 lo = region.min, hi = region.max;
             // 바깥쪽(서쪽) 끝 건물이 화면 가장자리에 걸려 잘리지 않게 건물 폭의 절반쯤 여백(10-19 ui_상점열_이름표 사진: 영원함 강화소가 잘림).
@@ -340,7 +358,7 @@ public class RtsCameraController : MonoBehaviour
         transform.position = clamped;
         targetHeight = transform.position.y;
 
-        string report = $"[카메라] 레인 {lane.LaneIndex} 시작 구도 — 섬{(hasPen ? "+우리" : "(우리 못 찾음)")} z {region.min.z:F0}~{region.max.z:F0} · " +
+        string report = $"[카메라] 레인 {lane.LaneIndex} 시작 구도 — 섬{(hasPen ? "+우리" : "(우리 못 찾음)")} x {region.min.x:F0}~{region.max.x:F0}{(hasShops ? "(상점 열 포함)" : "(상점 못 찾음)")} z {region.min.z:F0}~{region.max.z:F0} · " +
                         $"보이는 띠 뷰포트 {bottom:F2}~{top:F2}({hudSource}) · 높이 {transform.position.y:F0} · 위치 {transform.position} · 반복 {iteration + 1}";
         if (!converged || clamped != unclamped)
             Debug.LogWarning(report + (converged ? "" : $" — ⚠️ {FrameIterations}번 안에(또는 최대 높이 {maxHeight:F0}에서) 다 못 담았다") +
@@ -378,12 +396,19 @@ public class RtsCameraController : MonoBehaviour
             Transform building = behaviour.transform;
             while (building != null && !building.name.StartsWith(prefix)) building = building.parent;
             if (building == null) continue;
+            // 맵 S2: 컴포넌트가 붙은 「LaneN_이름」 오브젝트엔 렌더러가 없고 모양은 형제(「…_모양」)에 있다 — 그 경우 건물 위치를 건물 폭(간격 72)만큼 부풀려 쓴다.
+            bool drawn = false;
             foreach (Renderer r in building.GetComponentsInChildren<Renderer>())
             {
                 if (!(r is MeshRenderer || r is SkinnedMeshRenderer) || !r.enabled) continue;
+                drawn = true;
                 if (!any) { bounds = r.bounds; any = true; }
                 else bounds.Encapsulate(r.bounds);
             }
+            if (drawn) continue;
+            Bounds point = new Bounds(building.position, new Vector3(72f, 1f, 72f));
+            if (!any) { bounds = point; any = true; }
+            else bounds.Encapsulate(point);
         }
         return any;
     }
