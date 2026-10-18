@@ -193,6 +193,7 @@ def convert(name):
     pbs = {nid: arm.pose.bones[bname[nid]] for nid in order}
     rest = {nid: arm_d.bones[bname[nid]].matrix_local.copy() for nid in order}
     actions = []
+    last_ok = {}
     seqs = info["sequences"] or [dict(name="stand", start=0, end=1000, looping=True)]
     for si, seq in enumerate(seqs):
         seq["name"] = f"s{si}_" + "".join(c if (c.isascii() and (c.isalnum() or c in "_-")) else "" for c in seq["name"].encode("latin1", "ignore").decode("gbk", "ignore") or "")[:24]
@@ -223,6 +224,11 @@ def convert(name):
                     basis = (rest[par].inverted() @ rest[nid]).inverted() @ pose[par].inverted() @ pose[nid]
                 else:
                     basis = rest[nid].inverted() @ pose[nid]
+                if not all(math.isfinite(x) for row in basis for x in row):   # 뼈 휴식 행렬이 특이하면 역행렬이 NaN → 이전 프레임(없으면 단위)로 대체(유니티 「invalid numbers (NANs)」 방지)
+                    print("  NaN 포즈 → 대체:", bname[nid], seq["name"], fi)
+                    basis = last_ok.get(nid, Matrix.Identity(4))
+                else:
+                    last_ok[nid] = basis.copy()
                 l, r, s = basis.decompose()
                 pb = pbs[nid]
                 pb.rotation_mode = "QUATERNION"

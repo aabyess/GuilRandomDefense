@@ -102,11 +102,90 @@ def ability_view(aid, AB, AS):
     head = re.split(r'◎', uber)[0].strip(' /')
     # ◎ 앞의 굵은 소제목(「패기 발산」 등)이 있으면 그것도 살린다
     desc = ' · '.join(p.replace(' / ', ' ') for p in parts) if parts else head
-    ui_only = nm.startswith(('창고로 이동', '특성강화', '유닛 판매', '판매')) or uber.startswith('사용시 유닛을 창고')
+    ui_only = nm.startswith(('창고로 이동', '특성강화', '유닛 판매', '판매', '유닛 모으기')) or uber.startswith('사용시 유닛을 창고')
     tag_only = ui_only or a['name'].startswith('[') or a['name'] in ('판매',) or uber.startswith('◈') or (not uber and not a['tip']) or (a['name'].startswith(('@', '#')) and not uber) or (a['base'] in TAG_ONLY_BASES and not uber)
     if not desc and not tag_only:
         desc = '설명 미확정'
     return dict(id=aid, name=nm or aid, desc=desc, base=a['base'], tag_only=tag_only, raw_name=a['name'], art=a['art'], data=a['data'])
+
+
+# ───────────────────────── 툴팁 → 보스 1기 기준 스킬 기대 피해(대략) ─────────────────────────
+
+def kor_num(s):
+    """「45만」「3만 5000」「180만」「1억」「70,000」 → 수."""
+    s = s.replace(',', '')
+    total, m = 0.0, re.findall(r'(\d+(?:\.\d+)?)\s*(억|만)?', s)
+    for v, unit in m:
+        total += float(v) * (1e8 if unit == '억' else 1e4 if unit == '만' else 1)
+    return total
+
+
+def skill_expect_per_attack(uber, atk, boss_hp):
+    """툴팁 문장에서 (확률, 피해) 짝을 찾아 평타 1회당 기대 추가 피해(보스 1기 기준)를 낸다. 못 읽는 문장은 0으로 둔다(지어내지 않음)."""
+    total = 0.0
+    p = None
+    for seg in re.split(r'◎', uber):
+        m = re.search(r'공격시\s*(\d+(?:\.\d+)?)%\s*확률', seg)
+        if m:
+            p = float(m.group(1)) / 100
+        m = re.search(r'발동조건\s*:\s*마나\s*(\d+)', seg)
+        if m:
+            p = 1.0 / max(1.0, float(m.group(1)))
+        crit = re.search(r'(\d+(?:\.\d+)?)%\s*확률로\s*(\d+(?:\.\d+)?)배\s*크리티컬(?:\s*및\s*([\d만억\s,]+)\s*마법데미지)?', seg)
+        if crit:
+            cp = float(crit.group(1)) / 100
+            total += cp * ((float(crit.group(2)) - 1) * atk + (kor_num(crit.group(3)) if crit.group(3) else 0))
+            continue
+        m = re.search(r'데미지\s*:\s*(.+)', seg)
+        if m and p:
+            txt = m.group(1)
+            if '보스' in uber and '적용 X' in uber and ('현재체력' in txt or '최대체력' in txt):
+                continue
+            dmg = 0.0
+            hpm = re.search(r'(?:전체|최대)체력\s*(\d+(?:\.\d+)?)%', txt)
+            if hpm:
+                dmg += boss_hp * float(hpm.group(1)) / 100
+                txt = txt[:hpm.start()] + txt[hpm.end():]
+            per_sec = '초당' in txt
+            for part in re.split(r'\+', txt):
+                part = re.sub(r'\(x[\d.]+~[\d.]+\)', '', part)
+                mult = re.search(r'\(x([\d.]+)~([\d.]+)\)', m.group(1))
+                v = kor_num(re.sub(r'[^\d만억\s,.]', ' ', part.split('데미지')[0]))
+                if mult:
+                    v *= (float(mult.group(1)) + float(mult.group(2))) / 2
+                dmg += v
+            if per_sec:
+                dur = re.search(r'지속시간\s*:\s*(\d+(?:\.\d+)?)초', uber)
+                dmg *= float(dur.group(1)) if dur else 1
+            total += p * dmg
+    return total
+
+
+def current_skill_dps(skills, atk, spd, boss_hp):
+    """지금 SkillData의 피해 효과로 보스 1기 기준 기대 DPS(대략: 확률·게이지·쿨만, 조건·범위 수·버프 무시)."""
+    tot = 0.0
+    for s in skills:
+        lv = (s.get('levels') or [{}])[0]
+        dmg = 0.0
+        for e in lv.get('effects') or []:
+            if e.get('kind') != 0 or e.get('requiredTargetBuffId'):
+                continue
+            tc, tv = e.get('targetCondition', 0), e.get('targetConditionValue', 0)
+            pv = 200   # 보스 포인트값(원작 보스 분기 PV≥200)
+            if tc and not {1: pv < tv, 2: pv == tv, 3: pv >= tv, 4: pv != tv}.get(tc, True):
+                continue
+            m, b, basis = e.get('multiplier') or 0, e.get('bonus') or 0, e.get('basis', 0)
+            rnd = ((e.get('randMin') or 1) + (e.get('randMax') or 1)) / 2
+            v = {0: m * rnd, 1: boss_hp * m, 2: boss_hp * m * 0.5, 3: atk * m + b, 13: boss_hp * m * 0.5}.get(basis, 0)
+            dmg += v * (e.get('chance') or 1) * max(1, e.get('hitCount') or 1)
+        trig = s.get('triggerType', 0)
+        if trig == 0:
+            tot += dmg * (lv.get('triggerChance') or 0) * spd
+        elif trig == 3:
+            tot += dmg / max(1, lv.get('hitCountThreshold') or 1) * spd
+        elif trig == 1 and lv.get('cooldown'):
+            tot += dmg / lv['cooldown']
+    return tot
 
 
 # ───────────────────────── 이펙트(원작 아트) ─────────────────────────
@@ -139,6 +218,10 @@ def j_index(units_s2):
     return amap, umap
 
 
+FOUND_PATH = {}   # 모델 이름(소문자) → S2 MPQ 안 실제 경로(model_pull.py s2 인자)
+RAW_PATH = {}     # 모델 이름(소문자) → 원작 필드·트리거에 적힌 경로
+
+
 def model_status_factory(arch):
     ours = set()
     base = os.path.join(ROOT, 'Assets', 'Art', 'Effects', 'Original')
@@ -155,6 +238,7 @@ def model_status_factory(arch):
         p = path.replace('\\\\', '\\')
         stem = os.path.splitext(os.path.basename(p.replace('\\', '/')))[0]
         key = stem.lower()
+        RAW_PATH.setdefault(key, p)
         if key in cache:
             return cache[key]
         in_map = False
@@ -162,6 +246,7 @@ def model_status_factory(arch):
             try:
                 if arch.read(c):
                     in_map = True
+                    FOUND_PATH[key] = c
                     break
             except Exception:
                 pass
@@ -276,12 +361,14 @@ def main():
         spec = [s for s in skills if s['_file'].startswith(('SkillData_사장님_', 'SkillData_공용_'))]
         ids = [i for i in a.get('stat_ids', []) if i in Uu]
         cur_vfx = sorted({k for g in sguid for k in vfx_now.get(g, [])})
+        cur_skill_dps = current_skill_dps(skills, d['attackPower'], d['attackSpeed'], 10600000 * 8.25)
+        cur_spec_dps = current_skill_dps(spec, d['attackPower'], d['attackSpeed'], 10600000 * 8.25)
         recs.append(dict(
             file=f, name=d['unitName'], grade=d['grade'], grade_name=EX.GRADE.get(d['grade'], '초월위습' if d['grade'] == 13 else str(d['grade'])),
             atk=d['attackPower'], spd=d['attackSpeed'], dps=d['attackPower'] * d['attackSpeed'], rng=d['attackRange'],
             stat_ids=a.get('stat_ids', []), s2_stat_ids=ids, owner_ids=a.get('skill_owner_ids', []), how=a.get('how', ''),
             skills=[EX.clean_skill_name(s['skillName']) for s in skills], spec=len(spec), spec_names=[EX.clean_skill_name(s['skillName']) for s in spec],
-            vfx_now=cur_vfx, n_vfx=sum(1 for g in sguid if vfx_now.get(g)), n_skills=len(skills)))
+            vfx_now=cur_vfx, n_vfx=sum(1 for g in sguid if vfx_now.get(g)), n_skills=len(skills), cur_skill_dps=cur_skill_dps, cur_spec_dps=cur_spec_dps))
 
     for r in recs:
         best = None
@@ -347,6 +434,14 @@ def main():
         claimed[pick] = r['file']
         result[r['file']] = (pick, '새로', why + ' · 미사용 원작 중 DPS가 가장 가까운 것')
 
+    # 적용(10-18) 뒤엔 대응을 고정한다 — 다시 돌릴 때 바뀐 로스터 수치로 DPS 근접 고르기가 달라지지 않게(S2_ROSTER_MAP이 정본).
+    lock = sorted(glob.glob(ROOT + '/Docs/reference/S2_ROSTER_MAP_*.csv'))
+    if lock:
+        for row in csv.DictReader(open(lock[-1], encoding='utf-8-sig')):
+            if row['S2 원작 id'] and row['로스터'] in result:
+                old = result[row['로스터']]
+                result[row['로스터']] = (row['S2 원작 id'], old[1], old[2])
+
     # ── 행 만들기 ──
     rows, skill_rows, fx = [], [], defaultdict(lambda: dict(users=set(), status=None, where=None))
     for r in sorted(recs, key=lambda r: (EX.GRADE_ORDER.index(r['grade']) if r['grade'] in EX.GRADE_ORDER else 99, r['file'])):
@@ -358,6 +453,8 @@ def main():
         owners_txt = ', '.join(uname(i) for i in r['owner_ids']) if r['owner_ids'] else ('사양 스킬뿐' if r['spec'] else '스킬 없음')
         if not u:
             change = '대응 없음'
+        elif how == '유지' and r['n_skills'] == 0 and real:
+            change = '스킬 추가'
         elif how == '유지':
             other = [i for i in r['owner_ids'] if i.upper() != (r['cur'] or '').upper() and not i.upper().startswith('E')]
             change = '스킬만 바뀜' if (other or not r['owner_ids']) and r['spec'] < r['n_skills'] else '유지'
@@ -385,6 +482,9 @@ def main():
         elif u:
             diff = 'S2 신규 원작(옛 판에 없음)'
         new_dps = s2dps(new) if u else 0.0
+        BOSS = 10600000 * 8.25
+        skill_per_atk = sum(skill_expect_per_attack(D.ability_info(a['id'], AB, AS)['uber'], u['atk'], BOSS) for a in real) if u else 0.0
+        skill_dps = (skill_per_atk / u['cool']) if u and u['cool'] else 0.0
         if u and u['atk'] < 100 and r['atk'] > 1000:
             why = (why + ' · ' if why else '') + 'S2에서 평타 %s(스킬로 싸우는 유닛) — 공격력이 사실상 0이 됨' % fmt(u['atk'])
         stat_txt = ('%s / 공속 %.3f(주기 %.2f) / %s%s · 사거리 %d · 마나 %d' % (fmt(u['atk']), 1 / u['cool'] if u['cool'] else 0, u['cool'], u['atk_type'],
@@ -409,12 +509,17 @@ def main():
                 fx_rows.append((a['name'], k, stem, where, st))
                 fx[stem]['users'].add('%s/%s' % (r['name'], a['name']))
                 fx[stem]['status'], fx[stem]['where'] = st, where
+                fx[stem].setdefault('files', set()).add(r['file'])
+                rg = re.findall(r'범위 : ([^·]+)', a['desc'])
+                if rg:
+                    fx[stem].setdefault('ranges', set()).add('%s: %s' % (a['name'], rg[0].strip()))
             skill_rows.append(dict(grade=r['grade_name'], name=r['name'], file=r['file'], orig=uname(new), aid=a['id'], sname=a['name'], desc=a['desc'], base=a['base'],
                                    fx='; '.join('%s:%s(%s)' % (k, s, st) for (sn, k, s, w, st) in fx_rows if sn == a['name']) or '없음'))
         for m in sorted(unit_models):
             stem, st, where = mstatus(m)
             fx[stem]['users'].add('%s/(유닛 트리거)' % r['name'])
             fx[stem]['status'], fx[stem]['where'] = st, where
+            fx[stem].setdefault('files', set()).add(r['file'])
         fx_summary = Counter(st.split('(')[0] for (_, _, _, _, st) in fx_rows)
         fx_txt = ' · '.join('%s %d' % (k, v) for k, v in fx_summary.items()) if fx_rows else ('원작 아트 필드 없음' if u else '')
         rows.append(dict(
@@ -422,11 +527,12 @@ def main():
             cur_skill=owners_txt + (' + 사양 %d' % r['spec'] if r['spec'] and r['owner_ids'] else ''), new=uname(new) if u else '-',
             new_stat=stat_txt, new_skills=skills_txt, change=change, how=how, spec=spec_txt, note=why, diff=diff,
             cur_atk=r['atk'], cur_dps=r['dps'], new_atk=u['atk'] if u else 0.0, new_dps=new_dps, new_grade_src=(u['grade'] + ' · ' + u['grade_src']) if u else '',
-            fx=fx_txt, vfx_now=', '.join(r['vfx_now']) or '없음', n_real=len(real)))
+            fx=fx_txt, vfx_now=', '.join(r['vfx_now']) or '없음', n_real=len(real), skill_dps=skill_dps, cur_skill_dps=r['cur_skill_dps'], cur_spec_dps=r['cur_spec_dps']))
 
     json.dump(rows, open(os.path.join(OUT, 'rematch.json'), 'w'), ensure_ascii=False, indent=1)
     write_xlsx(rows, skill_rows, fx, pool, claimed, U)
     write_md(rows, pool, claimed, U)
+    write_blender_csv(rows, fx)
     print(json.dumps({'rows': len(rows), 'skills': len(skill_rows), 'fx_models': len(fx), 'change': Counter(r['change'] for r in rows),
                       'how': Counter(r['how'] for r in rows)}, ensure_ascii=False, default=str))
 
@@ -462,6 +568,50 @@ def write_xlsx(rows, skill_rows, fx, pool, claimed, U):
     EX.save(wb, os.path.join(OUT, '재매칭_제안.xlsx'))
 
 
+def write_blender_csv(rows, fx):
+    """blender 작업 목록(사장님 10-18 「원작 스킬 이펙트 가져오기」): 이미 들어온 것은 빼고 ①꺼내기만 ②손질 ③제작, 미확정 로스터에만 쓰이면 「보류」."""
+    hold_files = {r['file'] for r in rows if r['how'] in ('중복', '대응 없음') or 'S2에서 평타' in r['note']}
+    old_mpq = os.path.expanduser('~/grd/GRD_motion_trial/_work/ord.mpq')
+    old = D.Archive(old_mpq) if os.path.exists(old_mpq) else None
+
+    def in_old(stem):
+        if old is None:
+            return ''
+        for c in (stem + '.mdx', 'war3mapImported\\' + stem + '.mdx'):
+            try:
+                if old.read(c):
+                    return c
+            except Exception:
+                pass
+        return ''
+    out = []
+    for stem, v in fx.items():
+        st = v['status']
+        if st.startswith('이미') or stem in ('_', '-', ''):
+            continue
+        group = '① 꺼내기만' if st.startswith('꺼내기만') else ('② 꺼내면 깨짐 손질' if st.startswith('꺼내도') else '③ 없음 제작')
+        files = v.get('files', set())
+        hold = bool(files) and files <= hold_files
+        key = stem.lower()
+        src = 's2' if key in FOUND_PATH else ''
+        if not src and v['where'] != '기본 War3':
+            op = in_old(stem)
+            if op:
+                src = 'old'
+                FOUND_PATH[key] = op
+                if group == '③ 없음 제작':
+                    group = '① 꺼내기만'
+        out.append(('보류(매칭 미확정)' if hold else group, stem, FOUND_PATH.get(key) or RAW_PATH.get(key, ''), src or ('기본 War3(맵 밖)' if v['where'] == '기본 War3' else '맵에 없음'),
+                    st, '; '.join(sorted(v['users'])), '; '.join(sorted(v.get('ranges', set()))) or '(툴팁에 범위 없음)', ', '.join(sorted(files))))
+    order = {'① 꺼내기만': 0, '② 꺼내면 깨짐 손질': 1, '③ 없음 제작': 2, '보류(매칭 미확정)': 3}
+    out.sort(key=lambda x: (order[x[0]], x[1].lower()))
+    with open(os.path.join(OUT, 'effects_for_blender.csv'), 'w', encoding='utf-8-sig', newline='') as f:
+        w = csv.writer(f)
+        w.writerow(['묶음', '모델 이름', '원작 경로(model_pull.py 인자)', 'model_pull 판(s2|old)', '상태', '쓰는 유닛/스킬', '툴팁 범위(크기 맞출 때)', '로스터 파일'])
+        w.writerows(out)
+    return Counter(x[0] for x in out)
+
+
 def write_md(rows, pool, claimed, U):
     import math
     L = ['# S2 2.323 재매칭 제안 요약 (1단계 · 읽기 전용)', '', '기준 커밋 %s · 정본: Tools/w3x/원본_S2_2.323(슬크·툴팁) · 표: 재매칭_제안.xlsx' % EX.git_head(), '']
@@ -476,7 +626,12 @@ def write_md(rows, pool, claimed, U):
     L += ['', '### 랜덤 %d기 — S2 「랜덤전용」 원작은 평타가 18 안팎(스킬로 싸우는 유닛)이라 공격력이 사실상 0이 됨' % len(weak), '',
           'S2에서 옛 「랜덤전용[제한됨]」은 「신비」 등급이 됐다. 같은 신비 원작을 우리 랜덤·다른세계가 나눠 쓰고 있어, 한 원작 = 한 로스터 원칙으로 **다른세계에 신비를 주고 랜덤은 남는 「랜덤전용」 원작으로** 보냈다.',
           '다른 길: (가) 랜덤 쪽이 지금처럼 신비를 쓰고 다른세계가 비켜 줌(다른세계 원작 부족) (나) 랜덤은 중복을 허용해 지금 원작 유지 (다) 이 표대로.', '']
-    L += ['- %s: 지금 공격력 %s → %s(%s)' % (r['roster'], fmt(r['cur_atk']), fmt(r['new_atk']), r['new']) for r in weak]
+    L += ['**사장님 결정(10-18): (다) 원작대로 — S2 랜덤전용 원작 + 그 원작의 확률 스킬(툴팁 수치 그대로).** 스킬이 실제로 붙어야 싸운다.', '',
+          '평타 + 스킬 기대 DPS(보스 1기 기준, 툴팁의 확률×피해만 — 범위 타격 수·스턴·증폭·소환·쿨 스킬은 뺀 대략값, 못 읽는 문장은 0):', '',
+          '| 로스터 | 새 원작 | 지금 DPS(평타) | 새 평타 DPS | 새 스킬 기대 DPS | 새 합 | 지금 대비 |', '|---|---|---:|---:|---:|---:|---:|']
+    for r in weak:
+        tot = r['new_dps'] + r['skill_dps']
+        L.append('| %s | %s | %s | %s | %s | %s | ×%.2f |' % (r['roster'], r['new'], fmt(r['cur_dps']), fmt(r['new_dps']), fmt(r['skill_dps']), fmt(tot), tot / r['cur_dps'] if r['cur_dps'] else 0))
     L += ['']
     # ① 등급별 공격력·DPS 배율
     L += ['## ① 등급별로 공격력이 몇 배 바뀌나 (새 원작 S2 값 ÷ 지금 우리 값, 기하평균)', '', '| 등급 | 로스터 | 공격력 배율 | DPS 배율 | 범위(DPS 최소~최대) |', '|---|---:|---:|---:|---|']
@@ -509,6 +664,33 @@ def write_md(rows, pool, claimed, U):
         c = sum(r['cur_dps'] for r in rs) / len(rs)
         n = sum(r['new_dps'] for r in rs) / len(rs)
         L.append('| %s | %s | %s | %.0f → %.0f |' % (g, fmt(c), fmt(n), hp / c, hp / n))
+    # ④ 신 난이도 등급별 DPS 전후 — 실제로 적용될 모습(사양 스킬 유지·고정 6기·대응 없음·상붕카 그대로)
+    FIXED6 = {'주호리얼', '보스의앞잡이', '만물통달', '구일최강의여성', '상호파와채민파의아버지', '전전교회장'}
+    HID4 = {'맥주만땅', '푸은서', '감탄떡볶이', '이삭토스트'}
+
+    def after(r):
+        if r['how'] == '대응 없음' or r['file'] == '흔함_상붕카' or r['roster'] in FIXED6:
+            return r['cur_dps'], r['cur_skill_dps']
+        replace = r['change'] in ('스킬만 바뀜', '원작 바뀜', '스킬 추가') or r['roster'] in HID4
+        sk = (r['skill_dps'] + r['cur_spec_dps']) if replace else r['cur_skill_dps']
+        return r['new_dps'], sk
+    L += ['', '## ④ 「신」 난이도 등급별 DPS 전후 — 실제로 적용될 모습', '',
+          '새 쪽 = 2단계 적용 뒤 실제 상태: 사양 스킬(초월·불멸·영원·제한)은 지금 SkillData 그대로, 「능력치도 고정」 6기·대응 없음 7기·상붕카는 평타·스킬 다 그대로, 스킬 교체 유닛만 S2 툴팁 스킬(+남는 사양 스킬). '
+          '지금 스킬은 SkillData 피해 효과, 새 S2 스킬은 툴팁 문장에서 같은 방식(확률·게이지·쿨 × 피해, 보스 1기 기준)으로 셌다 — 범위 타격 수·스턴·증폭·버프·가동률은 뺀 대략값. R50 신 보스 체력 %s(현재체력 %%는 절반으로 침).' % fmt(hp), '',
+          '| 등급 | 로스터 | 지금 평타 | 지금 스킬 | 지금 합 | 새 평타 | 새 스킬 | 새 합 | 배율 | R50 신 보스(초) 지금 → 새 |', '|---|---:|---:|---:|---:|---:|---:|---:|---:|---|']
+    allg = defaultdict(list)
+    for r in rows:
+        allg[r['grade']].append(r)
+    for g in [EX.GRADE[k] for k in EX.GRADE_ORDER]:
+        rs = allg.get(g)
+        if not rs:
+            continue
+        c = sum(r['cur_dps'] for r in rs) / len(rs)
+        cs = sum(r['cur_skill_dps'] for r in rs) / len(rs)
+        ap = [after(r) for r in rs]
+        n = sum(a for a, _ in ap) / len(rs)
+        s = sum(b for _, b in ap) / len(rs)
+        L.append('| %s | %d | %s | %s | %s | %s | %s | %s | ×%.2f | %.0f → %.0f |' % (g, len(rs), fmt(c), fmt(cs), fmt(c + cs), fmt(n), fmt(s), fmt(n + s), (n + s) / (c + cs) if c + cs else 0, hp / (c + cs) if c + cs else 0, hp / (n + s) if n + s else 0))
     # 매칭 개요
     L += ['', '## 매칭 개요', '', '| 등급 | 유지 | 스킬만 바뀜 | 원작 바뀜 | 중복 | 대응 없음 |', '|---|---:|---:|---:|---:|---:|']
     cc = defaultdict(Counter)

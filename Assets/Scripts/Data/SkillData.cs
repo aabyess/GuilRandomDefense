@@ -410,6 +410,10 @@ public enum SkillEffectKind
     // multiplier = 원작 A11S 레벨 수(1레벨 = 계수 +0.05 = 툴팁 「폭발형 5% 증폭」, 3 = 15%, 6 = 30%). 서로 다른 유닛 종류의 값은 합해지고(같은 종류는 한 번), A11S 상한 23까지.
     // 폭발형 피해(SkillEffect.explosive)만 올린다 — 일반 마뎀·평타·범위 피해는 안 오른다. EnemyDummy.PercentDamageTakenMultiplier가 UnitAttacker.LaneExplosiveAmpLevels를 읽는다.
     LaneExplosiveAmp,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-18, 재매칭 S2 2.323 — 요츠바! 「떼쓰기」 「랜덤위습 ~ 희귀위습 중 1개」) — 직렬화 순서를 지킨다.
+    // 주인에게 SkillEffect.rewardWispPool 중 무작위 위습 1개(같은 확률)를 준다(RewardDistributor.GrantWisps). 서버만. 풀이 비었으면 rewardWisp 하나.
+    GrantRandomWisp,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,
@@ -705,6 +709,9 @@ public class SkillEffect
 
     // ⚠️ 맨 뒤(2026-10-06, 제한됨 이충민 발명품제작) — GrantInvention 전용: 위습 보상 종류.
     public WispData rewardWisp;
+
+    // ⚠️ 맨 뒤(2026-10-18, 재매칭 S2) — GrantRandomWisp 전용: 이 중 하나를 같은 확률로 준다.
+    public List<WispData> rewardWispPool = new List<WispData>();
 
     // ⚠️ 맨 뒤(2026-10-08, 초월 노태현 「가리지않는수단과방법」) — Damage 전용: 보스·광폭화 유닛에게만 이 효과의 피해가 이 배율만큼 곱해진다(1.3 = +30%). 0이면 꺼짐.
     // BossDamageMultiplier(패시브, 유닛 스킬 전부)와 달리 이 효과 하나에만 적용된다.

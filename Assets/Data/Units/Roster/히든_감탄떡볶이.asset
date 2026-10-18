@@ -17,15 +17,17 @@ MonoBehaviour:
   skinAlias: "\uB9E5\uC2EC,Maxim,\uBC29\uC8FC \uB9E5\uC2EC"
   personOverride: 
   damageType: 3
-  attackType: 3
+  attackType: 1
   movementAbility: 0
   hp: 583.2
-  attackPower: 63000
+  attackPower: 20001.5
   attackRange: 143.99
-  attackSpeed: 1.1765
+  attackSpeed: 1.5625
   moveSpeed: 125.3
   skill: {fileID: 0}
-  skills: []
+  skills:
+  - {fileID: 11400000, guid: 89b9646e5af4e62b4a7a388b8d9ff8c1, type: 2}
+  - {fileID: 11400000, guid: bcfcb6a07a663438fe43ce4043817976, type: 2}
   trait: {fileID: 0}
   prefab: {fileID: 5278489606444779991, guid: 8b99b6731e13043e0bbd719557034b8e, type: 3}
   critChance: 0.2
@@ -53,8 +55,8 @@ MonoBehaviour:
   sellRewardEveryNWoodChance: 1
   primaryStat: 0
   manaRegenPerSecond: 0
-  manaMax: 0
-  manaGaugePerMana: 0
+  manaMax: 150
+  manaGaugePerMana: 1
   lifeGaugeRegenPerSecond: 0
   lifeGaugeMax: 0
   manaGaugeStart: 0
@@ -72,8 +74,8 @@ MonoBehaviour:
   attackSplashRadius: 0
   attackCleaveFactor: 0
   attackCleaveRadius: 0
-  attackExtraTargets: 0
-  attackExtraTargetRadius: 0
+  attackExtraTargets: 3
+  attackExtraTargetRadius: 700
   raiseOnKillUnit: {fileID: 0}
   raiseOnKillChancePercent: 0
   raiseOnKillLifetimeSeconds: 0
@@ -87,4 +89,4 @@ MonoBehaviour:
   enhanceMaxLevel: 0
   enhanceGoldCost: 0
   enhanceWispCount: 0
-  originalMatchName: 
+  originalMatchName: "\uD788\uB4E0 \uBC29\uC8FC\uB9E5\uC2EC"

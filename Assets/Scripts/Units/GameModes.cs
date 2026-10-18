@@ -71,6 +71,6 @@ public static class GameModes
 
     static void Announce(string message)
     {
-        foreach (PlayerContext c in PlayerContext.Occupied) PlayerNotification.Show(c.PlayerId, message, 6f);
+        foreach (PlayerContext c in PlayerContext.Occupied) S2Notify.Show(c.PlayerId, message, 6f);
     }
 }

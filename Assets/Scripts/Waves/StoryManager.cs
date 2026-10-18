@@ -29,6 +29,9 @@ public class StoryManager : MonoBehaviour
     /// <summary>지금 필드에 나와 있는 스토리 적(호스트·싱글만, 없으면 null) — 유틸보드 실시간 기여도(UtilBoardPanel)가 읽는다.</summary>
     public EnemyDummy ActiveStoryEnemy => activeEnemy;
 
+    /// <summary>스토리존 한가운데(스토리 건물이 서는 자리) — S2 맵 목표물이 같은 섬을 찾는 데 쓴다.</summary>
+    public Vector3 SpawnPosition => spawnPoint != null ? spawnPoint.position : transform.position;
+
     /// <summary>순서(0부터)의 스토리 — 41R 게이트 패배 문구가 원작 이름 자리에 우리 이름을 넣는다.</summary>
     public StoryData StoryAt(int index) => index >= 0 && index < stories.Count ? stories[index] : null;
     public bool IsWaiting => replica ? replicaWaiting : running == null && pending != null; // MP: 클라는 호스트 값

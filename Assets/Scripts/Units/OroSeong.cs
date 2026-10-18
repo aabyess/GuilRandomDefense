@@ -78,6 +78,15 @@ public static class OroSeong
         Debug.Log($"[오로성] 이번 판: {Name(Chosen)} ({mode})");
     }
 
+    /// <summary>탐침 전용(Assets/Editor/S2Probe): 난이도 선택 없이 이 오로성·난이도로 판을 세팅한다.</summary>
+    public static void ForceForTest(Saint saint, bool isNightmare)
+    {
+        ResetMatch();
+        nightmare = isNightmare;
+        Chosen = saint;
+        silhouette = OroSeongSilhouette.Create(saint);
+    }
+
     /// <summary>RoundManager: 신세계 진입(R60 → 61). 니카가 이미 있으면 에메트가 막고, 아니면 효과를 건다.</summary>
     public static void OnNewWorldEnter()
     {
@@ -132,7 +141,7 @@ public static class OroSeong
 
     static void Announce(string message)
     {
-        foreach (PlayerContext c in PlayerContext.Occupied) PlayerNotification.Show(c.PlayerId, message, 10f);
+        foreach (PlayerContext c in PlayerContext.Occupied) S2Notify.Show(c.PlayerId, message, 10f);
     }
 
     /// <summary>점수판 한 줄(원작 「◎ 오로성 : 이름」). 없으면 null.</summary>
@@ -143,11 +152,9 @@ public static class OroSeong
 public class OroSeongSilhouette : MonoBehaviour
 {
     TextMesh label;
-    Renderer[] renderers;
-    MaterialPropertyBlock block;
+    S2Silhouette sil;
     bool filling, vanishing, applyAtEnd;
     float t;
-    static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
 
     public static OroSeongSilhouette Create(OroSeong.Saint saint)
     {
@@ -168,8 +175,7 @@ public class OroSeongSilhouette : MonoBehaviour
         foreach (Animator a in go.GetComponentsInChildren<Animator>(true)) a.enabled = true;
 
         var s = go.AddComponent<OroSeongSilhouette>();
-        s.renderers = go.GetComponentsInChildren<Renderer>(true);
-        s.block = new MaterialPropertyBlock();
+        s.sil = new S2Silhouette(go.GetComponentsInChildren<Renderer>(true));
         s.Paint(0f);
 
         var textGo = new GameObject("오로성 글자");
@@ -185,16 +191,7 @@ public class OroSeongSilhouette : MonoBehaviour
         return s;
     }
 
-    void Paint(float v)
-    {
-        foreach (Renderer r in renderers)
-        {
-            if (r == null) continue;
-            r.GetPropertyBlock(block);
-            block.SetColor(BaseColor, new Color(v, v, v, 1f));
-            r.SetPropertyBlock(block);
-        }
-    }
+    void Paint(float v) => sil.Paint(v);
 
     public void StartFill(bool dismissedAlready)
     {
@@ -220,6 +217,7 @@ public class OroSeongSilhouette : MonoBehaviour
             if (t >= 1f)
             {
                 filling = false;
+                sil.Restore();   // 원래 색으로(원작: 색이 다 차오른다)
                 if (applyAtEnd) OroSeong.ApplyNow();
             }
         }

@@ -40,7 +40,7 @@ public static class S2Dango
         {
             caster.ResourceWallet.Add(ResourceType.Wood, SelfReward);
             used[ci] = true;
-            PlayerNotification.Show(casterSlot, $"<color=#04FFC4>[알림]</color> 자신의 유닛에게 사용해 즉시 <color=#7AD823>{SelfReward} 목재</color>를 획득했습니다.", 5f);
+            S2Notify.Show(casterSlot, $"<color=#04FFC4>[알림]</color> 자신의 유닛에게 사용해 즉시 <color=#7AD823>{SelfReward} 목재</color>를 획득했습니다.", 5f);
             LastResult = "자기";
             return null;
         }
@@ -52,9 +52,9 @@ public static class S2Dango
 
         pendingUnit = unit; pendingCaster = casterSlot; pendingTarget = owner.OwnerId; pendingUntil = Time.time + ExpireSeconds;
         string casterName = PlayerDisplayName.Of(casterSlot);
-        PlayerNotification.Show(pendingTarget,
+        S2Notify.Show(pendingTarget,
             $"<color=#FF8200>{casterName}님이 '경단먹이기'를 사용합니다</color>\n◎ 대상: {identity.Data.unitName}\n◎ 소유권 변경 보상: <color=#7AD823>{OwnerReward} 목재</color>\n채팅에 <color=#04FFC4>-수락</color> 또는 <color=#FF6060>-거절</color> ({ExpireSeconds:0}초)", ExpireSeconds);
-        PlayerNotification.Show(casterSlot, "<color=#04FFC4>[알림]</color> 상대의 수락을 기다립니다.", 5f);
+        S2Notify.Show(casterSlot, "<color=#04FFC4>[알림]</color> 상대의 수락을 기다립니다.", 5f);
         LastResult = "요청";
         return null;
     }
@@ -73,7 +73,7 @@ public static class S2Dango
 
         if (decline)
         {
-            PlayerNotification.Show(caster, "<color=#04FFC4>[알림]</color> 유닛 소유권 변경을 상대방이 거절했습니다", 5f);
+            S2Notify.Show(caster, "<color=#04FFC4>[알림]</color> 유닛 소유권 변경을 상대방이 거절했습니다", 5f);
             LastResult = "거절";
             return "";
         }
@@ -82,15 +82,15 @@ public static class S2Dango
         // 30초 사이에 조합·창고·주인 변경으로 달라졌을 수 있다 — 아직 살아 있고 주인이 그대로인지 다시 본다.
         if (unit == null || identity == null || !unit.TryGetComponent(out OwnedByPlayer nowOwner) || nowOwner.OwnerId != target || !unit.gameObject.activeInHierarchy)
         {
-            PlayerNotification.Show(caster, "<color=#FF0000>[오류]</color> 경단먹이기 대상 유닛이 달라져 취소되었습니다.", 5f);
-            PlayerNotification.Show(target, "경단먹이기 대상 유닛이 달라져 취소되었습니다.", 4f);
+            S2Notify.Show(caster, "<color=#FF0000>[오류]</color> 경단먹이기 대상 유닛이 달라져 취소되었습니다.", 5f);
+            S2Notify.Show(target, "경단먹이기 대상 유닛이 달라져 취소되었습니다.", 4f);
             return "";
         }
         PlayerContext c = PlayerContext.GetOccupied(caster), t2 = PlayerContext.GetOccupied(target);
         UnitSpawner spawner = Object.FindFirstObjectByType<UnitSpawner>();
         if (identity == null || identity.Data == null || c == null || t2 == null || spawner == null)
         {
-            PlayerNotification.Show(caster, "<color=#FF0000>[오류]</color> 경단먹이기로 유닛이 지정되지 않았습니다.", 5f);
+            S2Notify.Show(caster, "<color=#FF0000>[오류]</color> 경단먹이기로 유닛이 지정되지 않았습니다.", 5f);
             return "";
         }
 
@@ -102,8 +102,8 @@ public static class S2Dango
         used[Mathf.Clamp(caster, 0, 3)] = true;
         t2.ResourceWallet?.Add(ResourceType.Wood, OwnerReward);
         c.ResourceWallet?.Add(ResourceType.Wood, CasterReward);
-        PlayerNotification.Show(caster, $"<color=#04FFC4>[알림]</color> {data.unitName} 유닛과 <color=#7AD823>{CasterReward} 목재</color>를 획득!", 5f);
-        PlayerNotification.Show(target, $"<color=#04FFC4>[알림]</color> <color=#FF8200>'경단먹이기'</color>를 수락하여 <color=#7AD823>{OwnerReward} 목재</color>를 획득!", 5f);
+        S2Notify.Show(caster, $"<color=#04FFC4>[알림]</color> {data.unitName} 유닛과 <color=#7AD823>{CasterReward} 목재</color>를 획득!", 5f);
+        S2Notify.Show(target, $"<color=#04FFC4>[알림]</color> <color=#FF8200>'경단먹이기'</color>를 수락하여 <color=#7AD823>{OwnerReward} 목재</color>를 획득!", 5f);
         LastResult = "수락";
         return "";
     }

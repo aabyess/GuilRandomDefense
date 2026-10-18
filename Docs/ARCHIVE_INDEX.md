@@ -49,3 +49,6 @@
 - ~/grd/GRD_pachinko_fx/ — 파칭코 화면 이펙트 스프라이트 11종(<효과>/rgba 투명·add 검정배경, meta.json). 재생성 `Tools/blender/run_pachinko_fx_all.sh [효과…]` ← gen_pachinko_fx.py
 - ~/grd/GRD_pachinko_cabinet/ — 파칭코 기계 정면 3D 1차(취소된 방향, 보관만). Tools/blender/gen_pachinko_cabinet.py
 - ~/grd/GRD_s2_models/ — S2 신규 기능용 원작 모델 추출(오로성 3·샨도라 종·룸바 영혼·엘리베이터·kineticfield). <모델>/fbx·Textures·json, _verify.json(부품 대조), _render/, sheet_s2_models.png. 재생성 `Tools/w3x/model_pull.py s2 ~/grd/GRD_s2_models <모델…>` → verify_mdx_fbx.py · render_mdx.py
+- ~/grd/GRD_skill_vfx/ — 재매칭 스킬 이펙트(원작). 1_extract/(① 꺼내기만 41: fbx·Textures·json, _verify.json, _render/) · sheet_1_extract.png · effect_list.json(구현담당1 목록) · b1_summary.json. 재생성 `Tools/w3x/model_pull.py s2 ~/grd/GRD_skill_vfx/1_extract <경로…>`(blink-yellow2만 old)
+- ~/grd/GRD_skill_vfx/2_fix/ — ② 깨짐 손질 20(S2 판, 부품 대조 20/20). 반입본은 ~/grd/GRD_orig_vfx_trial/<모델>/(①41+②20+kineticfield, unity·pre2Unity 블록), 목록 ~/grd/GRD_skill_vfx/반입목록_1018.csv, 교체된 옛 폴더 20개 백업 ~/grd/GRD_orig_vfx_trial/_backup_1018/. 재생성 `Tools/w3x/vfx_unity_block.py <루트>`(--check = 옛 블록 대조)
+- ③ 제작 16(워크3 기본 모델 베끼기 + Dashboard_UtaExAuraEff) → ~/grd/GRD_orig_vfx_trial/<이름>/(unity·pre2Unity, approxTexture). 미리보기 ~/grd/GRD_skill_vfx/sheet_3_make.png. 재생성 `blender -b --factory-startup --python Tools/blender/gen_skill_vfx_wc3.py -- [이름…]`
