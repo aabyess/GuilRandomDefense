@@ -37,7 +37,7 @@ def menu_frame():
         d = ImageDraw.Draw(band)
         for i in range(8):
             x = 48 + i * 52
-            d.rectangle([x, 54 if not flip else 66, x + 28, 112 if not flip else 124], fill=255)
+            d.ellipse([x + 8, (74 if not flip else 86), x + 24, (90 if not flip else 102)], fill=255)   # 작은 둥근 쇠 장식(성가퀴 네모는 축소 때 검은 줄로 보였다)
         m = np.asarray(band, np.float32) / 255
         if flip: m = m[::-1]
         m = m if not flip else m[::-1][::-1]
@@ -134,9 +134,9 @@ def background(w, h, seed=41):
     base = np.clip(1 - np.abs(yy - floor_y) / (14 * s), 0, 1)[..., None]
     img = img * (1 - 0.6 * base)
     # 아치 창 두 개
-    for cx in (int(w * 0.20), int(w * 0.50)):
-        ww, wh = int(150 * s), int(430 * s)
-        top = int(h * 0.12)
+    for cx in (int(w * 0.14), int(w * 0.55)):
+        ww, wh = int(150 * s), int(400 * s)
+        top = int(h * 0.30)
         win = Image.new("L", (w, h), 0)
         d = ImageDraw.Draw(win)
         d.rectangle([cx - ww // 2, top + ww // 2, cx + ww // 2, top + wh], fill=255)
@@ -159,7 +159,7 @@ def background(w, h, seed=41):
         # 창 둘레 빛 번짐
         img += radial_glow(h, w, cx, top + wh * 0.4, 320 * s, (28, 38, 60), 1.6)
     # 횃불 두 개(따뜻한 주황 — 이 장면의 유일한 따뜻한 색)
-    for tx, ty in ((int(w * 0.35), int(h * 0.47)), (int(w * 0.65), int(h * 0.47))):
+    for tx, ty in ((int(w * 0.32), int(h * 0.50)), (int(w * 0.77), int(h * 0.50))):
         bracket = Image.new("L", (w, h), 0)
         bd = ImageDraw.Draw(bracket)
         bd.rectangle([tx - int(7 * s), ty, tx + int(7 * s), ty + int(120 * s)], fill=255)
