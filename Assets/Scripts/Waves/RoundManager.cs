@@ -460,6 +460,9 @@ public class RoundManager : MonoBehaviour
             PlayerNotification.Show(context.PlayerId, line, VictoryNoticeSeconds);
     }
 
+    /// <summary>클리어 판에서 플레이어마다 FinishRun(세이브 쓰기) 직전에 부른다 — 클리어 때 주는 세이브 보상(베리·기록)을 여기 건다.</summary>
+    public static event System.Action<PlayerContext> ClearRewardHook;
+
     void FinishPersistentSave(bool cleared)
     {
         foreach (PlayerContext context in PlayerContext.Occupied)
@@ -477,6 +480,13 @@ public class RoundManager : MonoBehaviour
                     // 원작 j:5747(그 플레이어에게만, 사실상 계속): 「유닛카운트 점수 보너스:N점!」
                     PlayerNotification.Show(context.PlayerId, $"<color=#52E252>유닛카운트 점수 보너스:{bonus}점!</color>", VictoryNoticeSeconds);
                 }
+
+                // 베리(S2 CUh j:58487~58499): 클리어 1(악몽은 LI+1로 2, j:58040) · 악몽에서 최종 유닛 카운트 0이면 +1.
+                bool nightmare = DifficultyManager.Instance != null && DifficultyManager.Instance.Current == DifficultyMode.Nightmare;
+                Berry.Grant(context.PlayerId, nightmare ? 2 : 1, "클리어 보상");
+                if (nightmare && PersistentSave.CountAliveInLane(context.PlayerId) == 0 && Berry.Grant(context.PlayerId, 1, "클리어 보상", announce: false))
+                    PlayerNotification.Show(context.PlayerId, $"<color=#04FFC4>[클리어 보상]</color> 최종 유닛 카운트 0을 달성하여 <color={Berry.Color}>1 베리</color> 추가 획득!", 10f);
+                ClearRewardHook?.Invoke(context);   // 개인 미션 3개 완료(+1 베리)·유닛별 클리어 기록 — FinishRun 전에
             }
 
             context.PersistentSave.FinishRun(cleared);

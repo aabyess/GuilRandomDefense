@@ -30,6 +30,7 @@ public class NetPlayer : NetworkBehaviour
     [Networked] public int Gold { get; set; }
     [Networked, Capacity(ResourceSlots)] public NetworkArray<int> Resources => default;
     [Networked] public NetworkBool Dead { get; set; }
+    [Networked] public int Berry { get; set; }   // 베리 누적(세이브 값 + 이번 판) — 클라 표시용(Berry.Get)
     /// <summary>패배 사유(원작 문구, 색 없음) — 클라 패배 화면이 「왜 졌는지」를 쓴다(GAP 09-27 46).</summary>
     [Networked] public NetworkString<_128> DefeatMessage { get; set; }
 
@@ -162,6 +163,7 @@ public class NetPlayer : NetworkBehaviour
             foreach (ResourceType type in System.Enum.GetValues(typeof(ResourceType)))
                 if ((int)type < ResourceSlots) Resources.Set((int)type, context.ResourceWallet.Get(type));
         Dead = context.IsDead;
+        if (context.PersistentSave != null && Berry != context.PersistentSave.Data.berry) Berry = context.PersistentSave.Data.berry;
         string questTimer = PirateQuestManager.Instance != null ? PirateQuestManager.Instance.TimerText(Slot) : "";
         if (QuestTimerText.ToString() != questTimer) QuestTimerText = questTimer;
         string reason = context.DefeatMessage ?? "";
@@ -440,15 +442,15 @@ public class NetPlayer : NetworkBehaviour
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
-    public void RPC_SubmitSave(int point, int clear, int best, int level)
+    public void RPC_SubmitSave(int point, int clear, int best, int level, int berry)
     {
-        NetSaves.Receive(this, point, clear, best, level);
+        NetSaves.Receive(this, point, clear, best, level, berry);
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority)]
-    public void RPC_SaveResult(int point, int clear, int best, int level, NetworkBool cleared)
+    public void RPC_SaveResult(int point, int clear, int best, int level, NetworkBool cleared, int berry, string unitClears)
     {
-        NetSaves.WriteResult(point, clear, best, level, cleared);
+        NetSaves.WriteResult(point, clear, best, level, cleared, berry, unitClears);
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]

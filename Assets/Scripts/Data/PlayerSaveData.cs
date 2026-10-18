@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 // 원작 세이브 코드(VJSE)가 담던 네 값의 우리 버전이다. 원작은 워크3에 파일 저장이 없어서
 // 이 넷을 문자열로 압축해 채팅창에 코드로 뽑아냈다(MySampleSavecodeConfig__DecodeVersion_1,
@@ -34,4 +35,33 @@ public class PlayerSaveData
     // 그릇만 준비— 원작 TEMPDATA_PLAYER_LEVEL(Save_playerlevel) 대응. 우리 쪽엔 아직
     // "플레이어 레벨" 개념 자체가 없어서 항상 0이다. 나중에 채울 때 이 필드를 그대로 쓰면 된다.
     public int playerLevel;
+
+    // 베리(원랜디 S2 2.323 「Sx」, 사장님 10-18 「S2 아이디어 넣자」) — 세이브에 영구 누적되는 메타 화폐. 쓰는 곳(치장 상점)은 아직 없다.
+    //   얻는 곳: 클리어 1(악몽 2, j:58040·58491) · 악몽 최종 유닛 카운트 0 +1(j:58492) · 개인 미션 3개 완료 +1(j:58496) · 포네그리프 +1(j:51760) · 원피스 +10(j:55672) · 보물 2.5% +1(j:8626).
+    //   주는 창구는 Berry.Grant 하나.
+    public int berry;
+
+    // 유닛별 클리어 기록(S2 j:58478 CUg — 클리어 때 가진 최상위 유닛마다 +1). JsonUtility가 Dictionary를 못 써서 목록으로.
+    public List<UnitClearRecord> unitClears = new List<UnitClearRecord>();
+
+    public int UnitClearCount(string unitName)
+    {
+        if (unitClears != null) foreach (UnitClearRecord r in unitClears) if (r != null && r.unitName == unitName) return r.count;
+        return 0;
+    }
+
+    public void AddUnitClear(string unitName)
+    {
+        if (string.IsNullOrEmpty(unitName)) return;
+        if (unitClears == null) unitClears = new List<UnitClearRecord>();
+        foreach (UnitClearRecord r in unitClears) if (r != null && r.unitName == unitName) { r.count++; return; }
+        unitClears.Add(new UnitClearRecord { unitName = unitName, count = 1 });
+    }
+}
+
+[Serializable]
+public class UnitClearRecord
+{
+    public string unitName;
+    public int count;
 }
