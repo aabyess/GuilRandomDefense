@@ -323,7 +323,10 @@ public class CreditsConcepts
             rows[i] = rr; rowGroup[i] = row.GetComponent<CanvasGroup>();
             Rect("Rule", rr, Vector2.one * .5f, new Vector2(700, 2), new Vector2(0, -38), null, new Color(ink.r, ink.g, ink.b, 0.35f));
         }
-        var nail = Rect("Nail", root, Vector2.one * .5f, Vector2.one * 28f, new Vector2(0, 520 - 6), Disc(32, 0.8f), new Color(0.2f, 0.18f, 0.16f));
+        bool castle = MenuTheme.Current == MenuTheme.Kind.Castle;
+        // 성 테마: 돌벽 위라 어두운 못은 안 보인다 — 머리를 키우고 밝은 쇠색 + 아래로 드리운 그림자 한 점
+        RectTransform nailShadow = castle ? Rect("NailShadow", root, Vector2.one * .5f, Vector2.one * 52f, new Vector2(5, 520 - 16), Disc(32, 0.3f), new Color(0f, 0f, 0f, 0f)) : null;
+        var nail = Rect("Nail", root, Vector2.one * .5f, Vector2.one * (castle ? 46f : 28f), new Vector2(0, 520 - 6), Disc(32, 0.8f), castle ? new Color(0.52f, 0.56f, 0.63f) : new Color(0.2f, 0.18f, 0.16f));
         var stamp = Text("Stamp", pr, serif, 60f, new Color(0.65f, 0.08f, 0.05f, 0), "<cspace=4>제 작 진</cspace>", new Vector2(420, 80), new Vector2(200, 60));
         apply = t =>
         {
@@ -333,6 +336,7 @@ public class CreditsConcepts
             float sway = (t < 0.55f ? 6f * (1f - drop) : 0f) + Mathf.Sin(t * 2.1f) * 2.8f * damp * Seg(t, 0.4f, 0.9f) + Mathf.Sin(t * 5.3f) * 0.5f;
             hr.localRotation = Quaternion.Euler(0, 0, sway);
             SetAlpha(nail.GetComponent<Image>(), Seg(t, 0.4f, 0.6f));
+            if (nailShadow != null) SetAlpha(nailShadow.GetComponent<Image>(), 0.45f * Seg(t, 0.4f, 0.6f));
             bg.localScale = Vector3.one * (1f + 0.025f * Mathf.Clamp01(t / 4.4f));
             wanted.alpha = Ease(Seg(t, 0.5f, 0.9f)); wanted.characterSpacing = Mathf.Lerp(30f, 0f, wanted.alpha);
             photoBack.GetComponent<Image>().color = new Color(0.18f, 0.12f, 0.07f, Ease(Seg(t, 0.7f, 1.0f))); photoIn.GetComponent<Image>().color = new Color(1, 1, 1, Ease(Seg(t, 0.7f, 1.0f)));
