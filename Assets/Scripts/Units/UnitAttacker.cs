@@ -2575,6 +2575,19 @@ public class UnitAttacker : MonoBehaviour
         PlayerNotification.Show(owner.OwnerId, LastRevealCount > 0 ? $"<color=#FFD700>보물위치공개</color> — 반경 안 보물상자 {LastRevealCount}곳!" : "이 근처에는 보물상자가 없습니다.", 5f);
     }
 
+    // 랜덤 위습 지급(SkillEffectKind.GrantRandomWisp, 재매칭 S2 요츠바! 「떼쓰기」) — rewardWispPool 중 하나를 같은 확률로. 서버만.
+    void GrantRandomWisp(SkillEffect effect)
+    {
+        if (!GameAuthority.IsServer || owner == null || RewardDistributor.Instance == null) return;
+        PlayerContext context = PlayerContext.Get(owner.OwnerId);
+        if (context == null) return;
+        WispData wisp = effect.rewardWispPool != null && effect.rewardWispPool.Count > 0
+            ? effect.rewardWispPool[Random.Range(0, effect.rewardWispPool.Count)] : effect.rewardWisp;
+        if (wisp == null) return;
+        RewardDistributor.Instance.GrantWisps(context, new List<WispReward> { new WispReward { wisp = wisp, count = 1 } });
+        PlayerNotification.Show(owner.OwnerId, $"<color=#FFD700>떼쓰기</color> {wisp.name.Replace("Wisp_", "")} 위습 1", 4f);
+    }
+
     // 발명품제작(SkillEffectKind.GrantInvention, 제한됨 이충민) — 금화·목재·위습·소환수·상붕카 중 하나를 균등으로. 서버만.
     public string LastInventionResult { get; private set; }
 
@@ -3013,6 +3026,7 @@ public class UnitAttacker : MonoBehaviour
         // 소환(최상호 구일) — 대상이 없다. 확률·쿨다운은 위(CastSkillLevel·평타 확률 발동)가 이미 판정했다.
         if (effect.kind == SkillEffectKind.SummonUnit) { SummonFor(effect); return; }
         if (effect.kind == SkillEffectKind.GrantInvention) { GrantInvention(effect); return; }
+        if (effect.kind == SkillEffectKind.GrantRandomWisp) { GrantRandomWisp(effect); return; }
         if (effect.kind == SkillEffectKind.RevealTreasure) { RevealTreasureAround(effect, range); return; }
         if (effect.kind == SkillEffectKind.KillNormalEnemies) { lastKillSucceeded = KillNearestNormalEnemy(range, effect.killMostLostHp); return; }
         if (effect.kind == SkillEffectKind.RecruitEnemy) { RecruitNearestEnemy(range, effect); return; }
