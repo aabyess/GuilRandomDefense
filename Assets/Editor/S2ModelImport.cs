@@ -39,6 +39,7 @@ public static class S2ModelImport
         foreach (Spec s in Specs) CopyFolder(s, sb);
         AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
         foreach (Spec s in Specs) { try { Build(s, sb); } catch (System.Exception e) { sb.AppendLine($"   ❌ {s.prefab}: {e.Message}"); } }
+        try { BuildSoulVfx(sb); } catch (System.Exception e) { sb.AppendLine($"   ❌ 영혼 이펙트: {e.Message}"); }
         try { BuildMobs(sb); } catch (System.Exception e) { sb.AppendLine($"   ❌ Mob: {e.Message}"); }
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
@@ -191,6 +192,29 @@ public static class S2ModelImport
         var rs = go.GetComponentsInChildren<Renderer>(true).Where(r => !(r is ParticleSystemRenderer)).ToArray();
         if (rs.Length == 0) return new Bounds(go.transform.position, Vector3.one);
         Bounds b = rs[0].bounds; foreach (Renderer r in rs) b.Encapsulate(r.bounds); return b;
+    }
+
+    // 룸바 영혼: 원작 SmallLight는 빛 판 + 입자(PRE2)라 일반 FBX 경로로는 입자가 안 서고 판이 흰 네모가 된다(10-18 실측) → 원작 이펙트 반입 길(OriginalVfxBuilder)로 지어 RumbaSoul.prefab의 모델로 쓴다.
+    static void BuildSoulVfx(System.Text.StringBuilder sb)
+    {
+        const string name = "D__SmallLight";
+        string home = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
+        string src = Path.Combine(home, "grd/GRD_s2_models", name), dst = Path.Combine(home, "grd/GRD_orig_vfx_trial", name);
+        Directory.CreateDirectory(Path.Combine(dst, "Textures"));
+        foreach (string f in Directory.GetFiles(src, "*.fbx")) File.Copy(f, Path.Combine(dst, Path.GetFileName(f)), true);
+        foreach (string f in Directory.GetFiles(src, "*.json")) File.Copy(f, Path.Combine(dst, Path.GetFileName(f)), true);
+        foreach (string f in Directory.GetFiles(Path.Combine(src, "Textures"), "*.png")) File.Copy(f, Path.Combine(dst, "Textures", Path.GetFileName(f)), true);
+        sb.AppendLine("   " + OriginalVfxBuilder.Build(name).Trim());
+        GameObject vfx = AssetDatabase.LoadAssetAtPath<GameObject>($"{OriginalVfxBuilder.PrefabRoot}/{name}.prefab");
+        if (vfx == null) { sb.AppendLine("   ❌ 영혼 이펙트 프리팹 없음"); return; }
+        var holder = new GameObject("RumbaSoul");
+        holder.transform.localScale = Vector3.one * 90f;   // 빛 판 0.84m → 약 38(기존 영혼 크기 40) — 첫 시도 8.5는 7이라 점만 보였다(10-18 실측)
+        GameObject inst = (GameObject)PrefabUtility.InstantiatePrefab(vfx, holder.transform);
+        inst.transform.localPosition = Vector3.zero;
+        holder.AddComponent<S2SoulGlow>();
+        PrefabUtility.SaveAsPrefabAsset(holder, $"{DstRoot}/RumbaSoul.prefab");
+        Object.DestroyImmediate(holder);
+        sb.AppendLine("   ✅ RumbaSoul.prefab = 원작 이펙트(빛 판 + 입자)");
     }
 
     // 적 건물 프리팹: 스토리 건물(Mob_Story13)의 몸(상자)을 걷고 모델을 형제 노드로 붙인다(EnemyDummy.CacheSkinNode가 렌더러 있는 형제를 스킨으로 인식).
