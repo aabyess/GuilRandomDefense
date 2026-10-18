@@ -4,7 +4,7 @@
 import csv, os, subprocess, sys, glob
 from PIL import Image, ImageDraw, ImageFont
 H = os.path.expanduser("~"); ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-OUT = H + "/Desktop/구랜디스킨모음/교체24_전후비교"; TMP = H + "/grd/GRD_swap_before"; os.makedirs(OUT, exist_ok=True); os.makedirs(TMP + "/render", exist_ok=True)
+OUT = os.environ.get("SWAP_CARD_OUT", H + "/Desktop/구랜디스킨모음/교체24_전후비교"); TMP = os.environ.get("SWAP_BEFORE_TMP", H + "/grd/GRD_swap_before"); os.makedirs(OUT, exist_ok=True); os.makedirs(TMP + "/render", exist_ok=True)   # 새 교체 묶음은 SWAP_CARD_OUT·SWAP_BEFORE_TMP·SWAP_OLD_REF(=HEAD)·SWAP_NUMS(번호 쉼표목록)로 따로
 F = lambda n: ImageFont.truetype("/System/Library/Fonts/AppleSDGothicNeo.ttc", n, index=0)
 OLD_REF = {"초월_김경현_AP": "41ad6a5d0"}   # 시범 반입(cfeac9142)으로 이미 상디가 된 기 → 그 전 판(진타)
 rows = list(csv.DictReader(open(H + "/grd/GRD_skin_swap/교체목록.csv", encoding="utf-8-sig")))
@@ -12,11 +12,12 @@ only = set(sys.argv[1:]); cards = []
 for r in rows:
     ro = r["우리 로스터"]
     if only and ro not in only: continue
+    if os.environ.get("SWAP_NUMS") and r["번호"] not in os.environ["SWAP_NUMS"].split(","): continue
     name = ro.split("_")[1] + "_" + r["원작 이름"].split()[0]; pk = f"{H}/grd/GRD_skin_swap/{name}"
     if not os.path.isdir(pk):
         c = glob.glob(f"{H}/grd/GRD_skin_swap/{ro.split('_')[1]}_*"); pk = c[0] if c else pk
     old = f"{TMP}/Assets/Art/Units/{ro}"
-    if not os.path.isdir(old): subprocess.run(f"cd {ROOT} && git archive {OLD_REF.get(ro, '8c522dbce^')} 'Assets/Art/Units/{ro}' | tar -x -C {TMP}", shell=True)
+    if not os.path.isdir(old): subprocess.run(f"cd {ROOT} && git archive {OLD_REF.get(ro, os.environ.get('SWAP_OLD_REF', '8c522dbce^'))} 'Assets/Art/Units/{ro}' | tar -x -C {TMP}", shell=True)
     pre = f"{TMP}/render/{ro}"
     if not os.path.exists(pre + "_after.png"):
         p = subprocess.run(["blender", "-b", "--factory-startup", "--python", ROOT + "/Tools/blender/swap_before_after.py", "--", old, pk + "/model_fixed", pk + "/clip_map.json", pre], capture_output=True, text=True)
