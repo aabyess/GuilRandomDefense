@@ -96,7 +96,7 @@ def eff(kind, target, mult, **kw):
 
 
 KIND = dict(Damage=0, Stun=1, ArmorBreak=2, ArmorBonus=4, ApplyBuff=6, AttackPowerBuffFlat=11, AttackSpeedBuffPercent=12, Slow=13,
-            AttackPowerBuffPercent=14, DamageOverTime=27)
+            AttackPowerBuffPercent=14, DamageOverTime=26, GrantRandomWisp=52)
 T_SELF, T_ALLY, T_ENEMIES, T_SINGLE = 0, 1, 2, 3
 
 
@@ -422,7 +422,17 @@ def convert(raw_uber, ability_id, name):
                     b.effects += parse_extra(v, b, quiet=True)
                     if b.effects:
                         blocks.append(b)
+                elif k == '사용효과' and re.search(r'랜덤한\s*위습\s*1개\s*획득', v):
+                    # 「떼쓰기」: 쿨마다 랜덤~희귀 위습 1개 → 쿨 자동 GrantRandomWisp(풀: 랜덤·흔함·안흔함·특별함·희귀함)
+                    b = Block(name)
+                    b.trigger = 1
+                    b.cooldown = next((kor_num(v2) for k2, v2 in items if k2 == '쿨타임'), 90.0)
+                    b.effects.append(eff(KIND['GrantRandomWisp'], T_SELF, 0, wispPool=['6ad4fde3d2a94d59be7d5d7665a73d2a', '78f2f9cf08054763ab23ce26a1020667',
+                                                                                   'e610498c4baf4cc88aa036f9ce7b0799', '81eac83fa14e4fa8a0fefc992a32453b', 'e343898df3db474d85f1c7d1582a1334']))
+                    blocks.append(b)
                 elif k in ('사용효과', '쿨타임', '시전시간', '코스트', '제한사항'):
+                    if k == '쿨타임' and any(k2 == '사용효과' and re.search(r'랜덤한\s*위습', v2) for k2, v2 in items):
+                        continue
                     if k == '쿨타임' and any(k2 == '사용효과' and re.search(r'[\d만억]\s*(?:물리|마법|고정)\s*데미지', v2) for k2, v2 in items):
                         continue
                     lost.append('%s 「%s」(액티브·유틸 — 안 옮김)' % (k, v))

@@ -30,7 +30,7 @@ ROSTER_DIR = os.path.join(ROOT, 'Assets', 'Data', 'Units', 'Roster')
 SKILLDATA_SCRIPT = '9457f64cd84d34fd095791a069c0adc6'
 ATK = {'normal': 1, 'pierce': 2, 'siege': 3, 'hero': 4, 'chaos': 5, 'magic': 6, 'spells': 7}
 GRADE_SHORT = {0: '흔함', 1: '안흔함', 2: '특별함', 3: '희귀함', 4: '히든', 5: '전설', 6: '제한', 7: '초월', 8: '불멸', 9: '영원', 10: '랜덤', 11: '다른세계', 12: '특수', 14: '변화'}
-SKIP = {'흔함_상붕카'}
+SKIP = {'흔함_상붕카', '변화됨_박은석'}   # 박은석: 합친 대응(장군좀비+캐럿) 유지 — 메모리 merged-originals-stay-merged
 FIXED_STATS = {'주호리얼', '보스의앞잡이', '만물통달', '구일최강의여성', '상호파와채민파의아버지', '전전교회장'}
 HIDDEN4 = {'맥주만땅', '푸은서', '감탄떡볶이', '이삭토스트'}
 HOLD = set(os.environ.get('REMATCH_HOLD', '').split(',')) - {''}   # PM 답 대기(원작에 피해 스킬 없음)
@@ -97,7 +97,7 @@ EFFECT_TAIL = """      summonUnits: []
 def effect_yaml(e, atk_type):
     d = dict(EFFECT_DEFAULT)
     d.update({k: v for k, v in e.items() if k in EFFECT_DEFAULT})
-    if d['kind'] in (0, 27) and not d['attackType']:
+    if d['kind'] in (0, 26) and not d['attackType']:
         d['attackType'] = atk_type
     lines = []
     for i, k in enumerate(EFFECT_KEYS):
@@ -105,6 +105,8 @@ def effect_yaml(e, atk_type):
         s = (yq(v) if v else '') if isinstance(v, str) else fnum(v)
         lines.append(('    - ' if i == 0 else '      ') + '%s: %s' % (k, s))
     txt = '\n'.join(lines) + '\n' + EFFECT_TAIL
+    if e.get('wispPool'):
+        txt += '      rewardWispPool:\n' + ''.join('      - {fileID: 11400000, guid: %s, type: 2}\n' % g for g in e['wispPool'])
     if e.get('fixedDamage'):
         txt += '      fixedDamage: 1\n'
     if e.get('explosive'):
@@ -116,8 +118,8 @@ def skill_yaml(name, skill_name, desc, blk, atk_type):
     trig = {0: 0, 1: 1, 2: 2, 3: 3, 5: 5}[blk.trigger]
     thr, gk = (blk.gauge[1], 0 if blk.gauge[0] == 'mana' else 1) if blk.gauge else (0, 0)
     chance = blk.chance if blk.trigger == 0 else 1
-    body = """%YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
+    body = """%%YAML 1.1
+%%TAG !u! tag:unity3d.com,2011:
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -172,10 +174,11 @@ NativeFormatImporter:
 
 
 def set_field(text, key, value):
-    pat = re.compile(r'(?m)^  %s: .*$' % re.escape(key))
+    """「  key: 값」 한 줄을 바꾼다. 유니티가 긴 따옴표 문자열을 여러 줄로 접어 둔 경우(다음 줄들이 4칸 들여쓰기) 그 줄들도 함께 갈아 끼운다."""
+    pat = re.compile(r'(?m)^  %s: .*\n(?:    (?!- ).*\n)*' % re.escape(key))
     if not pat.search(text):
         raise KeyError(key)
-    return pat.sub(lambda m: '  %s: %s' % (key, value), text, count=1)
+    return pat.sub(lambda m: '  %s: %s\n' % (key, value), text, count=1)
 
 
 def build_plan():
