@@ -603,13 +603,13 @@ public static class SkillVfx
             case Kind.AuraSource:
                 if (!UseB() || Mat("ring_magic") == null) return null;
                 return Layered(parent, loop, "AuraSource",
-                    Layer("ring_magic", new Color(1f, 1f, 1f, 0.8f), 1.0f, 1.3f * Unit, 1, 0f, Shape.None, ground: true, persistent: loop),   // 발밑 얇은 광 고리
-                    Layer("dot_soft", new Color(1f, 1f, 1f, 0.8f), 2.0f, 0.1f * Unit, 0, 0f, Shape.Ring, rate: loop ? 3.5f : 0f, rise: 0.4f * Unit, ringRadius: 0.45f),   // 아주 느린 상승 입자(초당 3~4개)
+                    Layer("ring_magic", new Color(1f, 1f, 1f, 0.9f), 1.0f, 1.8f * Unit, 1, 0f, Shape.None, ground: true, persistent: loop),   // 발밑 얇은 광 고리
+                    Layer("dot_soft", new Color(1f, 1f, 1f, 0.9f), 2.0f, 0.14f * Unit, 0, 0f, Shape.Ring, rate: loop ? 3.5f : 0f, rise: 0.4f * Unit, ringRadius: 0.45f),   // 아주 느린 상승 입자(초당 3~4개)
                     Layer("ring_shock", new Color(1f, 1f, 1f, 0.15f), 1.0f, 4f * Unit, 1, 0f, Shape.None, ground: true, persistent: loop));   // 실제 범위 가장자리(반지름은 Attach가 넣는다)
             case Kind.AuraReceiver:
                 if (!UseB()) return null;
                 return Layered(parent, loop, "AuraReceiver",
-                    Layer("dot_soft", new Color(1f, 1f, 1f, 0.95f), 1.0f, 0.16f * Unit, 1, 0f, Shape.None, ground: true, persistent: loop));   // 「받고 있음」 점 하나
+                    Layer("dot_soft", new Color(1f, 1f, 1f, 1f), 1.0f, 0.34f * Unit, 1, 0f, Shape.None, ground: true, persistent: loop));   // 「받고 있음」 점 하나(큰 유닛 발밑에서도 보이게 0.34H)
             case Kind.Smash:
                 // 10-19 안 B: 물리 = 금. 땅 폭발 메시 + 금 8각 섬광 + 금 충격 고리, 받침판.
                 if (UseB())
