@@ -101,4 +101,61 @@ public static class IslandStoneBorder
             StructureDresser.PlaceStretched(parent, "선택위습_띠벽", $"{name}{i}", new Vector3(x, MapLayout.IslandTop, z0 + length / n * (i + 0.5f)), 90f, new Vector3(sz, u, u));
         return n;
     }
+
+    // ───────────────────────── 바닥 포인트(맵 폴리시 ②) ─────────────────────────
+    const string AccentRootName = "바닥포인트";
+
+    /// <summary>뽑기섬 등급 칸·특수 칸 포탈 밑에 얇은 돌 판, 조합판 네 모서리에 작은 돌 기둥. 과하지 않게(판 두께 0.03·기둥 0.55배). 스위치 StructureDresser.FloorAccentsOn.</summary>
+    [MenuItem("Tools/맵/바닥 포인트 얹기")]
+    public static void ApplyAccents()
+    {
+        GameObject old = GameObject.Find(AccentRootName);
+        if (old != null) Object.DestroyImmediate(old);
+        if (!StructureDresser.FloorAccentsOn) { Debug.Log("바닥 포인트: 스위치 꺼짐 — 걷기만 했습니다."); Save(); return; }
+
+        GameObject map = GameObject.Find("Map");
+        GameObject root = new GameObject(AccentRootName);
+        if (map != null) root.transform.SetParent(map.transform, false);
+        float u = StructureDresser.BorderUnit;
+        int pads = 0, pillars = 0;
+
+        MapLayout.Island gacha = System.Array.Find(MapLayout.Zones, z => z.name == "GachaIsland");
+        Rect gachaRect = new Rect(gacha.center - gacha.size * 0.5f, gacha.size);
+        foreach (Collider trigger in Object.FindObjectsByType<Collider>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (!trigger.isTrigger) continue;
+            GameObject go = trigger.gameObject;
+            if (go.GetComponent<UnitPortal>() == null && go.GetComponent<ResourcePortal>() == null) continue;
+            if (go.name.StartsWith("흔함선택_")) continue;   // 부스 바닥은 이미 정식 모델이 있다
+            Vector3 p = go.transform.position;
+            if (!gachaRect.Contains(new Vector2(p.x, p.z))) continue;
+            float pad = Mathf.Max(go.transform.lossyScale.x, 20f) * 1.5f;
+            // 선택위습_부스바닥 모델: 가로 2.0m · 깊이 1.7m · 두께 0.06m → 정사각 판 pad×pad, 두께 0.03.
+            StructureDresser.PlaceStretched(root.transform, "선택위습_부스바닥", $"{go.name}_돌판", new Vector3(p.x, MapLayout.IslandTop, p.z), 0f,
+                new Vector3(pad / 2f, 0.5f, pad / 1.7f));
+            pads++;
+        }
+
+        MapLayout.Island combine = System.Array.Find(MapLayout.Zones, z => z.name == "CombineTable");
+        if (!string.IsNullOrEmpty(combine.name))
+        {
+            float l = combine.center.x - combine.size.x * 0.5f + 3f, r = combine.center.x + combine.size.x * 0.5f - 3f;
+            float b = combine.center.y - combine.size.y * 0.5f + 3f, t = combine.center.y + combine.size.y * 0.5f - 3f;
+            foreach (Vector2 c in new[] { new Vector2(l, b), new Vector2(r, b), new Vector2(l, t), new Vector2(r, t) })
+            {
+                StructureDresser.PlaceStretched(root.transform, "선택위습_모서리기둥", "조합판_모서리기둥", new Vector3(c.x, MapLayout.IslandTop, c.y), 0f, Vector3.one * (u * 0.55f));
+                pillars++;
+            }
+        }
+        Save();
+        Debug.Log($"바닥 포인트: 포탈 돌판 {pads} · 조합판 모서리 기둥 {pillars}");
+    }
+
+    [MenuItem("Tools/맵/바닥 포인트 걷기")]
+    public static void RemoveAccents()
+    {
+        GameObject old = GameObject.Find(AccentRootName);
+        if (old != null) Object.DestroyImmediate(old);
+        Save();
+    }
 }

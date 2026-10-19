@@ -165,6 +165,8 @@ public static class StructureDresser
     public const bool IslandStoneBorderOn = true;
     /// <summary>선택 위습 부스 모델 환산(blender 부스 간격 228 = 2.28m ↔ 칸 폭 80.7 → m당 35.4). 테두리·기둥도 같은 크기.</summary>
     public const float BorderUnit = 35.4f;
+    /// <summary>맵 폴리시 ②: 뽑기섬 포탈 밑 돌 판·조합판 모서리 작은 기둥 스위치(IslandStoneBorder.ApplyAccents).</summary>
+    public const bool FloorAccentsOn = true;
     static readonly string[] ShopSlotOrder = { "도박소", "유닛강화소", "영원함강화소", "도움소", "공격타입강화소", "항해일지" };
 
     /// <summary>상점 상자 이름(「Lane1_도박소」)에서 그 슬롯의 이상적인 중앙과 슬롯 간격을 구한다. MapGenerator.LaneShopSlotAt과 같은 식(폭 × 1.15 ÷ 칸 수).</summary>
