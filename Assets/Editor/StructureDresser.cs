@@ -317,6 +317,91 @@ public static class StructureDresser
         blocker.AddComponent<BoxCollider>().size = bounds.size;
     }
 
+    // ───────────────────────── S2 장식 모델(옛 맵에 얹기, 장식만) ─────────────────────────
+    // blender 추출본(~/grd/GRD_s2_models/map): fbx 1m = 워크3 100 단위. 원작 도두드 배율 s → 우리 월드 배율 = s × 100 ÷ Scale.
+    // 맵 생성기를 건드리지 않고 메뉴(OldMapDecor)로 씬에 「S2장식」 루트 하나를 얹는다. 콜라이더 없음(Place가 지움) · NavMesh 굽기엔 안 들어감.
+    static bool OnAnyIsland(float x, float z)
+    {
+        foreach (MapLayout.Island island in MapLayout.Zones.Concat(MapLayout.Warehouses).Concat(MapLayout.SealIslands).Concat(MapLayout.Lanes))
+            if (Mathf.Abs(x - island.center.x) < island.size.x * 0.5f && Mathf.Abs(z - island.center.y) < island.size.y * 0.5f) return true;
+        return false;
+    }
+
+    // 원작 포탈은 검은 바탕이 투명(가산 합성)이라 그대로 그리면 검은 판이 선다 — 재질을 가산 입자 재질로 갈아 끼운다.
+    static void MakeAdditive(GameObject root)
+    {
+        const string dir = "Assets/Art/Structures/Materials";
+        if (!AssetDatabase.IsValidFolder(dir)) AssetDatabase.CreateFolder("Assets/Art/Structures", "Materials");
+        foreach (Renderer renderer in root.GetComponentsInChildren<Renderer>(true))
+        {
+            Material[] mats = renderer.sharedMaterials;
+            for (int i = 0; i < mats.Length; i++)
+            {
+                if (mats[i] == null) continue;
+                Texture tex = mats[i].HasProperty("_BaseMap") ? mats[i].GetTexture("_BaseMap") : mats[i].mainTexture;
+                string path = $"{dir}/장식_대형포탈_{mats[i].name}_가산.mat";
+                Material m = AssetDatabase.LoadAssetAtPath<Material>(path);
+                bool isNew = m == null;
+                if (isNew) m = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
+                m.SetTexture("_BaseMap", tex);
+                m.SetFloat("_Surface", 1f);
+                m.SetFloat("_Blend", 2f);
+                m.SetFloat("_ZWrite", 0f);
+                m.SetOverrideTag("RenderType", "Transparent");
+                m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+                m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                m.EnableKeyword("_BLENDMODE_ADD");
+                m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                if (isNew) AssetDatabase.CreateAsset(m, path); else { EditorUtility.SetDirty(m); AssetDatabase.SaveAssetIfDirty(m); }
+                mats[i] = m;
+            }
+            renderer.sharedMaterials = mats;
+        }
+    }
+
+    public static string PlaceOldMapLandmarks(Transform parent)
+    {
+        MapLayout.Island story = System.Array.Find(MapLayout.Zones, z => z.name == "StoryZone");
+        MapLayout.Island gacha = System.Array.Find(MapLayout.Zones, z => z.name == "GachaIsland");
+        MapLayout.Island lane1 = System.Array.Find(MapLayout.Lanes, z => z.name == "Lane1");
+        MapLayout.Island lane2 = System.Array.Find(MapLayout.Lanes, z => z.name == "Lane2");
+        float k = 100f / MapLayout.Scale;
+        float seaEdge = MapLayout.SeaSize * 0.5f;
+
+        float westX = lane1.center.x - lane1.size.x * 0.5f - 420f;          // 서쪽 레인 가장자리 바깥 바다
+        float northZ = lane1.center.y + lane1.size.y * 0.5f + 330f;         // 북쪽 레인 가장자리 바깥 바다
+        float eastX = lane2.center.x + lane2.size.x * 0.5f + 650f;          // 오른쪽(창고 위) 바다
+        Vector3 storyTop = new Vector3(story.center.x, MapLayout.IslandTop, story.center.y);
+        float statueX = story.center.x - story.size.x * 0.5f + 70f;         // 섬 안쪽 서쪽 줄
+
+        // (모델, 이름, 자리, 보는 각도(도), 원작 배율)
+        var items = new (string model, string name, Vector3 at, float yaw, float scale)[]
+        {
+            ("장식_고잉메리", "S2_고잉메리", new Vector3(westX, 0f, lane1.center.y - lane1.size.y * 0.5f - 60f), 60f, 1.05f),
+            ("장식_룸바배", "S2_룸바배", new Vector3(eastX, 0f, northZ + 120f), -140f, 1.8f),
+            ("장식_포네글리프", "S2_포네글리프", new Vector3(westX - 350f, 0f, northZ + 250f), -305f, 1.2f),
+            ("장식_대형스토리포탈", "S2_대형스토리포탈", storyTop + new Vector3(0f, 0f, story.size.y * 0.5f - 120f), -270f, 1f),
+            ("장식_위습동상", "S2_위습동상1", new Vector3(statueX, MapLayout.IslandTop, story.center.y + 255f), -180f, 1f),
+            ("장식_위습동상", "S2_위습동상2", new Vector3(statueX, MapLayout.IslandTop, story.center.y + 85f), -180f, 1f),
+            ("장식_위습동상", "S2_위습동상3", new Vector3(statueX, MapLayout.IslandTop, story.center.y - 85f), -180f, 1f),
+            ("장식_위습동상", "S2_위습동상4", new Vector3(statueX, MapLayout.IslandTop, story.center.y - 255f), -180f, 1f),
+            ("장식_불타는화로", "S2_불타는화로", new Vector3(gacha.center.x + gacha.size.x * 0.5f - 90f, MapLayout.IslandTop, gacha.center.y - gacha.size.y * 0.5f + 90f), -211f, 1.5f),
+        };
+        string report = "";
+        foreach (var item in items)
+        {
+            Vector3 at = item.at;
+            if (OnAnyIsland(at.x, at.z)) at.y = MapLayout.IslandTop;
+            GameObject placed = Place(parent, item.model, item.name, at, item.yaw, item.scale * k);
+            if (placed == null) { report += $"\n  ⚠️ {item.model} 모델 없음"; continue; }
+            if (item.model == "장식_대형스토리포탈") MakeAdditive(placed);
+            string size = TryMeasure(placed, out Bounds b) ? $"{b.size.x:0.#}×{b.size.y:0.#}×{b.size.z:0.#}" : "?";
+            report += $"\n  {item.name} 자리 ({at.x:0},{at.z:0}) 크기 {size} {(OnAnyIsland(at.x, at.z) ? "섬 위" : "바다")} 바다끝 ±{seaEdge:0}";
+        }
+        return "S2 장식(옛 맵):" + report;
+    }
+
     // ───────────────────────── 펑크해저드 ─────────────────────────
 
     static readonly string[] IceModels = { "펑크_얼음가시_01", "펑크_얼음가시_02", "펑크_얼음가시_03" };
