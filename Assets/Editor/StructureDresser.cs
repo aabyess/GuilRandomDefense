@@ -378,6 +378,7 @@ public static class StructureDresser
                 bool isNew = m == null;
                 if (isNew) m = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
                 m.SetTexture("_BaseMap", tex);
+                m.SetColor("_BaseColor", new Color(1f, 1f, 1f, onlyNameContains != null ? 0.5f : 1f));   // 상점 빛 겹은 절반 세기(사장님 전 PM 「너무 세다」)
                 m.SetFloat("_Surface", 1f);
                 m.SetFloat("_Blend", 2f);
                 m.SetFloat("_ZWrite", 0f);
