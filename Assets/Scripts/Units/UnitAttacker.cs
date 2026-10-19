@@ -673,6 +673,7 @@ public class UnitAttacker : MonoBehaviour
         public List<EnemyDummy> auraAffectedEnemies;
         public List<UnitIdentity> auraAffectedAllies;
         public List<string> auraSelfAppliedBuffIds;
+        public float auraVfxRange = -1f;      // 오라 이펙트(10-20): 이 오라가 범위 효과로 켜져 있으면 월드 반지름(0 = 범위 없는 범위효과), 꺼졌으면 −1
         public SkillLevel auraLevelApplied;   // 지금 걸려 있는 효과가 속한 레벨 — 특성 강화로 레벨이 바뀌면 옛 레벨 효과를 먼저 뗀다(10-06 임장혁 이간질 제거)
     }
 
@@ -1785,10 +1786,45 @@ public class UnitAttacker : MonoBehaviour
         }
 
         RefreshScaledAuraBonuses(level, state);
+
+        // 오라 전용 이펙트(10-20 안 B) — 범위 효과(아군·적 대상)가 켜져 있는 동안 소스 고리를 보인다.
+        bool rangeAura = false;
+        foreach (SkillEffect effect in level.effects) if (effect.target == SkillTargetKind.Allies || effect.target == SkillTargetKind.Enemies) { rangeAura = true; break; }
+        state.auraVfxRange = gatePasses && rangeAura ? (level.range > 0f ? level.WorldRange : 0f) : -1f;
+        RefreshAuraSourceVfx();
+    }
+
+    // 오라 이펙트 소스 — 유닛 하나에 고리 하나(오라가 여럿이면 가장 큰 범위). 특별함 미만은 안 띄운다(SkillVfx 등급 게이트와 같은 규칙, 사장님 09-29). 호스트(·싱글)만 — 클라 겉모습은 NetEntity가 따라 그린다.
+    void RefreshAuraSourceVfx()
+    {
+        if (!GameAuthority.IsServer || identity == null || identity.Data == null) return;
+        float range = -1f;
+        if (identity.Data.grade >= UnitGrade.Special && skillRuntimeStates != null)
+            foreach (SkillRuntimeState st in skillRuntimeStates.Values) range = Mathf.Max(range, st.auraVfxRange);
+        AuraVfx.SetSource(transform, identity.Data.grade, Mathf.Max(0f, range), range >= 0f);
+    }
+
+    // 받는 쪽 점(아군·적 발밑) — 버프 초록·디버프 보라. 소스가 특별함 이상일 때만, 호스트만. 적용·해제가 같은 level로 대칭이라 참조 수(AuraVfx)가 맞는다.
+    bool AuraVfxEnabled => GameAuthority.IsServer && identity != null && identity.Data != null && identity.Data.grade >= UnitGrade.Special;
+    static bool AllyAuraIsDebuff(SkillLevel level)
+    {
+        foreach (SkillEffect effect in level.effects)
+        {
+            if (effect.target != SkillTargetKind.Allies) continue;
+            if (effect.kind == SkillEffectKind.AllyMoveSpeedDebuff) return true;
+            if ((effect.kind == SkillEffectKind.AttackPowerBuffPercent || effect.kind == SkillEffectKind.AttackSpeedBuffPercent || effect.kind == SkillEffectKind.AttackPowerBuffFlat) && effect.multiplier < 0f) return true;
+        }
+        return false;
+    }
+    static bool HasEnemyAuraEffect(SkillLevel level)
+    {
+        foreach (SkillEffect effect in level.effects) if (effect.target == SkillTargetKind.Enemies) return true;
+        return false;
     }
 
     void ApplyPersistentAuraEffectsToEnemy(SkillLevel level, EnemyDummy target)
     {
+        if (AuraVfxEnabled && target != null && HasEnemyAuraEffect(level)) AuraVfx.ReceiverOn(target.transform, true);
         foreach (SkillEffect effect in level.effects)
         {
             if (effect.target != SkillTargetKind.Enemies) continue;
@@ -1813,6 +1849,7 @@ public class UnitAttacker : MonoBehaviour
 
     void RemovePersistentAuraEffectsFromEnemy(SkillLevel level, EnemyDummy target)
     {
+        if (AuraVfxEnabled && target != null && HasEnemyAuraEffect(level)) AuraVfx.ReceiverOff(target.transform, true);
         foreach (SkillEffect effect in level.effects)
         {
             if (effect.target != SkillTargetKind.Enemies) continue;
@@ -1835,6 +1872,7 @@ public class UnitAttacker : MonoBehaviour
 
     void ApplyPersistentAuraEffectsToAlly(SkillLevel level, UnitIdentity ally)
     {
+        if (AuraVfxEnabled && ally != null) AuraVfx.ReceiverOn(ally.transform, AllyAuraIsDebuff(level));
         UnitAttacker allyAttacker = ally != null ? ally.GetComponent<UnitAttacker>() : null;
         if (allyAttacker == null) return;
         foreach (SkillEffect effect in level.effects)
@@ -1858,6 +1896,7 @@ public class UnitAttacker : MonoBehaviour
 
     void RemovePersistentAuraEffectsFromAlly(SkillLevel level, UnitIdentity ally)
     {
+        if (AuraVfxEnabled && ally != null) AuraVfx.ReceiverOff(ally.transform, AllyAuraIsDebuff(level));
         UnitAttacker allyAttacker = ally != null ? ally.GetComponent<UnitAttacker>() : null;
         if (allyAttacker == null) return;
         foreach (SkillEffect effect in level.effects)
@@ -3820,6 +3859,7 @@ public class UnitAttacker : MonoBehaviour
     {
         if (upgrades != null) upgrades.OnLevelChanged -= HandleUpgradesChanged;
         RemoveGoldPlusBonus();
+        AuraVfx.SetSource(transform, UnitGrade.Common, 0f, false);   // 오라 이펙트 소스 끄기(받는 점은 아래 오라 해제 루프가 뗀다)
 
         // ⚠️ 2026-09-06 추가(오라 무한누적 근본수정) — EnemyAuraCaster.OnDestroy와 같은
         // 이유: 이 유닛이 죽는 순간까지 걸어둔 오라 지속효과를 전부 되돌린다. 안 그러면

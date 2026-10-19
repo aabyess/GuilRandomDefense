@@ -13,7 +13,7 @@ public static class SkillVfx
     // ⚠️ MP RPC가 int로 싣는다 — 새 종류는 맨 뒤에만 붙인다.
     //   StunImpact: 스턴이 걸리는 순간 발구르기 한 번(Attach(Stun)이 로컬로 부른다 — Played 안 알림, 친구 화면도 자기 Attach에서 튼다).
     //   Smash: 강타·범위 폭발(1.2.2 정의만 — 강타 데이터 연결 때 부른다).
-    public enum Kind { Hit, SpellHit, ArmorBreak, Stun, Slow, Buff, StunImpact, Smash }
+    public enum Kind { Hit, SpellHit, ArmorBreak, Stun, Slow, Buff, StunImpact, Smash, AuraSource, AuraReceiver }
 
     // 세계 단위 크기 기준 — 사람 키(유닛) 30, 레인 적 22.5(ArtBinder).
     const float Unit = 22.5f;
@@ -249,6 +249,24 @@ public static class SkillVfx
         }
     }
 
+    // ── 오라 전용 이펙트(10-20 안 B) ──────────────────────────────────────────────────────────
+    // AuraSource = 오라를 내는 유닛 발밑 얇은 광 고리(ring_magic) + 아주 느린 상승 입자 + 실제 범위 가장자리의 더 옅은 바깥 고리. AuraReceiver = 오라를 받는 대상 발밑 작은 점 하나.
+    // 색은 층 기본(흰색)에 Attach의 tint를 곱한다(소스 = 등급색 25% 밝힘, 받는 쪽 = 버프 초록·디버프 보라). 입자는 오라 한 개당 약 10개 이하(고리 2 + 입자 rate 3.5×수명 2초).
+    static readonly Dictionary<ParticleSystem, Color> baseColors = new Dictionary<ParticleSystem, Color>();
+
+    static void ApplyAuraStyle(ParticleSystem first, Color tint, float radius)
+    {
+        foreach (ParticleSystem ps in first.GetComponentsInChildren<ParticleSystem>(true))
+        {
+            if (!baseColors.TryGetValue(ps, out Color b)) continue;
+            ParticleSystem.MainModule main = ps.main;
+            main.startColor = new Color(tint.r * b.r, tint.g * b.g, tint.b * b.b, b.a);
+            if (ps.gameObject.name == "ring_shock" && radius > 0f)   // 바깥 고리 = 실제 오라 범위(선은 그림 반폭의 0.62 자리)
+                main.startSize = radius * 2f / 0.62f;
+            else if (ps.gameObject.name == "ring_shock") main.startSize = 0.0001f;   // 범위가 없으면(자기 전용 등) 바깥 고리 안 보임
+        }
+    }
+
     // MP: 한 번 터지는 이펙트를 실제로 띄울 때 알린다(등급 게이트·스로틀·풀을 다 지난 뒤) — 호스트의 NetGameState가 받아
     //     친구 화면으로 넘긴다. 위치는 카메라 쪽으로 당기기 전 값이다(당기기는 보는 사람 카메라 기준이라 받는 쪽이 한다).
     public static event System.Action<Kind, Vector3> Played;
@@ -413,6 +431,7 @@ public static class SkillVfx
     //   붙는 이펙트는 대상의 **자식이 아니다** — 루트 밑에 두고 SkillVfxFollower가 매 프레임 대상 위로 옮긴다. 스턴·이감 걸린 채
     //   적이 죽으면 Stop이 안 불려(EnemyDummy에 그 길이 없다) 자식이면 적과 같이 파괴돼 풀이 새던 것을 막는다 — 대상이 사라지면 스스로 반납.
     const int AttachPoolCap = 48;
+    const int AuraReceiverPoolCap = 120;   // 오라 받는 아군·적 발밑 점(입자 1개짜리) — 한 판에 수십 기가 동시에 받는다
     static readonly List<(ParticleSystem ps, Transform target, float height)> attachFollow = new List<(ParticleSystem, Transform, float)>();
     const float AttachFadeSeconds = 1.5f;
     static readonly Dictionary<Kind, List<ParticleSystem>> attachAll = new Dictionary<Kind, List<ParticleSystem>>();
@@ -420,7 +439,8 @@ public static class SkillVfx
     static readonly Dictionary<ParticleSystem, Kind> attachKind = new Dictionary<ParticleSystem, Kind>();
     static readonly List<(ParticleSystem ps, float at)> attachReturning = new List<(ParticleSystem, float)>();
 
-    public static GameObject Attach(Kind kind, Transform target, float height)
+    /// <param name="tint">오라 이펙트(AuraSource·AuraReceiver)의 색 — 층 기본 색에 곱한다. radius = AuraSource 바깥 고리의 실제 오라 반지름(월드 단위, 0이면 바깥 고리 없음).</param>
+    public static GameObject Attach(Kind kind, Transform target, float height, Color? tint = null, float radius = 0f)
     {
         if (target == null || !Enabled || !CasterAllowsVfx) return null;
         ReclaimAttached();
@@ -433,7 +453,7 @@ public static class SkillVfx
         if (free.Count > 0) { ps = free[free.Count - 1]; free.RemoveAt(free.Count - 1); }
         else
         {
-            if (all.Count >= AttachPoolCap) return null;
+            if (all.Count >= (kind == Kind.AuraReceiver ? AuraReceiverPoolCap : AttachPoolCap)) return null;
             ps = Build(kind, Root, loop: true);
             if (ps == null) return null;
             all.Add(ps);
@@ -447,6 +467,7 @@ public static class SkillVfx
         ps.gameObject.SetActive(true);
         ps.Clear(true);
         ApplyZoom(ps);
+        if (kind == Kind.AuraSource || kind == Kind.AuraReceiver) ApplyAuraStyle(ps, tint ?? Color.white, radius);
         ps.Play(true);
 
         // 스턴은 걸리는 순간 발구르기 한 번(벽 + 원판). 로컬로만 — 친구 화면은 자기 Attach(거울)에서 똑같이 튼다.
@@ -579,6 +600,16 @@ public static class SkillVfx
                     Mat("ring_shock") != null
                         ? Layer("ring_shock", new Color(1f, 1f, 1f, 0.6f), 0.25f, 2.0f * Unit / 0.62f, 1, 0f, Shape.None, mesh: "충격파_원판", feet: true, growFrom: 0.35f)
                         : Layer("circle_03", new Color(1f, 1f, 1f), 0.5f, 55f, 1, 0f, Shape.None, mesh: "충격파_원판", feet: true, growFrom: 0.3f));
+            case Kind.AuraSource:
+                if (!UseB() || Mat("ring_magic") == null) return null;
+                return Layered(parent, loop, "AuraSource",
+                    Layer("ring_magic", new Color(1f, 1f, 1f, 0.9f), 1.0f, 1.8f * Unit, 1, 0f, Shape.None, ground: true, persistent: loop, local: true),   // 발밑 얇은 광 고리(유닛을 따라다님)
+                    Layer("dot_soft", new Color(1f, 1f, 1f, 0.9f), 2.0f, 0.14f * Unit, 0, 0f, Shape.Ring, rate: loop ? 3.5f : 0f, rise: 0.4f * Unit, ringRadius: 0.45f),   // 아주 느린 상승 입자(초당 3~4개)
+                    Layer("ring_shock", new Color(1f, 1f, 1f, 0.15f), 1.0f, 4f * Unit, 1, 0f, Shape.None, ground: true, persistent: loop, local: true));   // 실제 범위 가장자리(반지름은 Attach가 넣는다)
+            case Kind.AuraReceiver:
+                if (!UseB()) return null;
+                return Layered(parent, loop, "AuraReceiver",
+                    Layer("dot_soft", new Color(1f, 1f, 1f, 1f), 1.0f, 0.5f * Unit, 1, 0f, Shape.None, ground: true, persistent: loop, local: true, offsetZ: -0.2f * Unit));   // 「받고 있음」 점 하나 — 0.5H, 모델 발 앞(카메라 쪽 0.2H)으로 당김(10-20 PM), 대상을 따라다님
             case Kind.Smash:
                 // 10-19 안 B: 물리 = 금. 땅 폭발 메시 + 금 8각 섬광 + 금 충격 고리, 받침판.
                 if (UseB())
@@ -658,6 +689,7 @@ public static class SkillVfx
         public string mesh; public bool feet; public float spinY, yaw; public bool randomYaw; public float growFrom; public bool shrinkWidth; public Vector3 aspect;
         public float spinZ;   // 판 안에서 도는 속도(도/초)
         public string trail; public float trailSeconds, trailWidth; public Color trailColor;   // 빛 꼬리(10-19 안 B): trail = 꼬리 재질 이름, trailSeconds = 꼬리 길이(초), trailWidth = 입자 크기 대비 폭, trailColor = 꼬리 색
+        public bool local; public float offsetZ;   // local = 입자가 이펙트 뿌리를 따라다님(붙는 이펙트의 지속 고리·점) · offsetZ = 뿌리에서 앞(−z, 카메라 쪽)으로 당긴 거리
         public float rise;   // 위로 오르는 속도(월드 단위/초) — 나선 알갱이
         public float ringRadius;   // Shape.Ring 반지름(0 = 기본 0.45 Unit)
         public bool hasColor2; public Color color2;   // 시작 색을 color·color2 중 무작위로
@@ -666,11 +698,11 @@ public static class SkillVfx
     static LayerSpec Layer(string texture, Color color, float lifetime, float size, int burst, float speed, Shape shape,
                            float rate = 0f, bool ground = false, bool randomRotation = false, float grow = 0f, float orbit = 0f,
                            bool persistent = false, bool alpha = false, string mesh = null, bool feet = false, float spinY = 0f,
-                           float yaw = 0f, bool randomYaw = false, float growFrom = 0f, bool shrinkWidth = false, Vector3? aspect = null, float spinZ = 0f, string trail = null, float trailSeconds = 0.35f, Color? color2 = null, Color? trailColor = null, float trailWidth = 1f, float ringRadius = 0f, float rise = 0f) =>
+                           float yaw = 0f, bool randomYaw = false, float growFrom = 0f, bool shrinkWidth = false, Vector3? aspect = null, float spinZ = 0f, string trail = null, float trailSeconds = 0.35f, Color? color2 = null, Color? trailColor = null, float trailWidth = 1f, float ringRadius = 0f, float rise = 0f, bool local = false, float offsetZ = 0f) =>
         new LayerSpec { texture = texture, color = color, lifetime = lifetime, size = size, burst = burst, speed = speed,
                         shape = shape, rate = rate, ground = ground, randomRotation = randomRotation, grow = grow, orbit = orbit,
                         persistent = persistent, alpha = alpha, mesh = mesh, feet = feet, spinY = spinY, yaw = yaw, randomYaw = randomYaw,
-                        growFrom = growFrom, shrinkWidth = shrinkWidth, aspect = aspect ?? Vector3.one, spinZ = spinZ, trail = trail, trailSeconds = trailSeconds, trailWidth = trailWidth, trailColor = trailColor ?? Color.white, hasColor2 = color2.HasValue, color2 = color2 ?? Color.white, ringRadius = ringRadius, rise = rise };
+                        growFrom = growFrom, shrinkWidth = shrinkWidth, aspect = aspect ?? Vector3.one, spinZ = spinZ, trail = trail, trailSeconds = trailSeconds, trailWidth = trailWidth, trailColor = trailColor ?? Color.white, hasColor2 = color2.HasValue, color2 = color2 ?? Color.white, ringRadius = ringRadius, rise = rise, local = local, offsetZ = offsetZ };
 
     static ParticleSystem Layered(Transform parent, bool loop, string name, params LayerSpec[] layers)
     {
@@ -700,7 +732,7 @@ public static class SkillVfx
             main.startSize = new ParticleSystem.MinMaxCurve(spec.size * 0.85f, spec.size * 1.15f);
             main.startColor = spec.hasColor2 ? new ParticleSystem.MinMaxGradient(spec.color, spec.color2) : new ParticleSystem.MinMaxGradient(spec.color);
             main.startRotation = spec.randomRotation ? new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f) : 0f;
-            main.simulationSpace = spec.orbit > 0f ? ParticleSystemSimulationSpace.Local : ParticleSystemSimulationSpace.World;
+            main.simulationSpace = spec.orbit > 0f || spec.local ? ParticleSystemSimulationSpace.Local : ParticleSystemSimulationSpace.World;
             main.scalingMode = ParticleSystemScalingMode.Shape;
             main.maxParticles = 32;
 
@@ -716,6 +748,13 @@ public static class SkillVfx
                 shape.shapeType = ParticleSystemShapeType.Circle; shape.radius = (spec.ringRadius > 0f ? spec.ringRadius : 0.45f) * Unit; shape.rotation = new Vector3(90f, 0f, 0f); shape.radiusThickness = 0f;
                 // 한 번에 뿌리는 입자를 원 둘레에 같은 간격으로(셋이면 120°씩) — 무작위면 한쪽에 몰린다.
                 if (spec.burst > 1) shape.arcMode = ParticleSystemShapeMultiModeValue.BurstSpread;
+            }
+
+            if (spec.offsetZ != 0f)
+            {
+                shape.enabled = true;
+                shape.shapeType = ParticleSystemShapeType.Sphere; shape.radius = 0.001f;
+                shape.position = new Vector3(0f, 0f, spec.offsetZ);
             }
 
             if (spec.orbit > 0f || spec.rise != 0f)
@@ -814,6 +853,7 @@ public static class SkillVfx
             }
 
             baseSizes[ps] = new BaseSize { size = spec.size, radius = ps.shape.radius, speed = spec.speed, aspect = spec.aspect };
+            baseColors[ps] = spec.color;
             if (first == null) { first = ps; holder = go.transform; }
             if (spec.feet)   // 첫 층(= 묶음 뿌리)이 발밑이어도 — 뿌리를 옮기면 다른 층도 따라가고, 발밑 층은 다시 같은 자리에 놓인다
             {
