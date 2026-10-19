@@ -810,10 +810,29 @@ public class RecipeHelperPanel : MonoBehaviour
         if (dirty || Time.unscaledTime >= nextRefresh)
         {
             nextRefresh = Time.unscaledTime + 0.5f;
+            // 보유 목록이 안 바뀌었으면 칸 수백 개의 진행률 계산·정렬·글자를 다시 하지 않는다(10-20 perf — 열려 있는 동안 0.5초마다 통째로 돌았다).
+            int signature = OwnedSignature();
+            if (!dirty && signature == lastOwnedSignature) return;
+            lastOwnedSignature = signature;
             dirty = false;
             Refresh();
             RefreshDetail();
         }
+    }
+
+    int lastOwnedSignature = int.MinValue;
+
+    // 보유 유닛·아이템의 순서 무관 서명(개수 + 해시 합). 인벤토리 이벤트가 없어서 값싼 서명으로 바뀜을 본다.
+    static int OwnedSignature()
+    {
+        PlayerContext me = PlayerContext.Local;
+        if (me == null) return 0;
+        int sum = 17;
+        if (me.UnitInventory != null)
+            foreach (UnitData u in me.UnitInventory.Units) if (u != null) unchecked { sum += u.GetHashCode() * 31 + 1; }
+        if (me.ItemInventory != null)
+            foreach (ItemData it in me.ItemInventory.Items) if (it != null) unchecked { sum += it.GetHashCode() * 17 + 3; }
+        return sum;
     }
 
     void CountOwned()
