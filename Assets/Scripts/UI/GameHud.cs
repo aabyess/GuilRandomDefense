@@ -5096,6 +5096,21 @@ public class GameHud : MonoBehaviour
                     selectedData = identity.Data;
             }
         }
+        else if (count > 1)
+        {
+            // 10-19 사장님 「희귀 김기연으로 전설 양문호 가려는데 조합 단추가 없다」 — 더블클릭(같은 종류 전부)·드래그로 같은 유닛 여럿을 고르면
+            // 단추가 사라졌다(count == 1만 봤다). 전부 같은 유닛이면 그 유닛의 조합 단추를 낸다(누르면 첫 유닛 자리에 결과가 나온다 — 위 클릭 처리).
+            // 종류가 섞이면 종전처럼 아무것도 안 낸다(어느 유닛 것인지 모호).
+            UnitData common = null;
+            bool same = true;
+            foreach (Selectable member in selection.Selected)
+            {
+                if (member == null || member.TryGetComponent(out ILaneShop _) || !member.TryGetComponent(out UnitIdentity memberIdentity)) { same = false; break; }
+                if (common == null) common = memberIdentity.Data;
+                else if (memberIdentity.Data != common) { same = false; break; }
+            }
+            if (same) selectedData = common;
+        }
 
         // 레인 상점이 선택된 동안은 조합 카드 로직(조합 레시피 캐시·흐림 처리)을 아예 건드리지 않는다 —
         // 12칸의 내용·클릭 의미만 상점 칸으로 바뀐다.
