@@ -240,11 +240,11 @@ public static class SkillVfx
             ParticleSystem.ColorOverLifetimeModule col = ps.colorOverLifetime;
             if (col.enabled && col.color.mode == ParticleSystemGradientMode.Gradient) col.color = new ParticleSystem.MinMaxGradient(RecolorGradient(col.color.gradient, rc));
         }
-        // 어두운 알파 받침판 — 가산광이 밝은 풀밭에서 하얗게 날아가는 것을 막는다(지름은 PlayPrefab이 매번 넣는다).
+        // 어두운 알파 받침판 — 가산광이 밝은 풀밭에서 하얗게 날아가는 것을 막는다(지름은 PlayPrefab이 매번 넣는다, 알파 0.4 — 10-19 풀밭에서 보이게).
         if (Mat("plate_dark") != null)
         {
             ParticleSystem plate = Layered(g.transform, false, "RolePlate",
-                Layer("plate_dark", new Color(0f, 0f, 0f, 0.28f), 0.7f, 20f, 1, 0f, Shape.None, ground: true, alpha: true));
+                Layer("plate_dark", new Color(0f, 0f, 0f, 0.4f), 0.7f, 20f, 1, 0f, Shape.None, ground: true, alpha: true));
             if (plate != null) platePs[g] = plate;
         }
     }
@@ -584,7 +584,7 @@ public static class SkillVfx
                 if (UseB())
                     return Layered(parent, loop, "Smash",
                         Layer("plate_dark", new Color(0f, 0f, 0f, 0.35f), 0.5f, 1.6f * Unit, 1, 0f, Shape.None, ground: true, alpha: true),
-                        Layer("vfx_spike", new Color(1f, 0.9f, 0.6f), 0.4f, 62f, 1, 0f, Shape.None, mesh: "땅_폭발", feet: true, growFrom: 0.35f),
+                        Layer("vfx_spike", new Color(1f, 0.9f, 0.6f), 0.4f, 80f, 1, 0f, Shape.None, mesh: "땅_폭발", feet: true, growFrom: 0.35f),
                         Layer("burst_8pt", BGold, 0.4f, 1.1f * Unit, 1, 0f, Shape.None),
                         Layer("ring_shock", A(BGold, 0.6f), 0.5f, 2.0f * Unit / 0.62f, 1, 0f, Shape.None, mesh: "충격파_원판", feet: true, growFrom: 0.3f));
                 // 강타·범위 폭발(정의만, 1.2.2) — 땅 폭발 + 벽 + 원판, 주황(원작 E_WarStompCaster·NewDirtEXNofire). 흙먼지는 데이터 연결 때
