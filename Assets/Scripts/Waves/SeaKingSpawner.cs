@@ -102,7 +102,6 @@ public class SeaKingSpawner : MonoBehaviour
     // 포인트 셋 다 마찬가지다.
     void GrantReward()
     {
-        S2Missions.Complete(S2Missions.Mission.SeaKing);   // S2 미션판(+아이템 발굴)
         List<WispReward> wisp = rewardWisp != null
             ? new List<WispReward> { new WispReward { wisp = rewardWisp, count = RewardWispCount } }
             : null;

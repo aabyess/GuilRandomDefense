@@ -13,12 +13,12 @@ public static class NetSaves
     public static void SubmitOwn(NetPlayer self)
     {
         PlayerSaveData data = PersistentSave.ReadOwnSave();
-        self.RPC_SubmitSave(data.cumulativePlayPoint, data.cumulativeClearCount, data.bestRunPoint, data.playerLevel, data.berry);
+        self.RPC_SubmitSave(data.cumulativePlayPoint, data.cumulativeClearCount, data.bestRunPoint, data.playerLevel);
         Debug.Log($"[MP] 세이브 제출: 누적 {data.cumulativePlayPoint}점 · 클리어 {data.cumulativeClearCount}회 · 최고 {data.bestRunPoint}");
     }
 
     /// <summary>호스트: 받은 값은 0 이상으로만 자른다(조작 방지는 안 함 — 친구 베타, 싱글과 같은 수준).</summary>
-    public static void Receive(NetPlayer sender, int point, int clear, int best, int level, int berry)
+    public static void Receive(NetPlayer sender, int point, int clear, int best, int level)
     {
         var data = new PlayerSaveData
         {
@@ -26,22 +26,18 @@ public static class NetSaves
             cumulativeClearCount = Mathf.Max(0, clear),
             bestRunPoint = Mathf.Max(0, best),
             playerLevel = Mathf.Max(0, level),
-            berry = Mathf.Max(0, berry),
         };
         MatchConfig.SetSubmittedSave(sender.Slot, data);
         Debug.Log($"[MP] 세이브 받음: 슬롯 {sender.Slot} — 누적 {data.cumulativePlayPoint}점 · 클리어 {data.cumulativeClearCount}회");
     }
 
     /// <summary>호스트: 원격 슬롯의 판 결과를 그 친구에게.</summary>
-    public static void SendResult(int slot, PlayerSaveData data, bool cleared, System.Collections.Generic.List<string> unitClears)
+    public static void SendResult(int slot, PlayerSaveData data, bool cleared)
     {
         foreach (NetPlayer player in NetPlayer.All)
         {
             if (player == null || player.Slot != slot) continue;
-            // 유닛 클리어 기록은 이번 판 몫(이름 목록)만 보낸다 — 친구 파일의 기록에 더한다(호스트는 친구의 옛 기록을 모른다).
-            string units = unitClears == null ? "" : string.Join("|", unitClears);
-            if (units.Length > 400) units = units.Substring(0, 400);
-            player.RPC_SaveResult(data.cumulativePlayPoint, data.cumulativeClearCount, data.bestRunPoint, data.playerLevel, cleared, data.berry, units);
+            player.RPC_SaveResult(data.cumulativePlayPoint, data.cumulativeClearCount, data.bestRunPoint, data.playerLevel, cleared);
             Debug.Log($"[MP] 세이브 결과 보냄: 슬롯 {slot} — 누적 {data.cumulativePlayPoint}점 · 클리어 {data.cumulativeClearCount}회");
             return;
         }
@@ -49,13 +45,9 @@ public static class NetSaves
     }
 
     /// <summary>클라: 결과를 받아 내 player_0.json에 쓰고 눈에 보이게 알린다(PM 요구).</summary>
-    public static void WriteResult(int point, int clear, int best, int level, bool cleared, int berry, string unitClears)
+    public static void WriteResult(int point, int clear, int best, int level, bool cleared)
     {
-        // 내 파일을 읽어 호스트가 아는 칸만 덮는다 — 유닛 클리어 기록처럼 호스트에 안 보낸 칸이 지워지지 않게.
-        PlayerSaveData data = PersistentSave.ReadOwnSave();
-        data.cumulativePlayPoint = point; data.cumulativeClearCount = clear; data.bestRunPoint = best; data.playerLevel = level;
-        data.berry = Mathf.Max(data.berry, berry);
-        if (!string.IsNullOrEmpty(unitClears)) foreach (string name in unitClears.Split('|')) data.AddUnitClear(name);
+        var data = new PlayerSaveData { cumulativePlayPoint = point, cumulativeClearCount = clear, bestRunPoint = best, playerLevel = level };
         try
         {
             PersistentSave.WriteOwnSave(data);

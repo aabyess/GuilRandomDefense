@@ -1,37 +1,10 @@
-# blender 인수인계 (2026-10-14~18, 직전 blender 세션 → 새 blender 세션)
+# blender 인수인계 (2026-10-14~16, 직전 blender 세션 → 새 blender 세션)
 
 새 세션: 이 파일을 먼저 읽고 PM(`pm` — 이름이 둘이면 새 쪽 ref)에게 「[blender → PM] 준비 완료」. 일이 끝나면 이 파일을 비우고 커밋.
-규칙: **Assets엔 안 쓴다**(반입은 PM·구현담당1/2). 산출은 `~/grd/GRD_*/` · `~/Desktop/구랜디스킨모음/` + 정본 스크립트(Tools/blender · Tools/w3x). 🔴 시스템 파이썬 PIL·numpy·yaml·mpyq는 `/usr/bin/python3`(`-I` 주지 말 것). Blender 창(MCP)이 켜져 있으면 시험은 창에서(`exec`로 스크립트 실행), 대량 렌더는 헤드리스(`blender -b --factory-startup --python …`). 커밋은 `git add -- <파일>` → `git commit -m … -- <파일>`(경로 없는 커밋·-a 금지), push는 PM. 큰 산출물이 새로 생기면 `Docs/ARCHIVE_INDEX.md`에 한 줄(위치+재생성 도구). 커밋 끝줄 `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. 원작 수치는 j/w3a/w3u 직접 디코드, 유료 에셋 금지. 임시 세션 blender2(S2 스킨 추출)·blender3(닫힘)가 있었다 — 새 일은 PM 지시로.
+규칙: **Assets엔 안 쓴다**(반입은 PM·구현담당1/2). 산출은 `~/grd/GRD_*/` · `~/Desktop/구랜디스킨모음/` + 정본 스크립트(Tools/blender · Tools/w3x). 🔴 시스템 파이썬 PIL·numpy·yaml·mpyq는 `/usr/bin/python3`(`-I` 주지 말 것). Blender 창(MCP)은 꺼져 있어 전부 헤드리스(`blender -b --factory-startup --python …`). 커밋은 `git add -- <파일>` → `git commit -m … -- <파일>`(경로 없는 커밋·-a 금지), push는 PM. 큰 산출물이 새로 생기면 `Docs/ARCHIVE_INDEX.md`에 한 줄(위치+재생성 도구). 커밋 끝줄 `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. 원작 수치는 j/w3a/w3u 직접 디코드, 유료 에셋 금지. 임시 세션 blender2(S2 스킨 추출)·blender3(닫힘)가 있었다 — 새 일은 PM 지시로.
 
-## 지금 진행 중인 일 없음 — 대기(10-18 저녁)
-PM이 재매칭 이펙트 78줄을 에디터에서 반입하는 중. 크기·색 조정 숫자가 오면 해당 gen_* 스크립트 숫자만 바꿔 다시 돌린다. 미커밋 도구 없음.
-Blender 창(MCP)은 10-16에 켜져 있었다(기본 장면) — 시험은 창에서, 대량 렌더는 헤드리스로 했다.
-
-## 10-16~18 세션에 끝낸 일 (전부 커밋·대부분 PM push)
-| 일 | 산출 위치 | 도구(재생성) |
-|---|---|---|
-| 파칭코 화면 이펙트 11종(섬광·충격파 0.4s·코인·집중선 루프·화염·슬라임·무지개·예고 글자 チャンス/激熱/確変/PUSH!!) | `~/grd/GRD_pachinko_fx/<효과>/`(rgba 투명·add 검정배경·meta.json) · 시트 `sheet_*.png` | `Tools/blender/gen_pachinko_fx.py` + `run_pachinko_fx_all.sh [효과…]`(렌더→`post` numpy bloom→`sheet`) |
-| (취소된 방향) 파칭코 기계 정면 3D | `~/grd/GRD_pachinko_cabinet/` | `gen_pachinko_cabinet.py` — 더 손대지 말 것(PM) |
-| S2 원작 모델·이펙트 추출 공용 도구 | — | 🔴 `/usr/bin/python3 Tools/w3x/model_pull.py <s2\|old> <출력루트> <모델…>`: mdx_extract → export_mdx_anim_fbx → none 층 전용 텍스처 알파 채움 → vfx_unity_block 자동. 이름은 `!0720_Tashigi`처럼 짧게도 됨 |
-| S2 신규 기능 모델 7(오로성 워큐리·새턴·나스쥬로, 샨도라 종, 룸바 영혼 SmallLight, 엘리베이터, kineticfield) | `~/grd/GRD_s2_models/`(_verify.json·_render·sheet_s2_models.png) | model_pull + `verify_mdx_fbx.py`(_ 폴더 건너뜀) + `render_mdx.py` |
-| 엘리베이터 원판·kineticfield 바닥 필드 재제작 | `~/grd/GRD_s2_models/gen_ElevatorPuzzle/`·`gen_kineticfield/` | `Tools/blender/gen_s2_props.py [elevator] [kinetic]` |
-| 재매칭 이펙트 ① 꺼내기만 41 · ② 깨짐 20 | `~/grd/GRD_skill_vfx/1_extract/`·`2_fix/` → 반입본 `~/grd/GRD_orig_vfx_trial/<모델>/` | model_pull · 목록 원본 `~/grd/GRD_rematch/effects_for_blender.csv`(구현담당1) |
-| 입자 목록 한 함수 | — | `Tools/w3x/pre2_unity.py`(stand_seq·pre2_entries) — scene_scripts.model_block과 공유. 따로 베끼지 말 것 |
-| unity 블록 생성 | — | `Tools/w3x/vfx_unity_block.py <루트> [--check]` — json에 `unity`(OriginalVfxBuilder)·`pre2Unity`(Pre2Builder) 추가 + 입자 텍스처 Textures/ 복사. 옛 527개 대조 521 일치 |
-| 재매칭 ③ 제작 16(워크3 기본 모델 베끼기 + Dashboard_UtaExAuraEff) | `~/grd/GRD_orig_vfx_trial/<이름>/` · 시트 `~/grd/GRD_skill_vfx/sheet_3_make.png` | `blender -b --factory-startup --python Tools/blender/gen_skill_vfx_wc3.py -- [이름…] [--out 루트]` |
-| 반입 목록(78줄) | `~/grd/GRD_skill_vfx/반입목록_1018.csv`(.json) | PM이 이걸로 반입 |
-
-## 10-16~18 함정 (🔴 새로 알게 된 것)
-- 🔴 **반입 원본 자리 = `~/grd/GRD_orig_vfx_trial/<모델>/<모델>.json·.fbx·Textures/`**(OriginalVfxBuilder.SourceRoot). 폴더 이름은 경로 뗀 모델 이름(`war3mapImported__!0603_Rebecca` → `!0603_Rebecca`), FBX 안 메시·액션 이름은 원래 태그 그대로. json엔 `unity` 블록(없으면 「unity 블록 없음」 실패)과 입자는 `pre2Unity` 필요. 입자 전용 모델은 `unity.layers=[]`. 10-18에 같은 이름 옛 폴더 20개를 S2 판으로 바꿈 — 옛 것은 `_backup_1018/`.
-- 🔴 **워터마크 알파**: 중국 모델러 BLP 일부(S2 새턴)는 알파에 「…未经许可禁止上架使用」 워터마크만 있고 98%가 0. 워크3는 none 층 알파를 무시하지만 우리 _cut 재질은 몸이 사라지고 Blender 그림은 검다. model_pull이 none 층 전용 텍스처만 알파를 채운다(transparent 층과 공유하면 그대로 — ArtBinder MakeOpaqueSlot에 맡김).
-- 🔴 **export_mdx_anim_fbx json의 pre2는 유니티가 못 읽는 이름**(lifespan·rate·filter 정수 등). 유니티용은 `pre2Unity`(=대본 models[].pre2 형식, pivot·tracks 포함). 새 도구도 pre2_unity.py를 import할 것.
-- 🔴 **OriginalVfxBuilder는 층 색(tint)을 안 읽는다** → Blender로 만든 메시 층 색은 텍스처에 구워 넣는다(gen_skill_vfx_wc3의 tex(…, tint)). 입자 색은 pre2Unity colorsRGB01.
-- 🔴 **Blender 오브젝트 애니 FBX의 테이크 이름 = 장면 이름**(bake_anim_use_all_actions=False). 클립 이름을 맞추려면 `scene.name = "s0_Stand"`.
-- **verify_mdx_fbx.py는 루트/*/*.json을 다 읽는다** — `_work`(_approx.json)·`_render`(_report.json)는 10-18에 건너뛰게 고침.
-- **PRE2 색 순서(RGB/BGR)는 미확정** — 우리 반입기(CinematicImporter)는 RGB로 읽는다. kineticfield가 파랑(RGB)/주황(BGR) 갈림 → 구현담당3이 에디터에서 확인 예정.
-- **워크3 기본 모델(Abilities\…·DNC…)은 맵에 없어 못 꺼낸다**(로컬에 War3.mpq도 없음). DNCLordaeron*은 낮밤 조명 모델이라 이펙트가 아님.
-- 파칭코 fx: 이미지 뷰어(Read)는 알파를 무시해 반투명 줄이 흰 띠처럼 보인다 — 알파 값은 PIL로 확인. 8비트 렌더+bloom은 띠가 생겨서 blur는 float FFT + 디더(gen_pachinko_fx.blur_rgb·dither8). 영상 위 합성 시트는 글자·코인(txt 층)은 알파 합성, 나머지는 더하기.
-- zsh: `${@:-a b c}`는 한 덩어리 문자열이 된다(run_all 첫 판이 아무것도 안 렌더) → 배열 `LIST=(…)`로.
+## 지금 진행 중인 일 없음 — 대기(PM 지시 기다림)
+미커밋 도구 없음(전부 커밋됨).
 
 ## 10-15~16 세션에 추가로 끝낸 일 (PM 지시, 전부 반영·커밋됨)
 - **초월_최상호_AD 컷인 title 재제작**(칭호 「킹카가될뻔했던사나이」): 칭호는 컷인 C안 `title` 레이어에 박혀 있다(다른 10층은 불변). PM이 반입·푸시(7404b80d9).

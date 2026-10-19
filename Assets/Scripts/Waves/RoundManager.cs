@@ -147,9 +147,6 @@ public class RoundManager : MonoBehaviour
 
     void Start()
     {
-        PachinkoController.ResetForNewRun();   // 판 사이에 남은 파칭코 static(한 판 하고 다시 하면 안 뜸)
-        RunStats.ResetForNewRun();             // S2 판 통계(도박·위습·조합 수)
-        S2Missions.ResetForNewRun();           // S2 미션판·개인 퀘스트·포네그리프
         for (int i = 0; i < MaxTrackedLanes; i++)
         {
             laneDeathCount[i] = startingDeathCount;
@@ -462,18 +459,6 @@ public class RoundManager : MonoBehaviour
             PlayerNotification.Show(context.PlayerId, line, VictoryNoticeSeconds);
     }
 
-    /// <summary>클리어 판에서 플레이어마다 FinishRun(세이브 쓰기) 직전에 부른다 — 클리어 때 주는 세이브 보상(베리·기록)을 여기 건다.</summary>
-    public static event System.Action<PlayerContext> ClearRewardHook;
-
-    /// <summary>빌드 시험용(-mpTestClear): 마지막 라운드를 깬 것과 같은 클리어 끝맺음(공지·베리·클리어 기록·세이브)을 지금 탄다. 호스트만.</summary>
-    public void TestForceClear()
-    {
-        if (isGameOver) return;
-        isGameOver = true;
-        AnnounceClear();
-        FinishPersistentSave(cleared: true);
-    }
-
     void FinishPersistentSave(bool cleared)
     {
         foreach (PlayerContext context in PlayerContext.Occupied)
@@ -491,13 +476,6 @@ public class RoundManager : MonoBehaviour
                     // 원작 j:5747(그 플레이어에게만, 사실상 계속): 「유닛카운트 점수 보너스:N점!」
                     PlayerNotification.Show(context.PlayerId, $"<color=#52E252>유닛카운트 점수 보너스:{bonus}점!</color>", VictoryNoticeSeconds);
                 }
-
-                // 베리(S2 CUh j:58487~58499): 클리어 1(악몽은 LI+1로 2, j:58040) · 악몽에서 최종 유닛 카운트 0이면 +1.
-                bool nightmare = DifficultyManager.Instance != null && DifficultyManager.Instance.Current == DifficultyMode.Nightmare;
-                Berry.Grant(context.PlayerId, nightmare ? 2 : 1, "클리어 보상");
-                if (nightmare && PersistentSave.CountAliveInLane(context.PlayerId) == 0 && Berry.Grant(context.PlayerId, 1, "클리어 보상", announce: false))
-                    PlayerNotification.Show(context.PlayerId, $"<color=#04FFC4>[클리어 보상]</color> 최종 유닛 카운트 0을 달성하여 <color={Berry.Color}>1 베리</color> 추가 획득!", 10f);
-                ClearRewardHook?.Invoke(context);   // 개인 미션 3개 완료(+1 베리)·유닛별 클리어 기록 — FinishRun 전에
             }
 
             context.PersistentSave.FinishRun(cleared);
@@ -518,15 +496,8 @@ public class RoundManager : MonoBehaviour
     }
 #endif
 
-    /// <summary>라운드가 시작될 때(인자 = 그 라운드 번호, 원작 X3가 바뀌는 순간) — 서버.</summary>
-    public static event System.Action<int> RoundStartedEvent;
-    /// <summary>라운드가 끝날 때(인자 = 끝난 라운드, 원작 l0) — 서버.</summary>
-    public static event System.Action<int> RoundEndedEvent;
-
     void AdvanceRound()
     {
-        if (currentRound == totalRounds) RunStats.SnapshotFinalUnitCounts();   // -점수판 「최종 유닛 카운트」(원작 jv)
-        RoundEndedEvent?.Invoke(currentRound);
         GrantRoundClearWisps(currentRound);
         FullCountScore.OnRoundEnd(currentRound, finalClear: totalRounds > 60 && currentRound == totalRounds);   // 풀카운트 라운드 끝 가산(원작 Round_10ver Stage 20)
         // 아이템 도박 재고는 라운드가 아니라 스토리 6·9 클리어 때 +1 — RewardDistributor.GrantStoryReward(원작 Item_Int+1, j:13555·13603).
@@ -564,7 +535,6 @@ public class RoundManager : MonoBehaviour
             if (totalRounds > 60)
             {
                 FullCountScore.OnNewWorldEnter();
-                OroSeong.OnNewWorldEnter();   // S2 오로성 저주 발동(걸려 있었다면)
                 if (DifficultyManager.Instance != null) RewardDistributor.Instance?.GrantNewWorldWisps(DifficultyManager.Instance.Current);   // e015 신세계 보상 위습
             }   // 원작 Stage 11: 전원 1250점·full_C 0, 점수판 풀카운트 행이 처음 뜬다
         }
@@ -693,7 +663,6 @@ public class RoundManager : MonoBehaviour
 
     void StartRound(int roundNumber)
     {
-        RoundStartedEvent?.Invoke(roundNumber);
         WaveData waveData = GetWaveData(roundNumber);
 
         roundTimer = ResolveRoundDuration(roundNumber, waveData);

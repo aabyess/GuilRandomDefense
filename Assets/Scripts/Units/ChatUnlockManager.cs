@@ -215,7 +215,6 @@ public class ChatUnlockManager : MonoBehaviour
         LaneMarker lane = LaneMarker.Get(context.PlayerId);
         Vector3 position = lane != null ? lane.TakeSpawnPosition(data.result) : transform.position;
         unitSpawner.Spawn(data.result, position, context.PlayerId, combined: true);
-        RunStats.OnCombined(context.PlayerId, data.result);   // S2 조합 퀘스트
     }
 
     // 입력창은 GameChatBox(통합) 소관이다 — 여기는 판정·지급 결과 메시지만 들고 있는다.

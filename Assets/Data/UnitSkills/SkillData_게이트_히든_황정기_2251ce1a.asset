@@ -46,7 +46,7 @@ MonoBehaviour:
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.15
+    triggerChance: 0.125
     range: 500
     hitCountThreshold: 0
     resetTo: 0
@@ -56,19 +56,19 @@ MonoBehaviour:
     selfBuffId: 
     effects:
     - kind: 0
-      basis: 0
+      basis: 4
       target: 2
-      damageType: 2
+      damageType: 1
       attackType: 5
-      multiplier: 625000
-      bonus: 0
+      multiplier: 52500
+      bonus: 525000
       chance: 1
       hitCount: 1
       duration: 0
       casterBuffCountFactor: 0
       buffId: 
       randMin: 1
-      randMax: 1
+      randMax: 1.5
       buffHitCharges: 0
       requiredTargetBuffId: 
       forbiddenTargetBuffId: 
@@ -108,7 +108,7 @@ MonoBehaviour:
       target: 3
       damageType: 2
       attackType: 6
-      multiplier: 625000
+      multiplier: 525000
       bonus: 0
       chance: 1
       hitCount: 1
@@ -151,7 +151,6 @@ MonoBehaviour:
       stackResetSeconds: 3
       attackSpeedScale: 0
       attackSpeedScaleCap: 0
-      fixedDamage: 1
     requiredTargetBuffId: 
     forbiddenTargetBuffId: 
     hitCountFloor: 0

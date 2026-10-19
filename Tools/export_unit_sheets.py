@@ -289,8 +289,6 @@ def effect_text(e, lv):
         return '%s 초당 %s 게이지 재생 +%s' % (where, '마나' if k == 'ManaRegenBuff' else '체력', num(m))
     if k == 'DesignateAlly':
         return '아군 1기를 지정'
-    if k == 'GrantRandomWisp':
-        return '랜덤·흔함·안흔함·특별함·희귀함 위습 중 1개 획득'
     if k == 'LaneExplosiveAmp':
         return '내 라인 적이 받는 폭발형 피해 증폭 %s단계' % num(m)
     return '%s(%s)' % (k, num(m))
@@ -347,7 +345,7 @@ def all_zero(s):
     for e in effs:
         gs = e.get('grantSkill') or {}
         if (e.get('multiplier') or 0) or (e.get('bonus') or 0) or (e.get('duration') or 0) or e.get('buffId') \
-                or e.get('summonUnits') or e.get('lootItems') or e.get('rewardWispPool') or (isinstance(gs, dict) and gs.get('guid')):
+                or e.get('summonUnits') or e.get('lootItems') or (isinstance(gs, dict) and gs.get('guid')):
             return False
     return True
 
@@ -484,60 +482,13 @@ def unit_field_state(name, d):
     return ''
 
 
-def load_s2_map():
-    """재매칭(10-18) 정본 대응표 — 있으면 이것을 먼저 쓴다(S2 2.323 원작)."""
-    fs = sorted(glob.glob(ROOT + '/Docs/reference/S2_ROSTER_MAP_*.csv'))
-    if not fs:
-        return {}
-    return {r['로스터']: r for r in csv.DictReader(open(fs[-1], encoding='utf-8-sig'))}
-
-
-def vfx_state():
-    """스킬 guid → 이펙트 상태(원작 이펙트 적용 / 대체 이펙트 / blender 제작 대기 / 없음)."""
-    t = open(ROOT + '/Assets/Resources/Effects/SkillVfxTable.asset', encoding='utf-8').read()
-    pre = re.search(r'  prefabs:\n((?:  - .*\n)+)', t)
-    pg = re.findall(r'guid: (\w+)', pre.group(1)) if pre else []
-    gi = {}
-    for m in glob.glob(ROOT + '/Assets/**/*.prefab.meta', recursive=True):
-        g = re.search(r'guid: (\w+)', open(m, encoding='utf-8').read())
-        if g:
-            gi[g.group(1)] = m[:-5]
-    paths = [gi.get(g, '') for g in pg]
-    out = {}
-    for m in re.finditer(r'  - skill: \{fileID: \d+, guid: (\w+), type: 2\}\n((?:    .*\n)+)', t):
-        kinds = set()
-        for s in re.finditer(r'      prefab: (-?\d+)\n      kind: (-?\d+)', m.group(2)):
-            pi, ki = int(s.group(1)), int(s.group(2))
-            if pi >= 0:
-                kinds.add('원작 이펙트 적용' if '/Original/' in (paths[pi] if pi < len(paths) else '') else '대체 이펙트')
-            elif ki >= 0:
-                kinds.add('대체 이펙트')
-        if kinds:
-            out[m.group(1)] = '원작 이펙트 적용' if '원작 이펙트 적용' in kinds else '대체 이펙트'
-    pend = set()
-    for f in glob.glob(ROOT + '/Docs/research/ORIGINAL_VFX_ASSIGN_*.csv'):
-        for r in csv.reader(open(f, encoding='utf-8')):
-            if r and r[0].startswith('Assets/') and any(c.startswith('원작:') for c in r[1:4]):
-                pend.add(os.path.basename(r[0])[:-6])
-    return out, pend
-
-
 def match_rows(roster, audit, master, names):
     rows = []
     unverified = 0
-    s2map = load_s2_map()
-    vfx, vfx_pend = vfx_state()
     for d in sorted(roster, key=lambda x: (GRADE_ORDER.index(x['grade']) if x['grade'] in GRADE_ORDER else 99, x['_file'])):
         a = audit.get(d['_file'])
         ou = orig_units(d, a, master, names)
-        sm = s2map.get(d['_file'])
-        if sm and sm.get('상태', '').startswith('원작 없음'):
-            orig = '원작 없음(사장님 창작)'
-            ou = []
-        elif sm and sm.get('S2 원작 id'):
-            orig = '%s(%s) · S2 2.323' % (sm['S2 원작 이름'], sm['S2 원작 id'])
-            ou = [(sm['S2 원작 id'].upper(), sm['S2 원작 이름'])]
-        elif ou:
+        if ou:
             orig = ' / '.join('%s(%s)' % (n or '이름 미상', i) for i, n in ou)
         elif d.get('originalMatchName'):
             orig = d['originalMatchName'] + ' (원작 id 미상)'
@@ -546,9 +497,9 @@ def match_rows(roster, audit, master, names):
         gs = skill_guids(d)
         sks = [s for s in (skill_of(g) for g in gs) if s]
         if not sks:
-            rows.append((GRADE.get(d['grade']), d['unitName'], orig, '(스킬 없음)', '이 유닛은 스킬이 붙어 있지 않다', '-', '스킬 없음', '-'))
+            rows.append((GRADE.get(d['grade']), d['unitName'], orig, '(스킬 없음)', '이 유닛은 스킬이 붙어 있지 않다', '-', '스킬 없음'))
             continue
-        for g, s in [(g, skill_of(g)) for g in gs if skill_of(g)]:
+        for s in sks:
             lv = (s.get('levels') or [{}])[0]
             has = bool(lv.get('effects'))
             sent = skill_sentence(s)
@@ -568,11 +519,7 @@ def match_rows(roster, audit, master, names):
                     sent, state = fs, '구현(유닛 데이터)'
                 else:
                     sent = '효과 칸이 비어 있다(이름·표시만. 수치가 유닛 데이터나 다른 스킬에서 처리되는지 확인 못 함)'
-            if s['_file'].startswith('SkillData_S2_'):
-                m = re.search(r'_(A[0-9A-Za-z]{3})_\d+$', s['_file'])
-                src = '원작 능력 %s · S2 2.323 툴팁' % (m.group(1) if m else '')
-            fx = vfx.get(g) or ('원작 이펙트 대기(blender·반입 전)' if s['_file'] in vfx_pend else '없음')
-            rows.append((GRADE.get(d['grade']), d['unitName'], orig, nm or s['_file'], sent, src, state, fx))
+            rows.append((GRADE.get(d['grade']), d['unitName'], orig, nm or s['_file'], sent, src, state))
     return rows
 
 
@@ -669,8 +616,8 @@ def main():
     ws = wb.active
     ws.title = '전체'
     write_sheet(ws, base + ' · 구랜디-원랜디 매칭 (원작 유닛 = 능력치 가져온 원작 유닛 기준)',
-                ['등급', '우리 이름', '원작 유닛 이름(원작 id)', '스킬 이름', '스킬 설명', '스킬 출처', '구현 상태', '이펙트'],
-                mr, [12, 20, 38, 30, 80, 34, 16, 22])
+                ['등급', '우리 이름', '원작 유닛 이름(원작 id)', '스킬 이름', '스킬 설명', '스킬 출처', '구현 상태'],
+                mr, [12, 20, 38, 30, 80, 34, 16])
     p2 = os.path.join(OUT, 'G.R.D 구랜디-원랜디 매칭.xlsx')
     save(wb, p2)
 

@@ -24,7 +24,6 @@ public class ItemInventory : MonoBehaviour
         if (items.Count >= MaxItems) return false;
         items.Add(item);
         OnInventoryChanged?.Invoke();
-        if (GameAuthority.IsServer) foreach (PlayerContext c in PlayerContext.Occupied) if (c.ItemInventory == this) { RunStats.OnItemAcquired(c.PlayerId, item); break; }   // S2 고고학자(유니크 획득 누적)
         return true;
     }
 

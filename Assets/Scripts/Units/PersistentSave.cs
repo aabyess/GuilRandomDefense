@@ -101,7 +101,7 @@ public class PersistentSave : MonoBehaviour
         // MP: 원격 슬롯은 호스트 PC에 쓰지 않고 그 친구에게 돌려보낸다 — 친구가 자기 player_0.json에 쓴다.
         if (remote)
         {
-            if (GameAuthority.IsServer) NetSaves.SendResult(playerId, Data, cleared, SessionUnitClears);
+            if (GameAuthority.IsServer) NetSaves.SendResult(playerId, Data, cleared);
             return;
         }
 
@@ -139,28 +139,6 @@ public class PersistentSave : MonoBehaviour
         // 원작 j:13678~13679 외(그 플레이어에게만): 「◎세이브_플레이포인트 N 획득!」 — 얻는 곳이 여럿이라 여기 한 곳에서(알림 묶음 10/13, GAP 85).
         //    클리어 보너스는 원작도 「유닛카운트 점수 보너스:N점!」을 따로 띄워 이 줄을 안 낸다(announce=false).
         if (announce) PlayerNotification.Show(playerId, $"<color=#32CD32>◎세이브_플레이포인트 {amount} 획득!</color>", 10f);
-    }
-
-    /// <summary>이번 판에 얻은 베리(알림·판 요약용). Data.berry에는 바로 더해진다 — 판 끝 FinishRun 때 파일에 쓴다.</summary>
-    public int SessionBerry { get; private set; }
-
-    /// <summary>이번 판 클리어로 +1된 유닛 이름(멀티 원격 슬롯은 이 목록만 친구에게 보내 친구 파일에 더한다).</summary>
-    public readonly List<string> SessionUnitClears = new List<string>();
-
-    /// <summary>베리 지급 — 호스트·싱글만. 부르는 곳은 Berry.Grant(직접 부르지 말 것).</summary>
-    public void AddBerry(int amount)
-    {
-        if (amount <= 0) return;
-        Data.berry += amount;
-        SessionBerry += amount;
-    }
-
-    /// <summary>유닛별 클리어 기록 +1(S2 CUg). 클리어 처리에서 FinishRun 전에 부른다.</summary>
-    public void AddUnitClear(string unitName)
-    {
-        if (string.IsNullOrEmpty(unitName)) return;
-        Data.AddUnitClear(unitName);
-        SessionUnitClears.Add(unitName);
     }
 
     // 신세계(75라운드) 완주 보너스 — war3map.j Trig_Save_sido3, 원문 그대로:
@@ -217,7 +195,6 @@ public class PersistentSave : MonoBehaviour
         PlayerNotification.Show(playerId, $" 클리어 회수 = {Data.cumulativeClearCount}", 10f);
         PlayerNotification.Show(playerId, $" 누적 플레이 포인트 = {Data.cumulativePlayPoint}", 10f);
         PlayerNotification.Show(playerId, $" 포인트 획득량 = {gained}점", 10f);
-        if (SessionBerry > 0) PlayerNotification.Show(playerId, $" 베리 = {Data.berry} (이번 판 +{SessionBerry})", 10f);
         PlayerNotification.Show(playerId, "진행 게임 결과를 세이브합니다.", 10f);
 
         SessionPoints = 0;

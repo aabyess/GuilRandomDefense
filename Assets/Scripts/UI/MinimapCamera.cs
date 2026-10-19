@@ -122,7 +122,7 @@ public class MinimapCamera : MonoBehaviour, IPointerClickHandler
     static string Describe(Bounds? b) => b == null ? "없음" : $"중심 {b.Value.center} · 크기 {b.Value.size} · x {b.Value.min.x:F0}~{b.Value.max.x:F0} · z {b.Value.min.z:F0}~{b.Value.max.z:F0}";
 
     // "Map" 아래 렌더러의 경계. 바다 판은 크기(맵 전체 가로·세로의 절반 넘게 덮는 판)로 빼고, 이름("Sea"·"바다"로 시작)은 덤으로 뺀다.
-    public static Bounds? MeasureMapRenderers()
+    static Bounds? MeasureMapRenderers()
     {
         GameObject map = GameObject.Find("Map");
         if (map == null) return null;

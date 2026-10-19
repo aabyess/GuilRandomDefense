@@ -52,8 +52,6 @@ public class ShopNameplateLayer : MonoBehaviour
         public TMP_Text text;
         public SupportShop support;          // 도움소만: 머리 위 마나 막대(사장님 10-07 「도움소 마나 얼마나 찼는지」)
         public Image manaFill, manaBack;
-        public Vector2 screen, placed;       // 이번 프레임 화면 좌표(원래 자리 / 겹침 피해 놓은 자리)
-        public bool shown;
     }
 
     static ShopNameplateLayer instance;
@@ -257,83 +255,8 @@ public class ShopNameplateLayer : MonoBehaviour
 
             if (plate.root == null) CreateLabel(plate);
             if (!plate.root.gameObject.activeSelf) plate.root.gameObject.SetActive(true);
-            plate.screen = new Vector2(screen.x, screen.y);
-            plate.shown = true;
+            plate.root.position = new Vector3(screen.x, screen.y, 0f);
             UpdateManaBar(plate);
-        }
-        PlaceWithoutOverlap();
-    }
-
-    // 맵 S2 카피(10-19): 상점이 깊이 방향 세로 열로 서면 화면 간격이 좁아 이름표가 서로 덮는다(가로 배치 간격은 약 130px). 위(먼 쪽)부터 놓으며
-    // 이미 놓은 것과 겹치면 가로로 번갈아 밀어 빈 곳에 둔다. 안 겹치면 제자리라 지금 맵에선 아무것도 안 바뀐다.
-    const float LabelWidth = 112f, LabelHeight = 60f;   // 캔버스 1920×1080 기준 대략(두 줄 이름 + 도움소 막대)
-    RectTransform topBar;
-    const float HintLineHeight = 32f;   // 상단 바 아래 안내줄(캔버스 px)
-    float TopLimitY(float scale)
-    {
-        if (topBar == null)
-        {
-            GameObject found = GameObject.Find("TopBar");
-            topBar = found != null ? found.transform as RectTransform : null;
-        }
-        if (topBar == null) return Screen.height;
-        var corners = new Vector3[4];
-        topBar.GetWorldCorners(corners);
-        return Mathf.Min(corners[0].y, corners[2].y) - HintLineHeight * scale;
-    }
-
-    static readonly Vector3[] keepOutCorners = new Vector3[4];
-    static bool TryGetKeepOut(out Rect rect)
-    {
-        rect = default;
-        if (!EmotePanel.TryGetButtonRect(out RectTransform r)) return false;
-        r.GetWorldCorners(keepOutCorners);
-        float x0 = Mathf.Min(keepOutCorners[0].x, keepOutCorners[2].x), x1 = Mathf.Max(keepOutCorners[0].x, keepOutCorners[2].x);
-        float y0 = Mathf.Min(keepOutCorners[0].y, keepOutCorners[2].y), y1 = Mathf.Max(keepOutCorners[0].y, keepOutCorners[2].y);
-        rect = Rect.MinMaxRect(x0, y0, x1, y1);
-        return true;
-    }
-
-    readonly List<Plate> shownScratch = new List<Plate>();
-    void PlaceWithoutOverlap()
-    {
-        shownScratch.Clear();
-        foreach (Plate plate in plates)
-        {
-            if (plate.root == null) continue;
-            if (plate.shown) shownScratch.Add(plate);
-            plate.shown = false;
-        }
-        shownScratch.Sort((a, b) => b.screen.y.CompareTo(a.screen.y));
-        float scale = canvasRect != null ? Mathf.Max(0.01f, canvasRect.lossyScale.x) : 1f;
-        float w = LabelWidth * scale, h = LabelHeight * scale;
-        // 먼 쪽 상점(레인 위쪽)은 지붕이 화면 맨 위 상단 바·「항법을 선택하세요」 안내줄까지 올라간다(10-19 후2_play 사진) — 그 아래로 눌러 둔다.
-        float topLimit = TopLimitY(scale);
-        bool hasKeepOut = TryGetKeepOut(out Rect keepOut);
-        for (int i = 0; i < shownScratch.Count; i++)
-        {
-            Plate plate = shownScratch[i];
-            Vector2 at = plate.screen;
-            for (int attempt = 0; attempt < 7; attempt++)
-            {
-                float dx = ((attempt + 1) / 2) * w * (attempt % 2 == 1 ? -1f : 1f);   // 0, -1w, +1w, -2w, +2w ...
-                Vector2 candidate = plate.screen + new Vector2(dx, 0f);
-                if (candidate.y + h > topLimit) candidate.y = topLimit - h;
-                // 왼쪽 위 HUD 아이콘(이모트 버튼) 위에 얹히면 그 오른쪽으로 비킨다.
-                if (hasKeepOut && Mathf.Abs(candidate.x - keepOut.center.x) < (w + keepOut.width) * 0.5f
-                    && candidate.y < keepOut.yMax && candidate.y + h > keepOut.yMin)
-                    candidate.x = keepOut.xMax + w * 0.5f;
-                bool clash = false;
-                for (int j = 0; j < i && !clash; j++)
-                {
-                    Vector2 other = shownScratch[j].placed;
-                    clash = Mathf.Abs(other.x - candidate.x) < w && Mathf.Abs(other.y - candidate.y) < h;
-                }
-                at = candidate;
-                if (!clash) break;
-            }
-            plate.placed = at;
-            plate.root.position = new Vector3(at.x, at.y, 0f);
         }
     }
 

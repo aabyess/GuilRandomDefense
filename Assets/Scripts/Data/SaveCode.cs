@@ -12,7 +12,7 @@ using System.Text;
 public static class SaveCode
 {
     public const string Prefix = "GRD1";
-    const byte Version = 2;   // 2(10-18): 베리 추가. 1은 그대로 읽는다(베리 0)
+    const byte Version = 1;
     const string Alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";   // Crockford Base32
     const ulong Salt = 0x6B2F3A9C51D7E480UL;
 
@@ -37,7 +37,6 @@ public static class SaveCode
         WriteVarint(body, Math.Max(0, data.cumulativeClearCount));
         WriteVarint(body, Math.Max(0, data.bestRunPoint));
         WriteVarint(body, Math.Max(0, data.playerLevel));
-        WriteVarint(body, Math.Max(0, data.berry));
         ulong sum = Checksum(body);
         body.Add((byte)(sum >> 16));
         body.Add((byte)(sum >> 8));
@@ -71,7 +70,7 @@ public static class SaveCode
             message = "코드가 손상되었습니다(글자 하나가 틀렸거나 잘렸습니다).";
             return false;
         }
-        if (body[0] != 1 && body[0] != Version)
+        if (body[0] != Version)
         {
             failure = Failure.UnknownVersion;
             message = "이 버전에서 읽을 수 없는 세이브 코드입니다.";
@@ -91,8 +90,7 @@ public static class SaveCode
         if (!ReadVarint(body, ref pos, out d.cumulativePlayPoint) ||
             !ReadVarint(body, ref pos, out d.cumulativeClearCount) ||
             !ReadVarint(body, ref pos, out d.bestRunPoint) ||
-            !ReadVarint(body, ref pos, out d.playerLevel) ||
-            (body[0] >= 2 && !ReadVarint(body, ref pos, out d.berry)) || pos != body.Count)
+            !ReadVarint(body, ref pos, out d.playerLevel) || pos != body.Count)
         {
             failure = Failure.Corrupted;
             message = "코드가 손상되었습니다.";

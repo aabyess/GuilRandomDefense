@@ -18,7 +18,6 @@ using UnityEngine.SceneManagement;
 ///   -mpHost | -mpJoin        바로 방 만들기/참가
 ///   -mpSolo                  바로 「혼자 하기」
 ///   -mpSaveDir 폴더           세이브 폴더(같은 PC 두 창이 같은 player_0.json을 안 쓰게) — 테스트용
-///   -mpTestClear 초          (호스트) 그 초에 실제 클리어 끝맺음(RoundManager.TestForceClear: 클리어 베리·ClearRewardHook·유닛 클리어·FinishRun(true)·클라 세이브 RPC)
 ///   -mpTestFinishRun 초      (호스트) 그 초에 살아 있는 전원 +5점 뒤 FinishRun(클리어 아님) — 판 끝 세이브 경로 확인용
 ///   -mpSession 코드           방 코드(호스트는 발급 대신 이 코드로 연다)
 ///   -mpRegion 지역            Photon 지역(기본 kr) — 방장과 친구가 같아야 서로 보인다
@@ -46,7 +45,6 @@ using UnityEngine.SceneManagement;
 ///   -mpTestChat 초 코드      그 초에 채팅 한 줄(게임 씬, 여러 번 가능)
 ///   -mpLobbyChat 초 문장     방에 들어간 뒤 그 초에 대기실 채팅 한 줄
 ///   -mpTestGambleLabels 초   그 초에 (호스트·클라 각자) 내 도박소 칸 글자 전부 로그 — 재고 「남은/최대 · N초」 복제 확인
-///   -mpCamAt 초 x z          그 초에 카메라를 월드 (x, z)로(여러 번 가능) — S2 황금 종·영혼 같은 먼 곳 캡처용(-mpShot과 짝)
 ///   -mpCamWisp 초            그 초에 카메라를 위습 쪽으로(주인 색 캡처용)
 ///   -mpToken 문자열          접속 식별값(재접속 때 같은 사람 알아보기)을 이 값으로 — 한 기계 두 창 테스트용(기본은 설치마다 GUID)
 ///   -mpDropAt 초             (클라) 그 초(실행 뒤 절대 시간)에 [나가기] 예고 없이 러너를 끊는다 — 망 끊김 흉내
@@ -152,9 +150,7 @@ public class NetLauncher : MonoBehaviour
     float testCommandsDelay = -1f;
     float testEconomyDelay = -1f;
     float testFinishRunDelay = -1f;
-    float testClearDelay = -1f;
     float camWispDelay = -1f;
-    readonly System.Collections.Generic.List<(float delay, float x, float z)> camAts = new System.Collections.Generic.List<(float, float, float)>();
     float testPortraitsDelay = -1f;
     string testPortraitsDir;
     float testSelectDelay = -1f;
@@ -237,9 +233,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpSolo": solo = true; break;
                 case "-mpSaveDir": PersistentSave.SaveRootOverride = Arg(i + 1); break;
                 case "-mpTestFinishRun": testFinishRunDelay = Seconds(i + 1); break;
-                case "-mpTestClear": testClearDelay = Seconds(i + 1); break;
                 case "-mpCamWisp": camWispDelay = Seconds(i + 1); break;
-                case "-mpCamAt": camAts.Add((Seconds(i + 1), Seconds(i + 2), Seconds(i + 3))); break;
                 case "-mpToken": cliToken = Arg(i + 1); break;
                 case "-mpTestGap": testGapDelay = Seconds(i + 1); break;
                 case "-mpTestSecondSave": testSecondSaveDelay = Seconds(i + 1); break;
@@ -799,10 +793,8 @@ public class NetLauncher : MonoBehaviour
         if (testBerserkDelay >= 0f) { var bt = gameObject.AddComponent<NetBerserkTest>(); bt.startAt = testBerserkDelay; }
         if (testMainDelay >= 0f) { var mt = gameObject.AddComponent<NetMainTest>(); mt.startAt = testMainDelay; mt.shotPrefix = testMainShot; }
         if (testFinishRunDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestFinishRunAfter(testFinishRunDelay));
-        if (testClearDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestClearAfter(testClearDelay));
         LogSeatAtGameScene();
         if (camWispDelay >= 0f) StartCoroutine(CamWispAfter(camWispDelay));
-        foreach (var c in camAts) StartCoroutine(CamAtAfter(c.delay, c.x, c.z));
         if (GameAuthority.IsServer && (testNoticesDelay >= 0f || testGapDelay >= 0f))
             PlayerNotification.Shown += (slot, msg, dur) => { if (noticesLogged++ < 80) Debug.Log($"[알림로그] → 슬롯 {slot}({dur:0}초): {msg}"); };
         if (testNoticesDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestNoticesAfter(testNoticesDelay, testNoticesShot));
@@ -1400,24 +1392,6 @@ public class NetLauncher : MonoBehaviour
             context.PersistentSave.FinishRun(false);
             Debug.Log($"[MP] 테스트 판 끝: 슬롯 {context.PlayerId} +5점 FinishRun");
         }
-    }
-
-    IEnumerator TestClearAfter(float seconds)
-    {
-        yield return new WaitForSecondsRealtime(seconds);
-        RoundManager round = FindFirstObjectByType<RoundManager>();
-        if (round == null) { Debug.LogWarning("[MP] -mpTestClear: RoundManager 없음"); yield break; }
-        Debug.Log("[MP] 테스트 클리어: TestForceClear");
-        round.TestForceClear();
-    }
-
-    IEnumerator CamAtAfter(float seconds, float x, float z)
-    {
-        yield return new WaitForSecondsRealtime(seconds);
-        RtsCameraController cam = FindFirstObjectByType<RtsCameraController>();
-        if (cam == null) yield break;
-        cam.MoveTo(new Vector3(x, 8f, z));
-        Debug.Log($"[MP] 카메라 → ({x}, {z})");
     }
 
     IEnumerator CamWispAfter(float seconds)

@@ -72,10 +72,6 @@ public class RewardDistributor : MonoBehaviour
     void Start()
     {
         GrantStartingWisps();
-        S2Evolution.EnsurePortal();   // 모든 PC(클라 포함)가 진화 포탈 겉모습을 만든다
-        S2Evolution.GrantStarting(this);
-        S2MapObjectives.Install();   // S2 맵 목표물(황금 종·룸바 영혼)
-        OroSeong.OnMatchStart();   // S2 오로성 저주(신·악몽): 실루엣
         GrantStartingSpecialUnits();
         GrantStartingSpecialGradeUnit();
         GrantStartingTraitPoints();
@@ -234,8 +230,6 @@ public class RewardDistributor : MonoBehaviour
         // 레인 소유자에게만 간다 — 누가 마지막 타격을 넣었는지는 안 본다(원작 그대로).
         PlayerContext owner = PlayerContext.Get(laneIndex);
         if (owner == null || !owner.IsOccupied) return;
-        S2Evolution.OnLaneKill(owner.PlayerId);
-        S2Treasure.OnLaneKill(owner.PlayerId);   // S2 보물상자(낮은 확률)   // S2 진화체: 라인몹 처치 152번에 깨어난다
 
         // 현상수배(초월 유재헌 SlowRewardBonus): 죽은 적이 이감을 받고 있었으면 이감 1%당 +N% — 골드·목재에 곱한다.
         float slowBonus = slowPercent > 0f ? UnitAttacker.SlowRewardPerPercent(owner.PlayerId) * slowPercent : 0f;
@@ -509,7 +503,6 @@ public class RewardDistributor : MonoBehaviour
 
         PlayerContext best = top >= 0 ? PlayerContext.GetOccupied(top) : null;
         if (best == null || best.IsDead) return;
-        RunStats.OnStoryMvp(best.PlayerId);   // S2 MVP 선정(기여도 1등 횟수 mX)
         string name = PlayerDisplayName.Of(top);
         bool multi = PlayerContext.OccupiedCount > 1;
         var rewards = new List<WispReward>();
@@ -623,7 +616,6 @@ public class RewardDistributor : MonoBehaviour
         // 조기 클리어 보너스(원작 j:13510 스토리2 udg_Level<9 · j:13614 스토리10 udg_Level<30) — 클리어 시점의 라운드로 판정한다.
         RoundManager roundForBonus = storyReward.earlyClearBeforeRound > 0 ? FindFirstObjectByType<RoundManager>() : null;
         bool earlyClear = roundForBonus != null && roundForBonus.CurrentRound < storyReward.earlyClearBeforeRound;
-        S2Missions.OnStoryCleared(storyReward.order, earlyClear);   // S2 미션판: 신속한 철거(2)·파괴왕(11)
 
         foreach (PlayerContext context in PlayerContext.All)
         {
@@ -875,7 +867,6 @@ public class RewardDistributor : MonoBehaviour
 
         context.FastUniqueGranted = true;
         GrantWisps(context, new List<WispReward> { new WispReward { wisp = saveRewardCommonChoiceWisp, count = 1 } });
-        S2Missions.Complete(S2Missions.Mission.FastUnique, ownerId);   // S2 미션판 개인 칸
         PlayerNotification.Show(ownerId, "<color=#959595>도전과제 -패스트 유니크 완료!</color>\n<color=#DB7093>보상-흔함 선택 위습 1기를 획득합니다!</color>", 5f);
     }
 

@@ -63,11 +63,6 @@ public static class SaveCodeService
 
         PlayerSaveData file = PersistentSave.ReadOwnSave();
         bool codeWins = SaveCode.CodeWins(file, fromCode);
-        if (file != null)
-        {
-            fromCode.unitClears = file.unitClears;   // 코드엔 유닛 클리어 기록이 없다 — 이 PC 기록을 지킨다
-            fromCode.berry = Mathf.Max(fromCode.berry, file.berry);
-        }
         PlayerSaveData result = codeWins ? fromCode : file;
         if (codeWins)
         {
@@ -75,14 +70,8 @@ public static class SaveCodeService
             catch (System.Exception e) { message = $"로드 실패! 파일을 쓰지 못했습니다({e.Message})"; return false; }
             onApplied?.Invoke(fromCode);
         }
-        else if (file != null && fromCode.berry > file.berry)
-        {
-            // 기록은 파일이 이겨도 베리는 큰 쪽(줄지 않게)
-            file.berry = fromCode.berry;
-            try { PersistentSave.WriteOwnSave(file); onApplied?.Invoke(file); } catch (System.Exception) { }
-        }
 
-        message = $"로드 성공! 클리어 회수 = {result.cumulativeClearCount} · 누적 플레이 점수 = {result.cumulativePlayPoint} · 베스트 점수 = {result.bestRunPoint} · 베리 = {result.berry}"
+        message = $"로드 성공! 클리어 회수 = {result.cumulativeClearCount} · 누적 플레이 점수 = {result.cumulativePlayPoint} · 베스트 점수 = {result.bestRunPoint}"
                   + (codeWins ? "" : "\n(이 PC의 기록이 같거나 더 커서 그대로 둡니다)");
         Debug.Log($"[세이브코드] 불러오기 {(codeWins ? "코드 채택" : "파일 유지")}: 코드 클리어 {fromCode.cumulativeClearCount}/누적 {fromCode.cumulativePlayPoint} · 파일 클리어 {file.cumulativeClearCount}/누적 {file.cumulativePlayPoint}");
         return true;

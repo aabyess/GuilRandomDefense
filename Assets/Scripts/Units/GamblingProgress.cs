@@ -27,7 +27,6 @@ public class GamblingProgress : MonoBehaviour
     public bool IsUnlocked(GamblingOptionData option)
     {
         if (option == null) return false;
-        if (GameModes.BlocksGambling(option)) return false;   // S2 이세계모드 꺼짐
         if (unlockedOptions.Contains(option)) return true;
         // 라운드 도달 해금(원작 Rhri R15 — 전원 동시). 보스 처치 해금(Unlock)과 별개 경로.
         if (option.unlockAtRound > 0)

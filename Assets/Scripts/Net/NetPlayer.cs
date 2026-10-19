@@ -30,13 +30,6 @@ public class NetPlayer : NetworkBehaviour
     [Networked] public int Gold { get; set; }
     [Networked, Capacity(ResourceSlots)] public NetworkArray<int> Resources => default;
     [Networked] public NetworkBool Dead { get; set; }
-    [Networked] public int Berry { get; set; }
-    // S2 미션판 개인 미션·개인 퀘스트 3칸(S2Missions) — 클라 표시용
-    [Networked] public int S2PersonalMask { get; set; }
-    [Networked, Capacity(3)] public NetworkArray<sbyte> S2QuestIds => default;
-    [Networked, Capacity(3)] public NetworkArray<short> S2QuestProgress => default;
-    [Networked] public byte S2QuestDone { get; set; }
-    [Networked] public NetworkBool S2RerollUsed { get; set; }   // 베리 누적(세이브 값 + 이번 판) — 클라 표시용(Berry.Get)
     /// <summary>패배 사유(원작 문구, 색 없음) — 클라 패배 화면이 「왜 졌는지」를 쓴다(GAP 09-27 46).</summary>
     [Networked] public NetworkString<_128> DefeatMessage { get; set; }
 
@@ -169,21 +162,6 @@ public class NetPlayer : NetworkBehaviour
             foreach (ResourceType type in System.Enum.GetValues(typeof(ResourceType)))
                 if ((int)type < ResourceSlots) Resources.Set((int)type, context.ResourceWallet.Get(type));
         Dead = context.IsDead;
-        if (context.PersistentSave != null && Berry != context.PersistentSave.Data.berry) Berry = context.PersistentSave.Data.berry;
-        if (S2PersonalMask != S2Missions.HostPersonalMask(Slot)) S2PersonalMask = S2Missions.HostPersonalMask(Slot);
-        {
-            byte done = 0;
-            for (int k = 0; k < 3; k++)
-            {
-                sbyte qid = S2Missions.HostQuestId(Slot, k);
-                if (S2QuestIds.Get(k) != qid) S2QuestIds.Set(k, qid);
-                short prog = (short)Mathf.Min(short.MaxValue, S2Missions.HostQuestProgress(Slot, k));
-                if (S2QuestProgress.Get(k) != prog) S2QuestProgress.Set(k, prog);
-                if (S2Missions.HostQuestDone(Slot, k)) done |= (byte)(1 << k);
-            }
-            if (S2QuestDone != done) S2QuestDone = done;
-            if (S2RerollUsed != S2Missions.HostRerollUsed(Slot)) S2RerollUsed = S2Missions.HostRerollUsed(Slot);
-        }
         string questTimer = PirateQuestManager.Instance != null ? PirateQuestManager.Instance.TimerText(Slot) : "";
         if (QuestTimerText.ToString() != questTimer) QuestTimerText = questTimer;
         string reason = context.DefeatMessage ?? "";
@@ -462,34 +440,15 @@ public class NetPlayer : NetworkBehaviour
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
-    public void RPC_SubmitSave(int point, int clear, int best, int level, int berry)
+    public void RPC_SubmitSave(int point, int clear, int best, int level)
     {
-        NetSaves.Receive(this, point, clear, best, level, berry);
+        NetSaves.Receive(this, point, clear, best, level);
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority)]
-    public void RPC_SaveResult(int point, int clear, int best, int level, NetworkBool cleared, int berry, string unitClears)
+    public void RPC_SaveResult(int point, int clear, int best, int level, NetworkBool cleared)
     {
-        NetSaves.WriteResult(point, clear, best, level, cleared, berry, unitClears);
-    }
-
-    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
-    public void RPC_S2Pone(NetworkId target)
-    {
-        if (NetCommands.TryGetOwnedReal(this, target, "포네그리프 해독", out GameObject real) && real.TryGetComponent(out UnitIdentity identity))
-            PoneglyphSite.TryStart(Slot, identity);
-    }
-
-    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
-    public void RPC_Emote(byte emote)
-    {
-        if (emote < EmotePanel.Count) NetGameState.Instance?.RPC_Emote((byte)Slot, emote);   // 쿨다운 없음(원작 그대로)
-    }
-
-    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
-    public void RPC_S2QuestReroll(byte questSlot)
-    {
-        S2Missions.TryReroll(Slot, questSlot);
+        NetSaves.WriteResult(point, clear, best, level, cleared);
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
@@ -516,18 +475,6 @@ public class NetPlayer : NetworkBehaviour
     public void RPC_PachinkoVote(sbyte theme)
     {
         NetCommands.ExecutePachinkoVote(this, theme);
-    }
-
-    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
-    public void RPC_Transfer(byte kind, int amount, sbyte target)
-    {
-        NetCommands.ExecuteTransfer(this, kind, amount, target);
-    }
-
-    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
-    public void RPC_Dango(NetworkId unit)
-    {
-        NetCommands.ExecuteDango(this, unit);
     }
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]

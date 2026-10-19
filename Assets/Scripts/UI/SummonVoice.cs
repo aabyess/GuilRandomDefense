@@ -41,12 +41,12 @@ public static class SummonVoice
         { "영원_조세민", new[] { "hancock" } },
         { "영원_최상호", new[] { "mihawk", "cavendish" } },
         { "초월_강재규_AP", new[] { "Robin" } },
-        { "초월_강주혁_AP", new[] { "Juhyuk_boss" } },   // 10-18 사장님 녹음 파일(원작 Nami·Zoro_2 대신, Assets/Audio/Custom)
+        { "초월_강주혁_AP", new[] { "Nami", "Zoro_2" } },
         { "초월_구주호_AD", new[] { "kizaru", "jinbe", "yamato" } },   // 원작 + PM 추가 · 10-06 사장님: 료쿠규 ↔ 징베 맞바꿈(최상호 AD와)
         { "초월_김경현_AP", new[] { "snakeman" } },
         { "초월_김만경_AD", new[] { "Akainu" } },
         { "초월_김민준_AP", new[] { "tashigi" } },
-        { "초월_노태현_AP", new[] { "Taehyun_boss" } },   // 10-18 사장님 녹음 파일(원작 Brook 대신, Assets/Audio/Custom)
+        { "초월_노태현_AP", new[] { "Brook" } },
         { "초월_두유찬_AD", new[] { "sabo" } },
         { "초월_박기찬_AD", new[] { "Franky" } },
         { "초월_박민수_AD", new[] { "Minsu_boss" } },   // 10-07 사장님 녹음 파일(원작 Zoro 대신, Assets/Audio/Custom)
@@ -63,7 +63,7 @@ public static class SummonVoice
         { "초월_황준석_ADAP", new[] { "kid" } },
         { "영원_김영원", new[] { "hancock" } },   // PM 배정
         { "초월_김건_AP", new[] { "Choppa" } },   // PM 배정
-        { "초월_박민석_ADAP", new[] { "Minseok_boss" } },   // 10-18 사장님 녹음 파일(원작 Shanks 대신, Assets/Audio/Custom)
+        { "초월_박민석_ADAP", new[] { "Shanks" } },   // PM 배정
         { "초월_엄태웅_AD", new[] { "Sanji" } },   // PM 배정
         { "초월_이재윤_AD", new[] { "hawkins" } },   // PM 배정
         { "제한_전법규", new[] { "enel" } },   // PM 배정

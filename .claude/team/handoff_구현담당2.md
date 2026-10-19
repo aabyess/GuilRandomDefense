@@ -1,32 +1,4 @@
-# 구현담당2 인수인계 — 2026-10-18 (파칭코 3단계·관전·2차 이펙트 · 베리 · S2 UI 7종 뒤) ← 이 절이 최신
-
-새 세션은 기억이 없다. 이 절 → 아래 옛 절 → `.claude/NEXT_SESSION.md`. 작업 장소 worktree `/Users/sang/GitHub/GuilRandomDefense-w2`(w2). 산출물은 `~/grd/GRD_*/`, 에디터 로그 `~/grd/GRD_w2_editor<N>.log`(마지막 12). push·SampleScene 금지, 병합은 PM(나는 `git merge --ff-only main`, 안 되면 `--no-edit main`). PM 세션 이름 `pm`(교체되면 「pm [ref]」).
-
-## 끝낸 일 (전부 main 병합, git log 제목으로)
-- **파칭코 영상형 3단계**(정본 `Docs/PACHINKO_RULES.md`): `SequenceVideo` 첫 룰렛(0~30초) → 보너스 스테이지 러쉬(불꽃 38·전생슬 25번) → 크리티컬 → PUSH. **관전 화면**(`SpectateRoutine`, 크게 하나+←/→) · 관전 영상 소리 음악×0.35.
-- **파칭코 static 리셋**: `PachinkoController.ResetForNewRun()`을 `RoundManager.Start`에서 — 한 판 뒤 타이틀→다시 하면 파칭코가 안 뜨던 버그. 시험 인자로 시작한 판(`startedByTest`)만 보호, 남은 판은 `PachinkoOverlay.AbortAll()`.
-- **파칭코 2차 화면 이펙트**(blender 11종): `Resources/Pachinko/Fx/Sheets/<이름>.png` 4×3 시트(칸 480×270·가장자리 14% 감쇠·crunch). `PachinkoOverlay.PlayFx` 알파 0.4초 · 얹은 곳: 첫 룰렛 당첨 starburst+chance / 보너스 shockwave+speedlines / 크리티컬 rainbow+geki(777 kakuhen) / PUSH push / 성공 coins / 큰 타격 fire·slime / 릴 777 rainbow+coins. 번쩍임 줄이기면 starburst·rainbow 35%. 탐침 `PachinkoFireProbe.FxSlowA~E`·`FxLog`. ⚠️ `Fx/` 바로 아래에 같은 이름(speedlines.png 등 1차 그림)이 있다 — 덮어쓰지 말 것.
-- **베리**(S2 메타 화폐): `Units/Berry.cs` `Grant/GrantAll/Get/Session` · `PlayerSaveData.berry`·`unitClears` · `NetPlayer.Berry` · 세이브 RPC에 베리·유닛 클리어 · 세이브 코드 v2(v1도 읽음) · 클리어 1(악몽 2)·악몽 카운트0 +1 · `RoundManager.ClearRewardHook`.
-- **S2 UI 7종**(사양 `~/grd/GRD_s2_ideas/spec_missions.md`·`spec_ui.md`, 사장님 확정 F-0절):
-  - `RunStats`(판 통계 — 도박 시도/실패·선택위습·목재도박·흔함판매·유니크·MVP·조합) + 훅(GamblingShop·UnitPortal·ResourcePortal·GameHud 판매·ItemInventory·RewardDistributor MVP·CombineSystem/Hidden/ChatUnlock) · `RoundManager.RoundStartedEvent/RoundEndedEvent`.
-  - `S2Missions`(미션판 10칸·개인 퀘스트 16종·리롤·해석자·클리어 베리·유닛 클리어 기록) · `MissionBoardPanel`(상단 「퀘스트 (F9)」) · `PoneglyphSite`(창의 「해독 시작」, 150/50초) · `S2RewardTable`(`Resources/S2/S2Rewards.asset`) · 멀티: `NetGameState.S2SharedMask/S2Flags/S2PoneLeft`, `NetPlayer.S2*`·`RPC_S2QuestReroll`·`RPC_S2Pone`.
-  - `EmotePanel`(원작 그림 `Resources/Emoji/emote1~6`·`emote.mp3`, `NetPlayer.RPC_Emote`→`NetGameState.RPC_Emote`) · `StatsChatCommands`(-점수판·-점수판흔함·흔함·-스토리·-리롤·-문, 오로성 줄은 `OroSeong.ScoreboardLine`) · `StoryRecords` · `UtilBoardPanel`(왼쪽 위 「유틸」, 판은 오른쪽 -330).
-  - 황금 종·영혼 파괴 이벤트는 구현담당3의 `S2Objectives.GoldenBellDestroyed/RumbarSoulFreed`(보상·표시는 내 쪽).
-  - 탐침 `Assets/Editor/S2UiProbe.cs`(BoardDemo·BoardProgress·BoardReroll0·PoneDemo·EmoteDemo·ScoreCmd·SpawnInfoUnits…). 실측 사진 `ClaudeBridge/shots/g2_s2b_*`, 패치노트 `~/grd/GRD_patch_0326/`.
-
-## 남은 일 / 미확인
-- S2: 2인 멀티 실측(복제·RPC) · 포네그리프 성공/실패 순간 · 리롤 사람 손 클릭 · 판 끝 베리·유닛 클리어 파일 저장 · 유틸보드 이동 후·오로성 줄 재촬영 · 유닛 클리어 기록·베리를 보여 주는 「대시보드」 없음(16번 치장 상점과 같이 나중) · 황금 종 5% 유니크 아이템 미구현 · -황금종 명령(종 HP 접근자 없음).
-- 파칭코: 실제 2인 관전 실측 · 관전 소리 귀 확인 · 전생슬 판 실제 이펙트 순간 · 도쿄구울 11~13초 공백·자막(사장님 답 대기) · 빌드 용량 증가분(이펙트 시트, crunch) 실측 안 함.
-
-## 함정(새로)
-- gameshot 인자에 **띄어쓰기 금지**(`click?:유틸 갱신` → 「모르는 인자」로 즉시 거부, 결과 줄이 없어 until 루프가 영원히 돈다 → `결과\|모르는`으로 기다릴 것).
-- 소스 편집·하위 에이전트 편집 중 촬영 = 도메인 리로드 오염. 편집 끝 → `refresh` 명령(inbox에 `refresh`) → 90~110초 → 촬영.
-- `csc_check`가 main `Library` ref dll을 써서, main 에디터가 빌드 중이면 「UnityEngine 없음」 수백 줄 → 잠시 뒤 다시.
-- w2가 옛 main에서 갈라졌을 때 남의 새 .cs에 내 에디터가 다른 guid .meta를 만든다 → 커밋하지 말고 지운 뒤 main 병합.
-- w2 에디터는 PM 메모리 정리로 자주 꺼진다 — 쓸 때 켜고(`nohup caffeinate -dimsu …Unity -projectPath $PWD -logFile ~/grd/GRD_w2_editorN.log &`) 끝나면 끈다.
-
----------- 아래는 10-16 밤 인수인계 ----------
-# 구현담당2 인수인계 — 2026-10-16 밤 (파칭코 영상형 테마·밤샘 4항목 뒤)
+# 구현담당2 인수인계 — 2026-10-16 밤 (파칭코 영상형 테마·밤샘 4항목 뒤) ← 이 절이 최신
 
 새 세션은 기억이 없다. 이 절 → 아래 옛 절 → `.claude/NEXT_SESSION.md`. 작업 장소 worktree `/Users/sang/GitHub/GuilRandomDefense-w2`(w2). 산출물은 전부 `~/grd/GRD_*/`(홈 `~/GRD_*` 아님), 에디터 로그 `~/grd/GRD_w2_editor<N>.log`. push·SampleScene 수정 금지, 병합은 PM(나는 `git merge --ff-only main`).
 
@@ -162,9 +134,3 @@
 - 모델 배선 메뉴(Tools/아트/모델 배선)는 돌리지 말 것(403개 Prefab/Generated 재직렬화) — PM 확인 뒤에만, 내 경로만 커밋.
 - 작업트리 미커밋 잔여(Materials·Fonts·UI/Skin .meta, `.check_entries_out/`)는 유니티 재직렬화·blender 산출 — 내 것 아니다, 건드리지 말 것.
 - GameHud·UnitAttacker는 공용 — 커밋 전 `git diff -- 파일 | grep "^@@"`로 내 hunk만인지 확인, 커밋은 `git add -- 경로` + `git commit -- 경로`만.
-
-## 10-19 밤 (S2 맵 카피 UI) — 끝난 일·함정
-- **끝**: `-mpTestClear 초`·`-mpCamAt 초 x z`(NetLauncher) · 카메라 이동 범위 맵에 맞춰 넓힘(WidenBoundsToMap) · 상점 이름표 겹침 회피 + 상단 바 클램프 + 왼쪽 위 이모트 아이콘(EmotePanel.TryGetButtonRect) 회피(ShopNameplateLayer) · 시작 구도 가로를 상점 열까지(+바깥 건물 폭 절반 여백) · 커밋 fa86a815d 4695a6099 bb9f43b44 e199b1680 e4de2ca69 c63d5d060 faeb5bd40 9b972e675 4c40c6efc 3c8dfa3d4. 사진·로그 ~/grd/GRD_s2_map/결과_1019/ui_*.png, 시험 앱 ~/Desktop/GRD_밤샘시험_1019.app.
-- **함정**: S2 맵 상점은 컴포넌트가 붙은 `LaneN_이름` 오브젝트에 **렌더러가 없다**(모양은 형제 `…_모양`). 렌더러로만 경계를 재면 조용히 「못 찾음」 — 카메라 TryGetShopBounds는 위치±36 폴백으로 고침(ShopNameplateLayer.Roof도 같은 이유로 폴백 높이 +2를 쓴다). 시작 구도 로그에 「(상점 열 포함/못 찾음)」이 찍힌다.
-- **남은 것**: 폴백 폭 72는 상수 박음 — MapLayout의 상점 간격에서 끌어올 것(PM 지적) · 이름표 LabelWidth 112×60은 눈대중(TMP preferredWidth로) · 도박소 이름표가 건물(화면 위로 잘림) 위 바다에 떠 보임 · 6칸 클릭·리롤·이모트·미션판·포네글리프·유닛 클리어 세이브·「베리 = N」 줄·파칭코 관전은 손 클릭 미확인.
-- 빌드: 빌드 폴더(../GuilRandomDefense-build)는 tmp/s2-castle 체크아웃, `Unity -batchmode -quit -projectPath … -buildTarget OSXUniversal -executeMethod BuildBeta.Mac` 약 30초(앱 이름은 GameVersion 라벨 「GuRandi 0.3.26v.app」). 솔로(-mpSolo)는 난이도 창이 안 닫혀 검은 화면 — 실측은 `-mpHost -mpAutoStart 1 -mpDifficulty Easy`로.

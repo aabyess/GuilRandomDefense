@@ -57,7 +57,7 @@ public class ResourcePortal : MonoBehaviour
     {
         if (!GameAuthority.IsServer) return;
         if (!other.TryGetComponent(out Wisp wisp)) return;
-        if (wisp.IsConsumed || wisp.Data == null || wisp.Data.isEvolution) return;
+        if (wisp.IsConsumed || wisp.Data == null) return;
 
         int ownerId = wisp.TryGetComponent(out OwnedByPlayer owner) ? owner.OwnerId : LocalPlayer.LocalPlayerId;
 
@@ -83,10 +83,7 @@ public class ResourcePortal : MonoBehaviour
         wisp.MarkConsumed();
         Destroy(wisp.gameObject);
 
-        bool woodGamble = payout == Payout.Resource && resourceType == ResourceType.Wood && successChancePercent < 100f;
-        bool won = Random.Range(0f, 100f) < successChancePercent;
-        if (woodGamble) RunStats.OnWoodGamble(ownerId, won);   // S2 목재수집·-점수판(j8)
-        if (!won)
+        if (Random.Range(0f, 100f) >= successChancePercent)
         {
             // 원작 문구 그대로("목재도박에 실패하였습니다") — 목재 도박(66%)만 실제로
             // 이 분기를 탄다(골드·마나는 100%). 다른 자원이 나중에 확률부로 바뀌어도

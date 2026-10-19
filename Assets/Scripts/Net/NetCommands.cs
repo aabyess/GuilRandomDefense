@@ -15,7 +15,6 @@ public enum NetHudAction : byte
     Bomb = 8,   // 초월 엄태웅 「폭탄제조」(10-06) — 목재 1개 → 사거리 안 밀집 지점 범위 폭탄
     Toto = 10,   // 초월 유재헌 「토토」(10-06) — 엔 1,000 → 33% 금화 3,000엔/목재 1/위습 1 중 하나
     Enhance = 9,   // 영원함 서민성 「강화」(10-06) — 엔 + 위습을 내고 이 유닛 강화 레벨 +1
-    DebeBack = 11,   // S2 데비백파이트(채팅 -데비백) — 특별함 유닛 하나를 걸고 50:50
     GambleBoost = 7,   // 초월 엄태웅 「웅교교주」(10-06) — 엔 10000 → 도박 성공 확률 +4%p(개인 누적, 최대 5회)
 }
 
@@ -283,7 +282,6 @@ public static class NetCommands
             case NetHudAction.Bomb: hud.ExecuteBombOn(selectable); break;
             case NetHudAction.Enhance: hud.ExecuteEnhanceOn(selectable); break;
             case NetHudAction.Toto: hud.ExecuteTotoOn(selectable); break;
-            case NetHudAction.DebeBack: S2DebeBack.Execute(selectable); break;
             case NetHudAction.CastActive: hud.ExecuteCastActiveOn(selectable); break;
             case NetHudAction.Reroll:
                 if (real.TryGetComponent(out UniqueRerollAbility reroll))
@@ -466,36 +464,6 @@ public static class NetCommands
         Debug.Log($"[MP] 일시정지 {(pause ? "멈춤" : "재개")}: 슬롯 {slot} {who}");
     }
 
-    /// <summary>클라: 자원 전송(S2 「-골드 N」) 요청 — 표적 슬롯은 이 PC 선택에서, 검사는 호스트.</summary>
-    public static void RequestTransfer(ResourceTransfer.Kind kind, int amount, int targetSlot)
-    {
-        if (NetPlayer.Local == null) return;
-        NetPlayer.Local.RPC_Transfer((byte)kind, amount, (sbyte)targetSlot);
-    }
-
-    public static void ExecuteTransfer(NetPlayer sender, byte kind, int amount, sbyte target)
-    {
-        string err = ResourceTransfer.ExecuteOnAuthority(sender.Slot, target, (ResourceTransfer.Kind)kind, amount);
-        if (err != null) PlayerNotification.ShowFailure(sender.Slot, "<color=#FF0000>[오류]</color> " + err, 5f);
-    }
-
-    /// <summary>클라: S2 경단먹이기(채팅 -경단) — 고른 유닛(남의 것도 된다)의 거울 번호만 보낸다. 주인·등급 검사는 호스트.</summary>
-    public static void RequestDango(Selectable unit)
-    {
-        NetEntity entity = unit != null ? unit.GetComponentInParent<NetEntity>() : null;
-        if (NetPlayer.Local == null) return;
-        NetPlayer.Local.RPC_Dango(entity != null && entity.Object != null && entity.Object.IsValid ? entity.Object.Id : default);
-    }
-
-    public static void ExecuteDango(NetPlayer sender, NetworkId unit)
-    {
-        Selectable selectable = null;
-        if (unit.IsValid && sender.Runner != null && sender.Runner.TryFindObject(unit, out NetworkObject obj) && obj.TryGetComponent(out NetEntity entity) && entity.Real != null)
-            entity.Real.TryGetComponent(out selectable);
-        string err = S2Dango.Request(sender.Slot, selectable);
-        if (err != null) PlayerNotification.ShowFailure(sender.Slot, "<color=#FF0000>[오류]</color> " + err, 5f);
-    }
-
     /// <summary>클라: 채팅 한 줄을 호스트로(대기실·게임 모두). 연타는 보내는 쪽(PlayerChat.AllowLocalSend)에서 먼저 막는다.</summary>
     public static void RequestChat(string text)
     {
@@ -561,7 +529,7 @@ public static class NetCommands
         if (commandsLogged++ < 30) Debug.Log($"[MP] 항법 요청 수행: 슬롯 {sender.Slot} {choice} → {(ok ? "성공" : "실패(이미 고름)")}");
     }
 
-    internal static bool TryGetOwnedReal(NetPlayer sender, NetworkId target, string what, out GameObject real, bool allowShared = false)
+    static bool TryGetOwnedReal(NetPlayer sender, NetworkId target, string what, out GameObject real, bool allowShared = false)
     {
         real = null;
         if (sender == null || sender.Runner == null || !sender.Runner.IsServer) return false;

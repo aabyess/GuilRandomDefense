@@ -31,11 +31,11 @@ public static class PachinkoSettings
 {
     /// <summary>이 라운드 보스를 잡는 순간 한 번(판당 1회).</summary>
     public const int TriggerRound = 30;
-    /// <summary>777 = 랜덤유닛 직접 지급(사장님 10-18: 5% → 3%).</summary>
-    public const float JackpotChance = 0.03f;
-    /// <summary>7을 뺀 세 같은 숫자 = 전설·히든 위습(사장님 10-18: 25% → 15%).</summary>
-    public const float WinChance = 0.15f;
-    /// <summary>리치(3▢3)만 걸렸다 빗나감 = 희귀함 위습. 나머지(1-JackpotChance-WinChance-이 값 = 42%)는 그냥 꽝 = 특별함 위습.</summary>
+    /// <summary>777 = 랜덤유닛 직접 지급.</summary>
+    public const float JackpotChance = 0.05f;
+    /// <summary>7을 뺀 세 같은 숫자 = 전설·히든 위습.</summary>
+    public const float WinChance = 0.25f;
+    /// <summary>리치(3▢3)만 걸렸다 빗나감 = 희귀함 위습. 나머지(1-JackpotChance-WinChance-이 값 = 30%)는 그냥 꽝 = 특별함 위습.</summary>
     public const float ReachMissChance = 0.40f;
     /// <summary>자기 PUSH 시간(초) — 각자 자기 버튼, 이 안에 한 번 누르면 자기 줄만 정지, 안 누르면 끝에 자동.</summary>
     public const float PushSeconds = 5f;
@@ -62,8 +62,8 @@ public static class PachinkoSettings
     public const bool VideoSuccessIsTopReward = true;
     /// <summary>영상형 테마 PUSH 성공 확률(사장님 10-16: 5초 안에 눌러도 51%만 성공, 안 누르면 무조건 실패). 호스트가 plan을 굴릴 때 미리 정해 plan.pushWin에 넣어 전원이 같은 결과를 본다.</summary>
     public const float VideoPushSuccessChance = 0.51f;
-    /// <summary>영상형 3단계(사장님 10-16 오후): 첫 룰렛 당첨 15%(10-18, 처음 30%) · 러쉬 숫자 한 번당 당첨(=크리티컬) 5%(불꽃 38번 ≈ 86%) · PUSH 51%(위). 보상: PUSH 성공 랜덤 유닛 · 크리티컬만 전설·히든 위습 · 러쉬까지 희귀함 위습 · 첫 룰렛 꽝 특별함 위습.</summary>
-    public const float VideoFirstWinChance = 0.15f, VideoRushWinChance = 0.05f;
+    /// <summary>영상형 3단계(사장님 10-16 오후): 첫 룰렛 당첨 30% · 러쉬 숫자 한 번당 당첨(=크리티컬) 5%(불꽃 38번 ≈ 86%) · PUSH 51%(위). 보상: PUSH 성공 랜덤 유닛 · 크리티컬만 전설·히든 위습 · 러쉬까지 희귀함 위습 · 첫 룰렛 꽝 특별함 위습.</summary>
+    public const float VideoFirstWinChance = 0.30f, VideoRushWinChance = 0.05f;
     /// <summary>시험용(-pachinkoSkipTo &lt;초&gt;): 영상형 테마 연출을 이 초만큼 건너뛴 지점에서 시작한다. 평소 0 — 실게임엔 영향 없다.</summary>
     public static float DebugSkipSeconds;
     /// <summary>시험용(-pachinkoRushAt &lt;n&gt;): 크리티컬 확정(-pachinkoTest jackpot|win)일 때 러쉬 n번째(1부터)에서 당첨시킨다. 0이면 랜덤.</summary>

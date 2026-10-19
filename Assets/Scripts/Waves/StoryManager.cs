@@ -26,11 +26,6 @@ public class StoryManager : MonoBehaviour
     int finished;
 
     public StoryData Running => running;
-    /// <summary>지금 필드에 나와 있는 스토리 적(호스트·싱글만, 없으면 null) — 유틸보드 실시간 기여도(UtilBoardPanel)가 읽는다.</summary>
-    public EnemyDummy ActiveStoryEnemy => activeEnemy;
-
-    /// <summary>스토리존 한가운데(스토리 건물이 서는 자리) — S2 맵 목표물이 같은 섬을 찾는 데 쓴다.</summary>
-    public Vector3 SpawnPosition => spawnPoint != null ? spawnPoint.position : transform.position;
 
     /// <summary>순서(0부터)의 스토리 — 41R 게이트 패배 문구가 원작 이름 자리에 우리 이름을 넣는다.</summary>
     public StoryData StoryAt(int index) => index >= 0 && index < stories.Count ? stories[index] : null;
@@ -139,18 +134,8 @@ public class StoryManager : MonoBehaviour
         activeEnemy.TakeDamage(amount, DamageType.AP, AttackType.Spells, killerPlayerId);
     }
 
-    // S2 2.323 에그헤드(14번째 스토리, j:55270~55470·CRB): 13번 클리어 120초 뒤 신·악몽에서만 등장, 240초 안에 못 깨면 전원 패배.
-    // 씬의 스토리 목록을 건드리지 않으려고 Resources에서 끝에 붙인다(체력은 우리 13번 대비 S2 비율 288.8M/190M = ×1.52).
-    void AppendS2Stories()
-    {
-        if (!S2Features.Enabled) return;
-        StoryData egghead = Resources.Load<StoryData>("S2/Story14_에그헤드");
-        if (egghead != null && !stories.Contains(egghead)) stories.Add(egghead);
-    }
-
     void Start()
     {
-        AppendS2Stories();
         Queue(0, firstStoryDelay);
     }
 
@@ -198,7 +183,6 @@ public class StoryManager : MonoBehaviour
         running = null;
         activeEnemy = null;
         finished++;
-        StoryRecords.Add(stories.IndexOf(story), Time.time - spawnedAt, deadStory);   // S2 「-스토리」 기록(시간·MVP·%)
         foreach (PlayerContext pc in PlayerContext.All)   // 퇴치 의뢰 해금(거프 ureq R029): 원작은 살아있는 플레이어에게만 연구시킨다
             if (pc != null && pc.IsOccupied && !pc.IsDead) pc.QuestStoriesCleared.Add(story.order);
 

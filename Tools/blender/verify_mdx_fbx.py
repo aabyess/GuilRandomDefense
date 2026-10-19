@@ -22,8 +22,6 @@ args = sys.argv[sys.argv.index("--") + 1:]
 WORK, FBX, OUTJ = args[0], args[1], args[2]
 res = []
 for jp in sorted(glob.glob(os.path.join(FBX, "*", "*.json"))):
-    if os.path.basename(os.path.dirname(jp)).startswith("_"):      # _work(_approx.json)·_render(_report.json) 건너뜀
-        continue
     side = json.load(open(jp))
     d = os.path.dirname(jp)
     tag = os.path.basename(d)

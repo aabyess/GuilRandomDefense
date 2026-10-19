@@ -70,34 +70,4 @@ public static class PachinkoFireProbe
         return "관전 시험";
     }
     public static string SpecAudio() => PachinkoOverlay.DebugSpecAudio();
-    // 신 R30 보스 시험: 레인 보스를 실제 사망 경로(TakeDamage → GrantKillReward → GrantBossReward)로 잡고 파칭코 상태를 문자열로 낸다
-    public static string KillLaneBosses()
-    {
-        int n = 0; string info = "";
-        foreach (EnemyDummy e in new System.Collections.Generic.List<EnemyDummy>(EnemyDummy.Active))
-        {
-            if (e == null || !e.IsBoss || e.LaneIndex < 0) continue;
-            info += $"{e.name}(R{e.SpawnRound},레인{e.LaneIndex}) ";
-            e.TakeDamage(1e12f, DamageType.AD, AttackType.Normal, e.LaneIndex, 1f, false, 1f, false, true);
-            n++;
-        }
-        return $"보스 {n}기 처치 시도: {info}";
-    }
-    public static string PachinkoState() => PachinkoController.DebugState();
-    // 두 번째 판 시험: 같은 앱 실행 안에서 씬을 다시 불러온다(타이틀 → 다시 시작과 같은 static 상태)
-    public static string ReloadScene()
-    {
-        UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
-        return "씬 다시 불러옴 · " + PachinkoController.DebugState();
-    }
-    // 파칭코 도중(투표 중) 씬을 다시 불러온다 — 실제 판처럼 결과 고정 없이 시작
-    public static string VoteThenReload() { PachinkoController.Begin(null); return ReloadScene(); }
-    public static string PickGod() { if (DifficultyManager.Instance == null) return "난이도 매니저 없음"; DifficultyManager.Instance.SelectMode(DifficultyMode.God); return "신 선택"; }
-    // 2차 이펙트(10-18): 모양 확인용 느린 재생 · 실제 판에서 재생된 목록
-    public static string FxSlowA() { PachinkoOverlay.DebugPlayFx("text_chance", 8f, 0.6f); PachinkoOverlay.DebugPlayFx("starburst", 8f, 0.6f); return "느린 chance+starburst"; }
-    public static string FxSlowB() { PachinkoOverlay.DebugPlayFx("rainbow", 8f, 0.7f); PachinkoOverlay.DebugPlayFx("text_geki", 8f, 0.6f); return "느린 rainbow+geki"; }
-    public static string FxSlowC() { PachinkoOverlay.DebugPlayFx("coins", 8f, 0.7f); PachinkoOverlay.DebugPlayFx("text_push", 8f, 0.6f); return "느린 coins+push"; }
-    public static string FxSlowD() { PachinkoOverlay.DebugPlayFx("fire", 8f, 0.55f); PachinkoOverlay.DebugPlayFx("shockwave", 8f, 0.7f); return "느린 fire+shockwave"; }
-    public static string FxSlowE() { PachinkoOverlay.DebugPlayFx("slime", 8f, 0.55f); PachinkoOverlay.DebugPlayFx("speedlines", 8f, 1f); PachinkoOverlay.DebugPlayFx("text_kakuhen", 8f, 0.6f); return "느린 slime+speedlines+kakuhen"; }
-    public static string FxLog() => $"이펙트 {PachinkoOverlay.FxPlayed}회: {PachinkoOverlay.FxLog}";
 }
