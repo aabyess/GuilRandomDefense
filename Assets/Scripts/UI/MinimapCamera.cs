@@ -2,6 +2,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.EventSystems;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 
 // 맵을 위에서 내려다보는 미니맵 전용 카메라. 이 컴포넌트가 붙은 RawImage와 같은 GameObject에서
@@ -14,7 +15,7 @@ public class MinimapCamera : MonoBehaviour, IPointerClickHandler
     [SerializeField] float mapExtent = 370f;
     [SerializeField] float cameraHeight = 500f;
     [SerializeField] int textureSize = 256;
-    [SerializeField] float refreshesPerSecond = 12f;
+    [SerializeField] float refreshesPerSecond = 6f;   // 10-20 perf: 12 → 6. 움직이는 점은 MinimapBlips가 초당 10번 따로 그린다 — 이 카메라는 땅 그림이라 느려도 된다.
     [SerializeField] RtsCameraController mainCameraController;
     // 미니맵에서 빼고 그릴 레이어(기본 없음 = 지금과 같다). UI 레이어는 이것과 별개로 항상 뺀다.
     // 용도: 수면을 단색으로 보이게 할 때 수면 레이어를 여기 넣는다(2026-09-23 PM — 수면 레이어 지정은 MapGenerator 쪽 일).
@@ -165,6 +166,19 @@ public class MinimapCamera : MonoBehaviour, IPointerClickHandler
         minimapCam.orthographic = true;
         // 켜 두면 매 프레임 맵 전체가 한 번 더 렌더링된다. 미니맵은 초당 몇 번이면 충분하다.
         minimapCam.enabled = false;
+        // 10-20 perf: 이 카메라는 작은 그림을 가끔 찍을 뿐이다 — 그림자·깊이/색 복사 패스·MSAA·HDR·가림 판정을 꺼서 한 번 찍는 값을 줄인다.
+        //   (그림자는 어차피 URP 그림자 거리 50 밖이라 안 보였다. 깊이 텍스처를 읽는 수면 셰이더가 미니맵에서 이상해 보이면 LeanRender를 false로.)
+        minimapCam.allowHDR = false;
+        minimapCam.allowMSAA = false;
+        minimapCam.useOcclusionCulling = false;
+        if (LeanRender)
+        {
+            UniversalAdditionalCameraData extra = minimapCam.GetUniversalAdditionalCameraData();
+            extra.renderShadows = false;
+            extra.requiresDepthOption = CameraOverrideOption.Off;
+            extra.requiresColorOption = CameraOverrideOption.Off;
+            extra.antialiasing = AntialiasingMode.None;
+        }
         minimapCam.clearFlags = CameraClearFlags.SolidColor;
         // 칸이 가로로 길고 맵은 세로로 길어서(09-23: 3175×3715) 좌우에 여백이 생기고, 그 여백이 바다 판 밖까지 나가면
         // 배경이 그대로 보인다. 검정이면 「잘린 검은 띠」로 읽혀서 수면과 비슷한 짙은 파랑으로 둔다.
@@ -242,16 +256,22 @@ public class MinimapCamera : MonoBehaviour, IPointerClickHandler
         minimapCam.aspect = aspect;
         minimapCam.orthographicSize = halfZ;
         nextRefreshTime = 0f;   // 다음 Update에서 바로 다시 그린다
+        renderedOnce = false;
     }
 
+    const bool LeanRender = true;
+    bool renderedOnce;
     float nextRefreshTime;
 
     void Update()
     {
         if (minimapCam == null || Time.unscaledTime < nextRefreshTime) return;
+        // 일시정지 중엔 화면이 안 바뀐다 — 마지막 그림을 그대로 둔다(10-20 perf). 크기가 바뀌면 ApplyAspect가 nextRefreshTime을 0으로 돌려 다시 찍는다.
+        if (GamePause.Paused && renderedOnce) return;
 
         nextRefreshTime = Time.unscaledTime + 1f / Mathf.Max(1f, refreshesPerSecond);
         minimapCam.Render();
+        renderedOnce = true;
     }
 
     void OnDestroy()
