@@ -3538,7 +3538,7 @@ public static class MapGenerator
     {
         GachaBand.Random("안흔함", UnitGrade.Uncommon),
         GachaBand.Random("특별함", UnitGrade.Special),
-        GachaBand.RandomWithBonus("희귀함·특수함", UnitGrade.Rare, UnitGrade.Superior, 3f),
+        GachaBand.RandomWithBonus("희귀함·특수함", UnitGrade.Rare, UnitGrade.Superior, 100f / 36f),   // 원작 구버전 Trig_Story_Tier4: GetRandomInt(1,36)==1 → UniqueSpecial 풀(특수함)에서 한 기(2.78%, 옛 값 3)
         GachaBand.Special("특수지급",
             SpecialSlot.Resources("돈+목재"),
             SpecialSlot.Units("박은석 초월위습", "초월위습_박은석"),
