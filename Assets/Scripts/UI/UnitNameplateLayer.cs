@@ -160,6 +160,7 @@ public class UnitNameplateLayer : MonoBehaviour
         {
             if (identity == null || identity.Data == null) continue;
             Vector3 p = identity.transform.position;
+            if ((p - camPos).sqrMagnitude >= maxDistance * maxDistance) continue;   // 어차피 이름표가 안 뜨는 먼 유닛은 겹침 묶기(GetComponent)도 안 한다(10-20 perf)
             int owner = identity.TryGetComponent(out OwnedByPlayer ownedBy) ? ownedBy.OwnerId : -1;
             var key = (identity.Data, owner, Mathf.RoundToInt(p.x / StackCell), Mathf.RoundToInt(p.z / StackCell));
             if (stackIndex.TryGetValue(key, out int at)) stacks[at] = (stacks[at].rep, stacks[at].count + 1);
