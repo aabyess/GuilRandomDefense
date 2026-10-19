@@ -23,6 +23,24 @@ public static class VfxStyleProbe
         cam.MoveTo(list[index].transform.position);
         return $"가까이 {index}번 표적 높이 {height}";
     }
+    /// <summary>실제 레인 적(H≈22.5)에 스턴을 건다 — 라운드가 시작돼 적이 나온 뒤(gameshot wait:25)에 부른다. 카메라는 첫 적 위 기본 높이 근처.</summary>
+    public static string StunLane()
+    {
+        if (!Application.isPlaying) return "❌ 플레이 중에만";
+        int n = 0; Vector3 at = Vector3.zero;
+        foreach (EnemyDummy e in new List<EnemyDummy>(EnemyDummy.Active))
+        {
+            if (e == null || e.IsBoss || e.LaneIndex < 0) continue;
+            e.AddFreeze();
+            if (n == 0) at = e.transform.position;
+            if (++n >= 3) break;
+        }
+        if (n == 0) return "❌ 레인 적 없음(라운드 시작 뒤에)";
+        RtsCameraController cam = Object.FindFirstObjectByType<RtsCameraController>();
+        if (cam != null) cam.MoveTo(at);
+        return $"레인 적 {n}기 스턴";
+    }
+
     public static string Close() => CloseOn(0, 90f);
     public static string Close2() => CloseOn(1, 90f);
     public static string Close3() => CloseOn(2, 90f);

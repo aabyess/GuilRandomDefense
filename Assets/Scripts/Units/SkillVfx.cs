@@ -479,8 +479,10 @@ public static class SkillVfx
                     return Layered(parent, loop, "Stun",
                         // H = Unit(레인 적 키). 궤도 반지름 0.47H · 반짝이 3개(120°) · 1.6초에 한 바퀴(3.93 rad/s) · 꼬리 ≈0.3초(궤도 70°)
                         Layer("plate_dark", new Color(0f, 0f, 0f, 0.3f), 0.9f, 1.3f * Unit, 1, 0f, Shape.None, ground: true, persistent: loop, alpha: true),   // 어두운 받침판(풀밭 가독성)
-                        Layer("sparkle_4pt", new Color(1f, 1f, 0.95f, 1f), 0.9f, 0.55f * Unit, 3, 0f, Shape.Ring, orbit: 3.93f, persistent: loop, ringRadius: 0.32f,
-                              color2: new Color(1f, 0.82f, 0.4f, 1f), trail: "trail_h", trailSeconds: 0.3f, trailColor: new Color(0.35f, 0.78f, 1f, 0.85f), trailWidth: 0.3f));
+                        // 코어 흰 + 가장자리 금(#ffd266, B의 물리 금) — 금빛 큰 반짝이 위에 흰 작은 반짝이를 겹친다. 꼬리는 금 층에.
+                        Layer("sparkle_4pt", new Color(1f, 0.82f, 0.4f, 1f), 0.9f, 0.62f * Unit, 3, 0f, Shape.Ring, orbit: 3.93f, persistent: loop, ringRadius: 0.32f,
+                              trail: "trail_h", trailSeconds: 0.3f, trailColor: new Color(0.35f, 0.78f, 1f, 0.85f), trailWidth: 0.6f),
+                        Layer("sparkle_4pt", new Color(1f, 1f, 0.95f, 1f), 0.9f, 0.34f * Unit, 3, 0f, Shape.Ring, orbit: 3.93f, persistent: loop, ringRadius: 0.32f));
                 return Layered(parent, loop, "Stun",
                     Layer("symbol_02", new Color(1f, 0.85f, 0.05f, 1f), 0.9f, 0.9f * Unit, 3, 0f, Shape.Ring, orbit: 5f, persistent: loop, alpha: true),
                     // 같은 자리·같은 궤도에 더하기 섞기 별을 한 겹 더 — 알파 노랑만으론 풀밭 초록과 섞여 탁했다(09-29 기본 높이 실측).
