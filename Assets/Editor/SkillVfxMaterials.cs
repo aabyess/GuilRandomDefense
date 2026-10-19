@@ -111,6 +111,13 @@ public static class SkillVfxMaterials
         foreach (string guid in AssetDatabase.FindAssets("t:Model", new[] { MeshFolder }))
         {
             string path = AssetDatabase.GUIDToAssetPath(guid);
+            // 10-19 빌드 실측: 메시 파티클은 메시가 Read/Write(isReadable)여야 그려진다 — 에디터에선 되는데 빌드 로그에 「No mesh data available for mesh Mesh_초승달_검기…」가 떴다.
+            //   FBX 임포터를 읽기 가능으로 두고 다시 가져온 뒤 복사한다(복사본이 그 설정을 물려받는다).
+            if (AssetImporter.GetAtPath(path) is ModelImporter modelImporter && !modelImporter.isReadable)
+            {
+                modelImporter.isReadable = true;
+                modelImporter.SaveAndReimport();
+            }
             Mesh source = null;
             foreach (Object o in AssetDatabase.LoadAllAssetsAtPath(path))
                 if (o is Mesh m) { source = m; break; }
@@ -125,7 +132,7 @@ public static class SkillVfxMaterials
             else { EditorUtility.CopySerialized(copy, existing); EditorUtility.SetDirty(existing); Object.DestroyImmediate(copy); }
 
             Bounds b = source.bounds;
-            sb.AppendLine($"   {outPath} · 삼각형 {source.triangles.Length / 3} · 경계 x {b.min.x:F3}~{b.max.x:F3} · y {b.min.y:F3}~{b.max.y:F3} · z {b.min.z:F3}~{b.max.z:F3}");
+            sb.AppendLine($"   {outPath} · 삼각형 {source.triangles.Length / 3} · 읽기가능 {source.isReadable} · 경계 x {b.min.x:F3}~{b.max.x:F3} · y {b.min.y:F3}~{b.max.y:F3} · z {b.min.z:F3}~{b.max.z:F3}");
         }
         AssetDatabase.SaveAssets();
         return sb.Length > 0 ? "   메시:\n" + sb : "   ❌ 메시 FBX 없음";
