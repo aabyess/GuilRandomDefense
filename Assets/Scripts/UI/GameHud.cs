@@ -342,6 +342,9 @@ public class GameHud : MonoBehaviour
     // 칸 배치를 한 곳에서 정한다. 원하는 칸(위 shown 깃발들 + 조합식 목록)을 11→4로 깔아 보고, 지금 배치와 다르면
     // 4~11의 글자·색·단축키·쿨 덮개·조합식 대응·클릭 대응을 전부 비운 뒤 새 번호를 적는다(옛 칸에 흔적이 남지 않게).
     // 칸 내용은 각 Refresh*가 매 프레임 자기 칸(FlexSlotOf)에 다시 그린다 — 배치가 바뀐 프레임은 빈 칸이고 다음 프레임에 찬다.
+    static readonly int[] FlexTargets2 = { 5, 6 }, FlexTargets3 = { 5, 6, 7 }, FlexBottomRow = { 8, 9, 10, 11 };
+    readonly List<(FlexKind kind, int arg)> flexSkillsScratch = new List<(FlexKind kind, int arg)>();
+
     void ReflowFlexSlots()
     {
         if (unitCommandSlotRoots[FlexSlotFirst] == null) return;
@@ -351,7 +354,8 @@ public class GameHud : MonoBehaviour
         // 10-07 원작 배치: 유닛 스킬 칸(액티브→재능→…→특성강화)은 둘째 줄 가운데 5·6, 조합 초상은 셋째 줄 8~11, 스킬이 둘을 넘으면 조합 초상 뒤로.
         int overflow = 0;
         flexPassiveOverflow.Clear();
-        var skills = new List<(FlexKind kind, int arg)>();
+        var skills = flexSkillsScratch;   // 매 프레임 새로 만들면 GC가 쌓인다(10-20 perf)
+        skills.Clear();
         if (activeSlotShown) skills.Add((FlexKind.Active, 0));
         if (rerollSlotShown) skills.Add((FlexKind.Reroll, 0));
         if (talentSlotsShown) for (int k = 0; k < UnitAttacker.TalentKindCount; k++) skills.Add((FlexKind.Talent, k));
@@ -372,12 +376,12 @@ public class GameHud : MonoBehaviour
             }
         int si = 0;
         bool sevenFree = SellSlotFree();
-        foreach (int target in sevenFree ? new[] { 5, 6, 7 } : new[] { 5, 6 })
+        foreach (int target in sevenFree ? FlexTargets3 : FlexTargets2)
         {
             if (si >= skills.Count) break;
             flexWantKind[target] = skills[si].kind; flexWantArg[target] = skills[si].arg; si++;
         }
-        int[] bottomRow = { 8, 9, 10, 11 };
+        int[] bottomRow = FlexBottomRow;
         int bi = 0;
         for (int i = 0; i < flexRecipes.Count; i++)
         {
@@ -3753,12 +3757,15 @@ public class GameHud : MonoBehaviour
     void SetWc3Strips(bool on, string name, string level)
     {
         if (wc3NameText == null) return;
-        wc3NameText.transform.parent.gameObject.SetActive(on);
-        wc3LevelText.transform.parent.gameObject.SetActive(on);
+        // 이미 그 상태면 건드리지 않는다 — 껐다 켜면 글자 메시가 매 프레임 다시 만들어진다(10-20 perf).
+        GameObject nameStrip = wc3NameText.transform.parent.gameObject, levelStrip = wc3LevelText.transform.parent.gameObject;
+        if (nameStrip.activeSelf != on) nameStrip.SetActive(on);
+        if (levelStrip.activeSelf != on) levelStrip.SetActive(on);
         if (!on) return;
+        singleWantStrips = true;
+        singleWantInfoText = false;
         wc3NameText.text = name;
         wc3LevelText.text = level;
-        unitInfoText.gameObject.SetActive(false);
     }
 
     static void SetStatIcon(Transform row, string iconName)
@@ -3846,6 +3853,7 @@ public class GameHud : MonoBehaviour
     {
         if (portraitHpBar == null) return;
         bool hpOn = hp.HasValue;
+        if (hpOn) portraitGaugeShown = false;
         bool mpOn = hpOn && mana.HasValue;
         if (portraitHpBar.transform.parent.gameObject.activeSelf != hpOn) portraitHpBar.transform.parent.gameObject.SetActive(hpOn);
         if (portraitMpBar.transform.parent.gameObject.activeSelf != mpOn) portraitMpBar.transform.parent.gameObject.SetActive(mpOn);
@@ -3862,16 +3870,23 @@ public class GameHud : MonoBehaviour
     void SetPortraitGauges(int fullHp, int lifeNow, int lifeMax, int manaNow, int manaMax)
     {
         if (portraitHpBar == null) return;
-        portraitHpBar.transform.parent.gameObject.SetActive(true);
-        if (lifeMax > 0) { portraitHpBar.fillAmount = Mathf.Clamp01(lifeNow / (float)lifeMax); portraitHpText.text = $"{lifeNow} / {lifeMax}"; }
-        else { portraitHpBar.fillAmount = 1f; portraitHpText.text = $"{fullHp} / {fullHp}"; }
+        singleBarsDrawn = true;
+        if (!portraitHpBar.transform.parent.gameObject.activeSelf) portraitHpBar.transform.parent.gameObject.SetActive(true);
         bool mpOn = manaMax > 0;
         if (portraitMpBar.transform.parent.gameObject.activeSelf != mpOn) portraitMpBar.transform.parent.gameObject.SetActive(mpOn);
+        // 값이 같으면 글자·앵커를 다시 만들지 않는다(10-20 perf — 유닛을 고르고 있는 동안 매 프레임 문자열 둘과 앵커 대입이 있었다).
+        int gaugeKey = System.HashCode.Combine(fullHp, lifeNow, lifeMax, manaNow, manaMax);
+        if (gaugeKey == lastPortraitGaugeKey && portraitGaugeShown) return;
+        lastPortraitGaugeKey = gaugeKey; portraitGaugeShown = true;
+        if (lifeMax > 0) { portraitHpBar.fillAmount = Mathf.Clamp01(lifeNow / (float)lifeMax); portraitHpText.text = $"{lifeNow} / {lifeMax}"; }
+        else { portraitHpBar.fillAmount = 1f; portraitHpText.text = $"{fullHp} / {fullHp}"; }
         if (!mpOn) return;
         PlacePortraitMpBar(false);
         portraitMpBar.fillAmount = Mathf.Clamp01(manaNow / (float)manaMax);
         portraitMpText.text = $"{manaNow} / {manaMax}";
     }
+    int lastPortraitGaugeKey;
+    bool portraitGaugeShown;   // SetPortraitBars·SetPortraitManaOnly가 같은 칸을 덮어쓰면 꺼서 다시 그리게 한다
 
     // 마나 줄 자리: 유닛은 체력 줄 아래(0.01~0.09), 건물(체력 줄 없음)은 체력 줄 자리(0.10~0.18)로 올려 틀 덮개에 안 가려지게 한다.
     void PlacePortraitMpBar(bool atHpSlot)
@@ -3885,6 +3900,8 @@ public class GameHud : MonoBehaviour
     void SetPortraitManaOnly(int mana, int manaCap)
     {
         if (portraitHpBar == null) return;
+        singleBarsDrawn = true;
+        portraitGaugeShown = false;
         portraitHpBar.transform.parent.gameObject.SetActive(false);
         portraitMpBar.transform.parent.gameObject.SetActive(true);
         PlacePortraitMpBar(true);
@@ -5373,14 +5390,32 @@ public class GameHud : MonoBehaviour
             ShowCardGrid(selection);
     }
 
+    // 10-20 perf: 단일 정보칸의 켜짐(정보 글자·스탯 줄·워크3 띠)은 분기들이 「원하는 상태」만 적고 끝에서 한 번 맞춘다.
+    //  예전엔 맨 위에서 전부 끄고 유닛 분기에서 다시 켜서, 유닛 하나만 골라도 글자 메시가 매 프레임 다시 만들어졌다.
+    bool singleWantStatRows, singleWantStrips, singleWantInfoText, singleUnitBranch, singleBarsDrawn;
+    Selectable lastUnitInfoFirst;
+    int lastUnitInfoKey;
+
     void ShowSingleInfo(SelectionManager selection, int count)
     {
-        SetPortraitBars(null, null, 0);   // 아래 유닛 분기에서만 켠다
-        SetWc3Strips(false, null, null);
-        if (unitStatRows != null && unitStatRows.activeSelf) unitStatRows.SetActive(false);
+        singleWantStatRows = false; singleWantStrips = false; singleWantInfoText = true; singleUnitBranch = false; singleBarsDrawn = false;
+        ShowSingleInfoInner(selection, count);
+        if (!singleBarsDrawn) SetPortraitBars(null, null, 0);   // 초상 아래 바는 유닛·도움소 분기만 그린다
+        if (!singleUnitBranch) lastUnitInfoFirst = null;   // 다른 분기가 정보 글자를 덮어썼으니 유닛 글자는 다시 만들어야 한다
+        if (unitStatRows != null && unitStatRows.activeSelf != singleWantStatRows) unitStatRows.SetActive(singleWantStatRows);
+        if (wc3NameText != null)
+        {
+            GameObject nameStrip = wc3NameText.transform.parent.gameObject, levelStrip = wc3LevelText.transform.parent.gameObject;
+            if (nameStrip.activeSelf != singleWantStrips) nameStrip.SetActive(singleWantStrips);
+            if (levelStrip.activeSelf != singleWantStrips) levelStrip.SetActive(singleWantStrips);
+        }
+        if (unitInfoText.gameObject.activeSelf != singleWantInfoText) unitInfoText.gameObject.SetActive(singleWantInfoText);
+    }
+
+    void ShowSingleInfoInner(SelectionManager selection, int count)
+    {
         if (skillIconRow != null && skillIconRow.activeSelf) skillIconRow.SetActive(false);
         unitCardsPanel.SetActive(false);
-        unitInfoText.gameObject.SetActive(true);
         if (unitInfoPortraitSlotObject != null) unitInfoPortraitSlotObject.SetActive(true);
 
         if (count == 0)
@@ -5431,60 +5466,57 @@ public class GameHud : MonoBehaviour
         first.TryGetComponent(out Wisp selectedWisp);
         WispData wispData = selectedWisp != null ? selectedWisp.Data : null;
 
-        string unitName = data != null ? data.DisplayName
-                        : wispData != null ? wispData.wispName
-                        : first.name.Replace("(Clone)", "");
-        string grade = data != null ? data.grade.KoreanName()
-                     : wispData != null ? $"{wispData.targetGrade.KoreanName()} 뽑기"
-                     : "-";
-        string gradeColorHex = ColorUtility.ToHtmlStringRGB(
-            data != null ? GetGradeColor(data.grade)
-            : wispData != null ? GetGradeColor(wispData.targetGrade)
-            : Color.white);
-        // 플레이어 유닛에 아직 별도 체력 컴포넌트가 없어, UnitData의 기준 hp를 표시한다(실시간 값 아님).
-        string hp = data != null ? data.hp.ToString("F0") : "-";
         // MP: 클라 겉모습엔 UnitAttacker가 없다 — 거울(NetEntity, 겉모습의 부모)이 싣고 온 호스트 실제 값을 쓴다.
         NetEntity mirror = attacker == null && data != null ? first.GetComponentInParent<NetEntity>() : null;
         // MP: 거울이 방금 사라진 프레임(판 끝·조합 재료)엔 [Networked] 값을 읽으면 예외다(09-29 두 창 실측).
         if (mirror != null && (mirror.Object == null || !mirror.Object.IsValid)) mirror = null;
         bool hasStats = attacker != null || mirror != null;
         float damage = attacker != null ? attacker.AttackDamage : mirror != null ? mirror.AttackDamage : 0f;
-        float range = attacker != null ? attacker.AttackRange : mirror != null ? mirror.AttackRange : 0f;
-        float interval = attacker != null ? attacker.AttackInterval : mirror != null ? mirror.AttackInterval : 0f;
         // 영웅 레벨(GAP 09-27 「영웅 레벨·XP HUD」) — 이름 줄 끝에 「Lv.N」(워크3 영웅 정보창의 레벨). 줄을 늘리지 않아 정보칸 높이는 그대로.
         int heroLevel = attacker != null ? attacker.CharacterLevel : mirror != null ? mirror.HeroLevel : 0;
-        string levelLabel = hasStats && heroLevel > 0 ? $"  Lv.{heroLevel}" : "";
-        string attackPower = hasStats ? damage.ToString("F0") : "-";
-        string attackRange = hasStats ? range.ToString("F1") : "-";
-        string attackSpeed = hasStats && interval > 0f
-            ? (1f / interval).ToString("F2")
-            : "-";
 
         // 마나·방어력은 PM 요청에 있었으나 UnitData/UnitAttacker에 그 필드 자체가 없다
         // (플레이어 유닛은 마나를 소모하지 않고, 방어력 감폭은 EnemyDummy 전용 축이다) —
         // 없는 값을 지어내지 않고 실제로 있는 축만 표시한다(2026-09-23, PM 보고 예정).
         if (data != null && unitStatRows != null)
         {
-            // 사진 서식(Docs/reference/ui/원랜디_인게임_01.png): 「이름(흰) 별명(노랑) – 등급(등급색)」 + 공격 아이콘 줄 + 방어 아이콘 줄 + 상태 줄,
-            //   체력·마나는 초상 아래 바. 플레이어 유닛은 피해를 안 받으니 방어는 원작 무적 표기(빨강)와 같다.
-            string person = data.DisplayName.Length > data.unitName.Length ? data.DisplayName.Substring(0, data.DisplayName.Length - data.unitName.Length - 1) : "";
-            string firstPart = person.Length > 0 ? person : data.unitName;
-            string secondPart = person.Length > 0 ? $" <color=#FFD84A>{data.unitName}</color>" : "";
-            unitInfoText.text = $"<size=115%>{firstPart}{secondPart} – <color=#{gradeColorHex}>{grade}{levelLabel}</color></size>" + (data.OriginalMatchLabel.Length > 0 ? $"  <size=80%><color=#FFD27A>{data.OriginalMatchLabel}</color></size>" : "");
-            string bonus = hasStats && data.attackPower > 0f && damage - data.attackPower >= 0.5f ? $" <color=#46E06A>+{damage - data.attackPower:F0}</color>" : "";
-            string baseShown = bonus.Length > 0 ? data.attackPower.ToString("F0") : attackPower;   // 10-08 워크3식: 앞 숫자는 기본값, 뒤 +는 보너스(합계를 앞에 쓰면 보너스가 두 번 붙어 보인다)
-            unitDamageText.text = $"<color=#FF9A3A>공격력:</color> {baseShown}{bonus}";   // 사장님 10-03: 사거리·공속은 정보칸에서 뺀다(F1 DebugHud엔 남음)
-            unitArmorText.text = "<color=#FF9A3A>방어:</color> <color=#FF4A4A>무적</color>";
-            unitStatusText.text = "<color=#FF9A3A>상태:</color>" + (attacker != null && attacker.GunFormActive ? $" <color=#FF6B6B>구건 {attacker.GunFormRemaining:F1}초</color>" : "") + (attacker != null && (attacker.UnitDeleteCount > 0 || attacker.GunFormActive) ? $" 삭제 {attacker.UnitDeleteCount}" : "");
-            RefreshStatusBadges(attacker);
+            singleUnitBranch = true;
+            singleWantStatRows = true;
             bool showHeroStats = attacker != null && (data.grade == UnitGrade.Transcendent || data.grade == UnitGrade.Eternal);
+            // 글자를 만드는 입력이 이전 프레임과 같으면 문자열을 다시 만들지 않는다(10-20 perf — 유닛 하나만 골라도 프레임마다 ~2KB 쓰레기가 나왔다).
+            int gunTenths = attacker != null && attacker.GunFormActive ? Mathf.RoundToInt(attacker.GunFormRemaining * 10f) : -1;
+            int unitInfoKey = System.HashCode.Combine(
+                System.HashCode.Combine(data, heroLevel, damage, hasStats),
+                System.HashCode.Combine(gunTenths, attacker != null ? attacker.UnitDeleteCount : 0, showHeroStats ? Mathf.FloorToInt(attacker.CurrentStrength) : 0,
+                    showHeroStats ? Mathf.FloorToInt(attacker.CurrentAgility) : 0, showHeroStats ? Mathf.FloorToInt(attacker.CurrentIntelligence) : 0));
+            if (first != lastUnitInfoFirst || unitInfoKey != lastUnitInfoKey)
+            {
+                lastUnitInfoFirst = first;
+                lastUnitInfoKey = unitInfoKey;
+                string grade = data.grade.KoreanName();
+                string gradeColorHex = ColorUtility.ToHtmlStringRGB(GetGradeColor(data.grade));
+                string levelLabel = hasStats && heroLevel > 0 ? $"  Lv.{heroLevel}" : "";
+                string attackPower = hasStats ? damage.ToString("F0") : "-";
+                // 사진 서식(Docs/reference/ui/원랜디_인게임_01.png): 「이름(흰) 별명(노랑) – 등급(등급색)」 + 공격 아이콘 줄 + 방어 아이콘 줄 + 상태 줄,
+                //   체력·마나는 초상 아래 바. 플레이어 유닛은 피해를 안 받으니 방어는 원작 무적 표기(빨강)와 같다.
+                string person = data.DisplayName.Length > data.unitName.Length ? data.DisplayName.Substring(0, data.DisplayName.Length - data.unitName.Length - 1) : "";
+                string firstPart = person.Length > 0 ? person : data.unitName;
+                string secondPart = person.Length > 0 ? $" <color=#FFD84A>{data.unitName}</color>" : "";
+                unitInfoText.text = $"<size=115%>{firstPart}{secondPart} – <color=#{gradeColorHex}>{grade}{levelLabel}</color></size>" + (data.OriginalMatchLabel.Length > 0 ? $"  <size=80%><color=#FFD27A>{data.OriginalMatchLabel}</color></size>" : "");
+                string bonus = hasStats && data.attackPower > 0f && damage - data.attackPower >= 0.5f ? $" <color=#46E06A>+{damage - data.attackPower:F0}</color>" : "";
+                string baseShown = bonus.Length > 0 ? data.attackPower.ToString("F0") : attackPower;   // 10-08 워크3식: 앞 숫자는 기본값, 뒤 +는 보너스(합계를 앞에 쓰면 보너스가 두 번 붙어 보인다)
+                unitDamageText.text = $"<color=#FF9A3A>공격력:</color> {baseShown}{bonus}";   // 사장님 10-03: 사거리·공속은 정보칸에서 뺀다(F1 DebugHud엔 남음)
+                unitArmorText.text = "<color=#FF9A3A>방어:</color> <color=#FF4A4A>무적</color>";
+                unitStatusText.text = "<color=#FF9A3A>상태:</color>" + (attacker != null && attacker.GunFormActive ? $" <color=#FF6B6B>구건 {attacker.GunFormRemaining:F1}초</color>" : "") + (attacker != null && (attacker.UnitDeleteCount > 0 || attacker.GunFormActive) ? $" 삭제 {attacker.UnitDeleteCount}" : "");
+                if (showHeroStats)
+                    unitHeroStatText.text = $"<color=#FF9A3A>힘</color> {Mathf.FloorToInt(attacker.CurrentStrength)}  <color=#FF9A3A>민</color> {Mathf.FloorToInt(attacker.CurrentAgility)}  <color=#FF9A3A>지</color> {Mathf.FloorToInt(attacker.CurrentIntelligence)}";
+                if (wc3NameText != null)
+                    // 10-14 사장님: 하단 정보창 가운데 이름 옆에 「초월 양재모 - 초월 조로」(우리 등급·이름 - 대응 원작 등급·이름), 전 등급.
+                    SetWc3Strips(true, $"<color=#{gradeColorHex}>{grade}</color> {firstPart}{secondPart}" + (data.OriginalMatchLabel.Length > 0 ? $" <b><color=#FFD27A>- {data.originalMatchName}</color></b>" : ""), $"<color=#{gradeColorHex}>{grade}{levelLabel}</color>" + (data.OriginalMatchInfoLabel.Length > 0 ? $"  <color=#FFD27A>· {data.OriginalMatchInfoLabel}</color>" : ""));   // 10-20 사장님: 등급 줄에 「· 원작: ○○」(길면 띠의 자동 글자 축소)
+            }
+            else if (wc3NameText != null) { singleWantStrips = true; singleWantInfoText = false; }
+            RefreshStatusBadges(attacker);
             unitHeroStatText.transform.parent.gameObject.SetActive(showHeroStats);
-            if (showHeroStats)
-                unitHeroStatText.text = $"<color=#FF9A3A>힘</color> {Mathf.FloorToInt(attacker.CurrentStrength)}  <color=#FF9A3A>민</color> {Mathf.FloorToInt(attacker.CurrentAgility)}  <color=#FF9A3A>지</color> {Mathf.FloorToInt(attacker.CurrentIntelligence)}";
-            if (!unitStatRows.activeSelf) unitStatRows.SetActive(true);
-            if (wc3NameText != null)
-                // 10-14 사장님: 하단 정보창 가운데 이름 옆에 「초월 양재모 - 초월 조로」(우리 등급·이름 - 대응 원작 등급·이름), 전 등급.
-                SetWc3Strips(true, $"<color=#{gradeColorHex}>{grade}</color> {firstPart}{secondPart}" + (data.OriginalMatchLabel.Length > 0 ? $" <b><color=#FFD27A>- {data.originalMatchName}</color></b>" : ""), $"<color=#{gradeColorHex}>{grade}{levelLabel}</color>" + (data.OriginalMatchInfoLabel.Length > 0 ? $"  <color=#FFD27A>· {data.OriginalMatchInfoLabel}</color>" : ""));   // 10-20 사장님: 등급 줄에 「· 원작: ○○」(길면 띠의 자동 글자 축소)
             if (skillIconRow != null && skillIconRow.activeSelf) skillIconRow.SetActive(false);   // 10-07 스킬 아이콘은 명령 카드로 옮김(ReflowFlexSlots Passive)
             // 10-08 6·7: 막대는 유닛 게이지(현재/문턱)다 — 지갑 마나(도움소)는 여기서 뺐다. 게이지가 없으면 체력은 가득·마나 막대는 숨김.
             int lifeNow = 0, lifeMax = 0, manaNow = 0, manaMax = 0;
@@ -5494,10 +5526,31 @@ public class GameHud : MonoBehaviour
             return;
         }
 
+        string unitName = data != null ? data.DisplayName
+                        : wispData != null ? wispData.wispName
+                        : first.name.Replace("(Clone)", "");
+        string grade2 = data != null ? data.grade.KoreanName()
+                     : wispData != null ? $"{wispData.targetGrade.KoreanName()} 뽑기"
+                     : "-";
+        string gradeColorHex2 = ColorUtility.ToHtmlStringRGB(
+            data != null ? GetGradeColor(data.grade)
+            : wispData != null ? GetGradeColor(wispData.targetGrade)
+            : Color.white);
+        // 플레이어 유닛에 아직 별도 체력 컴포넌트가 없어, UnitData의 기준 hp를 표시한다(실시간 값 아님).
+        string hp = data != null ? data.hp.ToString("F0") : "-";
+        float range = attacker != null ? attacker.AttackRange : mirror != null ? mirror.AttackRange : 0f;
+        float interval = attacker != null ? attacker.AttackInterval : mirror != null ? mirror.AttackInterval : 0f;
+        string levelLabel2 = hasStats && heroLevel > 0 ? $"  Lv.{heroLevel}" : "";
+        string attackPower2 = hasStats ? damage.ToString("F0") : "-";
+        string attackRange = hasStats ? range.ToString("F1") : "-";
+        string attackSpeed = hasStats && interval > 0f
+            ? (1f / interval).ToString("F2")
+            : "-";
+
         unitInfoText.text =
             // 09-29 워크3 콘솔: 이름 한 줄 + 스탯 두 열(정보칸이 넓어져 한 줄에 하나씩 쓰면 오른쪽이 빈다).
-            $"<size=115%><color=#{gradeColorHex}>{unitName} - {grade}{levelLabel}</color></size>\n" +
-            $"공격력: {attackPower}<pos=50%>사거리: {attackRange}\n" +
+            $"<size=115%><color=#{gradeColorHex2}>{unitName} - {grade2}{levelLabel2}</color></size>\n" +
+            $"공격력: {attackPower2}<pos=50%>사거리: {attackRange}\n" +
             $"공격속도: {attackSpeed}/s<pos=50%>체력: {hp}";
     }
 
