@@ -12,7 +12,7 @@ public static class MenuTheme
     public const Kind Current = Kind.Castle;
 
     static bool Castle => Current == Kind.Castle;
-    static T Pick<T>(T tavern, T castle) => Castle ? castle : tavern;
+    public static T Pick<T>(T tavern, T castle) => Castle ? castle : tavern;
 
     /// <summary>문 전환 방식(DoorTransition 머리 주석). Classic = 선술집 쌍여닫이(종전 그대로).</summary>
     public enum DoorKind { Classic, Doors, Portcullis }

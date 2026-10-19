@@ -29,7 +29,8 @@ public class GameBgm : MonoBehaviour
     {
         // 첫 화면 곡(사장님 10-06 「게임 시작 전까지 브금」) — NetBoot(첫 화면·대기실) 동안만 되풀이, 게임 씬으로 넘어가면 끈다.
         //   Alexander Nakarada 「Tavern Tales」 CC BY 4.0(free-stock-music.com 공식 배포본, 사장님 「선술집 느낌」) — 출처는 CreditsSplash에 적는다. 평균 −15.1dB → 0.12면 ≈ −33.5dB.
-        new Cue("Music/title_tavern_tales", TitleRound, TitleRound, 0.12f),
+        //   성 테마(10-19 사장님 확정): Elyvilon 「Noonday Feast of the Jolly Friar」(Nimueh's Gift, OpenGameArt, CC BY 4.0) — 평균 −16.4dB → 0.14면 ≈ −33.3dB. Tavern 테마는 위 곡 그대로.
+        new Cue(MenuTheme.Pick("Music/title_tavern_tales", "Music/title_castle_noonday_feast"), TitleRound, TitleRound, MenuTheme.Pick(0.12f, 0.14f)),
         new Cue("Music/binks_sake", 0, 1, 0.5f, once: true),             // 첫 화면 ~ 1라운드(2라운드 시작 때 끔)
         new Cue("Music/boss_r10_zoltraak", 10, 10, 0.1f, once: true, hold: true),   // 첫 보스(10라운드 주영호) — 11라운드 시작 때 끔
         new Cue("Music/boss_r20_journey", 20, 20, 0.11f, once: true, hold: true),   // 20라운드 보스(박은석) — 21라운드 시작 때 끔. 평균 −14.2dB → 0.11이면 ≈ −33.4dB

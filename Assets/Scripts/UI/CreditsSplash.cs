@@ -22,7 +22,9 @@ public class CreditsSplash : MonoBehaviour
         ("후원자", "임장혁 · 강주혁"),            // 사장님 10-09 「도움을 준 사람들 밑에」
     };
     // 배경음악(첫 화면 곡) 출처 — CC BY 4.0은 이름을 밝히는 게 조건이다.
-    const string MusicCredit = "Music: \"Tavern Tales\" by Alexander Nakarada (CreatorChords) · CC BY 4.0";
+    static readonly string MusicCredit = MenuTheme.Pick(
+        "Music: \"Tavern Tales\" by Alexander Nakarada (CreatorChords) · CC BY 4.0",
+        "Music: \"Noonday Feast of the Jolly Friar\" from \"Nimueh's Gift\" by Elyvilon · CC BY 4.0");
 
     const float FadeIn = 0.6f, Hold = 3.0f, FadeOut = 0.8f;
     const int TitleSceneIndex = 0;   // NetBoot — 배포판 첫 씬

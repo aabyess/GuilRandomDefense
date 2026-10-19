@@ -23,7 +23,7 @@ public class DoorTransition : MonoBehaviour
     const float GrateH = 1040f, GrateTravel = 1120f;
 
     static MenuTheme.DoorKind Kind => MenuTheme.DoorStyle;
-    static float CloseSeconds => Kind == MenuTheme.DoorKind.Classic ? 0.45f : Kind == MenuTheme.DoorKind.Doors ? 0.55f : 0.65f;
+    static float CloseSeconds => Kind == MenuTheme.DoorKind.Classic ? 0.45f : Kind == MenuTheme.DoorKind.Doors ? 1.0f : 0.65f;   // Doors 1.0초: 사장님 10-19 「느리게」(종전 0.55)
 
     /// <summary>촬영 전용(에디터 DoorPreview) — 게임에선 늘 꺼짐. PreviewTimeScale<1이면 전환이 그만큼 느려지고,
     /// PreviewFrozen이면 시간이 멈춰 있다가 PreviewStep(초)만큼씩만 흐른다(snap이 몇 초씩 걸려도 프레임 간격이 정확히 같다).</summary>
@@ -51,7 +51,7 @@ public class DoorTransition : MonoBehaviour
     bool impacted, openStarted;
     float shakeT = 99f, shakeAmp;
 
-    float OpenSeconds => style == MenuTheme.DoorKind.Classic ? 0.95f : style == MenuTheme.DoorKind.Doors ? 0.8f : 1.0f;
+    float OpenSeconds => style == MenuTheme.DoorKind.Classic ? 0.95f : style == MenuTheme.DoorKind.Doors ? 1.0f : 1.0f;   // Doors 열림 1.0초(종전 0.8)
     float ImpactAt => style == MenuTheme.DoorKind.Doors ? 0.78f : 0.75f;
 
     /// <summary>문을 닫고 다 닫히면 after를 부른다. expectScene이면 다음 씬이 올라오고(로딩 화면까지 걷힌 뒤) 열린다, 아니면 잠깐 뒤 열린다.</summary>
