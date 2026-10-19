@@ -26,6 +26,7 @@ public class MissionBoardPanel : MonoBehaviour
 
     public static void Install(Transform hudRoot)
     {
+        if (!S2Features.Enabled) return;   // S2Features 꺼짐
         if (instance != null) return;
         GameObject go = new GameObject("MissionBoardPanel", typeof(RectTransform));
         go.transform.SetParent(hudRoot, false);

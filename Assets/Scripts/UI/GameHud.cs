@@ -596,7 +596,7 @@ public class GameHud : MonoBehaviour
     {
         // 상단 바 「메뉴 (F10)」 — 워크3 기본 단축키
         if (HotkeyAlias.Pressed(Keyboard.current, Key.F11) && !ChatInputGate.IsOpen) AlliancePanel.Toggle();
-        if (Keyboard.current != null && Keyboard.current.f9Key.wasPressedThisFrame && !ChatInputGate.IsOpen) MissionBoardPanel.Toggle();   // 기록지침(F9)   // 동맹 (F11 / 맥 Opt+-)
+        if (S2Features.Enabled && Keyboard.current != null && Keyboard.current.f9Key.wasPressedThisFrame && !ChatInputGate.IsOpen) MissionBoardPanel.Toggle();   // 기록지침(F9)   // 동맹 (F11 / 맥 Opt+-)
         if (HotkeyAlias.Pressed(Keyboard.current, Key.F10, !ChatInputGate.IsOpen) && gameMenu != null)
         {
             if (gameMenu.activeSelf) CloseGameMenu(); else OpenGameMenu();
@@ -1396,8 +1396,14 @@ public class GameHud : MonoBehaviour
         layout.childForceExpandHeight = true;
 
         // 퀘스트: 11.089 원작은 퀘스트 로그를 안 썼지만(j에 CreateQuest 0건) S2 2.323의 기록지침(미션판·개인 퀘스트)을 여기서 연다(10-18).
-        TMP_Text questLabel = CreateTopBarButton(menuButtonsPanel, "QuestButton", "퀘스트 (F9)", 130f);
-        questLabel.transform.parent.GetComponent<Button>().onClick.AddListener(MissionBoardPanel.Toggle);
+        // S2Features 꺼짐(사장님 10-19 「구버전 원랜디를 따라간다」)이면 원작 모습 그대로: 버튼만 두고 흐리게·눌리지 않음.
+        TMP_Text questLabel = CreateTopBarButton(menuButtonsPanel, "QuestButton", S2Features.Enabled ? "퀘스트 (F9)" : "퀘스트", 130f);
+        if (S2Features.Enabled) questLabel.transform.parent.GetComponent<Button>().onClick.AddListener(MissionBoardPanel.Toggle);
+        else
+        {
+            questLabel.alpha = 0.45f;
+            questLabel.transform.parent.GetComponent<Button>().interactable = false;
+        }
         TMP_Text menuLabel = CreateTopBarButton(menuButtonsPanel, "MenuButton", "메뉴 (" + HotkeyAlias.Label("F10") + ")", 130f);
         menuLabel.enableAutoSizing = true; menuLabel.fontSizeMin = 10f; menuLabel.fontSizeMax = 18f;   // 맥 병기 라벨이 길어도 단추 폭 그대로(옆 항법 단추를 안 민다)
         menuLabel.transform.parent.GetComponent<Button>().onClick.AddListener(OpenGameMenu);

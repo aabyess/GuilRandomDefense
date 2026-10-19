@@ -122,6 +122,7 @@ public static class S2Missions
     /// <summary>미션 완료(호스트). 공유는 전원, 개인은 그 플레이어. 이미 깬 것은 무시. 기존 보상이 있는 미션은 그쪽이 준 뒤 여기서 표시·추가분만.</summary>
     public static void Complete(Mission m, int playerId = -1)
     {
+        if (!S2Features.Enabled) return;   // 사장님 10-19: S2 따라간 기능은 꺼 둔다(S2Features)
         if (!GameAuthority.IsServer) return;
         Hook();
         int bit = 1 << (int)m;
@@ -195,15 +196,17 @@ public static class S2Missions
 
     static void OnRoundStarted(int round)
     {
+        if (!S2Features.Enabled) return;   // 사장님 10-19: S2 따라간 기능은 꺼 둔다(S2Features)
         if (!GameAuthority.IsServer) return;
         if (!assigned) AssignQuests();
     }
 
     /// <summary>시험용: 라운드 시작을 기다리지 않고 배정.</summary>
-    public static void EnsureAssigned() { if (GameAuthority.IsServer && !assigned) AssignQuests(); }
+    public static void EnsureAssigned() { if (!S2Features.Enabled) return; if (GameAuthority.IsServer && !assigned) AssignQuests(); }
 
     static void AssignQuests()
     {
+        if (!S2Features.Enabled) return;   // 사장님 10-19: S2 따라간 기능은 꺼 둔다(S2Features)
         assigned = true;
         pool.Clear();
         for (sbyte q = 0; q < QuestCount; q++) pool.Add(q);
@@ -228,6 +231,7 @@ public static class S2Missions
     /// <summary>리롤(호스트). 10라운드 시작 전 · 미완료 칸 · 판에 1회(S2 BcN, j:8066~8069).</summary>
     public static void TryReroll(int playerId, int slot)
     {
+        if (!S2Features.Enabled) return;   // 사장님 10-19: S2 따라간 기능은 꺼 둔다(S2Features)
         if (!GameAuthority.IsServer || playerId < 0 || playerId >= RunStats.MaxPlayers || slot < 0 || slot > 2) return;
         if (!assigned || rerollUsed[playerId] || questDone[playerId, slot] || !RunStats.BeforeRound(RerollBeforeRound) || questIds[playerId, slot] < 0)
         {
@@ -310,6 +314,7 @@ public static class S2Missions
 
     static void OnCombined(int playerId, UnitData result)
     {
+        if (!S2Features.Enabled) return;   // 사장님 10-19: S2 따라간 기능은 꺼 둔다(S2Features)
         // 포네그리프 해석자(S2 aJ): 로빈·오뎅 계열 조합 → 해독 50초(j:24340~24352, 32160~32170)
         if (result != null && (result.name == "초월_강재규_AP" || result.name == "영원_서민성") && !interpreter)
         {
@@ -382,6 +387,7 @@ public static class S2Missions
     /// <summary>포네그리프 「해독 시작」(각자) — 지금 고른 내 유닛 하나.</summary>
     public static void RequestPone(UnitIdentity unit)
     {
+        if (!S2Features.Enabled) return;   // 사장님 10-19: S2 따라간 기능은 꺼 둔다(S2Features)
         if (unit == null) { PlayerNotification.Show(LocalPlayer.LocalPlayerId, "해독할 내 유닛을 먼저 고르세요.", 5f); return; }
         if (GameAuthority.IsServer) { PoneglyphSite.TryStart(LocalPlayer.LocalPlayerId, unit); return; }
         NetEntity entity = unit.GetComponentInParent<NetEntity>();
@@ -391,6 +397,7 @@ public static class S2Missions
     /// <summary>리롤 버튼(각자) — 호스트·싱글은 바로, 멀티 클라는 RPC.</summary>
     public static void RequestReroll(int slot)
     {
+        if (!S2Features.Enabled) return;   // 사장님 10-19: S2 따라간 기능은 꺼 둔다(S2Features)
         if (GameAuthority.IsServer) { TryReroll(LocalPlayer.LocalPlayerId, slot); return; }
         NetPlayer.Local?.RPC_S2QuestReroll((byte)slot);
     }

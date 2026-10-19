@@ -75,6 +75,7 @@ public static class RunStats
 
     public static void OnUnitGamble(int playerId, GamblingOptionData option, bool success, UnitData reward)
     {
+        if (!S2Features.Enabled) return;   // 사장님 10-19: S2 따라간 기능은 꺼 둔다(S2Features)
         PlayerStats s = Of(playerId); GambleTier? t = TierOf(option);
         if (s == null || t == null) return;
         int i = (int)t.Value;
@@ -92,6 +93,7 @@ public static class RunStats
 
     public static void OnChoiceWispUsed(int playerId)
     {
+        if (!S2Features.Enabled) return;   // 사장님 10-19: S2 따라간 기능은 꺼 둔다(S2Features)
         PlayerStats s = Of(playerId); if (s == null) return;
         s.choiceWispUses++;
         if (BeforeRound(15)) s.choiceWispUsesBefore15++;
@@ -100,6 +102,7 @@ public static class RunStats
 
     public static void OnWoodGamble(int playerId, bool success)
     {
+        if (!S2Features.Enabled) return;   // 사장님 10-19: S2 따라간 기능은 꺼 둔다(S2Features)
         PlayerStats s = Of(playerId); if (s == null) return;
         s.woodGambleTries++; if (success) s.woodGambleSuccess++;
         Touch(playerId);
@@ -107,6 +110,7 @@ public static class RunStats
 
     public static void OnCommonSold(int playerId)
     {
+        if (!S2Features.Enabled) return;   // 사장님 10-19: S2 따라간 기능은 꺼 둔다(S2Features)
         PlayerStats s = Of(playerId); if (s == null) return;
         s.commonSells++;
         Touch(playerId);
@@ -114,12 +118,14 @@ public static class RunStats
 
     public static void OnItemAcquired(int playerId, ItemData item)
     {
+        if (!S2Features.Enabled) return;   // 사장님 10-19: S2 따라간 기능은 꺼 둔다(S2Features)
         PlayerStats s = Of(playerId); if (s == null || item == null) return;
         if (item.hasGrade && item.grade == UnitGrade.Rare) { s.uniqueItemsAcquired++; Touch(playerId); }
     }
 
     public static void OnStoryMvp(int playerId)
     {
+        if (!S2Features.Enabled) return;   // 사장님 10-19: S2 따라간 기능은 꺼 둔다(S2Features)
         PlayerStats s = Of(playerId); if (s == null) return;
         s.storyMvps++;
         Touch(playerId);
@@ -130,6 +136,7 @@ public static class RunStats
     /// <summary>조합 완료(조합표·히든·채팅 조합). recipe가 있으면 아이템 재료 여부도 본다.</summary>
     public static void OnCombined(int playerId, UnitData result, CombineRecipe recipe = null)
     {
+        if (!S2Features.Enabled) return;   // 사장님 10-19: S2 따라간 기능은 꺼 둔다(S2Features)
         if (!GameAuthority.IsServer || result == null) return;
         PlayerStats s = Of(playerId); if (s == null) return;
         s.combinedGradeMask |= 1 << (int)result.grade;
@@ -143,6 +150,7 @@ public static class RunStats
 
     public static void SnapshotFinalUnitCounts()
     {
+        if (!S2Features.Enabled) return;   // 사장님 10-19: S2 따라간 기능은 꺼 둔다(S2Features)
         foreach (PlayerContext c in PlayerContext.Occupied)
         {
             PlayerStats s = Of(c.PlayerId); if (s == null) continue;
