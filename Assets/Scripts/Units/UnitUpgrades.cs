@@ -69,9 +69,13 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
         OnTraitPointsChanged?.Invoke();
     }
 
+    /// <summary>특성 해금·반복구매 횟수가 바뀔 때마다 오른다 — 이 값으로 파생값 캐시를 무효화한다(UnitAttacker 쿨다운 스킬 목록).</summary>
+    public int Version { get; private set; }
+
     public void ApplyReplicatedTrait(UnitTraitData trait, bool unlocked, int repeatCount)
     {
         if (trait == null) return;
+        Version++;
         if (unlocked) unlockedTraits.Add(trait); else unlockedTraits.Remove(trait);
         if (repeatCount > 0) repeatablePurchaseCounts[trait] = repeatCount; else repeatablePurchaseCounts.Remove(trait);
     }
@@ -146,6 +150,7 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
     public void IncrementRepeatablePurchase(UnitTraitData trait)
     {
         if (trait == null) return;
+        Version++;
         repeatablePurchaseCounts.TryGetValue(trait, out int count);
         repeatablePurchaseCounts[trait] = count + 1;
     }
@@ -179,6 +184,7 @@ public class UnitUpgrades : UnityEngine.MonoBehaviour
     public void Unlock(UnitTraitData trait)
     {
         if (trait == null || !unlockedTraits.Add(trait)) return;
+        Version++;
         OnLevelChanged?.Invoke();
     }
 
