@@ -157,6 +157,7 @@ public class NetLauncher : MonoBehaviour
     float test0929Delay = -1f; string test0929Dir;
     float testVfxDelay = -1f; string testVfxDir;
     float testAuraDelay = -1f;   // -mpTestAura 초: 오라 이펙트 두 창 확인(10-20) — 방장이 내 우리에 오라 유닛(전설적인_이승우) 1기+아군 흔함 3기를 서로 곁에 세우고 두 창 카메라를 그쪽으로
+    float testClicksDelay = -1f; int testClicksIntervalMs = 50, testClicksStutterMs;   // -mpTestClicks 초 간격ms [끊김ms]: 가상 마우스로 좌클릭 20번을 보내 처리율을 잰다(10-20 빠른 클릭 반응)
     float testFxDelay = -1f;   // -mpTestFx 초: 이펙트 안 B 두 창 확인(10-19) — 방장이 레인 적 셋에 스턴·이감·방깎+적중을 걸고 두 창 카메라를 모은다
     string testSelectDir;
     readonly System.Collections.Generic.List<(float, string)> shotAts = new System.Collections.Generic.List<(float, string)>();
@@ -255,6 +256,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpRejoinAfter": rejoinAfter = Seconds(i + 1); break;
                 case "-mpTestVfx": testVfxDelay = Seconds(i + 1); testVfxDir = Arg(i + 2); break;
                 case "-mpTestFx": testFxDelay = Seconds(i + 1); break;
+                case "-mpTestClicks": testClicksDelay = Seconds(i + 1); int.TryParse(Arg(i + 2), out testClicksIntervalMs); int.TryParse(Arg(i + 3), out testClicksStutterMs); break;
                 case "-mpTestAura": testAuraDelay = Seconds(i + 1); break;
                 case "-mpTest0929": test0929Delay = Seconds(i + 1); test0929Dir = Arg(i + 2); break;
                 case "-mpTestSelect": testSelectDelay = Seconds(i + 1); testSelectDir = Arg(i + 2); break;
@@ -814,6 +816,7 @@ public class NetLauncher : MonoBehaviour
         if (test0929Delay >= 0f) StartCoroutine(Test0929After(test0929Delay, test0929Dir));
         if (testVfxDelay >= 0f) StartCoroutine(TestVfxAfter(testVfxDelay, testVfxDir));
         if (testFxDelay >= 0f) StartCoroutine(TestFxAfter(testFxDelay));
+        if (testClicksDelay >= 0f) StartCoroutine(TestClicksAfter(testClicksDelay, testClicksIntervalMs, testClicksStutterMs));
         if (testAuraDelay >= 0f) StartCoroutine(TestAuraAfter(testAuraDelay));
         if (testPortraitsDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestPortraitsAfter(testPortraitsDelay, testPortraitsDir));
         if (testPhase3Delay >= 0f) StartCoroutine(TestPhase3After(testPhase3Delay));
@@ -1811,6 +1814,49 @@ public class NetLauncher : MonoBehaviour
             yield return new WaitForSecondsRealtime(0.5f);
         }
         Debug.LogWarning($"[AURA테스트] {side}: 60초 안에 오라 소스 겉모습을 못 봄");
+    }
+
+    class FrameStutter : MonoBehaviour
+    {
+        public int sleepMs, everyFrames = 4;
+        void Update() { if (sleepMs > 0 && Time.frameCount % everyFrames == 0) System.Threading.Thread.Sleep(sleepMs); }
+    }
+
+    // -mpTestClicks 초 간격ms [끊김ms] — 입력 유실 계측(10-20): 가상 마우스(UnityEngine.InputSystem)로 좌클릭(누름+10ms 뒤 뗌) 20번을 간격ms마다 보낸다. 끊김ms > 0이면 4프레임마다 그만큼 메인 스레드를 멈춰
+    // 프레임을 늘린다(버벅임 흉내 — 그러면 한 프레임에 여러 클릭이 몰린다). 결과: 보낸 수 · ClickQueue가 받은 누름(Raw) · 옛 폴링(프레임당 한 번)이 본 누름(Polled) · 큐에서 꺼내 처리한 누름(Handled).
+    IEnumerator TestClicksAfter(float seconds, int intervalMs, int stutterMs)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        var mouse = UnityEngine.InputSystem.InputSystem.AddDevice<UnityEngine.InputSystem.Mouse>("GrdClickTestMouse");
+        FrameStutter stutter = stutterMs > 0 ? gameObject.AddComponent<FrameStutter>() : null;
+        if (stutter != null) stutter.sleepMs = stutterMs;
+        int rawBefore = ClickQueue.RawPresses, polledBefore = ClickQueue.PolledPresses, handledBefore = ClickQueue.HandledPresses;
+        const int Clicks = 20;
+        float start = Time.realtimeSinceStartup;
+        int nextEvent = 0;                       // 0..39: 짝수 = 누름, 홀수 = 뗌
+        int frames = 0; float worstFrame = 0f, last = start;
+        Vector2 center = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+        while (nextEvent < Clicks * 2)
+        {
+            float elapsed = (Time.realtimeSinceStartup - start) * 1000f;
+            while (nextEvent < Clicks * 2)
+            {
+                int click = nextEvent / 2; bool press = nextEvent % 2 == 0;
+                float due = click * intervalMs + (press ? 0f : 10f);
+                if (elapsed < due) break;
+                var state = new UnityEngine.InputSystem.LowLevel.MouseState { position = center + new Vector2((click % 5) * 6f, 0f) };
+                state = state.WithButton(UnityEngine.InputSystem.LowLevel.MouseButton.Left, press);
+                UnityEngine.InputSystem.InputSystem.QueueStateEvent(mouse, state);
+                nextEvent++;
+            }
+            yield return null;
+            frames++; float now = Time.realtimeSinceStartup; worstFrame = Mathf.Max(worstFrame, now - last); last = now;
+        }
+        yield return null; yield return null; yield return null;
+        int sent = Clicks, raw = ClickQueue.RawPresses - rawBefore, polled = ClickQueue.PolledPresses - polledBefore, handled = ClickQueue.HandledPresses - handledBefore;
+        Debug.Log($"[클릭테스트] 간격 {intervalMs}ms · 끊김 {stutterMs}ms · 프레임 {frames}개(최악 {worstFrame * 1000f:F0}ms) — 보낸 {sent} · 큐가 받음 {raw} · **옛 폴링이 본 {polled}({100f * polled / sent:F0}%)** · **큐로 처리한 {handled}({100f * handled / sent:F0}%)**");
+        if (stutter != null) Destroy(stutter);
+        UnityEngine.InputSystem.InputSystem.RemoveDevice(mouse);
     }
 
     IEnumerator QuitAfter(float seconds)

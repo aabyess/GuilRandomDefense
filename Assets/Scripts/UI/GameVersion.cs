@@ -11,7 +11,7 @@ using UnityEngine;
 /// </summary>
 public class GameVersion : MonoBehaviour
 {
-    public const string Number = "0.3.36";
+    public const string Number = "0.3.37";
     // 베타 표시(사장님 10-07 「누구 매칭인지 보이게」) — 유닛 획득 알림 끝 「(원작: 징베)」·정보창 이름 줄 끝 「원작 징베」. 정식 출시 땐 false로 끈다(데이터 UnitData.originalMatchName은 그대로 둔다).
     public const bool BetaShowOriginalMatch = false;   // 10-14 친구 피드백: 원작 대응 표기를 전부 숨김(계승은 그대로, 데이터 originalMatchName도 그대로)
     public const bool ShowOriginalMatchInInfo = true;   // 10-20 사장님: 유닛 정보창 등급 줄에 「· 원작: ○○」(스킬·능력치를 가져온 원작 유닛, 대응 없으면 「없음(창작)」). 위 BetaShowOriginalMatch(획득 알림·이름 줄 꼬리)와는 따로 — 그쪽은 계속 꺼 둔다.
@@ -36,6 +36,7 @@ public class GameVersion : MonoBehaviour
 
     void OnGUI()
     {
+        if (Event.current.type != EventType.Repaint) return;   // 그리기뿐 — Layout·입력 이벤트마다 위치를 다시 재지 않는다(10-20 perf)
         // 1280×720 창에서 12 × 0.67 = 8px라 겨우 읽혔다(09-26 구현담당2) → 14px 밑으로는 안 줄인다.
         float scale = Mathf.Max(1f, Screen.height / 1080f);
         Style.fontSize = Mathf.RoundToInt(14f * scale);
@@ -51,11 +52,11 @@ public class GameVersion : MonoBehaviour
     float nextBarLookup;
 
     // 하단 바 윗선의 화면 위쪽 기준 y(OnGUI 좌표). 오버레이 캔버스라 월드 모서리가 곧 화면 픽셀이다. 못 읽으면 옛 비율.
+    static readonly Vector3[] corners = new Vector3[4];
     float BarTopFromTop()
     {
         if (bottomBar != null && bottomBar.transform is RectTransform rect)
         {
-            Vector3[] corners = new Vector3[4];
             rect.GetWorldCorners(corners);   // 0 좌하 · 1 좌상 · 2 우상 · 3 우하
             float top = Screen.height - corners[1].y;
             if (top > 0f && top < Screen.height) return top;

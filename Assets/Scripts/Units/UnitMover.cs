@@ -79,16 +79,36 @@ public class UnitMover : MonoBehaviour
         }
     }
 
+    // 10-20 「빠르게 클릭·버벅임」 — 우클릭 한 번에 선택된 유닛마다 FindFirstObjectByType·적 찾기·땅 레이캐스트를 따로 돌렸다(선택 12기면 12번).
+    //   같은 프레임엔 커서가 같으니 한 번만 재서 모두가 나눠 쓴다.
+    static SelectionManager selectionCache;
+    static int pickFrame = -1;
+    static EnemyDummy pickedEnemy;
+    static bool pickedGround;
+    static RaycastHit pickedHit;
+
+    void PickOncePerFrame()
+    {
+        if (pickFrame == Time.frameCount) return;
+        pickFrame = Time.frameCount;
+        Vector2 screen = Mouse.current.position.ReadValue();
+        pickedEnemy = WorldPick.TryPickEnemy(cam, screen, 0f);
+        // 땅만 본다. 사이에 낀 아군을 클릭 대상으로 삼으면 그 몸통 위가 목적지가 된다.
+        pickedGround = WorldPick.TryHitGround(cam, screen, out pickedHit);
+    }
+
     void TryMoveToCursor()
     {
         // 2026-09-26: 적 몸에 우클릭하면 이동이 아니라 공격(워크3와 같다). 적 콜라이더에 정확히 맞을 때만 —
         // 레인 근처 땅을 찍으려다 적으로 빨려 들지 않게 화면 여유(허용 픽셀)는 0으로 둔다.
         // A 공격 대상 고르는 중이면 우클릭은 「취소」라 여기서도 움직이지 않는다.
-        SelectionManager selection = FindFirstObjectByType<SelectionManager>();
+        if (selectionCache == null) selectionCache = FindFirstObjectByType<SelectionManager>();
+        SelectionManager selection = selectionCache;
         if (selection != null && selection.IsAttackTargeting) return;
+        PickOncePerFrame();
         if (combat != null)
         {
-            EnemyDummy enemy = WorldPick.TryPickEnemy(cam, Mouse.current.position.ReadValue(), 0f);
+            EnemyDummy enemy = pickedEnemy;
             if (enemy != null)
             {
                 combat.AttackTarget(enemy);
@@ -98,7 +118,7 @@ public class UnitMover : MonoBehaviour
         else if (!GameAuthority.IsServer && selectable != null)
         {
             // MP: 멀티 클라의 겉모습엔 UnitCombat이 없다 — 적 우클릭은 호스트에 공격 요청으로 보낸다(적은 거울 번호로).
-            EnemyDummy enemy = WorldPick.TryPickEnemy(cam, Mouse.current.position.ReadValue(), 0f);
+            EnemyDummy enemy = pickedEnemy;
             if (enemy != null)
             {
                 NetCommands.RequestUnitCommand(NetUnitCommand.AttackTarget, new[] { selectable }, enemy);
@@ -107,12 +127,12 @@ public class UnitMover : MonoBehaviour
         }
 
         // 이동 명령이 조용히 실패하면 "클릭이 안 먹는다"로만 보인다. 막힌 지점을 말하게 한다.
-        // 땅만 본다. 사이에 낀 아군을 클릭 대상으로 삼으면 그 몸통 위가 목적지가 된다.
-        if (!WorldPick.TryHitGround(cam, Mouse.current.position.ReadValue(), out RaycastHit hit))
+        if (!pickedGround)
         {
             Debug.Log($"[이동] {name}: 커서 아래에 아무것도 없습니다(콜라이더 없음).", this);
             return;
         }
+        RaycastHit hit = pickedHit;
 
         // MP: 멀티 클라는 땅 좌표만 호스트로 보낸다 — 실제 이동은 호스트의 실물이 아래 MoveToGroundPoint로 한다.
         //     싱글·호스트(IsServer)는 이 줄을 지나쳐 지금과 똑같이 움직인다.
