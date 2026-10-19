@@ -97,8 +97,32 @@ public static class WorldPick
                 bestDistance = hits[i].distance;
                 hit = hits[i];
             }
+            // 0.3.28 제보 「도박소 클릭했다가 옆 건물 클릭하려니 몇 번 씹힌다」 — 도움소 같은 큰 모델은 클릭 상자(건물×1.3)가 옆 상점 위로 넓게 덮고 앞쪽(카메라 쪽)에도 튀어나와
+            // 광선이 먼저 닿는 쪽(=앞 상자)으로 정해지면 옆 건물을 눌러도 그 큰 상점이 눌렸다. 유닛이 안 맞았으면 광선이 여러 상점 상자를 지날 때 「그 상자 안에서 가장 한가운데를 지나는」 상점을 고른다.
+            if (bestDistance == float.MaxValue) hit = MostCentralShopHit(cam.ScreenPointToRay(screenPosition), count, hit);
         }
         return true;
+    }
+
+    // 광선이 지나는 상점 상자들 중, 광선이 상자 중심에서 상자 반치수 대비 가장 덜 벗어난 것(체비셰프 정규화, 광선 위 중심 최근접점 기준). 하나뿐이면 그대로.
+    static RaycastHit MostCentralShopHit(Ray ray, int count, RaycastHit fallback)
+    {
+        RaycastHit best = fallback;
+        float bestScore = float.MaxValue;
+        int shops = 0;
+        for (int i = 0; i < count; i++)
+        {
+            Collider c = hits[i].collider;
+            if (c == null || !c.TryGetComponent(out ILaneShop _)) continue;
+            shops++;
+            Bounds b = c.bounds;
+            Vector3 e = b.extents, nearest = ray.origin + ray.direction * Vector3.Dot(b.center - ray.origin, ray.direction), d = nearest - b.center;   // 광선이 중심에 가장 가까워지는 점(진입점은 늘 면 위라 정규화가 1로 몰린다)
+            float score = Mathf.Max(Mathf.Abs(d.x) / Mathf.Max(e.x, 0.01f), Mathf.Max(Mathf.Abs(d.y) / Mathf.Max(e.y, 0.01f), Mathf.Abs(d.z) / Mathf.Max(e.z, 0.01f)));
+            if (score >= bestScore) continue;
+            bestScore = score;
+            best = hits[i];
+        }
+        return shops > 1 ? best : fallback;
     }
 
     /// <summary>
