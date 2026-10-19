@@ -143,7 +143,7 @@ public static class StructureDresser
     /// 상점 모델 선택(옛/새 한 곳에서). true면 S2 매칭 모델(blender shop_for_oldmap), false면 옛 상점_*.fbx(지우지 않고 남겨 둠).
     /// 바꾼 뒤 메뉴 「Tools/맵/상점 모양 다시 입히기(S2 모델 켜기/끄기)」로 씬에 반영한다.
     /// </summary>
-    public const bool UseS2ShopModels = true;
+    public const bool UseS2ShopModels = false;   // 10-20 사장님 「상점 옛 모델로 되돌려」 — S2 모델·받침대·정렬 코드는 아래 분기에 남겨 둔다(true로 켜면 다시 입힌다)
     // 도박소=금항아리 · 유닛강화소=대장간 · 영원함강화소=발전기 · 공격타입강화소(연구소)=마법학교 · 도움소=책 제단 · 항해일지=마법 금고
     static readonly (string suffix, string model)[] S2ShopModels =
     {
@@ -192,6 +192,14 @@ public static class StructureDresser
     {
         string model = LaneShopModels.FirstOrDefault(entry => body.name.EndsWith("_" + entry.suffix)).model;
         if (model == null) return;
+        if (!UseS2ShopModels)
+        {
+            // 옛 모델로 되돌릴 때: S2 정렬이 남긴 받침대를 치우고 상자를 슬롯 중앙(생성기가 처음 놓는 자리)으로 되돌린다.
+            GameObject leftoverPedestal = GameObject.Find(body.name + "_받침");
+            if (leftoverPedestal != null) Object.DestroyImmediate(leftoverPedestal);
+            if (ShopSlotCenter(body, out Vector3 originalSlot, out float _))
+                body.transform.position = new Vector3(originalSlot.x, body.transform.position.y, originalSlot.z);
+        }
         float scaleBoost = 1f;
         bool aligned = false;
         float pedestalTop = 0f;
