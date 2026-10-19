@@ -30,6 +30,23 @@ public static class IslandStoneBorder
         foreach (MapLayout.Island island in MapLayout.Zones.Concat(MapLayout.Warehouses).Where(i => i.name == "StoryZone" || i.name.StartsWith("Warehouse")))
             pieces += Border(root.transform, island, u, 0f);
 
+        GameObject returnPortal = GameObject.Find("스토리_복귀포탈");
+        if (returnPortal != null)
+        {
+            // 스토리존 복귀 포탈 둘레 낮은 돌 원형 단(띠벽 조각을 원으로 이어 붙임)
+            Vector3 c = returnPortal.transform.position;
+            float radius = returnPortal.transform.lossyScale.x * 0.62f;
+            int segs = 36;
+            float segLen = 2f * Mathf.PI * radius / segs;
+            for (int i = 0; i < segs; i++)
+            {
+                float a = i * 2f * Mathf.PI / segs;
+                Vector3 at = new Vector3(c.x + Mathf.Cos(a) * radius, MapLayout.IslandTop, c.z + Mathf.Sin(a) * radius);
+                StructureDresser.PlaceStretched(root.transform, "선택위습_띠벽", $"복귀포탈_원단{i}", at, -a * Mathf.Rad2Deg + 90f, new Vector3(segLen / 2f * 1.02f, u * 0.4f, u * 0.5f));
+                pieces++;
+            }
+        }
+
         MapLayout.Island gacha = System.Array.Find(MapLayout.Zones, z => z.name == "GachaIsland");
         if (!string.IsNullOrEmpty(gacha.name))
         {
@@ -72,7 +89,7 @@ public static class IslandStoneBorder
         count += Row(parent, $"{n}_아래", left, right, bottom, u);
         if (skipTop <= 0f) count += Row(parent, $"{n}_위", left, right, top, u);
         float sideTop = top - skipTop;
-        count += Column(parent, $"{n}_왼", left, bottom, sideTop, u);
+        count += Column(parent, $"{n}_왼", left, bottom, sideTop, u, n.StartsWith("Warehouse") ? island.center.y : float.NaN);
         count += Column(parent, $"{n}_오른", right, bottom, sideTop, u);
 
         foreach (Vector2 c in new[] { new Vector2(left, bottom), new Vector2(right, bottom) })
@@ -120,15 +137,30 @@ public static class IslandStoneBorder
         return n;
     }
 
-    static int Column(Transform parent, string name, float x, float z0, float z1, float u)
+    static int Column(Transform parent, string name, float x, float z0, float z1, float u, float doorZ = float.NaN)
     {
         float length = z1 - z0;
         if (length <= 0f) return 0;
         int n = Mathf.Max(1, Mathf.RoundToInt(length / (2f * u)));
         float sz = length / n / 2f;
+        int placed = 0;
         for (int i = 0; i < n; i++)
-            StructureDresser.PlaceStretched(parent, "선택위습_띠벽", $"{name}{i}", new Vector3(x, MapLayout.IslandTop, z0 + length / n * (i + 0.5f)), 90f, new Vector3(sz, u, u));
-        return n;
+        {
+            float z = z0 + length / n * (i + 0.5f);
+            // 창고 입구(레인 쪽 = 서쪽 변 가운데): 한 칸을 비워 문처럼. 비운 양끝에 둥근 머리 기둥.
+            if (!float.IsNaN(doorZ) && Mathf.Abs(z - doorZ) < length / n * 0.55f) continue;
+            StructureDresser.PlaceStretched(parent, "선택위습_띠벽", $"{name}{i}", new Vector3(x, MapLayout.IslandTop, z), 90f, new Vector3(sz, u, u));
+            placed++;
+        }
+        if (!float.IsNaN(doorZ))
+            foreach (float dz in new[] { -1f, 1f })
+            {
+                Vector3 at = new Vector3(x, MapLayout.IslandTop, doorZ + dz * length / n * 0.55f);
+                StructureDresser.PlaceStretched(parent, "선택위습_모서리기둥", $"{name}_이음기둥", at, 0f, Vector3.one * (u * 0.6f));
+                AddCap(parent, $"{name}_이음기둥_머리{(dz < 0 ? 0 : 1)}", at + Vector3.up * (1.4f * u * 0.6f), u * 0.6f);
+                placed += 2;
+            }
+        return placed;
     }
 
     // ───────────────────────── 바닥 포인트(맵 폴리시 ②) ─────────────────────────
