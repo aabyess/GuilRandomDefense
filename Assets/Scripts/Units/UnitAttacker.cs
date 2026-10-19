@@ -1750,6 +1750,8 @@ public class UnitAttacker : MonoBehaviour
         kind == SkillEffectKind.AttackSpeedBuffPercent || kind == SkillEffectKind.AttackPowerBuffFlat || kind == SkillEffectKind.AttackPowerBuffPercent
         || kind == SkillEffectKind.AllyMoveSpeedDebuff || kind == SkillEffectKind.AllySkillDamageBonus || kind == SkillEffectKind.DispelAllyDebuffs || kind == SkillEffectKind.SkillTriggerChanceBonus;
 
+    readonly List<EnemyDummy> auraEnemiesScratch = new List<EnemyDummy>();
+
     void UpdateAuraTick(SkillLevel level, SkillRuntimeState state, bool gatePasses)
     {
         state.auraAffectedEnemies ??= new List<EnemyDummy>();
@@ -1806,7 +1808,8 @@ public class UnitAttacker : MonoBehaviour
 
         // Enemies 타겟 지속효과 — 게이트가 막히면 범위를 "전부 벗어난 것"으로 취급해
         // 기존에 걸어둔 효과를 전부 걷어낸다.
-        List<EnemyDummy> enemiesInRange = new List<EnemyDummy>();
+        List<EnemyDummy> enemiesInRange = auraEnemiesScratch;   // 오라마다 1초에 한 번 새 목록을 만들던 것 — 유닛별 재사용(이 함수 안에서만 씀)
+        enemiesInRange.Clear();
         if (gatePasses)
         {
             foreach (EnemyDummy enemy in EnemyDummy.Active)
