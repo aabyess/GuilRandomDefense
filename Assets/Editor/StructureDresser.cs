@@ -161,6 +161,8 @@ public static class StructureDresser
     public const float LaneShopModelScale = 1.5f;
     /// <summary>클릭 상자 = 건물 경계 × 이 값(사장님 「클릭 범위 넓게」). 옆 상점 간격(≈110)보다 작게 유지.</summary>
     public const float LaneShopClickPad = 1.3f;
+    /// <summary>클릭 상자 가로·깊이 상한(월드). 상점 슬롯 간격 ≈110보다 작게.</summary>
+    public const float LaneShopClickMaxWidth = 100f;
 
     /// <summary>상점 상자 자리에 건물 모델을 세우고, 클릭 판정 상자를 건물 크기로 늘린다.</summary>
     public static void DressLaneShop(GameObject body)
@@ -188,10 +190,13 @@ public static class StructureDresser
         if (building == null) return;
 
         // 상자의 부모는 Map 루트(배율 1)라 월드 크기 = 로컬 크기. 건물 어디를 눌러도 선택되게 맞춘다.
-        if (TryMeasure(building, out Bounds bounds))
+        if (TryMeasure(building, out Bounds bounds, "_add"))   // 빛 겹(_add)은 경계에서 뺀다 — 책 제단 빛이 상자를 가로 302로 키워 옆 상점을 덮었다(10-19)
         {
+            Vector3 box = bounds.size * LaneShopClickPad;   // 클릭 범위는 건물보다 넉넉하게
+            box.x = Mathf.Min(box.x, LaneShopClickMaxWidth);   // 슬롯 간격(≈110) 이하 — 옆 상점 상자와 안 겹치게
+            box.z = Mathf.Min(box.z, LaneShopClickMaxWidth);
             body.transform.position = bounds.center;
-            body.transform.localScale = bounds.size * LaneShopClickPad;   // 클릭 범위는 건물보다 넉넉하게
+            body.transform.localScale = box;
         }
         HideRenderer(body);
         MakeAdditive(building, "_add");   // S2 모델의 빛 겹(원작 add 필터)은 가산으로 — 안 그러면 검은 덩어리

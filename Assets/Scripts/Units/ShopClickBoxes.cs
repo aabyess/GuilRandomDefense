@@ -29,7 +29,8 @@ static class ShopClickBoxes
             if (look != null)
                 foreach (Renderer r in look.GetComponentsInChildren<Renderer>())
                 {
-                    if (!(r is MeshRenderer) && !(r is SkinnedMeshRenderer)) continue;   // 굴뚝 연기·불 파티클은 건물 몸통이 아니다(상자가 1800으로 부풀었다)
+                    if (!(r is MeshRenderer) && !(r is SkinnedMeshRenderer)) continue;
+                    if (r.name.Contains("_add")) continue;   // 빛 겹은 몸통이 아니다(책 제단 빛이 상자를 가로 302로 키웠다)   // 굴뚝 연기·불 파티클은 건물 몸통이 아니다(상자가 1800으로 부풀었다)
                     if (any) w.Encapsulate(r.bounds); else { w = r.bounds; any = true; }
                 }
             if (any)
@@ -38,7 +39,8 @@ static class ShopClickBoxes
                 Vector3 worldCenter = new Vector3(w.center.x, w.min.y + height * 0.5f, w.center.z);
                 Vector3 ls = t.lossyScale;
                 box.center = t.InverseTransformPoint(worldCenter);
-                box.size = new Vector3(w.size.x / Mathf.Abs(ls.x), height / Mathf.Abs(ls.y), w.size.z / Mathf.Abs(ls.z));
+                const float MaxWidth = 100f;   // 슬롯 간격(≈110) 이하
+                box.size = new Vector3(Mathf.Min(w.size.x, MaxWidth) / Mathf.Abs(ls.x), height / Mathf.Abs(ls.y), Mathf.Min(w.size.z, MaxWidth) / Mathf.Abs(ls.z));
             }
             else
             {
