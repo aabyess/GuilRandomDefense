@@ -494,7 +494,7 @@ public static class MapGenerator
     /// ⚠️ 펑크해저드는 여기 넣지 않는다 — 사장님이 말씀하지 않으셨고, 그 섬의 얼음가시·용암바위는
     ///    `StructureDresser.ScatterPunkHazard`라 애초에 이 경로가 아니다.
     /// </summary>
-    static readonly string[] BareIslands = { "CombineTable", "TranscendDisplay", "ImmortalDisplay" };
+    static readonly string[] BareIslands = { "CombineTable", "TranscendDisplay", "ImmortalDisplay", "SealIsland1", "SealIsland2", "SealIsland3", "SealIsland4" };   // 물범 섬 넷은 사장님 10-20 「물범 있는 섬 장식물들 없애」
 
     // 섬 한 개의 테두리를 변마다 걸으며 소품을 놓는다. bottomApron이 0 이상이면(레인) 아래 변을 빼고,
     // 왼쪽·오른쪽 변도 아래에서 그만큼 올라간 데서 시작한다.
