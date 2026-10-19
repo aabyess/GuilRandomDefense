@@ -1563,12 +1563,30 @@ public class GameHud : MonoBehaviour
     // 단일 선택 + UnitData.trait가 있을 때만 보인다. 06번 26분기 외 213종은 trait가 null이라
     // 버튼 자체가 안 뜬다 — "능력이 없는 유닛"과 "특성강화가 아직 없는 유닛"을 구분하지 않는다
     // (원작도 능력강화가 없는 유닛은 그 조건 함수 자체가 없다).
+    // 10-19 「희귀 김기연 둘을 고르면 조합 단추가 없다」와 같은 count == 1 가정 — 같은 유닛(UnitData) 여럿(더블클릭·드래그)을 골라도 스킬·강화·재능·리롤·특성 단추가 사라지지 않게:
+    // 하나만 고른 것으로 치되 전부 같은 종류(상점·섞인 종류 제외)면 맨 앞 유닛(Selected[0])을 대표로 쓴다 — 아래 호출부는 모두 Selected[0]를 읽는다.
+    static bool SingleOrSameKind(SelectionManager selection)
+    {
+        if (selection == null) return false;
+        int count = selection.Selected.Count;
+        if (count == 1) return true;
+        if (count < 2) return false;
+        UnitData common = null;
+        foreach (Selectable member in selection.Selected)
+        {
+            if (member == null || member.TryGetComponent(out ILaneShop _) || !member.TryGetComponent(out UnitIdentity id) || id.Data == null) return false;
+            if (common == null) common = id.Data;
+            else if (id.Data != common) return false;
+        }
+        return true;
+    }
+
     void RefreshTraitButton()
     {
         if (traitButtonPanel == null) return;
 
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1) { HideTraitButton(); return; }
+        if (selection == null || !SingleOrSameKind(selection)) { HideTraitButton(); return; }
 
         Selectable single = selection.Selected[0];
         if (single == null || !single.TryGetComponent(out UnitIdentity identity) || identity.Data == null)
@@ -1709,7 +1727,7 @@ public class GameHud : MonoBehaviour
         SelectionManager selection = Selection;
         UnitData data = null;
         OwnedByPlayer owner = null;
-        if (selection != null && selection.Selected.Count == 1)
+        if (selection != null && SingleOrSameKind(selection))
         {
             Selectable single = selection.Selected[0];
             if (single != null && single.TryGetComponent(out UnitIdentity identity) && identity.Data != null)
@@ -1760,7 +1778,7 @@ public class GameHud : MonoBehaviour
     void OnGambleButtonClicked(int index)
     {
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1) return;
+        if (selection == null || !SingleOrSameKind(selection)) return;
 
         Selectable single = selection.Selected[0];
 
@@ -1912,7 +1930,7 @@ public class GameHud : MonoBehaviour
     UnitAttacker TalentCandidate()
     {
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1 || selection.Selected[0] == null) return null;
+        if (selection == null || !SingleOrSameKind(selection) || selection.Selected[0] == null) return null;
         Selectable single = selection.Selected[0];
         if (!single.TryGetComponent(out UnitIdentity identity) || identity.Data == null || identity.Data.name != UnitAttacker.TalentUnitAsset) return null;
         return single.TryGetComponent(out UnitAttacker attacker) ? attacker : null;
@@ -1944,7 +1962,7 @@ public class GameHud : MonoBehaviour
     void OnTalentClicked(int kind)
     {
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1) return;
+        if (selection == null || !SingleOrSameKind(selection)) return;
         Selectable single = selection.Selected[0];
         if (!GameAuthority.IsServer) { NetCommands.RequestHudUnitAction(NetHudAction.Talent, single, kind); return; }
         ExecuteTalentOn(single, kind);
@@ -1992,7 +2010,7 @@ public class GameHud : MonoBehaviour
     void OnBombClicked()
     {
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1) return;
+        if (selection == null || !SingleOrSameKind(selection)) return;
         Selectable single = selection.Selected[0];
         if (!GameAuthority.IsServer) { NetCommands.RequestHudUnitAction(NetHudAction.Bomb, single, 0); return; }
         ExecuteBombOn(single);
@@ -2058,7 +2076,7 @@ public class GameHud : MonoBehaviour
     bool TotoCandidate()
     {
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1 || selection.Selected[0] == null) return false;
+        if (selection == null || !SingleOrSameKind(selection) || selection.Selected[0] == null) return false;
         return selection.Selected[0].TryGetComponent(out UnitIdentity identity) && identity.Data != null && identity.Data.name == TotoUnitAsset;
     }
 
@@ -2082,7 +2100,7 @@ public class GameHud : MonoBehaviour
     void OnTotoClicked()
     {
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1) return;
+        if (selection == null || !SingleOrSameKind(selection)) return;
         Selectable single = selection.Selected[0];
         if (!GameAuthority.IsServer) { NetCommands.RequestHudUnitAction(NetHudAction.Toto, single, 0); return; }
         ExecuteTotoOn(single);
@@ -2130,7 +2148,7 @@ public class GameHud : MonoBehaviour
     {
         data = null; level = 0;
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1 || selection.Selected[0] == null) return false;
+        if (selection == null || !SingleOrSameKind(selection) || selection.Selected[0] == null) return false;
         Selectable single = selection.Selected[0];
         if (!single.TryGetComponent(out UnitIdentity identity) || identity.Data == null || identity.Data.enhanceMaxLevel <= 0) return false;
         data = identity.Data;
@@ -2161,7 +2179,7 @@ public class GameHud : MonoBehaviour
     void OnEnhanceClicked()
     {
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1) return;
+        if (selection == null || !SingleOrSameKind(selection)) return;
         Selectable single = selection.Selected[0];
         if (!GameAuthority.IsServer) { NetCommands.RequestHudUnitAction(NetHudAction.Enhance, single, 0); return; }
         ExecuteEnhanceOn(single);
@@ -2182,7 +2200,7 @@ public class GameHud : MonoBehaviour
     bool GambleBoostCandidate()
     {
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1 || selection.Selected[0] == null) return false;
+        if (selection == null || !SingleOrSameKind(selection) || selection.Selected[0] == null) return false;
         return selection.Selected[0].TryGetComponent(out UnitIdentity identity) && identity.Data != null && identity.Data.name == GambleBoostUnitAsset;
     }
 
@@ -2207,7 +2225,7 @@ public class GameHud : MonoBehaviour
     void OnGambleBoostClicked()
     {
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1) return;
+        if (selection == null || !SingleOrSameKind(selection)) return;
         Selectable single = selection.Selected[0];
         if (!GameAuthority.IsServer) { NetCommands.RequestHudUnitAction(NetHudAction.GambleBoost, single, 0); return; }
         ExecuteGambleBoostOn(single);
@@ -2234,7 +2252,7 @@ public class GameHud : MonoBehaviour
     UnitAttacker YoonseoCandidate()
     {
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1 || selection.Selected[0] == null) return null;
+        if (selection == null || !SingleOrSameKind(selection) || selection.Selected[0] == null) return null;
         Selectable single = selection.Selected[0];
         if (!single.TryGetComponent(out UnitIdentity identity) || identity.Data == null || identity.Data.name != YoonseoUnitAsset) return null;
         return single.TryGetComponent(out UnitAttacker attacker) ? attacker : null;
@@ -2267,7 +2285,7 @@ public class GameHud : MonoBehaviour
     {
         single = null;
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1 || selection.Selected[0] == null) return null;
+        if (selection == null || !SingleOrSameKind(selection) || selection.Selected[0] == null) return null;
         single = selection.Selected[0];
         if (!single.TryGetComponent(out UnitIdentity identity) || identity.Data == null || identity.Data.skills == null) return null;
         foreach (SkillData skill in identity.Data.skills)
@@ -2496,7 +2514,7 @@ public class GameHud : MonoBehaviour
     void OnYoonseoClicked()
     {
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1) return;
+        if (selection == null || !SingleOrSameKind(selection)) return;
         Selectable single = selection.Selected[0];
         if (!GameAuthority.IsServer) { NetCommands.RequestHudUnitAction(NetHudAction.Yoonseo, single, 0); return; }
         ExecuteYoonseoOn(single);
@@ -2530,7 +2548,7 @@ public class GameHud : MonoBehaviour
     bool SellSlotFree()
     {
         SelectionManager selection = Selection;
-        if (currentShop as Object != null || selection == null || selection.Selected.Count != 1) return false;
+        if (currentShop as Object != null || selection == null || !SingleOrSameKind(selection)) return false;
         Selectable single = selection.Selected[0];
         return single != null && single.TryGetComponent(out UnitIdentity identity) && identity.Data != null && !identity.IsRecruit && !identity.Data.SellableGrade;
     }
@@ -2722,7 +2740,7 @@ public class GameHud : MonoBehaviour
     {
         owner = null;
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1 || selection.Selected[0] == null) return null;
+        if (selection == null || !SingleOrSameKind(selection) || selection.Selected[0] == null) return null;
         Selectable single = selection.Selected[0];
         if (!single.TryGetComponent(out UniqueRerollAbility reroll) || !single.TryGetComponent(out owner)) return null;
         return UniqueRerollAbility.IsRerollable(single.gameObject) ? reroll : null;
@@ -2768,7 +2786,7 @@ public class GameHud : MonoBehaviour
     void OnRerollButtonClicked()
     {
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1) return;
+        if (selection == null || !SingleOrSameKind(selection)) return;
 
         Selectable single = selection.Selected[0];
         if (single == null || !single.TryGetComponent(out UniqueRerollAbility reroll) ||
@@ -3300,7 +3318,7 @@ public class GameHud : MonoBehaviour
     void OnTraitButtonClicked()
     {
         SelectionManager selection = Selection;
-        if (selection == null || selection.Selected.Count != 1) return;
+        if (selection == null || !SingleOrSameKind(selection)) return;
 
         Selectable single = selection.Selected[0];
 
