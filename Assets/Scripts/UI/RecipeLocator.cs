@@ -9,7 +9,7 @@ using UnityEngine;
 /// </summary>
 public static class RecipeLocator
 {
-    const float FlyHeight = 300f;        // 식 한 줄(재료 몇 개 + 결과)이 화면에 들어오는 높이
+    // (10-19) 옛 FlyHeight 300 줌은 뺐다. 줌 없이 자리만 옮긴다.
     const float SameRowRadius = 260f;    // 결과 인형 둘레에서 이 안의 재료 인형만 같은 식으로 본다
     const float RingDuration = 5f;
     const float RingDiameter = 15f;
@@ -49,7 +49,7 @@ public static class RecipeLocator
             }
 
         RtsCameraController camera = Object.FindFirstObjectByType<RtsCameraController>();
-        if (camera != null) camera.FlyTo(anchor, FlyHeight);
+        if (camera != null) camera.MoveTo(anchor);   // 높이(줌)는 그대로 두고 자리만 옮긴다 — 사장님 10-19 「조합판으로 갈 때 줌되는 게 불편」
         return true;
     }
 
