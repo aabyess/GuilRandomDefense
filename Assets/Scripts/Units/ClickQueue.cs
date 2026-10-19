@@ -17,11 +17,15 @@ public static class ClickQueue
     static InputAction left;
     public static bool Active { get; private set; }
 
+    static int lastPressFrame = -1;
+    /// <summary>이 프레임에 좌클릭 누름이 있었나(소비하지 않는 조회 — 대상 지정 클릭용). wasPressedThisFrame은 누름·뗌이 한 프레임에 같이 오면 false가 되지만 이건 이벤트로 기록해 놓친 적이 없다.</summary>
+    public static bool PressedThisFrame => Active ? lastPressFrame == Time.frameCount : (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame);
+
     /// <summary>시험·계측용 누적 수: Raw = InputAction이 받은 좌클릭 누름 수 · Polled = 옛 폴링(wasPressedThisFrame)이 본 프레임 수 · Handled = 큐에서 꺼내 처리한 누름 수.</summary>
     public static int RawPresses, PolledPresses, HandledPresses;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    static void ResetStatics() { queue.Clear(); left = null; Active = false; RawPresses = PolledPresses = HandledPresses = 0; }
+    static void ResetStatics() { queue.Clear(); left = null; Active = false; lastPressFrame = -1; RawPresses = PolledPresses = HandledPresses = 0; }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
     static void Init()
@@ -41,7 +45,7 @@ public static class ClickQueue
     {
         Vector2 pos = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero;
         queue.Enqueue(new Evt { down = down, pos = pos, time = Time.unscaledTime });
-        if (down) RawPresses++;
+        if (down) { RawPresses++; lastPressFrame = Time.frameCount; }
         if (queue.Count > 64) queue.Dequeue();   // 안전장치(소비자가 죽었을 때 무한히 안 쌓게)
     }
 

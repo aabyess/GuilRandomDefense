@@ -644,7 +644,7 @@ public class GameHud : MonoBehaviour
 
     void PlayButtonClickSound()
     {
-        if (Mouse.current == null || !Mouse.current.leftButton.wasPressedThisFrame) return;
+        if (Mouse.current == null || !ClickQueue.PressedThisFrame) return;
         EventSystem eventSystem = EventSystem.current;
         if (eventSystem == null) return;
         // 누를 때만(초당 몇 번) 만든다 — 매 프레임 아니라 할당은 신경 쓸 만큼이 아니다.
@@ -2366,7 +2366,7 @@ public class GameHud : MonoBehaviour
         if (pendingDockSkill == null) return;
         if (Mouse.current == null || pendingDockUnit == null) { pendingDockSkill = null; return; }
         if (Mouse.current.rightButton.wasPressedThisFrame) { pendingDockSkill = null; return; }
-        if (!Mouse.current.leftButton.wasPressedThisFrame || Time.frameCount <= pendingDockStartFrame) return;
+        if (!ClickQueue.PressedThisFrame || Time.frameCount <= pendingDockStartFrame) return;
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
 
         SkillData skill = pendingDockSkill;
@@ -2389,7 +2389,7 @@ public class GameHud : MonoBehaviour
         if (pendingAllySkill == null) return;
         if (Mouse.current == null || pendingAllyUnit == null) { pendingAllySkill = null; return; }
         if (Mouse.current.rightButton.wasPressedThisFrame) { pendingAllySkill = null; return; }
-        if (!Mouse.current.leftButton.wasPressedThisFrame || Time.frameCount <= pendingAllyStartFrame) return;
+        if (!ClickQueue.PressedThisFrame || Time.frameCount <= pendingAllyStartFrame) return;
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
 
         SkillData skill = pendingAllySkill;
@@ -2415,7 +2415,7 @@ public class GameHud : MonoBehaviour
         if (pendingPointSkill == null) return;
         if (Mouse.current == null || pendingPointUnit == null) { pendingPointSkill = null; return; }
         if (Mouse.current.rightButton.wasPressedThisFrame) { pendingPointSkill = null; return; }
-        if (!Mouse.current.leftButton.wasPressedThisFrame || Time.frameCount <= pendingPointStartFrame) return;
+        if (!ClickQueue.PressedThisFrame || Time.frameCount <= pendingPointStartFrame) return;
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
 
         SkillData skill = pendingPointSkill;
@@ -2889,7 +2889,7 @@ public class GameHud : MonoBehaviour
         if (!paperPlaneTargeting) return;
         if (Mouse.current == null) { paperPlaneTargeting = false; return; }
         if (Mouse.current.rightButton.wasPressedThisFrame) { paperPlaneTargeting = false; return; }
-        if (!Mouse.current.leftButton.wasPressedThisFrame || Time.frameCount <= paperPlaneStartFrame) return;
+        if (!ClickQueue.PressedThisFrame || Time.frameCount <= paperPlaneStartFrame) return;
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
 
         paperPlaneTargeting = false;
@@ -4962,7 +4962,7 @@ public class GameHud : MonoBehaviour
             return;
         }
 
-        if (!Mouse.current.leftButton.wasPressedThisFrame) return;
+        if (!ClickQueue.PressedThisFrame) return;
         if (Time.frameCount <= targetingStartFrame) return;
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
 
@@ -5029,7 +5029,7 @@ public class GameHud : MonoBehaviour
             return;
         }
 
-        if (!Mouse.current.leftButton.wasPressedThisFrame) return;
+        if (!ClickQueue.PressedThisFrame) return;
         if (Time.frameCount <= pendingTraitTargetingStartFrame) return;
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
 

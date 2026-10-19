@@ -197,7 +197,7 @@ public class SelectionManager : MonoBehaviour
             return false;
         }
 
-        if (!Mouse.current.leftButton.wasPressedThisFrame) return false;
+        if (!ClickQueue.PressedThisFrame) return false;
         // HUD를 누르면 대기를 푼다(롤처럼) — 명령칸 다른 명령·메뉴 버튼은 그대로 눌린다. 「공격」칸은 떼는 순간 다시 들어온다.
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
