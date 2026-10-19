@@ -128,7 +128,7 @@ public class HealthBarLayer : MonoBehaviour
 
             // 머리 위에 띄운다. 고정값을 쓰면 캐릭터 키를 바꿀 때마다 바가 발목이나 허공에 남는다 —
             // 실제로 키를 20으로 키운 뒤 바가 발목에 붙어 있었다.
-            Vector3 worldPos = enemy.transform.position + Vector3.up * (HeadHeight(enemy) + barHeightMargin);
+            Vector3 worldPos = enemy.transform.position + Vector3.up * (CachedHeadHeight(enemy) + barHeightMargin);
             Vector3 screenPos = cam.WorldToScreenPoint(worldPos);
 
             // z <= 0: 카메라 뒤. 화면 범위 밖: 어차피 안 보이니 자리를 낭비하지 않는다.
@@ -163,6 +163,28 @@ public class HealthBarLayer : MonoBehaviour
     }
 
     float nextLogTime;
+
+    // 머리 높이는 적마다 0.5초(+흩뿌림)에 한 번만 잰다 — 콜라이더 bounds를 적 수백 마리에 대해 프레임마다 읽던 것(10-20 perf).
+    struct HeightEntry { public float height; public float until; }
+    readonly Dictionary<EnemyDummy, HeightEntry> heightCache = new Dictionary<EnemyDummy, HeightEntry>();
+    readonly List<EnemyDummy> pruneScratch = new List<EnemyDummy>();
+    float nextHeightPrune;
+
+    float CachedHeadHeight(EnemyDummy enemy)
+    {
+        float now = Time.unscaledTime;
+        if (now >= nextHeightPrune)
+        {
+            nextHeightPrune = now + 5f;
+            pruneScratch.Clear();
+            foreach (EnemyDummy key in heightCache.Keys) if (key == null) pruneScratch.Add(key);
+            foreach (EnemyDummy key in pruneScratch) heightCache.Remove(key);
+        }
+        if (heightCache.TryGetValue(enemy, out HeightEntry entry) && now < entry.until) return entry.height;
+        float h = HeadHeight(enemy);
+        heightCache[enemy] = new HeightEntry { height = h, until = now + 0.5f + (enemy.GetInstanceID() & 7) * 0.03f };
+        return h;
+    }
 
     // 콜라이더가 있으면 그 윗면을, 없으면 렌더러 경계를 쓴다. 둘 다 없을 때만 어림값으로 떨어진다.
     static float HeadHeight(EnemyDummy enemy)
