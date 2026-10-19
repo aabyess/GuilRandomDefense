@@ -156,6 +156,7 @@ public class NetLauncher : MonoBehaviour
     float testSelectDelay = -1f;
     float test0929Delay = -1f; string test0929Dir;
     float testVfxDelay = -1f; string testVfxDir;
+    float testFxDelay = -1f;   // -mpTestFx 초: 이펙트 안 B 두 창 확인(10-19) — 방장이 레인 적 셋에 스턴·이감·방깎+적중을 걸고 두 창 카메라를 모은다
     string testSelectDir;
     readonly System.Collections.Generic.List<(float, string)> shotAts = new System.Collections.Generic.List<(float, string)>();
     float testPhase3Delay = -1f;
@@ -252,6 +253,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpDropAt": dropAt = Seconds(i + 1); break;
                 case "-mpRejoinAfter": rejoinAfter = Seconds(i + 1); break;
                 case "-mpTestVfx": testVfxDelay = Seconds(i + 1); testVfxDir = Arg(i + 2); break;
+                case "-mpTestFx": testFxDelay = Seconds(i + 1); break;
                 case "-mpTest0929": test0929Delay = Seconds(i + 1); test0929Dir = Arg(i + 2); break;
                 case "-mpTestSelect": testSelectDelay = Seconds(i + 1); testSelectDir = Arg(i + 2); break;
                 case "-mpTestPortraits": testPortraitsDelay = Seconds(i + 1); testPortraitsDir = Arg(i + 2); break;
@@ -809,6 +811,7 @@ public class NetLauncher : MonoBehaviour
         if (testSelectDelay >= 0f) StartCoroutine(TestSelectAfter(testSelectDelay, testSelectDir));
         if (test0929Delay >= 0f) StartCoroutine(Test0929After(test0929Delay, test0929Dir));
         if (testVfxDelay >= 0f) StartCoroutine(TestVfxAfter(testVfxDelay, testVfxDir));
+        if (testFxDelay >= 0f) StartCoroutine(TestFxAfter(testFxDelay));
         if (testPortraitsDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestPortraitsAfter(testPortraitsDelay, testPortraitsDir));
         if (testPhase3Delay >= 0f) StartCoroutine(TestPhase3After(testPhase3Delay));
         if (testTraitUnits && GameAuthority.IsServer) SpawnTraitTestUnits();
@@ -1727,6 +1730,30 @@ public class NetLauncher : MonoBehaviour
             yield return new WaitForSecondsRealtime(4.5f);
             Debug.Log($"[VFX테스트] ③ 해제 뒤 친구 적 {id}: {State()} (Stun·Slow False·러너 0·입자 0)");
         }
+    }
+
+    // -mpTestFx 초 — 이펙트 안 B(10-19) 두 창 확인: 방장이 레인 적 셋에 ① 스턴 ② 이감 ③ 방깎+마법 적중을 건다(특별함 시전자 게이트). 양쪽 창 카메라는 첫 적으로. 사진은 -mpShotAt으로.
+    IEnumerator TestFxAfter(float seconds)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        var targets = new System.Collections.Generic.List<EnemyDummy>();
+        foreach (EnemyDummy e in new System.Collections.Generic.List<EnemyDummy>(EnemyDummy.Active))
+            if (e != null && !e.IsBoss && e.LaneIndex >= 0 && targets.Count < 3) targets.Add(e);
+        if (targets.Count == 0) { Debug.LogWarning("[FX테스트] 레인 적이 없다"); yield break; }
+        Vector3 at = targets[0].transform.position;
+        RtsCameraController cam = FindFirstObjectByType<RtsCameraController>();
+        if (cam != null) cam.MoveTo(at);
+        if (GameAuthority.IsServer)
+        {
+            UnitData special = catalog != null ? catalog.units.FirstOrDefault(u => u != null && u.grade == UnitGrade.Special) : null;
+            bool before = SkillVfx.BeginCast(special);
+            targets[0].AddFreeze();
+            if (targets.Count > 1) { targets[1].TakeDamage(1f, DamageType.AD, AttackType.Normal, 0, 0f, true); targets[1].AddSlow(0.5f); }
+            if (targets.Count > 2) { targets[2].TakeDamage(1f, DamageType.AP, AttackType.Spells, 0, 0f, true); targets[2].AddArmorShred(1f); }
+            SkillVfx.EndCast(before);
+            Debug.Log($"[FX테스트] 방장: 적 {targets.Count}기에 스턴·이감·방깎+적중");
+        }
+        else Debug.Log($"[FX테스트] 친구 창: 카메라를 적으로 — 적 {targets.Count}기 보임 · 받은 이펙트 {NetGameState.ReceivedVfx}");
     }
 
     IEnumerator QuitAfter(float seconds)
