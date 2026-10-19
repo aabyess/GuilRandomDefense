@@ -79,13 +79,14 @@ public static class StructureDresser
     }
 
     // 에셋·씬 오브젝트 모두 — 메시에 저장된 경계 8꼭짓점을 렌더러 변환으로 옮겨 합친다(MapGenerator.TryMeasureFigure와 같은 방식).
-    static bool TryMeasure(GameObject root, out Bounds bounds)
+    static bool TryMeasure(GameObject root, out Bounds bounds, string skipNameContains = null)
     {
         bounds = default;
         bool any = false;
 
         foreach (Renderer renderer in root.GetComponentsInChildren<Renderer>(true))
         {
+            if (skipNameContains != null && renderer.name.Contains(skipNameContains)) continue;   // 빛 겹(_add)은 몸집에서 뺀다
             Mesh mesh = renderer is SkinnedMeshRenderer skinned
                 ? skinned.sharedMesh
                 : (renderer.TryGetComponent(out MeshFilter filter) ? filter.sharedMesh : null);
@@ -138,6 +139,24 @@ public static class StructureDresser
         ("항해일지", "상점_항해일지"),
     };
 
+    /// <summary>
+    /// 상점 모델 선택(옛/새 한 곳에서). true면 S2 매칭 모델(blender shop_for_oldmap), false면 옛 상점_*.fbx(지우지 않고 남겨 둠).
+    /// 바꾼 뒤 메뉴 「Tools/맵/상점 모양 다시 입히기(S2 모델 켜기/끄기)」로 씬에 반영한다.
+    /// </summary>
+    public const bool UseS2ShopModels = true;
+    // 도박소=금항아리 · 유닛강화소=대장간 · 영원함강화소=발전기 · 공격타입강화소(연구소)=마법학교 · 도움소=책 제단 · 항해일지=마법 금고
+    static readonly (string suffix, string model)[] S2ShopModels =
+    {
+        ("도박소", "S2상점_도박소"),
+        ("유닛강화소", "S2상점_대장간"),
+        ("영원함강화소", "S2상점_발전기"),
+        ("공격타입강화소", "S2상점_마법학교"),
+        ("도움소", "S2상점_책제단"),
+        ("항해일지", "S2상점_마법금고"),
+    };
+    /// <summary>새 모델 배율 = 옛 상점 발자국에 맞춘 배율과 높이에 맞춘 배율의 기하평균, 단 발자국 배율의 이 배수까지(옆 상점과 안 겹치게).</summary>
+    const float S2ShopFootprintCap = 1.25f;
+
     /// <summary>레인 상점 건물 배율(10-14 사장님 「더 크게」) — 원작 비율 MapLayout.Scale 위에 곱한다.</summary>
     public const float LaneShopModelScale = 1.5f;
     /// <summary>클릭 상자 = 건물 경계 × 이 값(사장님 「클릭 범위 넓게」). 옆 상점 간격(≈110)보다 작게 유지.</summary>
@@ -148,11 +167,24 @@ public static class StructureDresser
     {
         string model = LaneShopModels.FirstOrDefault(entry => body.name.EndsWith("_" + entry.suffix)).model;
         if (model == null) return;
+        float scaleBoost = 1f;
+        if (UseS2ShopModels)
+        {
+            string s2 = S2ShopModels.FirstOrDefault(entry => body.name.EndsWith("_" + entry.suffix)).model;
+            GameObject oldAsset = Load(model), newAsset = s2 == null ? null : Load(s2);
+            if (newAsset != null && oldAsset != null && TryMeasure(oldAsset, out Bounds ob) && TryMeasure(newAsset, out Bounds nb, "_add"))
+            {
+                float footprint = Mathf.Max(ob.size.x, ob.size.z) / Mathf.Max(nb.size.x, nb.size.z);
+                float height = ob.size.y / nb.size.y;
+                scaleBoost = Mathf.Min(Mathf.Sqrt(footprint * height), footprint * S2ShopFootprintCap);
+                model = s2;
+            }
+        }
 
         Vector3 ground = new Vector3(body.transform.position.x, MapLayout.IslandTop, body.transform.position.z);
         // 원작 비율 5단계(PM 지시 2026-09-23) — 모델은 실제 치수로 지어졌고 이 호출이 Scale을
         // 안 넘기면 항상 1배(Blender 그대로)로 서서, 맵이 커진 만큼 건물이 상대적으로 쪼그라든다.
-        GameObject building = Place(body.transform.parent, model, body.name + "_모양", ground, 0f, MapLayout.Scale * LaneShopModelScale);
+        GameObject building = Place(body.transform.parent, model, body.name + "_모양", ground, 0f, MapLayout.Scale * LaneShopModelScale * scaleBoost);
         if (building == null) return;
 
         // 상자의 부모는 Map 루트(배율 1)라 월드 크기 = 로컬 크기. 건물 어디를 눌러도 선택되게 맞춘다.
@@ -162,6 +194,7 @@ public static class StructureDresser
             body.transform.localScale = bounds.size * LaneShopClickPad;   // 클릭 범위는 건물보다 넉넉하게
         }
         HideRenderer(body);
+        MakeAdditive(building, "_add");   // S2 모델의 빛 겹(원작 add 필터)은 가산으로 — 안 그러면 검은 덩어리
         EffectSockets.Attach(building);   // 강화소 화덕 불·굴뚝 연기
     }
 
@@ -315,6 +348,104 @@ public static class StructureDresser
         blocker.transform.SetParent(parent, false);
         blocker.transform.position = bounds.center;
         blocker.AddComponent<BoxCollider>().size = bounds.size;
+    }
+
+    // ───────────────────────── S2 장식 모델(옛 맵에 얹기, 장식만) ─────────────────────────
+    // blender 추출본(~/grd/GRD_s2_models/map): fbx 1m = 워크3 100 단위. 원작 도두드 배율 s → 우리 월드 배율 = s × 100 ÷ Scale.
+    // 맵 생성기를 건드리지 않고 메뉴(OldMapDecor)로 씬에 「S2장식」 루트 하나를 얹는다. 콜라이더 없음(Place가 지움) · NavMesh 굽기엔 안 들어감.
+    static bool OnAnyIsland(float x, float z)
+    {
+        foreach (MapLayout.Island island in MapLayout.Zones.Concat(MapLayout.Warehouses).Concat(MapLayout.SealIslands).Concat(MapLayout.Lanes))
+            if (Mathf.Abs(x - island.center.x) < island.size.x * 0.5f && Mathf.Abs(z - island.center.y) < island.size.y * 0.5f) return true;
+        return false;
+    }
+
+    // 원작 포탈은 검은 바탕이 투명(가산 합성)이라 그대로 그리면 검은 판이 선다 — 재질을 가산 입자 재질로 갈아 끼운다.
+    static void MakeAdditive(GameObject root, string onlyNameContains = null)
+    {
+        const string dir = "Assets/Art/Structures/Materials";
+        if (!AssetDatabase.IsValidFolder(dir)) AssetDatabase.CreateFolder("Assets/Art/Structures", "Materials");
+        foreach (Renderer renderer in root.GetComponentsInChildren<Renderer>(true))
+        {
+            Material[] mats = renderer.sharedMaterials;
+            for (int i = 0; i < mats.Length; i++)
+            {
+                if (mats[i] == null) continue;
+                if (onlyNameContains != null && !mats[i].name.Contains(onlyNameContains) && !renderer.name.Contains(onlyNameContains)) continue;
+                Texture tex = mats[i].HasProperty("_BaseMap") ? mats[i].GetTexture("_BaseMap") : mats[i].mainTexture;
+                string path = $"{dir}/장식_대형포탈_{mats[i].name}_가산.mat";
+                Material m = AssetDatabase.LoadAssetAtPath<Material>(path);
+                bool isNew = m == null;
+                if (isNew) m = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
+                m.SetTexture("_BaseMap", tex);
+                m.SetFloat("_Surface", 1f);
+                m.SetFloat("_Blend", 2f);
+                m.SetFloat("_ZWrite", 0f);
+                m.SetOverrideTag("RenderType", "Transparent");
+                m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+                m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                m.EnableKeyword("_BLENDMODE_ADD");
+                m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                if (isNew) AssetDatabase.CreateAsset(m, path); else { EditorUtility.SetDirty(m); AssetDatabase.SaveAssetIfDirty(m); }
+                mats[i] = m;
+            }
+            renderer.sharedMaterials = mats;
+        }
+    }
+
+    public static string PlaceOldMapLandmarks(Transform parent)
+    {
+        MapLayout.Island story = System.Array.Find(MapLayout.Zones, z => z.name == "StoryZone");
+        MapLayout.Island gacha = System.Array.Find(MapLayout.Zones, z => z.name == "GachaIsland");
+        MapLayout.Island lane1 = System.Array.Find(MapLayout.Lanes, z => z.name == "Lane1");
+        MapLayout.Island lane2 = System.Array.Find(MapLayout.Lanes, z => z.name == "Lane2");
+        float k = 100f / MapLayout.Scale;
+        float seaEdge = MapLayout.SeaSize * 0.5f;
+
+        float westX = lane1.center.x - lane1.size.x * 0.5f - 420f;          // 서쪽 레인 가장자리 바깥 바다
+        float northZ = lane1.center.y + lane1.size.y * 0.5f + 330f;         // 북쪽 레인 가장자리 바깥 바다
+        float eastX = lane2.center.x + lane2.size.x * 0.5f + 650f;          // 오른쪽(창고 위) 바다
+        Vector3 storyTop = new Vector3(story.center.x, MapLayout.IslandTop, story.center.y);
+        GameObject returnPortal = GameObject.Find("스토리_복귀포탈");   // 스토리존의 마법진 — 소용돌이를 그 중심 위에 겹친다
+        Vector3 portalAt = returnPortal != null
+            ? new Vector3(returnPortal.transform.position.x, MapLayout.IslandTop, returnPortal.transform.position.z)
+            : storyTop + new Vector3(0f, 0f, story.size.y * 0.5f - 120f);
+        float statueX = story.center.x - story.size.x * 0.5f + 70f;         // 섬 안쪽 서쪽 줄
+
+        // (모델, 이름, 자리, 보는 각도(도), 원작 배율)
+        var items = new (string model, string name, Vector3 at, float yaw, float scale)[]
+        {
+            ("장식_고잉메리", "S2_고잉메리", new Vector3(westX, 0f, lane1.center.y - lane1.size.y * 0.5f - 60f), 60f, 1.05f),
+            ("장식_룸바배", "S2_룸바배", new Vector3(eastX, 0f, northZ + 120f), -140f, 1.8f),
+            ("장식_포네글리프", "S2_포네글리프", new Vector3(story.center.x - story.size.x * 0.5f + 110f, MapLayout.IslandTop, story.center.y + story.size.y * 0.5f - 110f), -305f, 1.2f),
+            ("장식_대형스토리포탈", "S2_대형스토리포탈", portalAt, -270f, 1.5f),
+            ("장식_위습동상", "S2_위습동상1", new Vector3(statueX, MapLayout.IslandTop, story.center.y + 255f), -180f, 1f),
+            ("장식_위습동상", "S2_위습동상2", new Vector3(statueX, MapLayout.IslandTop, story.center.y + 85f), -180f, 1f),
+            ("장식_위습동상", "S2_위습동상3", new Vector3(statueX, MapLayout.IslandTop, story.center.y - 85f), -180f, 1f),
+            ("장식_위습동상", "S2_위습동상4", new Vector3(statueX, MapLayout.IslandTop, story.center.y - 255f), -180f, 1f),
+            ("장식_불타는화로", "S2_불타는화로", new Vector3(gacha.center.x + gacha.size.x * 0.5f - 90f, MapLayout.IslandTop, gacha.center.y - gacha.size.y * 0.5f + 90f), -211f, 1.5f),
+        };
+        string report = "";
+        foreach (var item in items)
+        {
+            Vector3 at = item.at;
+            if (OnAnyIsland(at.x, at.z)) at.y = MapLayout.IslandTop;
+            GameObject placed = Place(parent, item.model, item.name, at, item.yaw, item.scale * k);
+            if (placed == null) { report += $"\n  ⚠️ {item.model} 모델 없음"; continue; }
+            if (item.model == "장식_대형스토리포탈") MakeAdditive(placed);
+            if (item.model == "장식_포네글리프" && TryMeasure(placed, out Bounds pb))
+            {
+                // 비석: 키 = 유닛 키 1.5배, 아래 1/4은 땅에 묻는다.
+                float target = ArtBinder.UnitHeight * 1.5f;
+                placed.transform.localScale *= target / pb.size.y;
+                if (TryMeasure(placed, out Bounds pb2))
+                    placed.transform.position += Vector3.up * (at.y - pb2.min.y - pb2.size.y * 0.25f);
+            }
+            string size = TryMeasure(placed, out Bounds b) ? $"{b.size.x:0.#}×{b.size.y:0.#}×{b.size.z:0.#}" : "?";
+            report += $"\n  {item.name} 자리 ({at.x:0},{at.z:0}) 크기 {size} {(OnAnyIsland(at.x, at.z) ? "섬 위" : "바다")} 바다끝 ±{seaEdge:0}";
+        }
+        return "S2 장식(옛 맵):" + report;
     }
 
     // ───────────────────────── 펑크해저드 ─────────────────────────
