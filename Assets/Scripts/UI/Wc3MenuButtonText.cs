@@ -29,6 +29,7 @@ public class Wc3MenuButtonText : MonoBehaviour, IPointerEnterHandler, IPointerEx
         text.fontStyle = FontStyles.Bold;
     }
 
+    Vector2 shownShift;
     void OnDisable() { hover = down = false; }
 
     void Update()
@@ -37,6 +38,8 @@ public class Wc3MenuButtonText : MonoBehaviour, IPointerEnterHandler, IPointerEx
         bool on = button.interactable;
         text.color = !on ? Disabled : (hover ? Hover : Normal);
         Vector2 shift = down && on ? new Vector2(0f, -2f) : Vector2.zero;
+        if (shift == shownShift) return;   // 누름 자리가 같으면 앵커를 다시 쓰지 않는다 — 대입만 해도 레이아웃이 매 프레임 더러워진다(10-20 perf)
+        shownShift = shift;
         text.rectTransform.offsetMin = baseMin + shift;
         text.rectTransform.offsetMax = baseMax + shift;
     }

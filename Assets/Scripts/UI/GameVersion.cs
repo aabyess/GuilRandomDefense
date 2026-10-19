@@ -36,6 +36,7 @@ public class GameVersion : MonoBehaviour
 
     void OnGUI()
     {
+        if (Event.current.type != EventType.Repaint) return;   // 그리기뿐 — Layout·입력 이벤트마다 위치를 다시 재지 않는다(10-20 perf)
         // 1280×720 창에서 12 × 0.67 = 8px라 겨우 읽혔다(09-26 구현담당2) → 14px 밑으로는 안 줄인다.
         float scale = Mathf.Max(1f, Screen.height / 1080f);
         Style.fontSize = Mathf.RoundToInt(14f * scale);
@@ -51,11 +52,11 @@ public class GameVersion : MonoBehaviour
     float nextBarLookup;
 
     // 하단 바 윗선의 화면 위쪽 기준 y(OnGUI 좌표). 오버레이 캔버스라 월드 모서리가 곧 화면 픽셀이다. 못 읽으면 옛 비율.
+    static readonly Vector3[] corners = new Vector3[4];
     float BarTopFromTop()
     {
         if (bottomBar != null && bottomBar.transform is RectTransform rect)
         {
-            Vector3[] corners = new Vector3[4];
             rect.GetWorldCorners(corners);   // 0 좌하 · 1 좌상 · 2 우상 · 3 우하
             float top = Screen.height - corners[1].y;
             if (top > 0f && top < Screen.height) return top;

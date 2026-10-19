@@ -94,15 +94,26 @@ public class AlliancePanel : MonoBehaviour
         Refresh();
     }
 
+    int lastRowsKey = int.MinValue;
+
     void Refresh()
     {
-        foreach (GameObject r in rows) if (r != null) Destroy(r);
-        rows.Clear();
         var others = new List<NetPlayer>();
         if (NetGameState.Instance != null)
             foreach (NetPlayer np in NetPlayer.All)
                 if (np != null && np.Slot >= 0 && np.Slot != LocalPlayer.LocalPlayerId && PlayerContext.Get(np.Slot) != null) others.Add(np);
         others.Sort((a, b) => a.Slot.CompareTo(b.Slot));
+        // 줄에 그리는 값(자리·이름·내게 공유·내 공유·눌렀다 기다리는 중)이 그대로면 줄을 부수고 다시 만들지 않는다(10-20 perf — 창이 열려 있는 동안 0.25초마다 오브젝트 수십 개를 지우고 만들었다).
+        int key = others.Count;
+        foreach (NetPlayer np in others)
+        {
+            bool waiting = pending.TryGetValue(np.Slot, out var pend);
+            key = System.HashCode.Combine(key, np.Slot, np.DisplayName, AllianceShare.IsShared(np.Slot, LocalPlayer.LocalPlayerId), AllianceShare.IsSharingTo(np.Slot), waiting && Time.unscaledTime <= pend.until ? (pend.value ? 1 : 2) : 0);
+        }
+        if (key == lastRowsKey && rows.Count == others.Count) return;
+        lastRowsKey = key;
+        foreach (GameObject r in rows) if (r != null) Destroy(r);
+        rows.Clear();
         emptyText.gameObject.SetActive(others.Count == 0);
         float height = 130f + Mathf.Max(0, others.Count) * 56f + (others.Count == 0 ? 40f : 0f);
         ((RectTransform)window.transform).sizeDelta = new Vector2(520f, height);

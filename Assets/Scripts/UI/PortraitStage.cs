@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Rendering.Universal;
 
 /// <summary>
 /// 선택 정보칸 초상화(사장님 09-26 「원랜디처럼 유닛 서 있는 거 — 모습이 보였으면」). 워크3 초상화처럼
@@ -72,6 +73,11 @@ public class PortraitStage : MonoBehaviour
         stageCamera.farClipPlane = 500f;
         stageCamera.targetTexture = texture;
         stageCamera.enabled = false;   // 대상이 있을 때만 찍는다
+        // 10-20 perf: 선택하는 동안 프레임마다 도는 카메라다 — 모델 하나 그리는 데 깊이/색 복사 패스와 가림 판정은 필요 없다(HDR·MSAA·그림자는 초상 모양이 달라질 수 있어 그대로).
+        stageCamera.useOcclusionCulling = false;
+        UniversalAdditionalCameraData extra = stageCamera.GetUniversalAdditionalCameraData();
+        extra.requiresDepthOption = CameraOverrideOption.Off;
+        extra.requiresColorOption = CameraOverrideOption.Off;
 
         // 무대 조명 — 씬의 방향광도 비추지만, 초상은 늘 밝게 보이게 앞에서 하나 더(레이어 31만).
         GameObject lightObj = new GameObject("PortraitLight");
