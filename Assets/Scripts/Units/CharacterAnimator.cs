@@ -96,22 +96,25 @@ public class CharacterAnimator : MonoBehaviour
         animator.SetFloat(SpeedHash, Mathf.Clamp01(speed / Mathf.Max(0.01f, runSpeed)));
 
         // 걷는 중(Move 상태)일 때만 재생 속도를 맞춘다. 서 있거나 공격할 때는 원래 속도.
-        LearnAttackLength(animator.GetCurrentAnimatorStateInfo(0));
+        AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);   // 한 프레임에 두 번 읽던 것 — animator.speed를 바꿔도 같은 프레임 상태 정보는 같다
+        LearnAttackLength(stateInfo);
         bool walking = speed / Mathf.Max(0.01f, runSpeed) > 0.15f;
         animator.speed = walking && bodyHeight > 0.01f
             ? Mathf.Clamp(speed / bodyHeight / walkClipHeightsPerSecond, 1f, maxWalkPlaybackSpeed)
-            : (attackPlaybackBoost > 1.001f && IsAttackState(animator.GetCurrentAnimatorStateInfo(0)) ? attackPlaybackBoost : 1f);
+            : (attackPlaybackBoost > 1.001f && IsAttackState(stateInfo) ? attackPlaybackBoost : 1f);
     }
 
     // 공격 상태의 실제 길이(초, 상태 속도 반영)를 처음 보는 순간 배운다 — 첫 타격은 보정 없이 한 번 재생된다.
+    static readonly System.Collections.Generic.List<AnimatorClipInfo> clipInfoScratch = new System.Collections.Generic.List<AnimatorClipInfo>(4);
+
     void LearnAttackLength(AnimatorStateInfo info)
     {
         if (!IsAttackState(info)) return;
         // info.speed = 상태 자체의 속도(Animator.speed 보정은 안 섞인다, 10-16 실측), clip.length = 보정과 무관한 원본 길이.
-        AnimatorClipInfo[] clips = animator.GetCurrentAnimatorClipInfo(0);
-        if (clips.Length == 0 || clips[0].clip == null) return;
+        animator.GetCurrentAnimatorClipInfo(0, clipInfoScratch);   // 배열 반환형은 부를 때마다 새 배열 — 공격 상태 동안 유닛마다 매 프레임이라 목록 재사용형으로
+        if (clipInfoScratch.Count == 0 || clipInfoScratch[0].clip == null) return;
         float stateSpeed = Mathf.Max(0.01f, info.speed);
-        float duration = clips[0].clip.length / stateSpeed;
+        float duration = clipInfoScratch[0].clip.length / stateSpeed;
         if (duration > 0.05f && duration < 20f) attackClipLength = duration;
     }
 
