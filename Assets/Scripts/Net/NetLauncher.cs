@@ -1743,7 +1743,8 @@ public class NetLauncher : MonoBehaviour
         {
             list = FindObjectsByType<NetEntity>(FindObjectsSortMode.None)
                 .Where(e => e != null && e.Object != null && e.Object.IsValid && e.EntityKind == NetEntityKind.Enemy
-                            && (GameAuthority.IsServer ? e.Real : e.Visual) != null)
+                            && (GameAuthority.IsServer ? e.Real : e.Visual) != null
+                            && !(GameAuthority.IsServer ? e.Real : e.Visual).name.Contains("Story"))   // 스토리 존 적 제외(레인 적만 — 양쪽 창 이름 같음: Mob_<이름>)
                 .OrderBy(e => e.Object.Id.Raw).Take(3).ToList();
             if (list.Count >= 3) break;
             yield return new WaitForSecondsRealtime(0.5f);
