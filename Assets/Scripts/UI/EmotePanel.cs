@@ -40,6 +40,7 @@ public class EmotePanel : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Install()
     {
+        if (!S2Features.Enabled) return;   // S2Features 꺼짐
         if (instance != null) return;
         var host = new GameObject("EmotePanel");
         DontDestroyOnLoad(host);

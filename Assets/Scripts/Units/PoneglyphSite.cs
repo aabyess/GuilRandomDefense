@@ -26,6 +26,7 @@ public static class PoneglyphSite
 
     public static void OnUnlocked()
     {
+        if (!S2Features.Enabled) return;   // 사장님 10-19: S2 따라간 기능은 꺼 둔다(S2Features)
         Debug.Log("[S2 미션] 포네그리프 해독 해금");
         foreach (PlayerContext c in PlayerContext.Occupied)
             PlayerNotification.Show(c.PlayerId, "<color=#FFD700>[히든미션]</color> 기록지침(F9)에서 전설적인 이상 유닛을 골라 「해독 시작」을 누르세요.", 10f);
@@ -34,6 +35,7 @@ public static class PoneglyphSite
     /// <summary>호스트: 해독 시작 요청.</summary>
     public static void TryStart(int playerId, UnitIdentity unit)
     {
+        if (!S2Features.Enabled) return;   // 사장님 10-19: S2 따라간 기능은 꺼 둔다(S2Features)
         if (!GameAuthority.IsServer) return;
         if (!S2Missions.HiddenUnlocked || S2Missions.PoneDone) return;
         if (SecondsLeft > 0f) { PlayerNotification.Show(playerId, "다른 유닛이 '포네그리프 해독' 중입니다.", 5f); return; }
