@@ -469,6 +469,13 @@ public static class SkillVfx
                     Layer("vfx_wall_fade", new Color(1f, 0.7f, 0.35f), 0.6f, 45f, 1, 0f, Shape.None, mesh: "충격파_벽", feet: true, growFrom: 0.4f),
                     Layer("circle_03", new Color(1f, 0.8f, 0.5f), 0.5f, 60f, 1, 0f, Shape.None, mesh: "충격파_원판", feet: true, growFrom: 0.3f));
             case Kind.Stun:
+                // 10-19 사장님 「스턴 별은 분위기와 안 맞는다」 → 어두운 중세 가정 시안: 머리 위에서 서로 반대로 도는 룬 고리 둘(쇠 테+룬) + 고리에서 오르는 푸른 불꽃, 별 없음.
+                //   새 재질(Skill_rune_ring·Skill_flame_blue, SkillVfxMaterials.BuildOwn)이 아직 없으면 아래 옛 별 모양으로 물러난다.
+                if (Mat("rune_ring") != null && Mat("flame_blue") != null)
+                    return Layered(parent, loop, "Stun",
+                        Layer("rune_ring", new Color(0.55f, 0.72f, 1f, 0.95f), 0.9f, 1.15f * Unit, 1, 0f, Shape.None, ground: true, persistent: loop, spinZ: 55f),
+                        Layer("rune_ring", new Color(0.4f, 0.55f, 0.95f, 0.8f), 0.9f, 0.72f * Unit, 1, 0f, Shape.None, ground: true, persistent: loop, spinZ: -80f),
+                        Layer("flame_blue", new Color(0.5f, 0.7f, 1f, 0.9f), 0.9f, 0.55f * Unit, 0, 0.7f * Unit, Shape.Ring, rate: loop ? 5f : 0f));
                 // 머리 위를 도는 노란 별 셋 — 09-29: 한 번에 셋을 **고르게** 뿌려 끝까지 돌린다(persistent). 전엔 초당 3.5개를
                 //   0.9초 수명으로 흘려 보내 어느 순간이든 2~3개가 한쪽에 몰려 「왼쪽 위로 치우친」 것처럼 보였다.
                 return Layered(parent, loop, "Stun",
@@ -505,16 +512,17 @@ public static class SkillVfx
         // 1.2.2 메시 층: mesh = Resources/Effects/Mesh_<이름>. feet = 발밑 땅에(Burst). spinY = 수명 동안 Y축으로 도는 총 각(가운데 기준 ±반).
         //   yaw = 시작 Y각(도), randomYaw = 시작 Y각 무작위. growFrom = 크기 growFrom→1. shrinkWidth = 폭(X·Z)만 1→0.3. aspect = 축별 크기 배율.
         public string mesh; public bool feet; public float spinY, yaw; public bool randomYaw; public float growFrom; public bool shrinkWidth; public Vector3 aspect;
+        public float spinZ;   // 판 안에서 도는 속도(도/초 — 룬 고리, 10-19 스턴 대체 시안)
     }
 
     static LayerSpec Layer(string texture, Color color, float lifetime, float size, int burst, float speed, Shape shape,
                            float rate = 0f, bool ground = false, bool randomRotation = false, float grow = 0f, float orbit = 0f,
                            bool persistent = false, bool alpha = false, string mesh = null, bool feet = false, float spinY = 0f,
-                           float yaw = 0f, bool randomYaw = false, float growFrom = 0f, bool shrinkWidth = false, Vector3? aspect = null) =>
+                           float yaw = 0f, bool randomYaw = false, float growFrom = 0f, bool shrinkWidth = false, Vector3? aspect = null, float spinZ = 0f) =>
         new LayerSpec { texture = texture, color = color, lifetime = lifetime, size = size, burst = burst, speed = speed,
                         shape = shape, rate = rate, ground = ground, randomRotation = randomRotation, grow = grow, orbit = orbit,
                         persistent = persistent, alpha = alpha, mesh = mesh, feet = feet, spinY = spinY, yaw = yaw, randomYaw = randomYaw,
-                        growFrom = growFrom, shrinkWidth = shrinkWidth, aspect = aspect ?? Vector3.one };
+                        growFrom = growFrom, shrinkWidth = shrinkWidth, aspect = aspect ?? Vector3.one, spinZ = spinZ };
 
     static ParticleSystem Layered(Transform parent, bool loop, string name, params LayerSpec[] layers)
     {
@@ -581,6 +589,13 @@ public static class SkillVfx
                 ParticleSystem.SizeOverLifetimeModule size = ps.sizeOverLifetime;
                 size.enabled = true;
                 size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 1f, 1f, spec.grow));
+            }
+
+            if (spec.spinZ != 0f)
+            {
+                ParticleSystem.RotationOverLifetimeModule spin = ps.rotationOverLifetime;
+                spin.enabled = true;
+                spin.z = spec.spinZ * Mathf.Deg2Rad;   // 초당 라디안(상수)
             }
 
             if (layerMesh != null)
