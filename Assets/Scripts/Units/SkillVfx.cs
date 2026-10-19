@@ -460,8 +460,11 @@ public static class SkillVfx
             case Kind.StunImpact:
                 // 스턴 걸리는 순간 발구르기(원작 AOws) — 바깥으로 벌어진 먼지벽 + 흰 충격파 고리
                 return Layered(parent, loop, "StunImpact",
-                    Layer("vfx_wall_fade", new Color(0.92f, 0.82f, 0.62f), 0.6f, 45f, 1, 0f, Shape.None, mesh: "충격파_벽", feet: true, growFrom: 0.4f),
-                    Layer("circle_03", new Color(1f, 1f, 0.95f), 0.5f, 55f, 1, 0f, Shape.None, mesh: "충격파_원판", feet: true, growFrom: 0.3f));
+                    // 10-19 안 B(재료_B README): 걸리는 순간 발밑에 ring_shock 한 번 — 지름 0.7H→2.0H, 0.25초, 알파 0.6→0, 흰색. 먼지벽 없음.
+                    //   ring_shock 선 반지름 = 그림 반폭의 0.62 → size = 지름/0.62. 재질이 없으면 옛 원판 모양.
+                    Mat("ring_shock") != null
+                        ? Layer("ring_shock", new Color(1f, 1f, 1f, 0.6f), 0.25f, 2.0f * Unit / 0.62f, 1, 0f, Shape.None, mesh: "충격파_원판", feet: true, growFrom: 0.35f)
+                        : Layer("circle_03", new Color(1f, 1f, 1f), 0.5f, 55f, 1, 0f, Shape.None, mesh: "충격파_원판", feet: true, growFrom: 0.3f));
             case Kind.Smash:
                 // 강타·범위 폭발(정의만, 1.2.2) — 땅 폭발 + 벽 + 원판, 주황(원작 E_WarStompCaster·NewDirtEXNofire). 흙먼지는 데이터 연결 때
                 return Layered(parent, loop, "Smash",
@@ -469,15 +472,15 @@ public static class SkillVfx
                     Layer("vfx_wall_fade", new Color(1f, 0.7f, 0.35f), 0.6f, 45f, 1, 0f, Shape.None, mesh: "충격파_벽", feet: true, growFrom: 0.4f),
                     Layer("circle_03", new Color(1f, 0.8f, 0.5f), 0.5f, 60f, 1, 0f, Shape.None, mesh: "충격파_원판", feet: true, growFrom: 0.3f));
             case Kind.Stun:
-                // 10-19 사장님 「스턴 별은 분위기와 안 맞는다」 → 어두운 중세 가정 시안: 머리 위에서 서로 반대로 도는 룬 고리 둘(쇠 테+룬) + 고리에서 오르는 푸른 불꽃, 별 없음.
-                //   새 재질(Skill_rune_ring·Skill_flame_blue, SkillVfxMaterials.BuildOwn)이 아직 없으면 아래 옛 별 모양으로 물러난다.
-                if (Mat("rune_ring") != null && Mat("flame_blue") != null)
+                // 10-19 사장님 확정 「안 B 워크3풍 정돈」: 별 대신 작은 4점 반짝이 셋이 머리 위 궤도를 빛 꼬리를 끌며 돈다(워크3 스턴의 「도는 빛」 구조 유지).
+                //   색은 기능별 고정 — 스턴은 디버프 = 보라 #b36cff + 흰 코어. 밝은 풀밭에서 가산광이 날아가지 않게 어두운 알파 받침판을 밑에 깐다.
+                //   새 재질(Skill_sparkle4·Skill_trail_soft, SkillVfxMaterials.BuildOwn)이 아직 없으면 아래 옛 별 모양으로 물러난다.
+                if (Mat("sparkle_4pt") != null && Mat("trail_h") != null)
                     return Layered(parent, loop, "Stun",
-                        Layer("rune_ring", new Color(0.55f, 0.72f, 1f, 0.95f), 0.9f, 1.15f * Unit, 1, 0f, Shape.None, ground: true, persistent: loop, spinZ: 55f),
-                        Layer("rune_ring", new Color(0.4f, 0.55f, 0.95f, 0.8f), 0.9f, 0.72f * Unit, 1, 0f, Shape.None, ground: true, persistent: loop, spinZ: -80f),
-                        Layer("flame_blue", new Color(0.5f, 0.7f, 1f, 0.9f), 0.9f, 0.55f * Unit, 0, 0.7f * Unit, Shape.Ring, rate: loop ? 5f : 0f));
-                // 머리 위를 도는 노란 별 셋 — 09-29: 한 번에 셋을 **고르게** 뿌려 끝까지 돌린다(persistent). 전엔 초당 3.5개를
-                //   0.9초 수명으로 흘려 보내 어느 순간이든 2~3개가 한쪽에 몰려 「왼쪽 위로 치우친」 것처럼 보였다.
+                        // H = Unit(레인 적 키). 궤도 반지름 0.47H · 반짝이 3개(120°) · 1.6초에 한 바퀴(3.93 rad/s) · 꼬리 ≈0.3초(궤도 70°)
+                        Layer("plate_dark", new Color(0f, 0f, 0f, 0.3f), 0.9f, 1.3f * Unit, 1, 0f, Shape.None, ground: true, persistent: loop, alpha: true),   // 어두운 받침판(풀밭 가독성)
+                        Layer("sparkle_4pt", new Color(1f, 1f, 0.95f, 1f), 0.9f, 0.55f * Unit, 3, 0f, Shape.Ring, orbit: 3.93f, persistent: loop, ringRadius: 0.32f,
+                              color2: new Color(1f, 0.82f, 0.4f, 1f), trail: "trail_h", trailSeconds: 0.3f, trailColor: new Color(0.35f, 0.78f, 1f, 0.85f), trailWidth: 0.3f));
                 return Layered(parent, loop, "Stun",
                     Layer("symbol_02", new Color(1f, 0.85f, 0.05f, 1f), 0.9f, 0.9f * Unit, 3, 0f, Shape.Ring, orbit: 5f, persistent: loop, alpha: true),
                     // 같은 자리·같은 궤도에 더하기 섞기 별을 한 겹 더 — 알파 노랑만으론 풀밭 초록과 섞여 탁했다(09-29 기본 높이 실측).
@@ -512,17 +515,20 @@ public static class SkillVfx
         // 1.2.2 메시 층: mesh = Resources/Effects/Mesh_<이름>. feet = 발밑 땅에(Burst). spinY = 수명 동안 Y축으로 도는 총 각(가운데 기준 ±반).
         //   yaw = 시작 Y각(도), randomYaw = 시작 Y각 무작위. growFrom = 크기 growFrom→1. shrinkWidth = 폭(X·Z)만 1→0.3. aspect = 축별 크기 배율.
         public string mesh; public bool feet; public float spinY, yaw; public bool randomYaw; public float growFrom; public bool shrinkWidth; public Vector3 aspect;
-        public float spinZ;   // 판 안에서 도는 속도(도/초 — 룬 고리, 10-19 스턴 대체 시안)
+        public float spinZ;   // 판 안에서 도는 속도(도/초)
+        public string trail; public float trailSeconds, trailWidth; public Color trailColor;   // 빛 꼬리(10-19 안 B): trail = 꼬리 재질 이름, trailSeconds = 꼬리 길이(초), trailWidth = 입자 크기 대비 폭, trailColor = 꼬리 색
+        public float ringRadius;   // Shape.Ring 반지름(0 = 기본 0.45 Unit)
+        public bool hasColor2; public Color color2;   // 시작 색을 color·color2 중 무작위로
     }
 
     static LayerSpec Layer(string texture, Color color, float lifetime, float size, int burst, float speed, Shape shape,
                            float rate = 0f, bool ground = false, bool randomRotation = false, float grow = 0f, float orbit = 0f,
                            bool persistent = false, bool alpha = false, string mesh = null, bool feet = false, float spinY = 0f,
-                           float yaw = 0f, bool randomYaw = false, float growFrom = 0f, bool shrinkWidth = false, Vector3? aspect = null, float spinZ = 0f) =>
+                           float yaw = 0f, bool randomYaw = false, float growFrom = 0f, bool shrinkWidth = false, Vector3? aspect = null, float spinZ = 0f, string trail = null, float trailSeconds = 0.35f, Color? color2 = null, Color? trailColor = null, float trailWidth = 1f, float ringRadius = 0f) =>
         new LayerSpec { texture = texture, color = color, lifetime = lifetime, size = size, burst = burst, speed = speed,
                         shape = shape, rate = rate, ground = ground, randomRotation = randomRotation, grow = grow, orbit = orbit,
                         persistent = persistent, alpha = alpha, mesh = mesh, feet = feet, spinY = spinY, yaw = yaw, randomYaw = randomYaw,
-                        growFrom = growFrom, shrinkWidth = shrinkWidth, aspect = aspect ?? Vector3.one, spinZ = spinZ };
+                        growFrom = growFrom, shrinkWidth = shrinkWidth, aspect = aspect ?? Vector3.one, spinZ = spinZ, trail = trail, trailSeconds = trailSeconds, trailWidth = trailWidth, trailColor = trailColor ?? Color.white, hasColor2 = color2.HasValue, color2 = color2 ?? Color.white, ringRadius = ringRadius };
 
     static ParticleSystem Layered(Transform parent, bool loop, string name, params LayerSpec[] layers)
     {
@@ -550,7 +556,7 @@ public static class SkillVfx
             main.startLifetime = spec.persistent ? 3600f : spec.lifetime;
             main.startSpeed = spec.speed;
             main.startSize = new ParticleSystem.MinMaxCurve(spec.size * 0.85f, spec.size * 1.15f);
-            main.startColor = spec.color;
+            main.startColor = spec.hasColor2 ? new ParticleSystem.MinMaxGradient(spec.color, spec.color2) : new ParticleSystem.MinMaxGradient(spec.color);
             main.startRotation = spec.randomRotation ? new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f) : 0f;
             main.simulationSpace = spec.orbit > 0f ? ParticleSystemSimulationSpace.Local : ParticleSystemSimulationSpace.World;
             main.scalingMode = ParticleSystemScalingMode.Shape;
@@ -565,7 +571,7 @@ public static class SkillVfx
             if (spec.shape == Shape.Sphere) { shape.shapeType = ParticleSystemShapeType.Sphere; shape.radius = 0.1f * Unit; }
             if (spec.shape == Shape.Ring)
             {
-                shape.shapeType = ParticleSystemShapeType.Circle; shape.radius = 0.45f * Unit; shape.rotation = new Vector3(90f, 0f, 0f); shape.radiusThickness = 0f;
+                shape.shapeType = ParticleSystemShapeType.Circle; shape.radius = (spec.ringRadius > 0f ? spec.ringRadius : 0.45f) * Unit; shape.rotation = new Vector3(90f, 0f, 0f); shape.radiusThickness = 0f;
                 // 한 번에 뿌리는 입자를 원 둘레에 같은 간격으로(셋이면 120°씩) — 무작위면 한쪽에 몰린다.
                 if (spec.burst > 1) shape.arcMode = ParticleSystemShapeMultiModeValue.BurstSpread;
             }
@@ -589,6 +595,28 @@ public static class SkillVfx
                 ParticleSystem.SizeOverLifetimeModule size = ps.sizeOverLifetime;
                 size.enabled = true;
                 size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 1f, 1f, spec.grow));
+            }
+
+            Material trailMat = spec.trail != null ? Mat(spec.trail) : null;
+            if (trailMat != null)
+            {
+                // 입자 수명이 3600초인 persistent 층에서도 꼬리는 trailSeconds만 — 수명에 대한 비율로 넣는다.
+                float life = spec.persistent ? 3600f : spec.lifetime;
+                ParticleSystem.TrailModule trails = ps.trails;
+                trails.enabled = true;
+                trails.mode = ParticleSystemTrailMode.PerParticle;
+                trails.ratio = 1f;
+                trails.lifetime = Mathf.Max(0.00005f, spec.trailSeconds / life);
+                trails.minVertexDistance = 0.8f;
+                trails.worldSpace = false;
+                trails.dieWithParticles = true;
+                trails.inheritParticleColor = false;
+                trails.sizeAffectsWidth = true;
+                trails.widthOverTrail = new ParticleSystem.MinMaxCurve(spec.trailWidth, AnimationCurve.Linear(0f, 1f, 1f, 0f));
+                Gradient tg = new Gradient();
+                tg.SetKeys(new[] { new GradientColorKey(spec.trailColor, 0f), new GradientColorKey(spec.trailColor, 1f) },
+                           new[] { new GradientAlphaKey(spec.trailColor.a, 0f), new GradientAlphaKey(0f, 1f) });
+                trails.colorOverTrail = tg;
             }
 
             if (spec.spinZ != 0f)
@@ -630,6 +658,7 @@ public static class SkillVfx
 
             ParticleSystemRenderer r = go.GetComponent<ParticleSystemRenderer>();
             r.sharedMaterial = mat;
+            if (trailMat != null) r.trailMaterial = trailMat;
             r.shadowCastingMode = ShadowCastingMode.Off;
             r.receiveShadows = false;
             r.renderMode = spec.ground ? ParticleSystemRenderMode.HorizontalBillboard : ParticleSystemRenderMode.Billboard;

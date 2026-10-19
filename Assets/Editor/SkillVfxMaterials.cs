@@ -90,7 +90,7 @@ public static class SkillVfxMaterials
             if (isNew) material = new Material(shader);
             else material.shader = shader;
             material.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(texPath));
-            material.SetFloat("_DstBlend", 1f);   // 가산
+            material.SetFloat("_DstBlend", name == "plate_dark" ? 10f : 1f);   // 받침판만 알파 섞기, 나머지 가산
             material.SetFloat("_Intensity", 1.6f);
             material.SetFloat("_SoftFade", 1f);
             material.renderQueue = (int)RenderQueue.Transparent;
