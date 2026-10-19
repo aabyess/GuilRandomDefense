@@ -3593,10 +3593,11 @@ public static class MapGenerator
     const float BoothDepthBase = 14f;
     /// <summary>뽑기섬 위쪽 흔함 줄이 깊어진 만큼 섬을 아래로 늘리는 양(MapLayout.GachaExtraZ가 더한다) — 아래 등급 칸 높이가 안 줄게.
     /// (옛 기준 부스 14 + 위습 칸 46.5)에서 지금 부스 + 위습 칸까지 늘어난 몫이다.</summary>
-    public const float GachaChoiceRowExtraZ = (BoothDepthBase * ChoiceRowScale + CommonAreaDepth) - (BoothDepthBase + CommonAreaDepthBase);
+    public const float GachaChoiceRowExtraZ = (BoothDepth + CommonAreaDepth) - (BoothDepthBase + CommonAreaDepthBase);
 
     const float PortalInset = 9f;       // 칸 위벽에서 포탈까지
-    const float BoothDepth = BoothDepthBase * ChoiceRowScale;   // 포탈 앞부터 뒷벽까지(14 × 인형 배율)
+    // 10-20 선택 위습 개편(blender 정식 부스 모델): 포탈(마법진 중심)에서 뒷벽 가운데까지. 옛 값 14 × 인형 배율 = 22.4.
+    const float BoothDepth = 51f;
     const float BoothWallHeight = 4.5f;
     const float BoothWallThickness = 0.6f;
 
@@ -3625,24 +3626,29 @@ public static class MapGenerator
         List<UnitData> commons = OrderCommonsForChoiceRow(LoadUnitsOfGrade(UnitGrade.Common));
         // 부스 뒷벽까지 섬 안에 들어와야 한다 — 포탈은 뒷벽에서 부스 깊이만큼 앞에 놓는다.
         float rowZ = top - BoothDepth - 2f;
-        float step = island.size.x / (commons.Count + 1);
+        // 10-20: 9칸이 섬 폭을 꽉 채운다(사진). 옛 폭÷(칸+1)은 양끝에 반 칸 여백이 남았다.
+        float step = island.size.x / commons.Count;
+        BoothGeo booth = BoothGeometry(step, rowZ);
 
         for (int i = 0; i < commons.Count; i++)
         {
             UnitData unit = commons[i];
-            float x = left + step * (i + 1);
+            float x = left + step * (i + 0.5f);
 
             GameObject stand = CreatePortalObject(parent, $"흔함선택_{unit.unitName}",
                 new Vector3(x, MapLayout.IslandTop + 0.25f, rowZ), ChoicePortalDiameter);
             ConfigurePortal(stand, UnitGrade.Common, unit, table, spawner);
 
             PlaceUnitMarker(parent, $"흔함선택_{unit.unitName}_표식",
-                new Vector3(x, 0f, rowZ + BoothDepth * 0.5f), UnitGrade.Common,
-                unit, DisplayFigureHeight);
+                new Vector3(x, 0f, booth.centerZ), UnitGrade.Common,
+                unit, DisplayFigureHeight, lift: BoothFloorLift);
+            BuildPortalGlow(parent, $"흔함선택_{unit.unitName}_분홍빛", new Vector3(x, MapLayout.IslandTop + 0.6f, rowZ));
+            BuildBoothRing(parent, $"흔함선택_{unit.unitName}_고리", new Vector3(x, MapLayout.IslandTop + BoothFloorLift + 0.3f, booth.centerZ), stand.GetComponent<UnitPortal>(), booth);
         }
 
         // 부스를 하나씩 두르면 이웃끼리 옆벽이 겹친다. 뒷벽 한 장 + 칸막이 한 줄로 세운다.
         BuildBoothRow(parent, left, left + island.size.x, rowZ, step, commons.Count);
+        BuildBoothDecor(parent, left, step, commons.Count, rowZ, booth);
 
         // 흔함 구역 아래를 막는다. 안 막으면 부스 앞 공간이 첫 등급 칸과 이어져,
         // 흔함 위습이 안흔함 칸으로 내려가고 안흔함 위습도 올라온다.
@@ -3652,6 +3658,7 @@ public static class MapGenerator
         BuildWall(parent, "흔함구역_아래벽",
             new Vector3(island.center.x, MapLayout.IslandTop + WallHeight * 0.5f, commonFloorZ),
             new Vector3(island.size.x + GateThickness, WallHeight, GateThickness));
+        BuildSelectWispBorder(parent, left, left + island.size.x, top, commonFloorZ, booth);
 
         // 흔함 선택 위습은 부스 줄 앞, 막힌 구역 안에서 생긴다 — 어느 부스로 갈지는 플레이어가 고른다.
         GameObject commonCell = new GameObject("위습칸_흔함선택");
@@ -5174,6 +5181,110 @@ public static class MapGenerator
     }
 
     // 부스 줄. 앞쪽(포탈 방향)은 열어 두고 뒤와 칸막이만 세운다.
+    // ───────────────────────── 선택 위습 구역 정식 모델(10-20, blender gen_wisp_models) ─────────────────────────
+    const float BoothFloorLift = 2.2f;   // 부스 바닥 판 윗면(두께 6 × m당 우리 단위 ≈ 2.1) 위에 유닛·고리를 올린다
+
+    struct BoothGeo { public float xUnit, zUnit, gap, centerZ; }
+
+    // 모델 크기 환산: blender는 부스 간격 228(워크3)=2.28m. 가로·높이는 칸 폭에서(xUnit = 우리 월드 ÷ m), 깊이는 BoothDepth에서 유도(zUnit).
+    // 깊이 배치(포탈 z=0 기준): 바닥 앞끝 = gap, 바닥 가운데 = gap + 0.85m, 뒷벽 가운데 = gap + 1.6m = BoothDepth.
+    static BoothGeo BoothGeometry(float step, float rowZ)
+    {
+        BoothGeo g = new BoothGeo();
+        g.xUnit = step / 2.28f;
+        g.gap = ChoicePortalDiameter * 0.5f + 1f;
+        g.zUnit = (BoothDepth - g.gap) / 1.6f;
+        g.centerZ = rowZ + g.gap + 0.85f * g.zUnit;
+        return g;
+    }
+
+    static void BuildBoothDecor(Transform parent, float left, float step, int count, float rowZ, BoothGeo g)
+    {
+        Vector3 stretch = new Vector3(g.xUnit, g.xUnit, g.zUnit);
+        for (int i = 0; i < count; i++)
+        {
+            Vector3 center = new Vector3(left + step * (i + 0.5f), MapLayout.IslandTop, g.centerZ);
+            StructureDresser.PlaceStretched(parent, "선택위습_부스바닥", $"부스_바닥{i}", center, 0f, stretch);
+            StructureDresser.PlaceStretched(parent, "선택위습_부스뒷벽", $"부스_뒷벽모양{i}", center, 180f, stretch);   // 모델 뒷벽이 blender +y = 유니티 −z쪽이라 180° 돌려 북쪽으로
+        }
+        // 기둥은 부스 사이(옆 부스와 공유) — 칸막이 자리마다, 바닥 앞쪽 가까이.
+        float pillarZ = rowZ + g.gap + 0.4f * g.zUnit;
+        for (int j = 0; j <= count; j++)
+            StructureDresser.PlaceStretched(parent, "선택위습_부스기둥", $"부스_기둥{j}",
+                new Vector3(left + step * j, MapLayout.IslandTop, pillarZ), 0f, Vector3.one * g.xUnit);
+    }
+
+    // 구역 둘레: 위습 칸 아래·양옆에 낮은 돌 띠벽, 아래 모서리 둘과 아래 변 가운데에 굵은 돌 기둥. (위 변은 부스 뒷벽이 막는다)
+    static void BuildSelectWispBorder(Transform parent, float left, float right, float top, float bottomZ, BoothGeo g)
+    {
+        float inset = 3f;
+        float width = right - left;
+        int nx = Mathf.Max(1, Mathf.RoundToInt(width / (2f * g.xUnit)));
+        float sx = width / nx / 2f;
+        for (int i = 0; i < nx; i++)
+            StructureDresser.PlaceStretched(parent, "선택위습_띠벽", $"위습칸_아래띠벽{i}",
+                new Vector3(left + width / nx * (i + 0.5f), MapLayout.IslandTop, bottomZ), 0f, new Vector3(sx, g.xUnit, g.xUnit));
+
+        float sideTop = top - 2f;
+        float length = sideTop - bottomZ;
+        int nz = Mathf.Max(1, Mathf.RoundToInt(length / (2f * g.xUnit)));
+        float sz = length / nz / 2f;
+        for (int i = 0; i < nz; i++)
+        {
+            float z = bottomZ + length / nz * (i + 0.5f);
+            StructureDresser.PlaceStretched(parent, "선택위습_띠벽", $"위습칸_왼띠벽{i}", new Vector3(left + inset, MapLayout.IslandTop, z), 90f, new Vector3(sz, g.xUnit, g.xUnit));
+            StructureDresser.PlaceStretched(parent, "선택위습_띠벽", $"위습칸_오른띠벽{i}", new Vector3(right - inset, MapLayout.IslandTop, z), 90f, new Vector3(sz, g.xUnit, g.xUnit));
+        }
+
+        foreach (float x in new[] { left + inset, (left + right) * 0.5f, right - inset })
+            StructureDresser.PlaceStretched(parent, "선택위습_모서리기둥", $"위습칸_모서리기둥{x:0}", new Vector3(x, MapLayout.IslandTop, bottomZ), 0f, Vector3.one * g.xUnit);
+    }
+
+    // 부스 앞 마법진 밑에 깔리는 부드러운 분홍 빛 판(사진의 「분홍·보라 원형 마법진 가운데 밝은 핵」 느낌). 재질은 Skill_dot_soft 사본에 분홍 틴트.
+    static void BuildPortalGlow(Transform parent, string name, Vector3 position)
+    {
+        const string path = "Assets/Art/Structures/Materials/선택위습_분홍빛.mat";
+        Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (material == null)
+        {
+            Material source = AssetDatabase.LoadAssetAtPath<Material>("Assets/Resources/Effects/Skill_dot_soft.mat");
+            if (source == null) return;
+            if (!AssetDatabase.IsValidFolder("Assets/Art/Structures/Materials")) AssetDatabase.CreateFolder("Assets/Art/Structures", "Materials");
+            material = new Material(source);
+            foreach (string property in new[] { "_Tint", "_BaseColor", "_Color" })
+                if (material.HasProperty(property)) material.SetColor(property, new Color(1f, 0.35f, 0.75f, 1f));
+            AssetDatabase.CreateAsset(material, path);
+        }
+        GameObject glow = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        glow.name = name;
+        glow.transform.SetParent(parent, false);
+        glow.transform.position = position;
+        glow.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+        glow.transform.localScale = Vector3.one * (ChoicePortalDiameter * 1.5f);
+        Object.DestroyImmediate(glow.GetComponent<Collider>());
+        MeshRenderer renderer = glow.GetComponent<MeshRenderer>();
+        renderer.sharedMaterial = material;
+        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+    }
+
+    // 유닛 발밑 빛 고리 — 평소 파랑, 그 칸 포탈이 지급하면 1.5초 분홍(BoothRing). 재질은 Resources/Effects/Skill_ring_magic(틴트 속성).
+    static void BuildBoothRing(Transform parent, string name, Vector3 position, UnitPortal portal, BoothGeo g)
+    {
+        Material ringMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Resources/Effects/Skill_ring_magic.mat");
+        if (ringMaterial == null || portal == null) return;
+        GameObject ring = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        ring.name = name;
+        ring.transform.SetParent(parent, false);
+        ring.transform.position = position;
+        ring.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+        ring.transform.localScale = Vector3.one * (g.xUnit * 0.5f);   // 지름 ≈ 칸 폭의 22% — 유닛 발밑
+        Object.DestroyImmediate(ring.GetComponent<Collider>());
+        MeshRenderer renderer = ring.GetComponent<MeshRenderer>();
+        renderer.sharedMaterial = ringMaterial;
+        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        ring.AddComponent<BoothRing>().Bind(portal, renderer);
+    }
+
     static void BuildBoothRow(Transform parent, float xLeft, float xRight,
                               float portalZ, float step, int count)
     {
@@ -5185,20 +5296,11 @@ public static class MapGenerator
             new Vector3((xLeft + xRight) * 0.5f, y, backZ),
             new Vector3(xRight - xLeft + BoothWallThickness, BoothWallHeight, BoothWallThickness));
 
-        // 칸막이는 부스 사이마다 한 장씩, 양 끝까지 포함해 count + 1장.
+        // 칸막이는 부스 사이마다 한 장씩, 양 끝까지 포함해 count + 1장. 10-20: 칸이 섬 폭을 꽉 채우므로 칸막이는 x0 + step×j(양 끝 = 섬 가장자리).
         for (int i = 0; i <= count; i++)
             BuildWall(parent, $"부스_칸막이{i}",
-                new Vector3(xLeft + step * (i + 0.5f), y, midZ),
+                new Vector3(xLeft + step * i, y, midZ),
                 new Vector3(BoothWallThickness, BoothWallHeight, BoothDepth + BoothWallThickness));
-
-        // 맨 바깥 칸막이와 섬 가장자리 사이에도 틈이 남는다. 그 두 곳을 막는다.
-        float edgeDepth = BoothDepth + BoothWallThickness;
-        BuildWall(parent, "부스_왼끝벽",
-            new Vector3((xLeft + (xLeft + step * 0.5f)) * 0.5f, y, midZ),
-            new Vector3(step * 0.5f, BoothWallHeight, edgeDepth));
-        BuildWall(parent, "부스_오른끝벽",
-            new Vector3(((xLeft + step * (count + 0.5f)) + xRight) * 0.5f, y, midZ),
-            new Vector3(xRight - (xLeft + step * (count + 0.5f)), BoothWallHeight, edgeDepth));
     }
 
     // 레인 사이 십자 벽 윗면(상자 윗면 y = IslandTop + WallHeight)에 NavMesh가 구워져 있었다(10-07 실측 56칸) — 레인에서는 닿지 않는 고립 섬이지만
@@ -5244,6 +5346,13 @@ public static class MapGenerator
         wall.transform.localScale = scale;
         Paint(wall, "rock", scale.x, scale.z);
         // 콜라이더는 남긴다 — 실제로 막히는 벽이라야 유닛이 부스 사이로 새지 않는다.
+        if (name.StartsWith("부스_") || name == "흔함구역_아래벽")
+        {
+            // 10-20 선택 위습 구역은 blender 정식 부스·띠벽 모델이 겉모습이다(BuildBoothDecor·BuildSelectWispBorder) — 상자는 막는 일(콜라이더)만 한다.
+            Object.DestroyImmediate(wall.GetComponent<MeshRenderer>());
+            Object.DestroyImmediate(wall.GetComponent<MeshFilter>());
+            return;
+        }
         if (name.StartsWith("레인간"))
         {
             // 레인 사이 벽은 돌담 조각 대신 BuildInterLaneHills의 솟은 대지가 겉모습이다 — 상자는 렌더러만 뗀다.

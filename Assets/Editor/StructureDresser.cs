@@ -360,6 +360,56 @@ public static class StructureDresser
         circle.AddComponent<MagicCircleSpin>().SetRings(clockwise.ToArray(), counterClockwise.ToArray());
     }
 
+    // ───────────────────────── 선택 위습 구역(10-20) ─────────────────────────
+
+    /// <summary>축마다 따로 키우는 모델 세우기(부스 깊이를 줄이려고 z만 다르게). 원점은 바닥 가운데, 콜라이더는 지운다.</summary>
+    public static GameObject PlaceStretched(Transform parent, string model, string name, Vector3 ground, float yaw, Vector3 scale)
+    {
+        GameObject asset = Load(model);
+        if (asset == null) return null;
+        // FBX 뿌리는 축 변환 회전이 있어 뿌리 배율을 직접 곱하면 축이 바뀐다 — 회전 없는 빈 부모가 월드 축 배율을 받고 모델은 그 안에 그대로 둔다.
+        GameObject holder = new GameObject(name);
+        holder.transform.SetParent(parent, false);
+        holder.transform.position = ground;
+        holder.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+        holder.transform.localScale = scale;
+        GameObject instance = (GameObject)PrefabUtility.InstantiatePrefab(asset, holder.transform);
+        instance.transform.localPosition = Vector3.zero;
+        foreach (Collider collider in instance.GetComponentsInChildren<Collider>(true))
+            Object.DestroyImmediate(collider);
+        placed.Add(model);
+        return holder;
+    }
+
+    static readonly Color BoothPortalPink = new Color(1f, 0.3f, 0.75f, 1f);
+
+    /// <summary>선택 위습 부스 앞 마법진을 분홍 계열로 — 보랏빛 텍스처에 분홍 틴트를 곱한 재질 사본(원본 재질은 그대로).</summary>
+    public static void TintBoothPortalPink(GameObject circle)
+    {
+        if (circle == null) return;
+        const string dir = "Assets/Art/Structures/Materials";
+        if (!AssetDatabase.IsValidFolder(dir)) AssetDatabase.CreateFolder("Assets/Art/Structures", "Materials");
+        foreach (Renderer renderer in circle.GetComponentsInChildren<Renderer>(true))
+        {
+            Material[] mats = renderer.sharedMaterials;
+            for (int i = 0; i < mats.Length; i++)
+            {
+                if (mats[i] == null) continue;
+                string path = $"{dir}/선택위습_분홍_{mats[i].name}.mat";
+                Material copy = AssetDatabase.LoadAssetAtPath<Material>(path);
+                if (copy == null)
+                {
+                    copy = new Material(mats[i]);
+                    foreach (string property in new[] { "_BaseColor", "_Color", "_TintColor", "_Tint" })
+                        if (copy.HasProperty(property)) copy.SetColor(property, copy.GetColor(property) * BoothPortalPink);
+                    AssetDatabase.CreateAsset(copy, path);
+                }
+                mats[i] = copy;
+            }
+            renderer.sharedMaterials = mats;
+        }
+    }
+
     /// <summary>뽑기 섬 위의 위습 포탈(UnitPortal·ResourcePortal) 전부에 작은 뽑기 아치.</summary>
     public static int DressGachaPortals(Transform root)
     {
@@ -375,7 +425,11 @@ public static class StructureDresser
             if (!area.Contains(new Vector2(disc.transform.position.x, disc.transform.position.z))) continue;
 
             // 포탈이 수십 개라 광원은 안 단다 — 빛 알갱이만.
-            if (DressPortal(disc, "포탈_마법진_뽑기", GachaGlow, light: false)) dressed++;
+            if (DressPortal(disc, "포탈_마법진_뽑기", GachaGlow, light: false))
+            {
+                dressed++;
+                if (disc.name.StartsWith("흔함선택_")) TintBoothPortalPink(GameObject.Find(disc.name + "_마법진"));   // 선택 위습 부스 앞 마법진은 분홍(사진)
+            }
         }
         return dressed;
     }

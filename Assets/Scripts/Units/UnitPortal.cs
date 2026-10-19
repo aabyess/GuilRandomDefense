@@ -6,6 +6,9 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
 {
+    /// <summary>이 포탈이 위습을 받아 유닛을 지급한 직후(서버). 부스 발밑 고리 번쩍임(BoothRing) 같은 겉모습이 듣는다.</summary>
+    public static event System.Action<UnitPortal> Granted;
+
     // 비어 있으면 모든 등급 허용.
     [SerializeField] List<UnitGrade> acceptedGrades = new List<UnitGrade>();
 
@@ -288,6 +291,7 @@ public class UnitPortal : MonoBehaviour, ISerializationCallbackReceiver
 
         // Spawn이 인벤토리 등록까지 한다 — 여기서 따로 Add하면 필드에 없는 유닛이 인벤토리에 생긴다.
         unitSpawner.Spawn(reward, ResolveSpawnPosition(ownerId, reward, isBonusReward), ownerId);
+        Granted?.Invoke(this);
         GameSound.PlayFor(ownerId, GameSoundId.Gacha);   // 뽑기음(10-06) — 위습을 넣은 사람에게만. 한꺼번에 여럿 넣으면 0.1초 간격 제한에 걸러진다
     }
 }
