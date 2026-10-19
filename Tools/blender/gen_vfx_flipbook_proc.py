@@ -73,5 +73,5 @@ for kind in kinds:
     for i in range(N):
         fr = ring_frame(i / (N - 1), 11) if kind == "ring" else arc_frame(i, 5)
         r, c = divmod(i, G); sheet[r * CELL:(r + 1) * CELL, c * CELL:(c + 1) * CELL] = fr
-    img = Image.fromarray((np.clip(sheet, 0, 1) * 255 + 0.5).astype(np.uint8), "RGBA"); p = f"{OUT}/flipbook_{ {'ring':'impact_ring','arc':'electric_arc'}[kind] }_{G}x{G}.png"
+    img = Image.fromarray((np.clip(sheet, 0, 1) * 255 + 0.5).astype(np.uint8), "RGBA"); p = f"{OUT}/flipbook_{ {'ring':'impact_ring','arc':'electric_arc'}[kind] }_{G}x{G}{'' if CELL == 512 else '_' + str(CELL * G)}.png"
     img.save(p); print("OK", p)
