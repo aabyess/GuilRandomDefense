@@ -15,10 +15,13 @@ public class UnitFacing : MonoBehaviour
     const float TurnDegreesPerSecond = 720f;   // 워크3처럼 빠르게
     const float MovingSpeedSqr = 0.25f;        // 이보다 빠르면 이동 중으로 본다(에이전트 회전에 맡김)
 
+    // UnitCombat은 UnitSpawner가 소환 뒤에 붙일 수 있어 Awake에선 못 잡는다 — 처음 찾은 뒤에만 잡아 둔다(없으면 계속 찾는다).
+    UnitCombat combat;
+
     void Update()
     {
         if (!GameAuthority.IsServer) return;
-        if (!TryGetComponent(out UnitCombat combat)) return;
+        if (combat == null && !TryGetComponent(out combat)) return;
         EnemyDummy target = combat.CurrentTarget;
         if (target == null) return;
 

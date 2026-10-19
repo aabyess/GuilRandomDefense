@@ -25,6 +25,15 @@ public class SkinClipHider : MonoBehaviour
 
     void Awake() { animator = GetComponentInChildren<Animator>(); }
 
+    // 한 이름 조회(클립 도중 알파 변화가 매 프레임 부른다) — 캐시에 있으면 배열을 새로 안 만든다.
+    readonly string[] oneName = new string[1];
+    Renderer[] FindOne(string name)
+    {
+        if (cache.TryGetValue(name, out Renderer[] hit)) return hit;
+        oneName[0] = name;
+        return Find(oneName);
+    }
+
     Renderer[] Find(string[] names)
     {
         var list = new List<Renderer>();
@@ -79,7 +88,7 @@ public class SkinClipHider : MonoBehaviour
             if (tm.clip != clip) continue;
             bool vis = tm.startVisible;
             for (int i = 0; i < tm.times.Length; i++) { if (tm.times[i] <= t) vis = tm.visible[i]; else break; }
-            foreach (Renderer r in Find(new[] { tm.mesh })) { r.enabled = vis; (touched ??= new List<Renderer>()).Add(r); }
+            foreach (Renderer r in FindOne(tm.mesh)) { r.enabled = vis; (touched ??= new List<Renderer>()).Add(r); }
         }
         if (touched != null) timedTouched = touched.ToArray();
     }

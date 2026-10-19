@@ -1423,12 +1423,13 @@ public class UnitAttacker : MonoBehaviour
         if (skill == null || source == null) return;
         foreach (GrantedSkill g in grantedSkills) if (g.source == source && g.skill == skill) return;
         grantedSkills.Add(new GrantedSkill { source = source, skill = skill });
+        grantedVersion++;
     }
 
     public void RemoveGrantedSkill(UnitAttacker source, SkillData skill)
     {
         for (int i = 0; i < grantedSkills.Count; i++)
-            if (grantedSkills[i].source == source && grantedSkills[i].skill == skill) { grantedSkills.RemoveAt(i); return; }
+            if (grantedSkills[i].source == source && grantedSkills[i].skill == skill) { grantedSkills.RemoveAt(i); grantedVersion++; return; }
     }
 
     // 06번① 완료: 스킬승급형 트레잇(UnitTraitData.skillLevelUnlockIndex)이 UnitUpgrades에
@@ -1589,20 +1590,87 @@ public class UnitAttacker : MonoBehaviour
 
     // CooldownAutoCast·Aura 전용 — OnHitChance·OnHitCount는 평타가 실제로 맞았을 때만
     // 판정해야 해서 Update()의 공격 성공 분기에서 TryCastOnHitSkill로 따로 부른다.
-    void UpdateSkillCooldown()
-    {
-        UnitData unitData = identity != null ? identity.Data : null;
-        if (unitData == null) return;
+    // 쿨다운·오라 스킬 목록 캐시 — 예전엔 매 프레임 스킬마다 ResolveSkillAt(특성 목록 순회)·CurrentSkillLevel(특성 목록 순회)을 다시 했다.
+    // 다음이 바뀔 때만 다시 만든다: 유닛 데이터 · 강화/특성 버전(UnitUpgrades.Version) · 빌린 스킬 목록. 최윤식 levelUpBuffId 스킬은 버프로 레벨이 바뀌어 매번 다시 본다.
+    /// <summary>탐침(CooldownEquivProbe)용 스위치 — false면 캐시를 매 프레임 버리고 다시 만든다(옛 경로와 비교).</summary>
+    public static bool UseCooldownCache = true;
 
+    /// <summary>탐침용: 쿨다운·오라 스킬별 (스킬 이름, 남은 쿨타임·상태 없으면 −1).</summary>
+    public List<(string name, float remaining)> DebugCooldowns()
+    {
+        var result = new List<(string, float)>();
+        UnitData d = identity != null ? identity.Data : null;
+        if (d == null) return result;
+        RefreshCooldownSkillCache(d);
+        foreach (CdSkill cs in cdSkills)
+            result.Add((cs.skill.name, cs.state != null ? cs.state.cooldownTimer : (GetRuntimeStateIfExists(cs.skill)?.cooldownTimer ?? -1f)));
+        return result;
+    }
+
+    /// <summary>탐침용: 캐시 목록이 처음부터 다시 푼 결과(스킬·레벨)와 같은가. levelUpBuffId 스킬은 매번 다시 읽으니 건너뛴다.</summary>
+    public bool DebugCacheMatchesFresh(out string detail)
+    {
+        detail = "";
+        UnitData d = identity != null ? identity.Data : null;
+        if (d == null) { detail = "데이터없음"; return true; }
+        RefreshCooldownSkillCache(d);
+        var fresh = new List<(SkillData, SkillLevel)>();
+        int count = EffectiveSkillCount(d);
+        for (int i = 0; i < count; i++)
+        {
+            SkillData skill = ResolveSkillAt(d, i);
+            if (skill == null) continue;
+            if (skill.triggerType != SkillTriggerType.CooldownAutoCast && skill.triggerType != SkillTriggerType.Aura) continue;
+            fresh.Add((skill, CurrentSkillLevel(skill)));
+        }
+        if (fresh.Count != cdSkills.Count) { detail = $"개수 {cdSkills.Count}≠{fresh.Count}"; return false; }
+        for (int i = 0; i < fresh.Count; i++)
+        {
+            if (cdSkills[i].skill != fresh[i].Item1) { detail = $"#{i} 스킬 {cdSkills[i].skill.name}≠{fresh[i].Item1.name}"; return false; }
+            if (!cdSkills[i].dynamicLevel && cdSkills[i].level != fresh[i].Item2) { detail = $"#{i} {fresh[i].Item1.name} 레벨 다름"; return false; }
+        }
+        detail = $"{fresh.Count}개 일치";
+        return true;
+    }
+
+    class CdSkill { public SkillData skill; public SkillLevel level; public bool dynamicLevel; public SkillRuntimeState state; }
+    readonly List<CdSkill> cdSkills = new List<CdSkill>();
+    UnitData cdData;
+    int cdUpgradesVersion = -2, cdGrantedVersion = -1;
+    int grantedVersion;
+
+    void RefreshCooldownSkillCache(UnitData unitData)
+    {
+        UnitUpgrades up = ResolveUpgrades();
+        int version = up != null ? up.Version : -1;
+        if (cdData == unitData && cdUpgradesVersion == version && cdGrantedVersion == grantedVersion) return;
+        cdData = unitData; cdUpgradesVersion = version; cdGrantedVersion = grantedVersion;
+        cdSkills.Clear();
         int count = EffectiveSkillCount(unitData);
         for (int i = 0; i < count; i++)
         {
             SkillData skill = ResolveSkillAt(unitData, i);
             if (skill == null) continue;
-            if (skill.triggerType != SkillTriggerType.CooldownAutoCast && skill.triggerType != SkillTriggerType.Aura)
-                continue;
+            if (skill.triggerType != SkillTriggerType.CooldownAutoCast && skill.triggerType != SkillTriggerType.Aura) continue;
+            cdSkills.Add(new CdSkill { skill = skill, level = CurrentSkillLevel(skill), dynamicLevel = !string.IsNullOrEmpty(skill.levelUpBuffId), state = GetRuntimeStateIfExists(skill) });
+        }
+    }
 
-            SkillLevel level = CurrentSkillLevel(skill);
+    SkillRuntimeState GetRuntimeStateIfExists(SkillData skill) =>
+        skillRuntimeStates != null && skillRuntimeStates.TryGetValue(skill, out SkillRuntimeState st) ? st : null;
+
+    void UpdateSkillCooldown()
+    {
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData == null) return;
+
+        if (!UseCooldownCache) cdData = null;   // 탐침 「캐시 끔」 — 매 프레임 처음부터 다시 푼다(옛 경로와 같은 결과여야 한다)
+        RefreshCooldownSkillCache(unitData);
+        for (int i = 0; i < cdSkills.Count; i++)
+        {
+            CdSkill cs = cdSkills[i];
+            SkillData skill = cs.skill;
+            SkillLevel level = cs.dynamicLevel ? CurrentSkillLevel(skill) : cs.level;
             if (level == null) { SkillTelemetry.Gate(unitData, skill, "레벨없음"); continue; }
 
             // 06번① 순위배정으로 13기의 UnitData.skill이 null이 아니게 됐지만 levels의
@@ -1611,7 +1679,7 @@ public class UnitAttacker : MonoBehaviour
             // 돌고 있다"가 된다(PM 지시, 2026-09-05).
             if (level.effects == null || level.effects.Count == 0) { SkillTelemetry.Gate(unitData, skill, "효과0(쿨·오라)"); continue; }
 
-            SkillRuntimeState state = GetRuntimeState(skill);
+            SkillRuntimeState state = cs.state ??= GetRuntimeState(skill);
 
             // ⚠️ 2026-09-06 근본수정(PM 지시) — Aura는 CooldownAutoCast와 다르게
             // "재시전"이 아니라 "계속 켜져 있는 지속효과"다. 예전엔 둘을 같은 코드로
