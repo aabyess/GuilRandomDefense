@@ -1592,6 +1592,47 @@ public class UnitAttacker : MonoBehaviour
     // 판정해야 해서 Update()의 공격 성공 분기에서 TryCastOnHitSkill로 따로 부른다.
     // 쿨다운·오라 스킬 목록 캐시 — 예전엔 매 프레임 스킬마다 ResolveSkillAt(특성 목록 순회)·CurrentSkillLevel(특성 목록 순회)을 다시 했다.
     // 다음이 바뀔 때만 다시 만든다: 유닛 데이터 · 강화/특성 버전(UnitUpgrades.Version) · 빌린 스킬 목록. 최윤식 levelUpBuffId 스킬은 버프로 레벨이 바뀌어 매번 다시 본다.
+    /// <summary>탐침(CooldownEquivProbe)용 스위치 — false면 캐시를 매 프레임 버리고 다시 만든다(옛 경로와 비교).</summary>
+    public static bool UseCooldownCache = true;
+
+    /// <summary>탐침용: 쿨다운·오라 스킬별 (스킬 이름, 남은 쿨타임·상태 없으면 −1).</summary>
+    public List<(string name, float remaining)> DebugCooldowns()
+    {
+        var result = new List<(string, float)>();
+        UnitData d = identity != null ? identity.Data : null;
+        if (d == null) return result;
+        RefreshCooldownSkillCache(d);
+        foreach (CdSkill cs in cdSkills)
+            result.Add((cs.skill.name, cs.state != null ? cs.state.cooldownTimer : (GetRuntimeStateIfExists(cs.skill)?.cooldownTimer ?? -1f)));
+        return result;
+    }
+
+    /// <summary>탐침용: 캐시 목록이 처음부터 다시 푼 결과(스킬·레벨)와 같은가. levelUpBuffId 스킬은 매번 다시 읽으니 건너뛴다.</summary>
+    public bool DebugCacheMatchesFresh(out string detail)
+    {
+        detail = "";
+        UnitData d = identity != null ? identity.Data : null;
+        if (d == null) { detail = "데이터없음"; return true; }
+        RefreshCooldownSkillCache(d);
+        var fresh = new List<(SkillData, SkillLevel)>();
+        int count = EffectiveSkillCount(d);
+        for (int i = 0; i < count; i++)
+        {
+            SkillData skill = ResolveSkillAt(d, i);
+            if (skill == null) continue;
+            if (skill.triggerType != SkillTriggerType.CooldownAutoCast && skill.triggerType != SkillTriggerType.Aura) continue;
+            fresh.Add((skill, CurrentSkillLevel(skill)));
+        }
+        if (fresh.Count != cdSkills.Count) { detail = $"개수 {cdSkills.Count}≠{fresh.Count}"; return false; }
+        for (int i = 0; i < fresh.Count; i++)
+        {
+            if (cdSkills[i].skill != fresh[i].Item1) { detail = $"#{i} 스킬 {cdSkills[i].skill.name}≠{fresh[i].Item1.name}"; return false; }
+            if (!cdSkills[i].dynamicLevel && cdSkills[i].level != fresh[i].Item2) { detail = $"#{i} {fresh[i].Item1.name} 레벨 다름"; return false; }
+        }
+        detail = $"{fresh.Count}개 일치";
+        return true;
+    }
+
     class CdSkill { public SkillData skill; public SkillLevel level; public bool dynamicLevel; public SkillRuntimeState state; }
     readonly List<CdSkill> cdSkills = new List<CdSkill>();
     UnitData cdData;
@@ -1623,6 +1664,7 @@ public class UnitAttacker : MonoBehaviour
         UnitData unitData = identity != null ? identity.Data : null;
         if (unitData == null) return;
 
+        if (!UseCooldownCache) cdData = null;   // 탐침 「캐시 끔」 — 매 프레임 처음부터 다시 푼다(옛 경로와 같은 결과여야 한다)
         RefreshCooldownSkillCache(unitData);
         for (int i = 0; i < cdSkills.Count; i++)
         {
