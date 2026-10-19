@@ -146,12 +146,6 @@ public class SideBossBarLayer : MonoBehaviour
             if (cam == null) return;
         }
 
-        for (int i = 0; i < pool.Count; i++)
-        {
-            if (pool[i].root.gameObject.activeSelf)
-                pool[i].root.gameObject.SetActive(false);
-        }
-
         int used = 0;
 
         foreach (SideBossEncounter boss in SideBossEncounter.Active)
@@ -166,12 +160,12 @@ public class SideBossBarLayer : MonoBehaviour
             if (screenPos.x < 0f || screenPos.x > Screen.width || screenPos.y < 0f || screenPos.y > Screen.height) continue;
 
             Group group = GetOrCreateGroup(used);
-            group.root.gameObject.SetActive(true);
+            if (!group.root.gameObject.activeSelf) group.root.gameObject.SetActive(true);
             group.root.position = new Vector3(screenPos.x, screenPos.y, 0f);
 
             group.castFill.fillAmount = Mathf.Clamp01(boss.CastProgress / 100f);
             group.stunFill.fillAmount = Mathf.Clamp01(boss.StunGauge / 100f);
-            group.invulnLabel.gameObject.SetActive(boss.IsInvulnerable);
+            if (group.invulnLabel.gameObject.activeSelf != boss.IsInvulnerable) group.invulnLabel.gameObject.SetActive(boss.IsInvulnerable);
 
             used++;
         }
@@ -190,12 +184,18 @@ public class SideBossBarLayer : MonoBehaviour
             if (screenPos.x < 0f || screenPos.x > Screen.width || screenPos.y < 0f || screenPos.y > Screen.height) continue;
 
             Group group = GetOrCreateGroup(used);
-            group.root.gameObject.SetActive(true);
+            if (!group.root.gameObject.activeSelf) group.root.gameObject.SetActive(true);
             group.root.position = new Vector3(screenPos.x, screenPos.y, 0f);
             group.castFill.fillAmount = Mathf.Clamp01(replica.SideCast / 100f);
             group.stunFill.fillAmount = Mathf.Clamp01(replica.SideStun / 100f);
-            group.invulnLabel.gameObject.SetActive(replica.SideInvuln);
+            if (group.invulnLabel.gameObject.activeSelf != replica.SideInvuln) group.invulnLabel.gameObject.SetActive(replica.SideInvuln);
             used++;
+        }
+
+        for (int i = used; i < pool.Count; i++)
+        {
+            if (pool[i].root.gameObject.activeSelf)
+                pool[i].root.gameObject.SetActive(false);
         }
     }
 

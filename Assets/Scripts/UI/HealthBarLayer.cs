@@ -119,12 +119,6 @@ public class HealthBarLayer : MonoBehaviour
         // 먼저 전부 끄고 필요한 것만 켠다.
         // "남는 것만 나중에 끄는" 방식은 중간에 하나라도 어긋나면 바가 화면에 남고,
         // 그게 어디서 어긋났는지 추적하기 어렵다. 64개 SetActive는 그 위험을 감수할 만큼 비싸지 않다.
-        for (int i = 0; i < pool.Count; i++)
-        {
-            if (pool[i].root.gameObject.activeSelf)
-                pool[i].root.gameObject.SetActive(false);
-        }
-
         int used = 0;
 
         foreach (EnemyDummy enemy in EnemyDummy.Active)
@@ -142,7 +136,7 @@ public class HealthBarLayer : MonoBehaviour
             if (screenPos.x < 0f || screenPos.x > Screen.width || screenPos.y < 0f || screenPos.y > Screen.height) continue;
 
             Bar bar = GetOrCreateBar(used);
-            bar.root.gameObject.SetActive(true);
+            if (!bar.root.gameObject.activeSelf) bar.root.gameObject.SetActive(true);   // 이미 켜진 바를 껐다 켜면 캔버스가 매 프레임 더러워진다(10-20 perf)
             // WorldToScreenPoint의 z는 카메라까지의 거리다. Overlay 캔버스에서는 화면 좌표만 쓰므로
             // 그대로 넣으면 바가 캔버스 평면 밖으로 나간다.
             bar.root.position = new Vector3(screenPos.x, screenPos.y, 0f);
@@ -152,6 +146,13 @@ public class HealthBarLayer : MonoBehaviour
             bar.fill.color = ColorForRatio(ratio);
 
             used++;
+        }
+
+        // 이번 프레임에 안 쓴 바만 끈다 — 그 뒤에 남는 바가 없다는 건 이 루프가 보장한다.
+        for (int i = used; i < pool.Count; i++)
+        {
+            if (pool[i].root.gameObject.activeSelf)
+                pool[i].root.gameObject.SetActive(false);
         }
 
         if (logCounts && Time.unscaledTime >= nextLogTime)
