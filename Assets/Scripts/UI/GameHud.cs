@@ -1940,6 +1940,9 @@ public class GameHud : MonoBehaviour
         return single.TryGetComponent(out UnitAttacker attacker) ? attacker : null;
     }
 
+    readonly int[] talentTextKey = { -1, -1, -1, -1, -1, -1, -1, -1 };
+    readonly string[] talentNameText = new string[8], talentHotkeyText = new string[8];
+
     void RefreshTalentButtons()
     {
         if (currentShop as Object != null) { talentSlotsShown = false; return; }   // 상점을 고른 동안 이 칸들은 상점 칸이다
@@ -1953,8 +1956,10 @@ public class GameHud : MonoBehaviour
             if (slot < 0) continue;
             int have = attacker.GetTalent(k), max = UnitAttacker.TalentMaxOf(k);
             bool open = have < max && points > 0;
-            unitCommandSlotNames[slot].text = $"{UnitAttacker.TalentNames[k]}\n{have}/{max}";
-            unitCommandSlotHotkeys[slot].text = $"포인트 {points}";
+            int talentKey = have * 10000 + max * 100 + points;   // 값이 같으면 같은 문자열 참조를 다시 넣는다(프레임마다 할당 안 함, 10-20 perf)
+            if (talentKey != talentTextKey[k]) { talentTextKey[k] = talentKey; talentNameText[k] = $"{UnitAttacker.TalentNames[k]}\n{have}/{max}"; talentHotkeyText[k] = $"포인트 {points}"; }
+            unitCommandSlotNames[slot].text = talentNameText[k];
+            unitCommandSlotHotkeys[slot].text = talentHotkeyText[k];
             Color color = UnitCommandDefaultColor;
             color.a = open ? 1f : 0.35f;
             SetCommandSlotColor(slot, color);
@@ -1994,6 +1999,12 @@ public class GameHud : MonoBehaviour
     }
     readonly System.Collections.Generic.Dictionary<int, float> bombReadyAt = new System.Collections.Generic.Dictionary<int, float>();
 
+    int bombTextWood = -1; string bombText;
+    string totoText;
+    int enhanceTextKey = -1; string enhanceText;
+    int boostTextCount = -1; string boostText;
+    int rerollTextKey = -1; string rerollNameText, rerollLeftText;
+
     void RefreshBombButton()
     {
         if (currentShop as Object != null || !GambleBoostCandidate()) { bombSlotShown = false; return; }   // 칸 비우기는 ReflowFlexSlots
@@ -2002,7 +2013,8 @@ public class GameHud : MonoBehaviour
         if (slot < 0) return;
         PlayerContext context = PlayerContext.Get(LocalPlayer.LocalPlayerId);
         int wood = context != null && context.ResourceWallet != null ? context.ResourceWallet.Get(ResourceType.Wood) : 0;
-        unitCommandSlotNames[slot].text = $"폭탄제조\n목재 {wood}";
+        if (wood != bombTextWood) { bombTextWood = wood; bombText = $"폭탄제조\n목재 {wood}"; }
+        unitCommandSlotNames[slot].text = bombText;
         unitCommandSlotHotkeys[slot].text = "";
         Color color = UnitCommandDefaultColor;
         color.a = wood >= BombWoodCost ? 1f : 0.35f;
@@ -2092,7 +2104,7 @@ public class GameHud : MonoBehaviour
         if (slot < 0) return;
         PlayerContext context = PlayerContext.Get(LocalPlayer.LocalPlayerId);
         bool enough = context != null && context.GoldWallet != null && context.GoldWallet.Gold >= TotoCost;
-        unitCommandSlotNames[slot].text = $"토토\n{TotoCost:N0}엔";
+        unitCommandSlotNames[slot].text = totoText ??= $"토토\n{TotoCost:N0}엔";
         unitCommandSlotHotkeys[slot].text = "";
         Color color = UnitCommandDefaultColor;
         color.a = enough ? 1f : 0.35f;
@@ -2171,7 +2183,9 @@ public class GameHud : MonoBehaviour
         int slot = FlexSlotOf(FlexKind.Enhance);
         if (slot < 0) return;
         bool done = level >= data.enhanceMaxLevel;
-        unitCommandSlotNames[slot].text = $"강화\n{level}/{data.enhanceMaxLevel}";
+        int eKey = level * 1000 + data.enhanceMaxLevel;
+        if (eKey != enhanceTextKey) { enhanceTextKey = eKey; enhanceText = $"강화\n{level}/{data.enhanceMaxLevel}"; }
+        unitCommandSlotNames[slot].text = enhanceText;
         unitCommandSlotHotkeys[slot].text = "";
         Color color = UnitCommandDefaultColor;
         color.a = done ? 0.35f : 1f;
@@ -2217,7 +2231,8 @@ public class GameHud : MonoBehaviour
         PlayerContext context = PlayerContext.Get(LocalPlayer.LocalPlayerId);
         int count = context != null ? context.GambleBoostCount : 0;
         bool done = count >= PlayerContext.GambleBoostMax;
-        unitCommandSlotNames[slot].text = $"웅교교주\n{count}/{PlayerContext.GambleBoostMax}";
+        if (count != boostTextCount) { boostTextCount = count; boostText = $"웅교교주\n{count}/{PlayerContext.GambleBoostMax}"; }
+        unitCommandSlotNames[slot].text = boostText;
         unitCommandSlotHotkeys[slot].text = "";
         Color color = UnitCommandDefaultColor;
         color.a = done ? 0.35f : 1f;
@@ -2763,8 +2778,10 @@ public class GameHud : MonoBehaviour
         int left = state != null ? Mathf.Max(0, state.Limit - state.AttemptsUsed) : 0;
         int wood = context != null && context.ResourceWallet != null ? context.ResourceWallet.Get(ResourceType.Wood) : 0;
         bool enough = wood >= reroll.WoodCost;
-        unitCommandSlotNames[slot].text = $"리롤\n목재 {reroll.WoodCost}";
-        unitCommandSlotHotkeys[slot].text = $"{left}회";
+        int rKey = reroll.WoodCost * 1000 + left;
+        if (rKey != rerollTextKey) { rerollTextKey = rKey; rerollNameText = $"리롤\n목재 {reroll.WoodCost}"; rerollLeftText = $"{left}회"; }
+        unitCommandSlotNames[slot].text = rerollNameText;
+        unitCommandSlotHotkeys[slot].text = rerollLeftText;
         Color color = UnitCommandDefaultColor;
         color.a = enough ? 1f : 0.35f;
         SetCommandSlotColor(slot, color);
