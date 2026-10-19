@@ -1732,28 +1732,36 @@ public class NetLauncher : MonoBehaviour
         }
     }
 
-    // -mpTestFx 초 — 이펙트 안 B(10-19) 두 창 확인: 방장이 레인 적 셋에 ① 스턴 ② 이감 ③ 방깎+마법 적중을 건다(특별함 시전자 게이트). 양쪽 창 카메라는 첫 적으로. 사진은 -mpShotAt으로.
+    // -mpTestFx 초 — 이펙트 안 B(10-19) 두 창 확인: 초 뒤부터 레인 적이 나올 때까지(최대 90초) 기다렸다가, 방장이 NetEntity 번호순 앞 적 셋에 ① 스턴 ② 이감 ③ 방깎+마법 적중을 건다(특별함 시전자 게이트).
+    // 양쪽 창 카메라는 같은 첫 적으로(친구 창은 거울 겉모습). 사진은 -mpShotAt으로 이 뒤 몇 초에.
     IEnumerator TestFxAfter(float seconds)
     {
         yield return new WaitForSecondsRealtime(seconds);
-        var targets = new System.Collections.Generic.List<EnemyDummy>();
-        foreach (EnemyDummy e in new System.Collections.Generic.List<EnemyDummy>(EnemyDummy.Active))
-            if (e != null && !e.IsBoss && e.LaneIndex >= 0 && targets.Count < 3) targets.Add(e);
-        if (targets.Count == 0) { Debug.LogWarning("[FX테스트] 레인 적이 없다"); yield break; }
-        Vector3 at = targets[0].transform.position;
+        string side = GameAuthority.IsServer ? "방장" : "친구";
+        System.Collections.Generic.List<NetEntity> list = null;
+        for (float waited = 0f; waited < 90f; waited += 0.5f)
+        {
+            list = FindObjectsByType<NetEntity>(FindObjectsSortMode.None)
+                .Where(e => e != null && e.Object != null && e.Object.IsValid && e.EntityKind == NetEntityKind.Enemy
+                            && (GameAuthority.IsServer ? e.Real : e.Visual) != null)
+                .OrderBy(e => e.Object.Id.Raw).Take(3).ToList();
+            if (list.Count >= 3) break;
+            yield return new WaitForSecondsRealtime(0.5f);
+        }
+        if (list == null || list.Count == 0) { Debug.LogWarning($"[FX테스트] 적을 못 찾음({side})"); yield break; }
+        GameObject first = GameAuthority.IsServer ? list[0].Real : list[0].Visual;
         RtsCameraController cam = FindFirstObjectByType<RtsCameraController>();
-        if (cam != null) cam.MoveTo(at);
+        if (cam != null && first != null) cam.MoveTo(first.transform.position);
         if (GameAuthority.IsServer)
         {
             UnitData special = catalog != null ? catalog.units.FirstOrDefault(u => u != null && u.grade == UnitGrade.Special) : null;
             bool before = SkillVfx.BeginCast(special);
-            targets[0].AddFreeze();
-            if (targets.Count > 1) { targets[1].TakeDamage(1f, DamageType.AD, AttackType.Normal, 0, 0f, true); targets[1].AddSlow(0.5f); }
-            if (targets.Count > 2) { targets[2].TakeDamage(1f, DamageType.AP, AttackType.Spells, 0, 0f, true); targets[2].AddArmorShred(1f); }
+            if (list[0].Real.TryGetComponent(out EnemyDummy e0)) e0.AddFreeze();
+            if (list.Count > 1 && list[1].Real.TryGetComponent(out EnemyDummy e1)) { e1.TakeDamage(1f, DamageType.AD, AttackType.Normal, 0, 0f, true); e1.AddSlow(0.5f); }
+            if (list.Count > 2 && list[2].Real.TryGetComponent(out EnemyDummy e2)) { e2.TakeDamage(1f, DamageType.AP, AttackType.Spells, 0, 0f, true); e2.AddArmorShred(1f); }
             SkillVfx.EndCast(before);
-            Debug.Log($"[FX테스트] 방장: 적 {targets.Count}기에 스턴·이감·방깎+적중");
         }
-        else Debug.Log($"[FX테스트] 친구 창: 카메라를 적으로 — 적 {targets.Count}기 보임 · 받은 이펙트 {NetGameState.ReceivedVfx}");
+        Debug.Log($"[FX테스트] {side}: 적 {list.Count}기 · 카메라 이동 · 받은 이펙트 {NetGameState.ReceivedVfx}");
     }
 
     IEnumerator QuitAfter(float seconds)
