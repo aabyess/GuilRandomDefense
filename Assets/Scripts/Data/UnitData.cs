@@ -641,6 +641,9 @@ public class UnitData : ScriptableObject
     // 솔·성탄·뻬꼼(히든)은 흔함 강화 트랙을 받는 흔함 띠 유닛이라(UnitUpgrades.TrackGradeOf) 판매도 흔함과 같은 경로·보상(3회 누적 위습 + 35% 목재)이다(사장님 10-16).
     public bool SellableGrade => !sellBlocked && UnitUpgrades.TrackGradeOf(this).Tier() <= 3 && grade != UnitGrade.RandomUnit && grade != UnitGrade.OtherWorld;
 
+    /// <summary>정보창 등급 줄용(GameVersion.ShowOriginalMatchInInfo) — 「원작: 징베」, 대응이 없으면(사장님 창작) 「원작: 없음(창작)」. 스위치가 꺼졌으면 빈 문자열.</summary>
+    public string OriginalMatchInfoLabel => !GameVersion.ShowOriginalMatchInInfo ? "" : string.IsNullOrEmpty(originalMatchName) ? "원작: 없음(창작)" : $"원작: {originalMatchName}";
+
     /// <summary>베타 표시용 「원작: 징베」 — 스위치가 꺼졌거나 대응이 없으면 빈 문자열.</summary>
     public string OriginalMatchLabel => GameVersion.BetaShowOriginalMatch && !string.IsNullOrEmpty(originalMatchName) ? $"원작: {originalMatchName}" : "";
 }

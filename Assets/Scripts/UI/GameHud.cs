@@ -5484,7 +5484,7 @@ public class GameHud : MonoBehaviour
             if (!unitStatRows.activeSelf) unitStatRows.SetActive(true);
             if (wc3NameText != null)
                 // 10-14 사장님: 하단 정보창 가운데 이름 옆에 「초월 양재모 - 초월 조로」(우리 등급·이름 - 대응 원작 등급·이름), 전 등급.
-                SetWc3Strips(true, $"<color=#{gradeColorHex}>{grade}</color> {firstPart}{secondPart}" + (data.OriginalMatchLabel.Length > 0 ? $" <b><color=#FFD27A>- {data.originalMatchName}</color></b>" : ""), $"<color=#{gradeColorHex}>{grade}{levelLabel}</color>");
+                SetWc3Strips(true, $"<color=#{gradeColorHex}>{grade}</color> {firstPart}{secondPart}" + (data.OriginalMatchLabel.Length > 0 ? $" <b><color=#FFD27A>- {data.originalMatchName}</color></b>" : ""), $"<color=#{gradeColorHex}>{grade}{levelLabel}</color>" + (data.OriginalMatchInfoLabel.Length > 0 ? $"  <color=#FFD27A>· {data.OriginalMatchInfoLabel}</color>" : ""));   // 10-20 사장님: 등급 줄에 「· 원작: ○○」(길면 띠의 자동 글자 축소)
             if (skillIconRow != null && skillIconRow.activeSelf) skillIconRow.SetActive(false);   // 10-07 스킬 아이콘은 명령 카드로 옮김(ReflowFlexSlots Passive)
             // 10-08 6·7: 막대는 유닛 게이지(현재/문턱)다 — 지갑 마나(도움소)는 여기서 뺐다. 게이지가 없으면 체력은 가득·마나 막대는 숨김.
             int lifeNow = 0, lifeMax = 0, manaNow = 0, manaMax = 0;
