@@ -22,17 +22,17 @@ public class NetLobbyUi : MonoBehaviour
     // 게임 HUD·조합 검색 서랍(RecipeSearchDrawer)과 같은 워크3 결: 돌/금 9-슬라이스 패널 · 남색 단추 · 금빛 글자/테두리 · 어두운 홈 입력창.
     // blender 시안(사장님 10-06 확정): 노을 섬 사진 배경 + 청동·돌 틀(제목 판·메뉴 틀·단추) + 금빛 글자. 그림은 Resources/UI/Lobby(LobbyArtSetup), 폰트 SongMyung(제목)·NanumMyeongjo ExtraBold(단추·본문).
     static readonly Color Backdrop = Color.black;
-    static readonly Color Card = new Color(0.14f, 0.10f, 0.07f, 0.97f);            // 그림이 없을 때 물러나는 색
-    static readonly Color Row = new Color(0.10f, 0.07f, 0.05f, 0.88f);
+    static readonly Color Card = MenuTheme.Card;            // 그림이 없을 때 물러나는 색
+    static readonly Color Row = MenuTheme.Row;
     static readonly Color ButtonNormal = Color.white;
-    static readonly Color ButtonAccent = Color.white;                              // 시안엔 으뜸 단추 표식이 없다(호버 때 금테 그림으로 바뀐다)
-    static readonly Color ButtonDanger = new Color(1f, 0.70f, 0.66f, 1f);
-    static readonly Color Selected = new Color(1f, 0.84f, 0.25f, 1f);
-    static readonly Color Gold = new Color(0.79f, 0.64f, 0.29f, 1f);
-    static readonly Color ButtonText = new Color(0.96f, 0.86f, 0.58f, 1f);         // 단추 글자 금빛
-    static readonly Color TextMain = new Color(0.96f, 0.93f, 0.84f, 1f);
-    static readonly Color TextDim = new Color(0.80f, 0.72f, 0.54f, 1f);
-    static readonly Color ReadyGreen = new Color(0.52f, 0.88f, 0.50f, 1f);
+    static readonly Color ButtonAccent = MenuTheme.ButtonAccent;                              // 시안엔 으뜸 단추 표식이 없다(호버 때 금테 그림으로 바뀐다)
+    static readonly Color ButtonDanger = MenuTheme.ButtonDanger;
+    static readonly Color Selected = MenuTheme.Selected;
+    static readonly Color Gold = MenuTheme.Gold;
+    static readonly Color ButtonText = MenuTheme.ButtonText;         // 단추 글자 금빛
+    static readonly Color TextMain = MenuTheme.TextMain;
+    static readonly Color TextDim = MenuTheme.TextDim;
+    static readonly Color ReadyGreen = MenuTheme.ReadyGreen;
     static readonly Vector2 FrameSize = new Vector2(480f, 912f);
     static readonly Vector2 FramePos = new Vector2(-324f, -24f);                    // 화면 오른쪽 가운데 기준(시안 1600×900의 메뉴 틀 자리)
     static readonly Vector2 ButtonSize = new Vector2(348f, 84f);
@@ -174,7 +174,7 @@ public class NetLobbyUi : MonoBehaviour
             bool me = player == NetPlayer.Local;
             slotNames[slot].text = player.DisplayName + (me ? "  (나)" : "");
             slotNames[slot].color = TextMain;
-            slotRows[slot].color = me ? new Color(0.34f, 0.22f, 0.08f, 0.95f) : Row;
+            slotRows[slot].color = me ? MenuTheme.RowMe : Row;
 
             if (player.IsHost) { slotTags[slot].text = "방장"; slotTags[slot].color = Selected; }
             else if (player.Ready) { slotTags[slot].text = "준비 완료"; slotTags[slot].color = ReadyGreen; }
@@ -192,7 +192,8 @@ public class NetLobbyUi : MonoBehaviour
             SetAccent(readyButton, !local.Ready);
         }
         startButton.interactable = launcher.CanStartMatch;
-        startHint.text = isHost ? launcher.StartBlockedReason : "";
+        // 손님은 준비한 뒤에만 한 줄(준비 전 안내는 roomStatus가 이미 말한다). 방장은 시작 불가 사유
+        startHint.text = isHost ? launcher.StartBlockedReason : (local != null && local.Ready ? "준비 완료 — 방장이 시작하면 게임이 열립니다" : "");
         roomStatus.text = launcher.Status;
     }
 
@@ -216,7 +217,7 @@ public class NetLobbyUi : MonoBehaviour
         subtitle = CreateText(root, "Subtitle", "", 34, boldFont, ButtonText, TextAlignmentOptions.Center);
         Place(subtitle.rectTransform, new Vector2(0f, 1f), new Vector2(636f, -262f), new Vector2(900f, 48f));
         subtitle.outlineWidth = 0.22f;
-        subtitle.outlineColor = new Color32(40, 22, 6, 255);
+        subtitle.outlineColor = MenuTheme.SubtitleOutline;
 
         BuildNickPanel(root);
         BuildModePanel(root);
@@ -359,13 +360,13 @@ public class NetLobbyUi : MonoBehaviour
 
         // 메뉴 틀 그림(menu_frame)은 위아래 룬 띠가 커서 줄이 겹친다(0.3.10 맥 실측) — 설정 창은 어두운 판 + 금테 두 겹으로.
         // 10-06 사장님 「선술집 분위기로」: blender 나무 게시판(원목 널판·쇠 모서리·리벳, Resources/UI/Settings, 9-slice 사방 128) + 위 나무 명패.
-        Image card = CreateImage(holder, "SettingsCard", new Color(0.16f, 0.11f, 0.07f, 0.98f));
+        Image card = CreateImage(holder, "SettingsCard", MenuTheme.SettingsCard);
         Vector2 size = new Vector2(860f, 905f);
         Place(card.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, size);
-        Sprite board = Resources.Load<Sprite>("UI/Settings/panel_9slice");
+        Sprite board = MenuTheme.SettingsSprite("panel_9slice");
         if (board != null) { card.sprite = board; card.type = Image.Type.Sliced; card.color = Color.white; card.pixelsPerUnitMultiplier = 1.16f; }   // 쇠 모서리가 ≈110 크기로
-        Image plate = CreateImage(card.rectTransform, "Nameplate", new Color(0.3f, 0.2f, 0.1f, 1f));
-        Sprite plateSprite = Resources.Load<Sprite>("UI/Settings/nameplate");
+        Image plate = CreateImage(card.rectTransform, "Nameplate", MenuTheme.NameplateFallback);
+        Sprite plateSprite = MenuTheme.SettingsSprite("nameplate");
         if (plateSprite != null) { plate.sprite = plateSprite; plate.color = Color.white; plate.preserveAspect = true; }
         plate.raycastTarget = false;
         PlaceFromTop(plate.rectTransform, -34f, new Vector2(400f, 125f));
@@ -374,7 +375,7 @@ public class NetLobbyUi : MonoBehaviour
 
         TMP_Text head = CreateText(c, "Title", "설정", 46, titleFont, ButtonText, TextAlignmentOptions.Center);
         PlaceFromTop(head.rectTransform, -40f, new Vector2(400f, 70f));
-        head.outlineWidth = 0.25f; head.outlineColor = new Color32(30, 16, 4, 255);
+        head.outlineWidth = 0.25f; head.outlineColor = MenuTheme.HeadOutline;
 
         float y = -170f;
         AddVolumeRow(c, "전체 소리", y, AudioPrefs.MasterVolume, AudioPrefs.SetMaster);
@@ -441,14 +442,14 @@ public class NetLobbyUi : MonoBehaviour
 
         RectTransform sliderRect = CreateRect(parent, label + "Slider");
         PlaceFromTopX(sliderRect, 40f, y, new Vector2(330f, 30f));
-        Image track = CreateImage(sliderRect, "Track", new Color(0.08f, 0.06f, 0.04f, 0.95f));
+        Image track = CreateImage(sliderRect, "Track", MenuTheme.TrackFallback);
         Stretch(track.rectTransform, 0f, 4f);
-        Sprite groove = Resources.Load<Sprite>("UI/Settings/slider_groove");
+        Sprite groove = MenuTheme.SettingsSprite("slider_groove");
         if (groove != null) { track.sprite = groove; track.type = Image.Type.Sliced; track.color = Color.white; }
         RectTransform fillArea = CreateRect(sliderRect, "FillArea");
         Stretch(fillArea, 0f, 8f);
         Image fill = CreateImage(fillArea, "Fill", Gold);
-        Sprite fillSprite = Resources.Load<Sprite>("UI/Settings/slider_fill");
+        Sprite fillSprite = MenuTheme.SettingsSprite("slider_fill");
         if (fillSprite != null) { fill.sprite = fillSprite; fill.type = Image.Type.Sliced; fill.color = Color.white; }
         fill.rectTransform.anchorMin = Vector2.zero; fill.rectTransform.anchorMax = new Vector2(0f, 1f);
         fill.rectTransform.offsetMin = fill.rectTransform.offsetMax = Vector2.zero;
@@ -456,7 +457,7 @@ public class NetLobbyUi : MonoBehaviour
         Stretch(handleArea, 12f, 0f);
         Image handle = CreateImage(handleArea, "Handle", ButtonText);
         handle.rectTransform.anchorMin = Vector2.zero; handle.rectTransform.anchorMax = new Vector2(0f, 1f);
-        Sprite mug = Resources.Load<Sprite>("UI/Settings/slider_knob_mug");   // 손잡이 = 맥주잔
+        Sprite mug = MenuTheme.SettingsSprite("slider_knob_mug");   // 손잡이 = 맥주잔(Castle는 같은 이름의 쇠고리 그림)
         if (mug != null) { handle.sprite = mug; handle.color = Color.white; handle.preserveAspect = true; handle.rectTransform.sizeDelta = new Vector2(52f, 26f); }
         else handle.rectTransform.sizeDelta = new Vector2(24f, 0f);
 
@@ -674,7 +675,7 @@ public class NetLobbyUi : MonoBehaviour
         return t;
     }
 
-    static Sprite Lobby(string name) => Resources.Load<Sprite>("UI/Lobby/" + name);
+    static Sprite Lobby(string name) => MenuTheme.LobbySprite(name);
 
     // 대기실 큰 카드: 시안의 메뉴 틀 그림을 얇은 테두리로(가로로 넓게 늘린다). 그림이 없으면 색 칸.
     static Image CreateCard(Transform parent, string name)
@@ -701,12 +702,14 @@ public class NetLobbyUi : MonoBehaviour
         Image image = CreateImage(parent, name, Color.white);
         Sprite normal = Lobby("btn_normal");
         if (normal != null) { image.sprite = normal; image.type = Image.Type.Sliced; image.pixelsPerUnitMultiplier = 512f / ButtonSize.x; }
-        else image.color = new Color(0.20f, 0.18f, 0.16f, 1f);
+        else image.color = MenuTheme.ButtonFallback;
         Button button = image.gameObject.AddComponent<Button>();
         button.targetGraphic = image;
         button.transition = UnityEngine.UI.Selectable.Transition.None;   // 그림 교체는 LobbyButtonFx
 
-        TMP_Text text = CreateText(image.rectTransform, "Label", label, fontSize, boldFont, ButtonText, TextAlignmentOptions.Center);
+        // 으뜸 단추(ButtonAccent가 ButtonNormal과 다른 테마에서만)는 글자를 더 밝게 — 어느 단추를 먼저 눌러야 하는지 한눈에
+        bool accent = ButtonAccent != ButtonNormal && color == ButtonAccent;
+        TMP_Text text = CreateText(image.rectTransform, "Label", label, fontSize, boldFont, accent ? MenuTheme.ButtonTextAccent : ButtonText, TextAlignmentOptions.Center);
         text.enableWordWrapping = false;
         Stretch(text.rectTransform);
 
@@ -730,7 +733,7 @@ public class NetLobbyUi : MonoBehaviour
         LobbyButtonFx fx = button.GetComponent<LobbyButtonFx>();
         if (fx == null || fx.label == null) return;
         fx.accent = accent;
-        fx.label.color = accent ? new Color(1f, 0.92f, 0.62f, 1f) : TextDim;
+        fx.label.color = accent ? MenuTheme.ButtonTextAccent : TextDim;
     }
 
     static GameObject AddGoldBorder(RectTransform parent, Color color, float t)
@@ -753,7 +756,7 @@ public class NetLobbyUi : MonoBehaviour
     // 어두운 홈 입력창(console_cell_frame_9s) + 금빛 캐럿
     TMP_InputField CreateInput(Transform parent, string name, string placeholder, int characterLimit)
     {
-        Image background = CreateImage(parent, name, new Color(0.05f, 0.035f, 0.025f, 0.96f));
+        Image background = CreateImage(parent, name, MenuTheme.InputBackground);
         TMP_InputField input = background.gameObject.AddComponent<TMP_InputField>();
 
         RectTransform area = CreateRect(background.rectTransform, "TextArea");
@@ -770,7 +773,7 @@ public class NetLobbyUi : MonoBehaviour
         Stretch(text.rectTransform);
 
         // 어두운 홈 + 금빛이 죽은 가는 테두리(그림 프레임은 칸이 낮을 때 모서리가 줄무늬로 늘어났다)
-        GameObject groove = AddGoldBorder(background.rectTransform, new Color(0.62f, 0.48f, 0.20f, 1f), 2f);
+        GameObject groove = AddGoldBorder(background.rectTransform, MenuTheme.InputBorder, 2f);
         groove.transform.SetAsFirstSibling();
         input.textViewport = area;
         input.textComponent = text;
@@ -781,7 +784,7 @@ public class NetLobbyUi : MonoBehaviour
         input.lineType = TMP_InputField.LineType.SingleLine;
         input.caretColor = Selected;
         input.customCaretColor = true;
-        input.selectionColor = new Color(0.79f, 0.64f, 0.29f, 0.35f);
+        input.selectionColor = MenuTheme.InputSelection;
         return input;
     }
 
@@ -814,7 +817,7 @@ public class NetLobbyUi : MonoBehaviour
         Stretch(solid.rectTransform);
         // 시안의 노을 섬 사진 — 화면 높이가 1080을 넘으면 큰 쪽(2560×1440). 화면 비율이 달라도 꽉 채우고 넘치는 쪽은 잘린다.
         string name = Screen.height > 1100 || Screen.width > 1950 ? "bg_2560x1440" : "bg_1920x1080";
-        Texture2D photo = Resources.Load<Texture2D>("UI/Lobby/" + name);
+        Texture2D photo = MenuTheme.LobbyBackground(name, out bool castlePhoto);
         if (photo == null) return;
         RawImage raw = AddRaw(root, "Photo", photo);
         Stretch(raw.rectTransform);
@@ -822,6 +825,8 @@ public class NetLobbyUi : MonoBehaviour
         fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
         fitter.aspectRatio = (float)photo.width / photo.height;
         // 10-06 사장님 「움직이는 배경」: blender 섬 루프(같은 구도 8초·192장 → StreamingAssets/title_loop.webm VP8). 첫 장이 나올 때까지는 위 사진이 그대로 보인다.
+        // 성 테마는 정적 그림 한 장(영상 없음, PM 10-19).
+        if (castlePhoto) return;
         TitleLoopVideo loop = raw.gameObject.AddComponent<TitleLoopVideo>();
         loop.Begin(raw, canvas);
     }
@@ -853,19 +858,19 @@ public class NetLobbyUi : MonoBehaviour
         Place(subtitle.rectTransform, new Vector2(0f, 1f), plateCenter + new Vector2(0f, -90f), new Vector2(700f, 50f));
         subtitle.enableVertexGradient = true;
         subtitle.colorGradient = new VertexGradient(
-            new Color(0.94f, 0.88f, 0.70f, 1f), new Color(0.94f, 0.88f, 0.70f, 1f),
-            new Color(0.78f, 0.67f, 0.43f, 1f), new Color(0.78f, 0.67f, 0.43f, 1f));
+            MenuTheme.SubTop, MenuTheme.SubTop,
+            MenuTheme.SubBottom, MenuTheme.SubBottom);
         subtitle.outlineWidth = 0.3f;
-        subtitle.outlineColor = new Color32(48, 26, 6, 255);
+        subtitle.outlineColor = MenuTheme.TitleOutline;
         // 10-06 사장님 「깜빡이는 게 아니라 보였다 안 보였다 생동감 있게」 — 숨 쉬듯 천천히 흐려졌다 돌아온다(그림자도 같이).
         TextBreathe breathe = subtitle.gameObject.AddComponent<TextBreathe>();
         breathe.texts = new[] { subtitle, subShadow };
         title.enableVertexGradient = true;
         title.colorGradient = new VertexGradient(
-            new Color(1f, 0.93f, 0.62f, 1f), new Color(1f, 0.93f, 0.62f, 1f),
-            new Color(0.90f, 0.62f, 0.18f, 1f), new Color(0.90f, 0.62f, 0.18f, 1f));
+            MenuTheme.TitleTop, MenuTheme.TitleTop,
+            MenuTheme.TitleBottom, MenuTheme.TitleBottom);
         title.outlineWidth = 0.16f;
-        title.outlineColor = new Color32(48, 26, 6, 255);
+        title.outlineColor = MenuTheme.TitleOutline;
     }
 
     // 첫 화면 카드를 위쪽 기준으로 둔다(펴고 접어도 위가 고정). position.y = 화면 가운데에서 위로 올린 거리.
@@ -993,7 +998,7 @@ public class LobbyRowHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHa
     public TMP_Text hint;
     public bool movable;
     bool hover;
-    static readonly Color Highlight = new Color(0.42f, 0.30f, 0.12f, 0.95f);
+    static readonly Color Highlight = MenuTheme.Highlight;
 
     public void OnPointerEnter(PointerEventData e) { hover = true; }
     public void OnPointerExit(PointerEventData e) { hover = false; }

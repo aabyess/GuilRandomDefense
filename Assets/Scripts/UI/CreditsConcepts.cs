@@ -77,6 +77,23 @@ public class CreditsConcepts
     static Sprite Radial(Color c, Color e) => MakeSprite(128, 128, (u, v) => { float d = Mathf.Clamp01(Mathf.Sqrt((u - .5f) * (u - .5f) * 0.8f + (v - .5f) * (v - .5f)) * 2f / 1.1f); return Color.Lerp(c, e, Mathf.SmoothStep(0, 1, d)); });
     static Sprite VGradient(Color top, Color bottom) => MakeSprite(4, 128, (u, v) => Color.Lerp(bottom, top, v));
 
+    // 성 테마 돌벽: 엇갈려 쌓은 회색 블록 + 모르타르 줄(Radial 위에 깔 한 장)
+    static Sprite StoneWall()
+    {
+        const int rows = 8, cols = 6;
+        return MakeSprite(512, 288, (u, v) =>
+        {
+            float fr = v * rows; int r = Mathf.FloorToInt(fr);
+            float cu = u * cols + (r % 2) * 0.5f; int c = Mathf.FloorToInt(cu);
+            float fx = cu - c, fy = fr - r;
+            float edge = Mathf.Min(Mathf.Min(fx, 1f - fx) * 0.7f, Mathf.Min(fy, 1f - fy));
+            float tone = 0.30f + 0.10f * Hash(c + r * 17, r) + 0.07f * Fbm(u * 18f, v * 18f);
+            float bevel = Mathf.Clamp01(edge / 0.12f);
+            float k = edge < 0.035f ? 0.12f : tone * (0.75f + 0.25f * bevel);
+            return new Color(k * 0.92f, k * 0.96f, k * 1.04f, 1f);
+        });
+    }
+
     static Sprite Parchment(int w, int h, bool torn)
     {
         return MakeSprite(w, h, (u, v) =>
@@ -270,9 +287,19 @@ public class CreditsConcepts
     // ── E: 현상수배 포스터 ─────────────────────────────────────
     void BuildWanted()
     {
-        var bg = Rect("Bg", root, Vector2.one * .5f, new Vector2(2400, 1400), Vector2.zero, Radial(new Color(0.22f, 0.17f, 0.12f), new Color(0.04f, 0.03f, 0.02f)));
-        Sprite plank = MakeSprite(256, 64, (u, v) => { float g = 0.5f + 0.5f * Fbm(u * 3f, v * 40f); return new Color(0.28f * g + 0.08f, 0.19f * g + 0.05f, 0.11f * g + 0.03f, 0.55f); }, true);
-        for (int i = 0; i < 6; i++) Rect("Plank" + i, root, Vector2.one * .5f, new Vector2(2400, 190), new Vector2(0, -475 + i * 190), plank);
+        RectTransform bg;
+        if (MenuTheme.Current == MenuTheme.Kind.Castle)
+        {
+            // 성 테마: 포스터가 돌벽에 못 박혀 있다(널판 대신 회색 돌벽 + 가장자리 어둡게)
+            bg = Rect("Bg", root, Vector2.one * .5f, new Vector2(2400, 1400), Vector2.zero, StoneWall());
+            Rect("Shade", root, Vector2.one * .5f, new Vector2(2400, 1400), Vector2.zero, Radial(new Color(0f, 0f, 0f, 0.05f), new Color(0.01f, 0.012f, 0.02f, 0.9f)));
+        }
+        else
+        {
+            bg = Rect("Bg", root, Vector2.one * .5f, new Vector2(2400, 1400), Vector2.zero, Radial(new Color(0.22f, 0.17f, 0.12f), new Color(0.04f, 0.03f, 0.02f)));
+            Sprite plank = MakeSprite(256, 64, (u, v) => { float g = 0.5f + 0.5f * Fbm(u * 3f, v * 40f); return new Color(0.28f * g + 0.08f, 0.19f * g + 0.05f, 0.11f * g + 0.03f, 0.55f); }, true);
+            for (int i = 0; i < 6; i++) Rect("Plank" + i, root, Vector2.one * .5f, new Vector2(2400, 190), new Vector2(0, -475 + i * 190), plank);
+        }
         const float PW = 820f, PH = 1010f;
         var holder = new GameObject("Poster", typeof(RectTransform)); holder.transform.SetParent(root, false);
         var hr = (RectTransform)holder.transform; hr.anchorMin = hr.anchorMax = new Vector2(.5f, .5f); hr.pivot = new Vector2(.5f, 1f); hr.sizeDelta = new Vector2(PW, PH); hr.anchoredPosition = new Vector2(0, 520);
@@ -296,7 +323,10 @@ public class CreditsConcepts
             rows[i] = rr; rowGroup[i] = row.GetComponent<CanvasGroup>();
             Rect("Rule", rr, Vector2.one * .5f, new Vector2(700, 2), new Vector2(0, -38), null, new Color(ink.r, ink.g, ink.b, 0.35f));
         }
-        var nail = Rect("Nail", root, Vector2.one * .5f, Vector2.one * 28f, new Vector2(0, 520 - 6), Disc(32, 0.8f), new Color(0.2f, 0.18f, 0.16f));
+        bool castle = MenuTheme.Current == MenuTheme.Kind.Castle;
+        // 성 테마: 돌벽 위라 어두운 못은 안 보인다 — 머리를 키우고 밝은 쇠색 + 아래로 드리운 그림자 한 점
+        RectTransform nailShadow = castle ? Rect("NailShadow", root, Vector2.one * .5f, Vector2.one * 52f, new Vector2(5, 520 - 16), Disc(32, 0.3f), new Color(0f, 0f, 0f, 0f)) : null;
+        var nail = Rect("Nail", root, Vector2.one * .5f, Vector2.one * (castle ? 46f : 28f), new Vector2(0, 520 - 6), Disc(32, 0.8f), castle ? new Color(0.52f, 0.56f, 0.63f) : new Color(0.2f, 0.18f, 0.16f));
         var stamp = Text("Stamp", pr, serif, 60f, new Color(0.65f, 0.08f, 0.05f, 0), "<cspace=4>제 작 진</cspace>", new Vector2(420, 80), new Vector2(200, 60));
         apply = t =>
         {
@@ -306,6 +336,7 @@ public class CreditsConcepts
             float sway = (t < 0.55f ? 6f * (1f - drop) : 0f) + Mathf.Sin(t * 2.1f) * 2.8f * damp * Seg(t, 0.4f, 0.9f) + Mathf.Sin(t * 5.3f) * 0.5f;
             hr.localRotation = Quaternion.Euler(0, 0, sway);
             SetAlpha(nail.GetComponent<Image>(), Seg(t, 0.4f, 0.6f));
+            if (nailShadow != null) SetAlpha(nailShadow.GetComponent<Image>(), 0.45f * Seg(t, 0.4f, 0.6f));
             bg.localScale = Vector3.one * (1f + 0.025f * Mathf.Clamp01(t / 4.4f));
             wanted.alpha = Ease(Seg(t, 0.5f, 0.9f)); wanted.characterSpacing = Mathf.Lerp(30f, 0f, wanted.alpha);
             photoBack.GetComponent<Image>().color = new Color(0.18f, 0.12f, 0.07f, Ease(Seg(t, 0.7f, 1.0f))); photoIn.GetComponent<Image>().color = new Color(1, 1, 1, Ease(Seg(t, 0.7f, 1.0f)));
