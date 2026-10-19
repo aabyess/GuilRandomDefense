@@ -533,6 +533,7 @@ public class EnemyDummy : MonoBehaviour
     }
     float RegenPercentNow()
     {
+        if (regenPercentById.Count == 0) return 0f;   // 적마다 매 프레임 불리는 길 — 비었으면 순회 없이 0(결과 동일)
         float total = 0f;
         foreach (List<float> list in regenPercentById.Values)
         {
