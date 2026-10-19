@@ -386,6 +386,8 @@ public static class SkillVfx
     // 발밑 층(메시 원판·벽·기둥)의 Transform — 풀에서 다시 쓸 때마다 이번 발밑으로 옮긴다.
     static readonly Dictionary<ParticleSystem, List<Transform>> feetLayers = new Dictionary<ParticleSystem, List<Transform>>();
 
+    static readonly Dictionary<Kind, int> burstCursor = new Dictionary<Kind, int>();
+
     static void Burst(Kind kind, Vector3 position, bool notify)
     {
         if (!Enabled || !CasterAllowsVfx) return;
@@ -396,11 +398,21 @@ public static class SkillVfx
             if (currentEntry.hit.kind != (int)kind) kind = (Kind)currentEntry.hit.kind;
         }
         if (!pools.TryGetValue(kind, out List<ParticleSystem> pool)) pools[kind] = pool = new List<ParticleSystem>();
-        pool.RemoveAll(p => p == null);
 
+        // 매 호출 RemoveAll·앞에서부터 IsAlive(자식 파티클 전부 훑음) 스캔을 하던 것 — 지난번 빈 칸 다음부터 돌고(바쁜 앞쪽을 매번 재검사 안 함),
+        // 파괴된 항목은 만났을 때만 정리한다. 어느 빈 것이든 쓰는 건 그대로라 동작은 같다.
         ParticleSystem free = null;
-        foreach (ParticleSystem p in pool)
-            if (!p.IsAlive(true)) { free = p; break; }
+        bool hasDead = false;
+        int count = pool.Count;
+        int start = burstCursor.TryGetValue(kind, out int cur) ? cur : 0;
+        for (int k = 0; k < count; k++)
+        {
+            int idx = (start + k) % count;
+            ParticleSystem p = pool[idx];
+            if (p == null) { hasDead = true; continue; }
+            if (!p.IsAlive(true)) { free = p; burstCursor[kind] = idx + 1; break; }
+        }
+        if (hasDead) { pool.RemoveAll(p => p == null); burstCursor[kind] = 0; }
         if (free == null)
         {
             if (pool.Count >= PoolPerKind) return;
