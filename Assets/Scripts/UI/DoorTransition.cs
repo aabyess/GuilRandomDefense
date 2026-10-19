@@ -296,13 +296,13 @@ public class DoorTransition : MonoBehaviour
                 else if (style == MenuTheme.DoorKind.Doors)
                 {
                     float rattle = k < 0.12f ? 0.012f * Mathf.Sin(k / 0.12f * Mathf.PI * 3f) : 0f;   // 걸쇠가 풀리며 덜컹
-                    float e = k < 0.12f ? Mathf.Max(0f, rattle) : Mathf.Lerp(Seg(k, 0.1f, 1f), EaseInOutCubic(Seg(k, 0.1f, 1f)), 0.5f);   // 묵직하게 시작 → 가속 → 천천히 멈춤. 순수 easeInOutCubic은 움직임이 가운데 40%에 몰려 1.0초가 0.4초로 보여(10-19 PM 촬영) 직선과 절반 섞음
+                    float e = k < 0.12f ? Mathf.Max(0f, rattle) : Mathf.Lerp(Seg(k, 0.1f, 1f), EaseInOutCubic(Seg(k, 0.1f, 1f)), 0.2f);   // 묵직하게 시작 → 가속 → 천천히 멈춤. 순수 easeInOutCubic은 움직임이 가운데 40%에 몰려 1.0초가 0.4초로 보여(10-19 PM 촬영) 직선과 절반 섞음
                     SetOpenAmount(e, half);
-                    // 틈 빛은 Classic처럼 문이 벌어지는 동안 틈을 따라 넓어졌다 사라진다(문짝은 계속 보인다). 전체 화면 번쩍임은 짧고 약한 한 번(피크 ≈0.08초·30%).
+                    // 틈 빛은 Classic처럼 문이 벌어지는 동안 틈을 따라 넓어졌다 사라진다(문짝은 계속 보인다). 전체 화면 번쩍임은 짧고 약한 한 번(피크 ≈0.08초·14%).
                     float pulse = Mathf.Sin(Mathf.Clamp01(k * 2.2f) * Mathf.PI);
                     gap.color = new Color(MenuTheme.DoorGapLight.r, MenuTheme.DoorGapLight.g, MenuTheme.DoorGapLight.b, pulse * 0.5f);   // 0.75→0.5: 문이 반쯤 열린 프레임에 틈 빛이 문 전체를 뿌옇게 덮던 것(PM 촬영 19번)
                     gap.rectTransform.localScale = new Vector3(1f + 0.5f * e, 1f, 1f);
-                    SetFlash(0.3f * Tri(k, 0.16f, 0.05f));
+                    SetFlash(0.14f * Tri(k, 0.16f, 0.05f));   // 0.3→0.14: 촬영 프레임이 피크에 걸리면 문 전체가 뿌옇게 덮여 보였다(PM 19번 = 전체 화면 Flash 이미지, gap 아님)
                     block.color = new Color(0f, 0f, 0f, 0.5f * (1f - EaseOutCubic(k)));            // 게임 화면이 어둠에서 서서히 밝아진다
                 }
                 else
