@@ -3538,7 +3538,7 @@ public static class MapGenerator
     {
         GachaBand.Random("안흔함", UnitGrade.Uncommon),
         GachaBand.Random("특별함", UnitGrade.Special),
-        GachaBand.RandomWithBonus("희귀함·특수함", UnitGrade.Rare, UnitGrade.Superior, 3f),
+        GachaBand.RandomWithBonus("희귀함·특수함", UnitGrade.Rare, UnitGrade.Superior, 100f / 36f),   // 원작 구버전 Trig_Story_Tier4: GetRandomInt(1,36)==1 → UniqueSpecial 풀(특수함)에서 한 기(2.78%, 옛 값 3)
         GachaBand.Special("특수지급",
             SpecialSlot.Resources("돈+목재"),
             SpecialSlot.Units("박은석 초월위습", "초월위습_박은석"),
@@ -7175,6 +7175,9 @@ public static class MapGenerator
     /// 그래서 타일 횟수마다 `.mat`을 하나씩 둔다. 정수로 반올림하는 것은 개수를 줄이려는 것이기도
     /// 하고, 타일 경계가 면 가장자리에 맞아 이음매가 덜 보이기 때문이기도 하다.
     /// </summary>
+    /// <summary>상점 받침대 등 다른 편집기 코드가 돌 질감을 입힐 때(StructureDresser).</summary>
+    internal static void PaintStone(GameObject obj, float sizeX, float sizeZ) => Paint(obj, "rock", sizeX, sizeZ);
+
     static void Paint(GameObject obj, string key, float sizeX = 1f, float sizeZ = 1f)
     {
         if (!Surfaces.TryGetValue(key, out Surface surface)) return;

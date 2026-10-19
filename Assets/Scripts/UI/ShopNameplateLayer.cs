@@ -133,6 +133,18 @@ public class ShopNameplateLayer : MonoBehaviour
             if (!any) { bounds = renderer.bounds; any = true; }
             else bounds.Encapsulate(renderer.bounds);
         }
+        // 10-20: 모양(건물 모델)은 상자의 형제 「<이름>_모양」이다 — 상자 렌더러는 꺼져 있어 위 루프가 비었다. 빛 겹(_add)은 키에서 뺀다(책 제단 빛이 이름표를 띄웠다).
+        Transform look = building.parent != null ? building.parent.Find(building.name + "_모양") : null;
+        if (look != null)
+        {
+            any = false;   // 모양이 있으면 그 경계(받침대 위 건물 상단)를 기준으로 삼는다
+            foreach (Renderer renderer in look.GetComponentsInChildren<Renderer>())
+            {
+                if (!(renderer is MeshRenderer || renderer is SkinnedMeshRenderer) || !renderer.enabled || renderer.name.Contains("_add")) continue;
+                if (!any) { bounds = renderer.bounds; any = true; }
+                else bounds.Encapsulate(renderer.bounds);
+            }
+        }
         return any ? new Vector3(bounds.center.x, bounds.max.y, bounds.center.z) : building.position + Vector3.up * 2f;
     }
 

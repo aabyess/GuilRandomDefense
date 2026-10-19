@@ -154,6 +154,29 @@ public static class StructureDresser
         ("도움소", "S2상점_책제단"),
         ("항해일지", "S2상점_마법금고"),
     };
+    // 10-20 정렬: 받침대 폭 = 슬롯 간격 × 0.95(전부 같은 폭·높이 돌 단), 건물 발자국 = 슬롯 간격 × 0.72, 키 제한 = 발자국 × 1.15.
+    const float ShopPedestalWidthFraction = 0.95f;
+    const float ShopFootprintFraction = 0.72f;
+    const float ShopTallLimit = 1.15f;
+    const float ShopPedestalHeight = 4f;
+    /// <summary>모든 상점이 같은 방향(문이 남쪽 = 카메라 쪽)을 보게 하는 회전(도). 모델 정면이 +Z면 180.</summary>
+    public static float ShopFacingYaw = 0f;
+    static readonly string[] ShopSlotOrder = { "도박소", "유닛강화소", "영원함강화소", "도움소", "공격타입강화소", "항해일지" };
+
+    /// <summary>상점 상자 이름(「Lane1_도박소」)에서 그 슬롯의 이상적인 중앙과 슬롯 간격을 구한다. MapGenerator.LaneShopSlotAt과 같은 식(폭 × 1.15 ÷ 칸 수).</summary>
+    public static bool ShopSlotCenter(GameObject body, out Vector3 center, out float pitch)
+    {
+        center = default; pitch = 0f;
+        MapLayout.Island lane = MapLayout.Lanes.FirstOrDefault(l => body.name.StartsWith(l.name + "_"));
+        if (string.IsNullOrEmpty(lane.name)) return false;
+        int slot = System.Array.FindIndex(ShopSlotOrder, s => body.name.EndsWith("_" + s));
+        if (slot < 0) return false;
+        MapLayout.Island strip = MapLayout.LaneShopStrip(lane);
+        pitch = strip.size.x * 1.15f / ShopSlotOrder.Length;
+        center = new Vector3(strip.center.x + (slot - (ShopSlotOrder.Length - 1) * 0.5f) * pitch, MapLayout.IslandTop, strip.center.y);
+        return true;
+    }
+
     /// <summary>새 모델 배율 = 옛 상점 발자국에 맞춘 배율과 높이에 맞춘 배율의 기하평균, 단 발자국 배율의 이 배수까지(옆 상점과 안 겹치게).</summary>
     const float S2ShopFootprintCap = 1.25f;
 
@@ -170,23 +193,50 @@ public static class StructureDresser
         string model = LaneShopModels.FirstOrDefault(entry => body.name.EndsWith("_" + entry.suffix)).model;
         if (model == null) return;
         float scaleBoost = 1f;
+        bool aligned = false;
+        float pedestalTop = 0f;
+        float alignedScale = 0f;
         if (UseS2ShopModels)
         {
             string s2 = S2ShopModels.FirstOrDefault(entry => body.name.EndsWith("_" + entry.suffix)).model;
             GameObject oldAsset = Load(model), newAsset = s2 == null ? null : Load(s2);
             if (newAsset != null && oldAsset != null && TryMeasure(oldAsset, out Bounds ob) && TryMeasure(newAsset, out Bounds nb, "_add"))
             {
-                float footprint = Mathf.Max(ob.size.x, ob.size.z) / Mathf.Max(nb.size.x, nb.size.z);
-                float height = ob.size.y / nb.size.y;
-                scaleBoost = Mathf.Min(Mathf.Sqrt(footprint * height), footprint * S2ShopFootprintCap);
                 model = s2;
+                if (ShopSlotCenter(body, out Vector3 slot, out float pitch))
+                {
+                    // 10-20 사장님 「건물들 정렬 잘 배치해줘, 들쑥날쑥」 — 슬롯 중앙·한 줄 앞선·공통 받침대 위 바닥선·발자국 폭 통일.
+                    aligned = true;
+                    body.transform.position = new Vector3(slot.x, body.transform.position.y, slot.z);
+                    GameObject oldPedestal = GameObject.Find(body.name + "_받침");
+                    if (oldPedestal != null) Object.DestroyImmediate(oldPedestal);
+                    float pedestalW = pitch * ShopPedestalWidthFraction;
+                    GameObject pedestal = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    pedestal.name = body.name + "_받침";
+                    pedestal.transform.SetParent(body.transform.parent, false);
+                    pedestal.transform.position = new Vector3(slot.x, MapLayout.IslandTop + ShopPedestalHeight * 0.5f, slot.z);
+                    pedestal.transform.localScale = new Vector3(pedestalW, ShopPedestalHeight, pedestalW * 0.8f);
+                    MapGenerator.PaintStone(pedestal, pedestal.transform.localScale.x, pedestal.transform.localScale.z);
+                    Object.DestroyImmediate(pedestal.GetComponent<Collider>());
+                    pedestalTop = ShopPedestalHeight;
+                    float target = pitch * ShopFootprintFraction;
+                    alignedScale = target / Mathf.Max(nb.size.x, nb.size.z);
+                    if (nb.size.y * alignedScale > target * ShopTallLimit) alignedScale *= 0.8f;   // 키가 발자국의 1.15배를 넘는 건물(마법학교·책 제단)은 0.8배
+                }
+                else
+                {
+                    float footprint = Mathf.Max(ob.size.x, ob.size.z) / Mathf.Max(nb.size.x, nb.size.z);
+                    float height = ob.size.y / nb.size.y;
+                    scaleBoost = Mathf.Min(Mathf.Sqrt(footprint * height), footprint * S2ShopFootprintCap);
+                }
             }
         }
 
-        Vector3 ground = new Vector3(body.transform.position.x, MapLayout.IslandTop, body.transform.position.z);
+        Vector3 ground = new Vector3(body.transform.position.x, MapLayout.IslandTop + pedestalTop, body.transform.position.z);
         // 원작 비율 5단계(PM 지시 2026-09-23) — 모델은 실제 치수로 지어졌고 이 호출이 Scale을
         // 안 넘기면 항상 1배(Blender 그대로)로 서서, 맵이 커진 만큼 건물이 상대적으로 쪼그라든다.
-        GameObject building = Place(body.transform.parent, model, body.name + "_모양", ground, 0f, MapLayout.Scale * LaneShopModelScale * scaleBoost);
+        float buildingScale = aligned ? alignedScale : MapLayout.Scale * LaneShopModelScale * scaleBoost;
+        GameObject building = Place(body.transform.parent, model, body.name + "_모양", ground, aligned ? ShopFacingYaw : 0f, buildingScale);
         if (building == null) return;
 
         // 상자의 부모는 Map 루트(배율 1)라 월드 크기 = 로컬 크기. 건물 어디를 눌러도 선택되게 맞춘다.
