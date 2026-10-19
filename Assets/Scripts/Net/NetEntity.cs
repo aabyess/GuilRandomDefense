@@ -41,6 +41,10 @@ public class NetEntity : NetworkBehaviour
     // 적: 호스트 실물에 스턴·이감 이펙트가 붙어 있나(SkillVfx 등급 게이트까지 반영된 결과) — 클라가 겉모습에 같은 걸 붙였다 뗀다.
     [Networked] public NetworkBool StunVfx { get; set; }
     [Networked] public NetworkBool SlowVfx { get; set; }
+    // 오라 이펙트(10-20 안 B, AuraVfx): 비트0 = 이 유닛이 오라 소스 고리를 내고 있다 · 비트1~2 = 받는 점(0 없음·1 버프·2 디버프). 등급·범위는 소스 고리 색·바깥 고리용(월드 단위 정수).
+    [Networked] public byte AuraFlags { get; set; }
+    [Networked] public byte AuraGrade { get; set; }
+    [Networked] public ushort AuraRange { get; set; }
     // 적: 광폭화 유닛(BerserkMob)이다 — 클라 겉모습에 이름 「광폭화 ○○」·붉은 틴트·원판·고리를 붙인다(10-07).
     [Networked] public NetworkBool Berserk { get; set; }
     // 유닛: 복사본(박진웅 볼보이·모리아 좀비)이다 — 클라 판매 버튼이 흐려지게 UnitIdentity.IsCopy로 되돌린다(10-09).
@@ -76,6 +80,9 @@ public class NetEntity : NetworkBehaviour
     int seenAttackSeq;
     GameObject clientStunVfx;
     GameObject clientSlowVfx;
+    GameObject clientAuraSource, clientAuraReceiver;
+    float clientAuraRange;
+    int clientAuraReceiverState;
 
     public static int ClientVisualCount { get; private set; }
 
@@ -125,6 +132,19 @@ public class NetEntity : NetworkBehaviour
         else
             transform.SetPositionAndRotation(real.position, real.rotation);
         transform.localScale = real.localScale;
+
+        // 오라 이펙트 상태를 실어 보낸다(호스트 실물 기준) — 바뀔 때만 쓴다.
+        {
+            bool sourceOn = AuraVfx.SourceState(real, out UnitGrade auraGrade, out float auraRange);
+            byte flags = (byte)((sourceOn ? 1 : 0) | (AuraVfx.ReceiverState(real) << 1));
+            if (AuraFlags != flags) AuraFlags = flags;
+            if (sourceOn)
+            {
+                byte g = (byte)auraGrade; ushort r = (ushort)Mathf.Clamp(Mathf.RoundToInt(auraRange), 0, 65000);
+                if (AuraGrade != g) AuraGrade = g;
+                if (AuraRange != r) AuraRange = r;
+            }
+        }
 
         if (realEnemy != null)
         {
@@ -179,6 +199,11 @@ public class NetEntity : NetworkBehaviour
 
     public override void Render()
     {
+        if (!HasStateAuthority && Visual != null)
+        {
+            clientAuraSource = AuraVfx.SyncSource(clientAuraSource, Visual.transform, (AuraFlags & 1) != 0, (UnitGrade)AuraGrade, AuraRange, ref clientAuraRange);
+            clientAuraReceiver = AuraVfx.SyncReceiver(clientAuraReceiver, Visual.transform, (AuraFlags >> 1) & 3, ref clientAuraReceiverState);
+        }
         if (replicaEnemy != null)
         {
             replicaEnemy.SetReplicaHp(Hp, MaxHp);
@@ -214,6 +239,8 @@ public class NetEntity : NetworkBehaviour
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
         ClientEnemies.Remove(this);
+        if (clientAuraSource != null) SkillVfx.Stop(clientAuraSource);
+        if (clientAuraReceiver != null) SkillVfx.Stop(clientAuraReceiver);
         if (realAnimator != null) realAnimator.AttackPlayed -= OnRealAttack;
 
         if (Visual != null)
