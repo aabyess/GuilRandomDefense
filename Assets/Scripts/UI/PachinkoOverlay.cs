@@ -153,6 +153,22 @@ public class PachinkoOverlay : MonoBehaviour
     /// <summary>컨트롤러 없이 한 판 보기(개발·촬영): PUSH 5초 뒤 스스로 결과로 간다. Space·클릭도 먹는다.</summary>
     public static void Preview(PachinkoPlan plan) { Theme = plan.theme; Ensure().Begin(plan, true); }
 
+    /// <summary>판 중에 씬을 떠났을 때(오버레이는 DontDestroyOnLoad라 남는다) 연출·투표·관전·소리를 전부 끊는다.</summary>
+    public static void AbortAll()
+    {
+        PachinkoOverlay o = instance;
+        if (o == null) return;
+        o.StopAllCoroutines();
+        o.running = null; o.specCo = null; o.musicOn = false;
+        o.StopAllSfx(); o.StopVideoNow();
+        if (o.musicSource != null) o.musicSource.Stop();
+        o.duckTarget = 1f; GameBgm.Duck = 1f;
+        if (o.root != null) o.root.gameObject.SetActive(false);
+        if (o.voteRoot != null) o.voteRoot.gameObject.SetActive(false);
+        if (o.specRoot != null) o.specRoot.gameObject.SetActive(false);
+        o.MonitorClear();
+    }
+
     public static bool IsPlaying => instance != null && instance.running != null;
     /// <summary>배경 영상이 지금 재생 중인가(FPS 측정용).</summary>
     public static bool BgVideoPlaying => instance != null && instance.videoPlayer != null && instance.videoPlayer.isPlaying;

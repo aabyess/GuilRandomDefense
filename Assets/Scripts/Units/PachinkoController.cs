@@ -48,6 +48,7 @@ public class PachinkoController : MonoBehaviour
     /// <summary>이 PC에서 파칭코 연출이 진행 중인가(카메라·입력이 비켜야 할 때 본다).</summary>
     public static bool Active => Instance != null && Instance.Running;
     static bool triggeredThisRun;
+    static bool startedByTest;   // Begin(modes)로 결과를 고정해 시작한 판(시험 인자·탐침)
 
     enum Phase { Prelude, Push, Result, Done }
     class Run
@@ -88,6 +89,7 @@ public class PachinkoController : MonoBehaviour
         PachinkoController c = Ensure();
         if (c.Running || voting) return;
         triggeredThisRun = true;
+        startedByTest = modes != null;
         bool fixedResult = false;
         if (modes != null) foreach (string m in modes) if (!string.IsNullOrEmpty(m) && m != "random") fixedResult = true;
         if (!fixedResult && VoteOpenHandler != null)
@@ -381,7 +383,9 @@ public class PachinkoController : MonoBehaviour
     /// <summary>새 판(씬 로드 뒤 RoundManager.Start)에서 부른다. 한 판 하고 타이틀로 나갔다 다시 하면 static이 남아(ResetStatics는 앱 켤 때 한 번뿐) 두 번째 판부터 파칭코가 안 떴다.</summary>
     public static void ResetForNewRun()
     {
-        if (Instance != null && Instance.Running) return;   // 시험 인자가 Start 전에 시작시킨 판은 건드리지 않는다
+        if (Instance != null && Instance.Running && startedByTest) return;   // 시험 인자가 Start 전에 시작시킨 판만 보호한다. 이전 씬에서 남은 판은 아래에서 정리한다
+        if (Instance != null && (Instance.Running || voting)) PachinkoOverlay.AbortAll();
+        startedByTest = false;
         triggeredThisRun = false; voting = false; voteClosed = false; voteModes = null; voteOpenSeen = false; VoteTheme = -1;
         Array.Clear(votes, 0, votes.Length);
         if (Instance != null) { Instance.runs.Clear(); Instance.authority = false; }
