@@ -91,7 +91,7 @@ public static class SkillVfxMaterials
             else material.shader = shader;
             material.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(texPath));
             material.SetFloat("_DstBlend", name == "plate_dark" ? 10f : 1f);   // 받침판만 알파 섞기, 나머지 가산
-            material.SetFloat("_Intensity", 1.6f);
+            material.SetFloat("_Intensity", 1.3f);   // HDR 상한: 밝은 풀밭에서 가산광이 하얗게 날아가지 않게(안 B 대책)
             material.SetFloat("_SoftFade", 1f);
             material.renderQueue = (int)RenderQueue.Transparent;
             if (isNew) AssetDatabase.CreateAsset(material, matPath);

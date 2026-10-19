@@ -433,6 +433,14 @@ public static class SkillVfx
         switch (kind)
         {
             case Kind.Hit:
+                // 10-19 안 B: 물리 = 금. 8각 별 섬광(금 1.25H + 흰 코어 0.7H) + 발밑 금 충격 고리 + 불똥 9, 어두운 받침판으로 풀밭 위 가독성.
+                if (UseB())
+                    return Layered(parent, loop, "Hit",
+                        Layer("plate_dark", new Color(0f, 0f, 0f, 0.35f), 0.35f, 1.1f * Unit, 1, 0f, Shape.None, alpha: true),
+                        Layer("burst_8pt", BGold, 0.35f, 1.25f * Unit, 1, 0f, Shape.None, randomRotation: true),
+                        Layer("burst_8pt", new Color(1f, 1f, 0.95f), 0.35f, 0.7f * Unit, 1, 0f, Shape.None),
+                        Layer("ring_shock", A(BGold, 0.5f), 0.35f, 1.0f * Unit / 0.62f, 1, 0f, Shape.None, mesh: "충격파_원판", feet: true, growFrom: 0.5f),
+                        Layer("dot_soft", BGold, 0.35f, 0.14f * Unit, 9, 1.8f * Unit, Shape.Sphere));
                 // 금빛 번쩍 + 흩어지는 별 조각 — 09-29: 짙은 금빛 판(알파)을 밑에 깔아 풀밭 위에서도 모양이 선다
                 return Layered(parent, loop, "Hit",
                     Layer("star_09", new Color(1f, 0.62f, 0.1f, 0.95f), 0.45f, 1.2f * Unit, 1, 0f, Shape.None, alpha: true),
@@ -441,6 +449,14 @@ public static class SkillVfx
                     // 1.2.2 메시: 누운 초승달 검기가 −60°→+60° 쓸고 지나간다(원작 검기 적중 mihawkslashhit·slash-gold)
                     Layer("vfx_slash_strip", new Color(1f, 0.93f, 0.65f), 0.3f, 30f, 1, 0f, Shape.None, mesh: "초승달_검기", spinY: 120f, randomYaw: true));
             case Kind.SpellHit:
+                // 10-19 안 B: 마법 = 청. 하늘(3H)에서 꽂히는 번개 줄기 + 적중점 4점 반짝이(청+흰 코어) + 발밑 청 고리.
+                if (UseB())
+                    return Layered(parent, loop, "SpellHit",
+                        Layer("plate_dark", new Color(0f, 0f, 0f, 0.3f), 0.4f, 1.0f * Unit, 1, 0f, Shape.None, alpha: true),
+                        Layer("lightning_a", BBlue, 0.25f, 3.0f * Unit, 1, 0f, Shape.None, mesh: "번개_기둥", feet: true, aspect: new Vector3(0.3f, 1f, 0.3f)),
+                        Layer("sparkle_4pt", BBlue, 0.4f, 0.8f * Unit, 1, 0f, Shape.None),
+                        Layer("sparkle_4pt", new Color(1f, 1f, 1f), 0.4f, 0.4f * Unit, 1, 0f, Shape.None),
+                        Layer("ring_shock", A(BBlue, 0.6f), 0.4f, 1.0f * Unit / 0.62f, 1, 0f, Shape.None, mesh: "충격파_원판", feet: true, growFrom: 0.5f));
                 // 마법(AP) — 푸른 번쩍 + 번개
                 return Layered(parent, loop, "SpellHit",
                     Layer("star_09", new Color(0.2f, 0.45f, 1f, 0.95f), 0.45f, 1.2f * Unit, 1, 0f, Shape.None, alpha: true),
@@ -450,6 +466,15 @@ public static class SkillVfx
                     Layer("trace_06", new Color(0.75f, 0.9f, 1f), 0.4f, 80f, 1, 0f, Shape.None, mesh: "번개_기둥", feet: true, shrinkWidth: true),
                     Layer("circle_02", new Color(0.7f, 0.85f, 1f), 0.4f, 35f, 1, 0f, Shape.None, mesh: "충격파_원판", feet: true, growFrom: 0.3f));
             case Kind.ArmorBreak:
+                // 10-19 안 B: 디버프 = 보라. 같은 X자 검기·할퀸 자국을 보라로 + 발밑 보라 고리 + 어두운 받침판.
+                if (UseB())
+                    return Layered(parent, loop, "ArmorBreak",
+                        Layer("plate_dark", new Color(0f, 0f, 0f, 0.35f), 0.7f, 1.0f * Unit, 1, 0f, Shape.None, alpha: true),
+                        Layer("scratch_01", A(BPurple, 1f), 0.7f, 1.1f * Unit, 1, 0f, Shape.None, randomRotation: true),
+                        Layer("vfx_slash_strip", BPurple, 0.35f, 34f, 1, 0f, Shape.None, mesh: "초승달_검기", yaw: 45f),
+                        Layer("vfx_slash_strip", BPurple, 0.35f, 34f, 1, 0f, Shape.None, mesh: "초승달_검기", yaw: -45f),
+                        Layer("ring_shock", A(BPurple, 0.6f), 0.6f, 1.0f * Unit / 0.62f, 1, 0f, Shape.None, mesh: "충격파_원판", feet: true, growFrom: 0.5f),
+                        Layer("dot_soft", BPurple, 0.7f, 0.12f * Unit, 6, -0.6f * Unit, Shape.Ring));
                 // 붉은 할퀸 자국 + 퍼지는 붉은 고리
                 return Layered(parent, loop, "ArmorBreak",
                     Layer("scratch_01", new Color(0.85f, 0.08f, 0.05f, 1f), 0.7f, 1.2f * Unit, 1, 0f, Shape.None, randomRotation: true, alpha: true),
@@ -466,6 +491,13 @@ public static class SkillVfx
                         ? Layer("ring_shock", new Color(1f, 1f, 1f, 0.6f), 0.25f, 2.0f * Unit / 0.62f, 1, 0f, Shape.None, mesh: "충격파_원판", feet: true, growFrom: 0.35f)
                         : Layer("circle_03", new Color(1f, 1f, 1f), 0.5f, 55f, 1, 0f, Shape.None, mesh: "충격파_원판", feet: true, growFrom: 0.3f));
             case Kind.Smash:
+                // 10-19 안 B: 물리 = 금. 땅 폭발 메시 + 금 8각 섬광 + 금 충격 고리, 받침판.
+                if (UseB())
+                    return Layered(parent, loop, "Smash",
+                        Layer("plate_dark", new Color(0f, 0f, 0f, 0.35f), 0.5f, 1.6f * Unit, 1, 0f, Shape.None, ground: true, alpha: true),
+                        Layer("vfx_spike", BGold, 0.4f, 38f, 1, 0f, Shape.None, mesh: "땅_폭발", feet: true, growFrom: 0.2f),
+                        Layer("burst_8pt", BGold, 0.4f, 1.6f * Unit, 1, 0f, Shape.None),
+                        Layer("ring_shock", A(BGold, 0.6f), 0.5f, 2.0f * Unit / 0.62f, 1, 0f, Shape.None, mesh: "충격파_원판", feet: true, growFrom: 0.3f));
                 // 강타·범위 폭발(정의만, 1.2.2) — 땅 폭발 + 벽 + 원판, 주황(원작 E_WarStompCaster·NewDirtEXNofire). 흙먼지는 데이터 연결 때
                 return Layered(parent, loop, "Smash",
                     Layer("vfx_spike", new Color(1f, 0.55f, 0.15f), 0.4f, 38f, 1, 0f, Shape.None, mesh: "땅_폭발", feet: true, growFrom: 0.2f),
@@ -489,6 +521,12 @@ public static class SkillVfx
                     Layer("symbol_02", new Color(1f, 1f, 0.6f), 0.9f, 0.75f * Unit, 3, 0f, Shape.Ring, orbit: 5f, persistent: loop),
                     Layer("star_07", new Color(1f, 0.95f, 0.5f), 0.5f, 0.6f * Unit, 0, 0f, Shape.Ring, rate: loop ? 4f : 0f));
             case Kind.Slow:
+                // 10-19 안 B: 청. 발밑 마법진 광 고리(ring_magic, 눕힘) + 퍼지는 청 충격 고리 + 떨어지는 청 알갱이.
+                if (UseB())
+                    return Layered(parent, loop, "Slow",
+                        Layer("ring_magic", A(BBlue, 0.8f), 1.0f, 1.3f * Unit, loop ? 0 : 1, 0f, Shape.None, rate: loop ? 1.1f : 0f, ground: true),
+                        Layer("ring_shock", A(BBlue, 0.5f), 1.2f, 1.2f * Unit / 0.62f, 0, 0f, Shape.None, rate: loop ? 0.8f : 0f, mesh: "충격파_원판", growFrom: 0.5f),
+                        Layer("dot_soft", BBlue, 0.8f, 0.11f * Unit, 0, -0.8f * Unit, Shape.Ring, rate: loop ? 7f : 0f));
                 // 발밑 푸른 마법진 + 떨어지는 서리
                 return Layered(parent, loop, "Slow",
                     Layer("circle_03", new Color(0.1f, 0.45f, 1f, 0.9f), 1.0f, 1.8f * Unit, 0, 0f, Shape.None, rate: loop ? 1.5f : 0f, ground: true, alpha: true),
@@ -497,6 +535,12 @@ public static class SkillVfx
                     // 1.2.2 메시: 가는 고리 원판이 느리게 퍼진다(원작 AHtc 천둥박수 둔화) — 붙는 자리가 이미 발밑이라 feet 불필요
                     Layer("circle_02", new Color(0.45f, 0.75f, 1f), 1.2f, 50f, 0, 0f, Shape.None, rate: loop ? 0.8f : 0f, mesh: "충격파_원판", growFrom: 0.3f));
             case Kind.Buff:
+                // 10-19 안 B: 버프 = 초록. 이중 나선 알갱이가 몸을 감고 위로(반경 0.27H·높이 ~0.9H) + 발밑 초록 고리.
+                if (UseB())
+                    return Layered(parent, loop, "Buff",
+                        Layer("dot_soft", BGreen, 0.9f, 0.16f * Unit, 0, 0f, Shape.Ring, rate: loop ? 9f : 0f, orbit: 4f, rise: 1.0f * Unit, ringRadius: 0.27f),
+                        Layer("dot_soft", new Color(0.8f, 1f, 0.85f), 0.9f, 0.09f * Unit, 0, 0f, Shape.Ring, rate: loop ? 9f : 0f, orbit: 3f, rise: 1.0f * Unit, ringRadius: 0.27f),
+                        Layer("ring_shock", A(BGreen, 0.5f), loop ? 1.2f : 0.6f, 0.8f * Unit / 0.62f, loop ? 0 : 1, 0f, Shape.None, rate: loop ? 0.8f : 0f, mesh: "충격파_원판", feet: !loop, growFrom: 0.5f));
                 // 몸을 감고 오르는 초록·금빛 소용돌이
                 return Layered(parent, loop, "Buff",
                     Layer("twirl_01", new Color(0.15f, 0.8f, 0.2f, 0.9f), 0.8f, 0.9f * Unit, loop ? 0 : 2, 0.6f * Unit, Shape.None, rate: loop ? 2f : 0f, randomRotation: true, alpha: true),
@@ -506,6 +550,12 @@ public static class SkillVfx
         }
         return null;
     }
+
+    // 10-19 안 B(워크3풍 정돈) 재질 세트(재료_B 10장)가 다 있을 때만 새 모양 — 없으면 각 Kind의 옛 모양으로 물러난다.
+    static bool UseB() => Mat("burst_8pt") != null && Mat("ring_shock") != null && Mat("dot_soft") != null && Mat("sparkle_4pt") != null
+                          && Mat("plate_dark") != null && Mat("lightning_a") != null && Mat("ring_magic") != null;
+    static readonly Color BGold = new Color(1f, 0.82f, 0.4f), BBlue = new Color(0.35f, 0.78f, 1f), BGreen = new Color(0.38f, 0.88f, 0.48f), BPurple = new Color(0.70f, 0.42f, 1f);
+    static Color A(Color c, float a) => new Color(c.r, c.g, c.b, a);
 
     enum Shape { None, Sphere, Ring }
 
@@ -519,6 +569,7 @@ public static class SkillVfx
         public string mesh; public bool feet; public float spinY, yaw; public bool randomYaw; public float growFrom; public bool shrinkWidth; public Vector3 aspect;
         public float spinZ;   // 판 안에서 도는 속도(도/초)
         public string trail; public float trailSeconds, trailWidth; public Color trailColor;   // 빛 꼬리(10-19 안 B): trail = 꼬리 재질 이름, trailSeconds = 꼬리 길이(초), trailWidth = 입자 크기 대비 폭, trailColor = 꼬리 색
+        public float rise;   // 위로 오르는 속도(월드 단위/초) — 나선 알갱이
         public float ringRadius;   // Shape.Ring 반지름(0 = 기본 0.45 Unit)
         public bool hasColor2; public Color color2;   // 시작 색을 color·color2 중 무작위로
     }
@@ -526,11 +577,11 @@ public static class SkillVfx
     static LayerSpec Layer(string texture, Color color, float lifetime, float size, int burst, float speed, Shape shape,
                            float rate = 0f, bool ground = false, bool randomRotation = false, float grow = 0f, float orbit = 0f,
                            bool persistent = false, bool alpha = false, string mesh = null, bool feet = false, float spinY = 0f,
-                           float yaw = 0f, bool randomYaw = false, float growFrom = 0f, bool shrinkWidth = false, Vector3? aspect = null, float spinZ = 0f, string trail = null, float trailSeconds = 0.35f, Color? color2 = null, Color? trailColor = null, float trailWidth = 1f, float ringRadius = 0f) =>
+                           float yaw = 0f, bool randomYaw = false, float growFrom = 0f, bool shrinkWidth = false, Vector3? aspect = null, float spinZ = 0f, string trail = null, float trailSeconds = 0.35f, Color? color2 = null, Color? trailColor = null, float trailWidth = 1f, float ringRadius = 0f, float rise = 0f) =>
         new LayerSpec { texture = texture, color = color, lifetime = lifetime, size = size, burst = burst, speed = speed,
                         shape = shape, rate = rate, ground = ground, randomRotation = randomRotation, grow = grow, orbit = orbit,
                         persistent = persistent, alpha = alpha, mesh = mesh, feet = feet, spinY = spinY, yaw = yaw, randomYaw = randomYaw,
-                        growFrom = growFrom, shrinkWidth = shrinkWidth, aspect = aspect ?? Vector3.one, spinZ = spinZ, trail = trail, trailSeconds = trailSeconds, trailWidth = trailWidth, trailColor = trailColor ?? Color.white, hasColor2 = color2.HasValue, color2 = color2 ?? Color.white, ringRadius = ringRadius };
+                        growFrom = growFrom, shrinkWidth = shrinkWidth, aspect = aspect ?? Vector3.one, spinZ = spinZ, trail = trail, trailSeconds = trailSeconds, trailWidth = trailWidth, trailColor = trailColor ?? Color.white, hasColor2 = color2.HasValue, color2 = color2 ?? Color.white, ringRadius = ringRadius, rise = rise };
 
     static ParticleSystem Layered(Transform parent, bool loop, string name, params LayerSpec[] layers)
     {
@@ -578,10 +629,12 @@ public static class SkillVfx
                 if (spec.burst > 1) shape.arcMode = ParticleSystemShapeMultiModeValue.BurstSpread;
             }
 
-            if (spec.orbit > 0f)
+            if (spec.orbit > 0f || spec.rise != 0f)
             {
                 ParticleSystem.VelocityOverLifetimeModule vel = ps.velocityOverLifetime;
                 vel.enabled = true;
+                vel.x = 0f; vel.z = 0f;
+                vel.y = spec.rise;
                 vel.orbitalY = spec.orbit;
             }
 
