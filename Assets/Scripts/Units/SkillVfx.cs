@@ -109,6 +109,7 @@ public static class SkillVfx
         {
             if (pool.Count >= PrefabPoolCap) return;
             free = MakePrefabInstance(t.prefabs[index]);
+            ApplyRoleStyle(free, t.prefabs[index].name);
             pool.Add(free);
         }
         if (notify) PlayedPrefab?.Invoke(index, position, diameter, ground);
@@ -124,6 +125,11 @@ public static class SkillVfx
         free.transform.SetPositionAndRotation(at, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
         free.transform.localScale = Vector3.one * (diameter / native * ZoomScale());
         free.SetActive(true);
+        if (platePs.TryGetValue(free, out ParticleSystem plate) && plate != null)
+        {
+            ParticleSystem.MainModule pm = plate.main;
+            pm.startSize = diameter * 0.95f * ZoomScale();   // Shape 모드라 부모 배율을 안 탄다 — 월드 크기로 직접
+        }
         OriginalVfxPlayer original = free.GetComponent<OriginalVfxPlayer>();
         if (original != null) { original.Restart(); return; }   // 원작 모델 이펙트(10-08): 파티클이 없어 재생기가 직접 다시 시작
         foreach (ParticleSystem ps in free.GetComponentsInChildren<ParticleSystem>(true))
@@ -158,6 +164,89 @@ public static class SkillVfx
             main.playOnAwake = false;
         }
         return g;
+    }
+
+    // ── 팩 프리팹 B 규칙 래퍼(10-19 사장님 확정 안 B) ──────────────────────────────────────────────
+    // 프리팹은 안 고친다. 사본을 만들 때 색 역할(물리 금·마법 청·버프 초록·디버프 보라)대로 색조를 바꾸고(하양 코어는 유지) 밝기를 1.2로 누르고,
+    // 풀밭에서 가산광이 날아가지 않게 어두운 알파 받침판을 깐다. 역할표 = Resources/Effects/SkillVfxRoles.csv(「프리팹 이름,역할」 한 줄씩, 없는 프리팹은 손대지 않는다).
+    /// <summary>끄면 팩 프리팹을 원래 색 그대로 띄운다(전/후 비교 촬영·문제 시 되돌리기).</summary>
+    public static bool RoleStyle = true;
+    static Dictionary<string, string> roleByName;
+    static readonly Dictionary<GameObject, ParticleSystem> platePs = new Dictionary<GameObject, ParticleSystem>();
+
+    static string RoleOf(string prefabName)
+    {
+        if (roleByName == null)
+        {
+            roleByName = new Dictionary<string, string>();
+            TextAsset csv = Resources.Load<TextAsset>("Effects/SkillVfxRoles");
+            if (csv != null)
+                foreach (string line in csv.text.Split('\n'))
+                {
+                    string l = line.Trim();
+                    if (l.Length == 0 || l.StartsWith("#")) continue;
+                    int comma = l.LastIndexOf(',');
+                    if (comma > 0) roleByName[l.Substring(0, comma).Trim()] = l.Substring(comma + 1).Trim().ToLowerInvariant();
+                }
+        }
+        return roleByName.TryGetValue(prefabName, out string role) ? role : null;
+    }
+
+    static Color RoleColor(string role) => role == "magic" ? BBlue : role == "buff" ? BGreen : role == "debuff" ? BPurple : BGold;
+
+    // 색조를 역할 색으로: 채도가 낮은(흰) 부분은 그대로(코어), 채도가 높은 부분은 역할 색 × 원래 밝기. 밝기 상한 1.2.
+    static Color Recolor(Color c, Color role)
+    {
+        float v = Mathf.Max(c.r, Mathf.Max(c.g, c.b));
+        float mn = Mathf.Min(c.r, Mathf.Min(c.g, c.b));
+        float sat = v > 0.0001f ? (v - mn) / v : 0f;
+        float k = Mathf.Min(v, 1.2f);
+        Color white = new Color(k, k, k, c.a);
+        Color tinted = new Color(role.r * k, role.g * k, role.b * k, c.a);
+        return Color.Lerp(white, tinted, Mathf.Clamp01(sat * 1.6f));
+    }
+
+    static Gradient RecolorGradient(Gradient g, Color role)
+    {
+        var keys = g.colorKeys;
+        for (int i = 0; i < keys.Length; i++) { Color c = Recolor(keys[i].color, role); keys[i].color = new Color(c.r, c.g, c.b, 1f); }
+        var copy = new Gradient();
+        copy.SetKeys(keys, g.alphaKeys);
+        return copy;
+    }
+
+    static ParticleSystem.MinMaxGradient RecolorStart(ParticleSystem.MinMaxGradient g, Color role)
+    {
+        switch (g.mode)
+        {
+            case ParticleSystemGradientMode.Color: return new ParticleSystem.MinMaxGradient(Recolor(g.color, role));
+            case ParticleSystemGradientMode.TwoColors: return new ParticleSystem.MinMaxGradient(Recolor(g.colorMin, role), Recolor(g.colorMax, role));
+            case ParticleSystemGradientMode.Gradient: return new ParticleSystem.MinMaxGradient(RecolorGradient(g.gradient, role));
+            case ParticleSystemGradientMode.TwoGradients: return new ParticleSystem.MinMaxGradient(RecolorGradient(g.gradientMin, role), RecolorGradient(g.gradientMax, role));
+            default: return g;   // RandomColor — 그대로
+        }
+    }
+
+    static void ApplyRoleStyle(GameObject g, string prefabName)
+    {
+        if (!RoleStyle) return;
+        string role = RoleOf(prefabName);
+        if (role == null) return;
+        Color rc = RoleColor(role);
+        foreach (ParticleSystem ps in g.GetComponentsInChildren<ParticleSystem>(true))
+        {
+            ParticleSystem.MainModule main = ps.main;
+            main.startColor = RecolorStart(main.startColor, rc);
+            ParticleSystem.ColorOverLifetimeModule col = ps.colorOverLifetime;
+            if (col.enabled && col.color.mode == ParticleSystemGradientMode.Gradient) col.color = new ParticleSystem.MinMaxGradient(RecolorGradient(col.color.gradient, rc));
+        }
+        // 어두운 알파 받침판 — 가산광이 밝은 풀밭에서 하얗게 날아가는 것을 막는다(지름은 PlayPrefab이 매번 넣는다).
+        if (Mat("plate_dark") != null)
+        {
+            ParticleSystem plate = Layered(g.transform, false, "RolePlate",
+                Layer("plate_dark", new Color(0f, 0f, 0f, 0.28f), 0.7f, 20f, 1, 0f, Shape.None, ground: true, alpha: true));
+            if (plate != null) platePs[g] = plate;
+        }
     }
 
     // MP: 한 번 터지는 이펙트를 실제로 띄울 때 알린다(등급 게이트·스로틀·풀을 다 지난 뒤) — 호스트의 NetGameState가 받아
@@ -437,8 +526,8 @@ public static class SkillVfx
                 if (UseB())
                     return Layered(parent, loop, "Hit",
                         Layer("plate_dark", new Color(0f, 0f, 0f, 0.35f), 0.35f, 1.1f * Unit, 1, 0f, Shape.None, alpha: true),
-                        Layer("burst_8pt", BGold, 0.35f, 1.25f * Unit, 1, 0f, Shape.None, randomRotation: true),
-                        Layer("burst_8pt", new Color(1f, 1f, 0.95f), 0.35f, 0.7f * Unit, 1, 0f, Shape.None),
+                        Layer("burst_8pt", BGold, 0.35f, 1.0f * Unit, 1, 0f, Shape.None, randomRotation: true),
+                        Layer("burst_8pt", new Color(1f, 1f, 0.95f), 0.35f, 0.56f * Unit, 1, 0f, Shape.None),
                         Layer("ring_shock", A(BGold, 0.5f), 0.35f, 1.0f * Unit / 0.62f, 1, 0f, Shape.None, mesh: "충격파_원판", feet: true, growFrom: 0.5f),
                         Layer("dot_soft", BGold, 0.35f, 0.14f * Unit, 9, 1.8f * Unit, Shape.Sphere));
                 // 금빛 번쩍 + 흩어지는 별 조각 — 09-29: 짙은 금빛 판(알파)을 밑에 깔아 풀밭 위에서도 모양이 선다
@@ -495,8 +584,8 @@ public static class SkillVfx
                 if (UseB())
                     return Layered(parent, loop, "Smash",
                         Layer("plate_dark", new Color(0f, 0f, 0f, 0.35f), 0.5f, 1.6f * Unit, 1, 0f, Shape.None, ground: true, alpha: true),
-                        Layer("vfx_spike", BGold, 0.4f, 38f, 1, 0f, Shape.None, mesh: "땅_폭발", feet: true, growFrom: 0.2f),
-                        Layer("burst_8pt", BGold, 0.4f, 1.6f * Unit, 1, 0f, Shape.None),
+                        Layer("vfx_spike", new Color(1f, 0.9f, 0.6f), 0.4f, 62f, 1, 0f, Shape.None, mesh: "땅_폭발", feet: true, growFrom: 0.35f),
+                        Layer("burst_8pt", BGold, 0.4f, 1.1f * Unit, 1, 0f, Shape.None),
                         Layer("ring_shock", A(BGold, 0.6f), 0.5f, 2.0f * Unit / 0.62f, 1, 0f, Shape.None, mesh: "충격파_원판", feet: true, growFrom: 0.3f));
                 // 강타·범위 폭발(정의만, 1.2.2) — 땅 폭발 + 벽 + 원판, 주황(원작 E_WarStompCaster·NewDirtEXNofire). 흙먼지는 데이터 연결 때
                 return Layered(parent, loop, "Smash",
@@ -525,8 +614,8 @@ public static class SkillVfx
                 if (UseB())
                     return Layered(parent, loop, "Slow",
                         Layer("ring_magic", A(BBlue, 0.8f), 1.0f, 1.3f * Unit, loop ? 0 : 1, 0f, Shape.None, rate: loop ? 1.1f : 0f, ground: true),
-                        Layer("ring_shock", A(BBlue, 0.5f), 1.2f, 1.2f * Unit / 0.62f, 0, 0f, Shape.None, rate: loop ? 0.8f : 0f, mesh: "충격파_원판", growFrom: 0.5f),
-                        Layer("dot_soft", BBlue, 0.8f, 0.11f * Unit, 0, -0.8f * Unit, Shape.Ring, rate: loop ? 7f : 0f));
+                        Layer("ring_shock", A(BBlue, 0.8f), 1.2f, 1.2f * Unit / 0.62f, 0, 0f, Shape.None, rate: loop ? 0.8f : 0f, mesh: "충격파_원판", growFrom: 0.5f),
+                        Layer("dot_soft", BBlue, 0.8f, 0.17f * Unit, 0, -0.8f * Unit, Shape.Ring, rate: loop ? 10f : 0f));
                 // 발밑 푸른 마법진 + 떨어지는 서리
                 return Layered(parent, loop, "Slow",
                     Layer("circle_03", new Color(0.1f, 0.45f, 1f, 0.9f), 1.0f, 1.8f * Unit, 0, 0f, Shape.None, rate: loop ? 1.5f : 0f, ground: true, alpha: true),
@@ -538,9 +627,9 @@ public static class SkillVfx
                 // 10-19 안 B: 버프 = 초록. 이중 나선 알갱이가 몸을 감고 위로(반경 0.27H·높이 ~0.9H) + 발밑 초록 고리.
                 if (UseB())
                     return Layered(parent, loop, "Buff",
-                        Layer("dot_soft", BGreen, 0.9f, 0.16f * Unit, 0, 0f, Shape.Ring, rate: loop ? 9f : 0f, orbit: 4f, rise: 1.0f * Unit, ringRadius: 0.27f),
-                        Layer("dot_soft", new Color(0.8f, 1f, 0.85f), 0.9f, 0.09f * Unit, 0, 0f, Shape.Ring, rate: loop ? 9f : 0f, orbit: 3f, rise: 1.0f * Unit, ringRadius: 0.27f),
-                        Layer("ring_shock", A(BGreen, 0.5f), loop ? 1.2f : 0.6f, 0.8f * Unit / 0.62f, loop ? 0 : 1, 0f, Shape.None, rate: loop ? 0.8f : 0f, mesh: "충격파_원판", feet: !loop, growFrom: 0.5f));
+                        Layer("dot_soft", BGreen, 0.9f, 0.24f * Unit, 0, 0f, Shape.Ring, rate: loop ? 9f : 0f, orbit: 4f, rise: 1.0f * Unit, ringRadius: 0.27f),
+                        Layer("dot_soft", new Color(0.8f, 1f, 0.85f), 0.9f, 0.14f * Unit, 0, 0f, Shape.Ring, rate: loop ? 9f : 0f, orbit: 3f, rise: 1.0f * Unit, ringRadius: 0.27f),
+                        Layer("ring_shock", A(BGreen, 0.85f), loop ? 1.2f : 0.6f, 1.0f * Unit / 0.62f, loop ? 0 : 1, 0f, Shape.None, rate: loop ? 0.8f : 0f, mesh: "충격파_원판", feet: !loop, growFrom: 0.5f));
                 // 몸을 감고 오르는 초록·금빛 소용돌이
                 return Layered(parent, loop, "Buff",
                     Layer("twirl_01", new Color(0.15f, 0.8f, 0.2f, 0.9f), 0.8f, 0.9f * Unit, loop ? 0 : 2, 0.6f * Unit, Shape.None, rate: loop ? 2f : 0f, randomRotation: true, alpha: true),
