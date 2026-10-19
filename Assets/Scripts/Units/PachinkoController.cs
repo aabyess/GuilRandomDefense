@@ -378,6 +378,18 @@ public class PachinkoController : MonoBehaviour
         return p;
     }
 
+    /// <summary>새 판(씬 로드 뒤 RoundManager.Start)에서 부른다. 한 판 하고 타이틀로 나갔다 다시 하면 static이 남아(ResetStatics는 앱 켤 때 한 번뿐) 두 번째 판부터 파칭코가 안 떴다.</summary>
+    public static void ResetForNewRun()
+    {
+        if (Instance != null && Instance.Running) return;   // 시험 인자가 Start 전에 시작시킨 판은 건드리지 않는다
+        triggeredThisRun = false; voting = false; voteClosed = false; voteModes = null; voteOpenSeen = false; VoteTheme = -1;
+        Array.Clear(votes, 0, votes.Length);
+        if (Instance != null) { Instance.runs.Clear(); Instance.authority = false; }
+        GamePause.SetPachinkoHold(false);
+    }
+
+    public static string DebugState() => $"파칭코 상태: triggered={triggeredThisRun} voting={voting} closed={voteClosed} instance={(Instance != null)} running={(Instance != null && Instance.Running)}";
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetStatics() { Instance = null; triggeredThisRun = false; PlayHandler = null; PushedHandler = null; MonitorPlanHandler = null; MonitorPushedHandler = null; MonitorClearHandler = null; AutoPushForTest = false; VoteOpenHandler = null; VoteTallyHandler = null; VoteCloseHandler = null; voteOpenSeen = false; voting = false; voteClosed = false; voteModes = null; VoteTheme = -1; }
 
