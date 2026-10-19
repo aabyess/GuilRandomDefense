@@ -161,6 +161,10 @@ public static class StructureDresser
     const float ShopPedestalHeight = 4f;
     /// <summary>모든 상점이 같은 방향(문이 남쪽 = 카메라 쪽)을 보게 하는 회전(도). 모델 정면이 +Z면 180.</summary>
     public static float ShopFacingYaw = 0f;
+    /// <summary>10-20 밤샘: 섬 가장자리 돌 테두리(IslandStoneBorder) 스위치. false면 「섬 돌 테두리 얹기」 메뉴가 걷기만 한다.</summary>
+    public const bool IslandStoneBorderOn = true;
+    /// <summary>선택 위습 부스 모델 환산(blender 부스 간격 228 = 2.28m ↔ 칸 폭 80.7 → m당 35.4). 테두리·기둥도 같은 크기.</summary>
+    public const float BorderUnit = 35.4f;
     static readonly string[] ShopSlotOrder = { "도박소", "유닛강화소", "영원함강화소", "도움소", "공격타입강화소", "항해일지" };
 
     /// <summary>상점 상자 이름(「Lane1_도박소」)에서 그 슬롯의 이상적인 중앙과 슬롯 간격을 구한다. MapGenerator.LaneShopSlotAt과 같은 식(폭 × 1.15 ÷ 칸 수).</summary>
@@ -535,7 +539,7 @@ public static class StructureDresser
         var items = new (string model, string name, Vector3 at, float yaw, float scale)[]
         {
             ("장식_고잉메리", "S2_고잉메리", new Vector3(-2175f, 0f, 1450f), 60f, 1.05f * 1.5f),   // 10-20 사장님 「B로 가자」: 레인 서쪽 바다 · 1.5배
-            ("장식_룸바배", "S2_룸바배", new Vector3(-2230f, 0f, 1900f), -140f, 1.8f * 1.5f),
+            ("장식_룸바배", "S2_룸바배", new Vector3(-2230f, 0f, 1800f), -140f, 1.8f * 1.5f),
             ("장식_포네글리프", "S2_포네글리프", new Vector3(story.center.x - story.size.x * 0.5f + 110f, MapLayout.IslandTop, story.center.y + story.size.y * 0.5f - 110f), -305f, 1.2f),
             ("장식_대형스토리포탈", "S2_대형스토리포탈", portalAt, -270f, 1.5f),
             ("장식_위습동상", "S2_위습동상1", new Vector3(statueX, MapLayout.IslandTop, story.center.y + 255f), -180f, 1f),
