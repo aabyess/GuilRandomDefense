@@ -64,7 +64,42 @@ public static class SkillVfxMaterials
             made++;
         }
         AssetDatabase.SaveAssets();
-        return $"✅ 스킬 이펙트 재질 {made}개 → {OutFolder}\n" + BuildMeshes();
+        return $"✅ 스킬 이펙트 재질 {made}개 → {OutFolder}\n" + BuildOwn() + "\n" + BuildMeshes();
+    }
+
+    // 10-19 이펙트 개편: 우리가 그린 텍스처(Assets/Art/Effects/Own, Tools/vfx/gen_stun_textures.py)로 GRD/FxGlow 재질을 만든다(가산·소프트 파티클). 이름 = Skill_<파일 이름>.
+    const string OwnTextureFolder = "Assets/Art/Effects/Own";
+    public static string BuildOwn()
+    {
+        Shader shader = Shader.Find("GRD/FxGlow");
+        if (shader == null) return "⚠️ 셰이더 GRD/FxGlow 없음(Assets/Shaders/GRD_FxGlow.shader 임포트 확인) — 자작 재질 건너뜀";
+        int made = 0;
+        foreach (string guid in AssetDatabase.FindAssets("t:Texture2D", new[] { OwnTextureFolder }))
+        {
+            string texPath = AssetDatabase.GUIDToAssetPath(guid);
+            TextureImporter importer = AssetImporter.GetAtPath(texPath) as TextureImporter;
+            if (importer != null && (!importer.alphaIsTransparency || importer.mipmapEnabled || importer.wrapMode != TextureWrapMode.Clamp))
+            {
+                importer.alphaIsTransparency = true; importer.mipmapEnabled = false; importer.wrapMode = TextureWrapMode.Clamp;
+                importer.SaveAndReimport();
+            }
+            string name = System.IO.Path.GetFileNameWithoutExtension(texPath);
+            string matPath = $"{OutFolder}/Skill_{name}.mat";
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+            bool isNew = material == null;
+            if (isNew) material = new Material(shader);
+            else material.shader = shader;
+            material.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(texPath));
+            material.SetFloat("_DstBlend", name == "plate_dark" ? 10f : 1f);   // 받침판만 알파 섞기, 나머지 가산
+            material.SetFloat("_Intensity", 1.3f);   // HDR 상한: 밝은 풀밭에서 가산광이 하얗게 날아가지 않게(안 B 대책)
+            material.SetFloat("_SoftFade", 1f);
+            material.renderQueue = (int)RenderQueue.Transparent;
+            if (isNew) AssetDatabase.CreateAsset(material, matPath);
+            else { EditorUtility.SetDirty(material); AssetDatabase.SaveAssetIfDirty(material); }
+            made++;
+        }
+        AssetDatabase.SaveAssets();
+        return $"✅ 자작 이펙트 재질 {made}개(GRD/FxGlow) → {OutFolder}";
     }
 
     // 메시 이펙트(1.2.2): FBX는 Resources 밖(blender 세션 정본 자리)이라 실행 중에 못 읽는다 → 메시만 Resources/Effects/Mesh_<이름>.asset으로 복사.
