@@ -29,6 +29,7 @@ public static class GameModes
     /// <summary>DifficultySelectHud: 방장이 난이도를 고르기 직전에 토글 값을 넣는다(지옥 미만이면 무시).</summary>
     public static void Choose(DifficultyMode mode, bool altered, bool otherWorld)
     {
+        if (!S2Features.Enabled) { return; }
         if (!GameAuthority.IsServer) return;
         if (!ModesAvailable(mode)) return;
         Altered = altered;
@@ -63,11 +64,11 @@ public static class GameModes
         Debug.Log($"[변질모드] 조합식 {banned.Count}개 밴");
     }
 
-    public static bool IsBanned(CombineRecipe recipe) => Altered && recipe != null && !string.IsNullOrEmpty(recipe.commandId) && banned.Contains(recipe.commandId);
+    public static bool IsBanned(CombineRecipe recipe) => S2Features.Enabled && Altered && recipe != null && !string.IsNullOrEmpty(recipe.commandId) && banned.Contains(recipe.commandId);
 
     /// <summary>도박소 옵션이 이세계 도박(랜덤유닛 도박)인가 — 모드가 꺼졌으면 잠긴다.</summary>
     public static bool BlocksGambling(GamblingOptionData option) =>
-        !OtherWorld && option != null && option.category == GamblingCategory.Unit && option.primaryResultGrade == UnitGrade.RandomUnit;
+        S2Features.Enabled && !OtherWorld && option != null && option.category == GamblingCategory.Unit && option.primaryResultGrade == UnitGrade.RandomUnit;
 
     static void Announce(string message)
     {

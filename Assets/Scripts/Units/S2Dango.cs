@@ -28,6 +28,7 @@ public static class S2Dango
     /// <summary>호스트: 요청자(casterSlot)가 유닛을 골라 「-경단」을 쳤다. 오류 문구를 돌려주고 정상이면 null.</summary>
     public static string Request(int casterSlot, Selectable unit)
     {
+        if (!S2Features.Enabled) { return "S2 기능이 꺼져 있습니다."; }
         int ci = Mathf.Clamp(casterSlot, 0, 3);
         if (used[ci]) return "경단먹이기는 이미 사용했습니다.";
         if (unit == null || !unit.TryGetComponent(out UnitIdentity identity) || identity.Data == null || !unit.TryGetComponent(out OwnedByPlayer owner))
@@ -62,6 +63,7 @@ public static class S2Dango
     /// <summary>호스트: 채팅 「-수락」「-거절」. 이 명령이 아니면 null, 맞으면 결과 문구(""은 알림으로 이미 알림).</summary>
     public static string TryRespond(int slot, string text)
     {
+        if (!S2Features.Enabled) { return null; }
         string t = (text ?? "").Trim();
         bool accept = t == "-수락", decline = t == "-거절";
         if (!accept && !decline) return null;

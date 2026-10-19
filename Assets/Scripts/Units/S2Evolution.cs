@@ -24,6 +24,7 @@ public static class S2Evolution
     /// </summary>
     public static void EnsurePortal()
     {
+        if (!S2Features.Enabled) { return; }
         if (GameObject.Find("Portal_진화체") != null) return;
         GameObject north = GameObject.Find("Portal_유닛랜덤"), east = GameObject.Find("Portal_금화랜덤");
         if (north == null) { Debug.LogWarning("[진화체] Portal_유닛랜덤을 못 찾아 진화 포탈을 못 세웁니다."); return; }
@@ -52,6 +53,7 @@ public static class S2Evolution
     /// <summary>RewardDistributor.Start: 시작 위습 지급(호스트).</summary>
     public static void GrantStarting(RewardDistributor distributor)
     {
+        if (!S2Features.Enabled) { return; }
         WispData wisp = Wisp;
         if (wisp == null || distributor == null) return;
         foreach (PlayerContext context in PlayerContext.Occupied)
@@ -91,6 +93,7 @@ public static class S2Evolution
     /// <summary>RewardDistributor.GrantKillReward: 레인 주인의 라인몹 처치 하나(호스트).</summary>
     public static void OnLaneKill(int ownerId)
     {
+        if (!S2Features.Enabled) { return; }
         if (states.TryGetValue(ownerId, out State s) && s.body != null) s.body.AddKill();
     }
 

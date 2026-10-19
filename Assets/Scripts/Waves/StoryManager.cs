@@ -143,6 +143,7 @@ public class StoryManager : MonoBehaviour
     // 씬의 스토리 목록을 건드리지 않으려고 Resources에서 끝에 붙인다(체력은 우리 13번 대비 S2 비율 288.8M/190M = ×1.52).
     void AppendS2Stories()
     {
+        if (!S2Features.Enabled) return;
         StoryData egghead = Resources.Load<StoryData>("S2/Story14_에그헤드");
         if (egghead != null && !stories.Contains(egghead)) stories.Add(egghead);
     }

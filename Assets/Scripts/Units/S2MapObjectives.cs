@@ -20,6 +20,7 @@ public class S2MapObjectives : MonoBehaviour
 
     public static void Install()
     {
+        if (!S2Features.Enabled) { return; }
         if (!GameAuthority.IsServer || Instance != null) return;
         new GameObject("S2MapObjectives").AddComponent<S2MapObjectives>();
     }
@@ -49,6 +50,7 @@ public class S2MapObjectives : MonoBehaviour
     /// <summary>「-황금종」 채팅 — 황금 종 체력 %.</summary>
     public static string BellHpText()
     {
+        if (!S2Features.Enabled) { return "S2 기능이 꺼져 있습니다."; }
         EnemyDummy b = Instance != null ? Instance.bell : null;
         return b == null ? "황금 종이 없습니다(이미 부서졌거나 아직 안 세워짐)." : $"황금 종 체력 {b.HpRatio * 100f:0.#}%";
     }

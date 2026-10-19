@@ -30,6 +30,7 @@ public static class S2Fortune
     /// <summary>한 번 점친다. 돌려주는 값은 오류 문구(쿨 중 등), 정상이면 null. rng 인자는 탐침이 고정 값을 넣어 단계별로 확인하려고 둔 것(null이면 무작위).</summary>
     public static string Cast(int playerId, System.Func<int, int> roll100 = null, System.Func<int, int> roll3 = null)
     {
+        if (!S2Features.Enabled) { return "S2 기능이 꺼져 있습니다."; }
         PlayerContext context = PlayerContext.GetOccupied(playerId);
         if (context == null || context.IsDead) return "점칠 수 없는 상태입니다.";
         int idx = Mathf.Clamp(playerId, 0, nextAllowed.Length - 1);

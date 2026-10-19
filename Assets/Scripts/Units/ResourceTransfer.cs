@@ -15,6 +15,7 @@ public static class ResourceTransfer
     /// <summary>명령이 아니면 false. 명령이면 true — amount는 숫자가 아니면 0(오류 문구는 호출부가).</summary>
     public static bool TryParse(string text, out Kind kind, out int amount)
     {
+        if (!S2Features.Enabled) { kind = Kind.Gold; amount = 0; return false; }
         kind = Kind.Gold;
         amount = 0;
         string t = (text ?? "").Trim();
@@ -45,6 +46,7 @@ public static class ResourceTransfer
     /// <summary>판정 쪽(호스트·싱글). 오류 문구를 돌려주고, 성공이면 null — 양쪽에 알림을 띄운다.</summary>
     public static string ExecuteOnAuthority(int from, int to, Kind kind, int amount)
     {
+        if (!S2Features.Enabled) { return "S2 기능이 꺼져 있습니다."; }
         if (amount <= 0) return "전송량은 1 이상이어야 합니다.";
         PlayerContext src = PlayerContext.GetOccupied(from);
         PlayerContext dst = to >= 0 ? PlayerContext.GetOccupied(to) : null;

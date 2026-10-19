@@ -70,6 +70,7 @@ public static class OroSeong
     /// <summary>판 시작(호스트·싱글): 신·악몽이면 하나 뽑아 실루엣을 세운다.</summary>
     public static void OnMatchStart()
     {
+        if (!S2Features.Enabled) { return; }
         if (!GameAuthority.IsServer || DifficultyManager.Instance == null) return;
         DifficultyMode mode = DifficultyManager.Instance.Current;
         if (mode != DifficultyMode.God && mode != DifficultyMode.Nightmare) return;
@@ -106,6 +107,7 @@ public static class OroSeong
     /// <summary>RoundManager: 신세계 진입(R60 → 61). 니카가 이미 있으면 에메트가 막고, 아니면 효과를 건다.</summary>
     public static void OnNewWorldEnter()
     {
+        if (!S2Features.Enabled) { return; }
         if (!GameAuthority.IsServer || Chosen == Saint.None || Active || silhouette == null) return;
         fillStarted = true;
         silhouette.StartFill(Dismissed);
@@ -146,6 +148,7 @@ public static class OroSeong
     /// <summary>UnitSpawner.Spawn이 부른다(호스트).</summary>
     public static void OnUnitSpawned(UnitData data)
     {
+        if (!S2Features.Enabled) { return; }
         if (data == null || Chosen == Saint.None || Dismissed || string.IsNullOrEmpty(data.unitName)) return;
         if (data.unitName.Contains("니카")) Dismiss();
     }

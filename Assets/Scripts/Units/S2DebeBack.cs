@@ -37,6 +37,7 @@ public static class S2DebeBack
     /// <summary>호스트(싱글): 고른 유닛으로 한 번 건다. forcedRoll(1~100)은 탐침용. 돌려주는 값은 오류 문구, 정상이면 null.</summary>
     public static string Execute(Selectable target, int forcedRoll = 0)
     {
+        if (!S2Features.Enabled) { return "S2 기능이 꺼져 있습니다."; }
         if (target == null || !target.TryGetComponent(out UnitIdentity identity) || identity.Data == null || !target.TryGetComponent(out OwnedByPlayer owner))
             return "자신의 '특별' 유닛에게만 사용 가능합니다";
         int pid = owner.OwnerId;

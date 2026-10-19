@@ -39,6 +39,7 @@ public static class S2Treasure
     /// <summary>RewardDistributor.GrantKillReward: 레인 주인의 라인몹 처치 하나(호스트).</summary>
     public static void OnLaneKill(int ownerId)
     {
+        if (!S2Features.Enabled) { return; }
         if (Random.value >= ChestDropChance) return;
         Open(ownerId);
     }
