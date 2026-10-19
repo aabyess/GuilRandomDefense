@@ -156,6 +156,7 @@ public class NetLauncher : MonoBehaviour
     float testSelectDelay = -1f;
     float test0929Delay = -1f; string test0929Dir;
     float testVfxDelay = -1f; string testVfxDir;
+    float testAuraDelay = -1f;   // -mpTestAura 초: 오라 이펙트 두 창 확인(10-20) — 방장이 내 우리에 오라 유닛(전설적인_이승우) 1기+아군 흔함 3기를 서로 곁에 세우고 두 창 카메라를 그쪽으로
     float testFxDelay = -1f;   // -mpTestFx 초: 이펙트 안 B 두 창 확인(10-19) — 방장이 레인 적 셋에 스턴·이감·방깎+적중을 걸고 두 창 카메라를 모은다
     string testSelectDir;
     readonly System.Collections.Generic.List<(float, string)> shotAts = new System.Collections.Generic.List<(float, string)>();
@@ -254,6 +255,7 @@ public class NetLauncher : MonoBehaviour
                 case "-mpRejoinAfter": rejoinAfter = Seconds(i + 1); break;
                 case "-mpTestVfx": testVfxDelay = Seconds(i + 1); testVfxDir = Arg(i + 2); break;
                 case "-mpTestFx": testFxDelay = Seconds(i + 1); break;
+                case "-mpTestAura": testAuraDelay = Seconds(i + 1); break;
                 case "-mpTest0929": test0929Delay = Seconds(i + 1); test0929Dir = Arg(i + 2); break;
                 case "-mpTestSelect": testSelectDelay = Seconds(i + 1); testSelectDir = Arg(i + 2); break;
                 case "-mpTestPortraits": testPortraitsDelay = Seconds(i + 1); testPortraitsDir = Arg(i + 2); break;
@@ -812,6 +814,7 @@ public class NetLauncher : MonoBehaviour
         if (test0929Delay >= 0f) StartCoroutine(Test0929After(test0929Delay, test0929Dir));
         if (testVfxDelay >= 0f) StartCoroutine(TestVfxAfter(testVfxDelay, testVfxDir));
         if (testFxDelay >= 0f) StartCoroutine(TestFxAfter(testFxDelay));
+        if (testAuraDelay >= 0f) StartCoroutine(TestAuraAfter(testAuraDelay));
         if (testPortraitsDelay >= 0f && GameAuthority.IsServer) StartCoroutine(TestPortraitsAfter(testPortraitsDelay, testPortraitsDir));
         if (testPhase3Delay >= 0f) StartCoroutine(TestPhase3After(testPhase3Delay));
         if (testTraitUnits && GameAuthority.IsServer) SpawnTraitTestUnits();
@@ -1763,6 +1766,51 @@ public class NetLauncher : MonoBehaviour
             SkillVfx.EndCast(before);
         }
         Debug.Log($"[FX테스트] {side}: 적 {list.Count}기 · 카메라 이동 · 받은 이펙트 {NetGameState.ReceivedVfx}");
+    }
+
+    // -mpTestAura 초 — 오라 이펙트(AuraVfx) 두 창 확인: 방장이 0번 슬롯 우리에 오라 유닛 1기(전설적인_이승우, 아군 공격력·공속 버프 오라)와 아군 흔함 3기를 오라 범위 안(곁)에 세운다.
+    // 양쪽 창 카메라는 그 유닛 쪽(친구 창은 거울 겉모습이 생길 때까지 기다림). 사진은 -mpShotAt으로 이 뒤 몇 초에.
+    IEnumerator TestAuraAfter(float seconds)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        string side = GameAuthority.IsServer ? "방장" : "친구";
+        if (GameAuthority.IsServer)
+        {
+            UnitSpawner spawner = FindFirstObjectByType<UnitSpawner>();
+            LaneMarker lane = LaneMarker.Get(0);
+            UnitData auraUnit = catalog != null ? catalog.units.FirstOrDefault(u => u != null && u.prefab != null && u.name == "전설적인_이승우") : null;
+            var commons = catalog != null ? catalog.units.Where(u => u != null && u.prefab != null && u.grade == UnitGrade.Common).Take(3).ToList() : null;
+            if (spawner == null || lane == null || auraUnit == null || commons == null || commons.Count == 0) { Debug.LogWarning("[AURA테스트] 오라 유닛·흔함·레인을 못 찾음"); yield break; }
+            GameObject src = spawner.Spawn(auraUnit, lane.TakeSpawnPosition(auraUnit), 0);
+            Vector3 center = src != null ? src.transform.position : lane.LaneCenter;
+            Vector3[] offsets = { new Vector3(-55f, 0f, -10f), new Vector3(55f, 0f, -10f), new Vector3(0f, 0f, -60f) };
+            for (int i = 0; i < commons.Count; i++)
+            {
+                GameObject ally = spawner.Spawn(commons[i], lane.TakeSpawnPosition(commons[i]), 0);
+                if (ally == null) continue;
+                Vector3 to = center + offsets[i];
+                if (ally.TryGetComponent(out UnityEngine.AI.NavMeshAgent agent) && agent.enabled) agent.Warp(to); else ally.transform.position = to;
+            }
+            RtsCameraController hostCam = FindFirstObjectByType<RtsCameraController>();
+            if (hostCam != null) hostCam.MoveTo(center);
+            Debug.Log($"[AURA테스트] 방장: 오라 유닛 {(src != null ? src.name : "실패")} + 아군 {commons.Count}기 → 위치 {center}");
+            yield break;
+        }
+        // 친구 창: 호스트가 세울 때까지 기다렸다가 오라 유닛 겉모습(NetEntity.AuraFlags 소스 비트)을 찾아 카메라를 옮기고 상태를 기록한다.
+        for (float waited = 0f; waited < 60f; waited += 0.5f)
+        {
+            NetEntity source = FindObjectsByType<NetEntity>(FindObjectsSortMode.None).FirstOrDefault(e => e != null && e.Object != null && e.Object.IsValid && e.EntityKind == NetEntityKind.Unit && (e.AuraFlags & 1) != 0 && e.Visual != null);
+            if (source != null)
+            {
+                RtsCameraController cam = FindFirstObjectByType<RtsCameraController>();
+                if (cam != null) cam.MoveTo(source.Visual.transform.position);
+                int receivers = FindObjectsByType<NetEntity>(FindObjectsSortMode.None).Count(e => e != null && e.Object != null && e.Object.IsValid && ((e.AuraFlags >> 1) & 3) != 0);
+                Debug.Log($"[AURA테스트] {side}: 소스 겉모습 찾음 · 범위 {source.AuraRange} · 등급 {source.AuraGrade} · 받는 점 {receivers}기");
+                yield break;
+            }
+            yield return new WaitForSecondsRealtime(0.5f);
+        }
+        Debug.LogWarning($"[AURA테스트] {side}: 60초 안에 오라 소스 겉모습을 못 봄");
     }
 
     IEnumerator QuitAfter(float seconds)

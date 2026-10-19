@@ -6,6 +6,10 @@ using UnityEngine;
 ///   call:AuraVfxProbe.Setup(오라 유닛 1기 + 받는 아군 셋을 우리에 세움) · call:AuraVfxProbe.Cam(높이) 대신 CamClose/CamBase(가까이 130 / 기본 374 근처) · call:AuraVfxProbe.Report(AuraVfx 상태·살아 있는 입자 수)</summary>
 public static class AuraVfxProbe
 {
+    /// <summary>오라 유닛 로스터 이름 — 기본 초월_노태현_AP(디버프 오라). SetBuff()로 전설적인_이승우(아군 공격력·공속 버프 오라)로 바꾼다.</summary>
+    static string SrcName = "초월_노태현_AP";
+    public static string SetBuff() { SrcName = "전설적인_이승우"; return "버프 오라 유닛 = " + SrcName; }
+
     static string Spawn(string unit)
     {
         MethodInfo m = typeof(ClaudeCommands).GetMethod("SpawnForShot", BindingFlags.Static | BindingFlags.NonPublic);
@@ -15,9 +19,9 @@ public static class AuraVfxProbe
     public static string Setup()
     {
         var sb = new StringBuilder();
-        foreach (string n in new[] { "초월_노태현_AP", "흔함_양재모", "흔함_강재규", "흔함_문필환" }) sb.AppendLine(Spawn(n));
+        foreach (string n in new[] { SrcName, "흔함_양재모", "흔함_강재규", "흔함_문필환" }) sb.AppendLine(Spawn(n));
         // 받는 아군 셋을 오라 유닛 바로 곁(범위 144 안)에 모은다 — 우리(pen)는 슬롯이 넓어 범위 밖일 수 있다.
-        GameObject src = GameObject.Find("Unit_초월_노태현_AP(Clone)");
+        GameObject src = GameObject.Find("Unit_" + SrcName + "(Clone)");
         string[] allies = { "양재모", "강재규", "문필환" };
         Vector3[] offsets = { new Vector3(-55f, 0f, -10f), new Vector3(55f, 0f, -10f), new Vector3(0f, 0f, -60f) };
         for (int i = 0; i < allies.Length && src != null; i++)
@@ -33,7 +37,7 @@ public static class AuraVfxProbe
     static string Cam(float height)
     {
         RtsCameraController cam = Object.FindFirstObjectByType<RtsCameraController>();
-        GameObject g = GameObject.Find("Unit_초월_노태현_AP(Clone)");
+        GameObject g = GameObject.Find("Unit_" + SrcName + "(Clone)");
         if (cam == null || g == null) return "❌ 카메라/노태현 없음";
         FieldInfo target = typeof(RtsCameraController).GetField("targetHeight", BindingFlags.Instance | BindingFlags.NonPublic);
         target?.SetValue(cam, height);
@@ -46,7 +50,7 @@ public static class AuraVfxProbe
 
     public static string Report()
     {
-        GameObject g = GameObject.Find("Unit_초월_노태현_AP(Clone)");
+        GameObject g = GameObject.Find("Unit_" + SrcName + "(Clone)");
         bool src = AuraVfx.SourceState(g != null ? g.transform : null, out UnitGrade gr, out float range);
         var sb = new StringBuilder($"소스 {src} 등급 {gr} 범위 {range:F0}");
         foreach (string n in new[] { "양재모", "강재규", "문필환" })

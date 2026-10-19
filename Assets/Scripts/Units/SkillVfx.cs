@@ -603,13 +603,13 @@ public static class SkillVfx
             case Kind.AuraSource:
                 if (!UseB() || Mat("ring_magic") == null) return null;
                 return Layered(parent, loop, "AuraSource",
-                    Layer("ring_magic", new Color(1f, 1f, 1f, 0.9f), 1.0f, 1.8f * Unit, 1, 0f, Shape.None, ground: true, persistent: loop),   // 발밑 얇은 광 고리
+                    Layer("ring_magic", new Color(1f, 1f, 1f, 0.9f), 1.0f, 1.8f * Unit, 1, 0f, Shape.None, ground: true, persistent: loop, local: true),   // 발밑 얇은 광 고리(유닛을 따라다님)
                     Layer("dot_soft", new Color(1f, 1f, 1f, 0.9f), 2.0f, 0.14f * Unit, 0, 0f, Shape.Ring, rate: loop ? 3.5f : 0f, rise: 0.4f * Unit, ringRadius: 0.45f),   // 아주 느린 상승 입자(초당 3~4개)
-                    Layer("ring_shock", new Color(1f, 1f, 1f, 0.15f), 1.0f, 4f * Unit, 1, 0f, Shape.None, ground: true, persistent: loop));   // 실제 범위 가장자리(반지름은 Attach가 넣는다)
+                    Layer("ring_shock", new Color(1f, 1f, 1f, 0.15f), 1.0f, 4f * Unit, 1, 0f, Shape.None, ground: true, persistent: loop, local: true));   // 실제 범위 가장자리(반지름은 Attach가 넣는다)
             case Kind.AuraReceiver:
                 if (!UseB()) return null;
                 return Layered(parent, loop, "AuraReceiver",
-                    Layer("dot_soft", new Color(1f, 1f, 1f, 1f), 1.0f, 0.34f * Unit, 1, 0f, Shape.None, ground: true, persistent: loop));   // 「받고 있음」 점 하나(큰 유닛 발밑에서도 보이게 0.34H)
+                    Layer("dot_soft", new Color(1f, 1f, 1f, 1f), 1.0f, 0.5f * Unit, 1, 0f, Shape.None, ground: true, persistent: loop, local: true, offsetZ: -0.2f * Unit));   // 「받고 있음」 점 하나 — 0.5H, 모델 발 앞(카메라 쪽 0.2H)으로 당김(10-20 PM), 대상을 따라다님
             case Kind.Smash:
                 // 10-19 안 B: 물리 = 금. 땅 폭발 메시 + 금 8각 섬광 + 금 충격 고리, 받침판.
                 if (UseB())
@@ -689,6 +689,7 @@ public static class SkillVfx
         public string mesh; public bool feet; public float spinY, yaw; public bool randomYaw; public float growFrom; public bool shrinkWidth; public Vector3 aspect;
         public float spinZ;   // 판 안에서 도는 속도(도/초)
         public string trail; public float trailSeconds, trailWidth; public Color trailColor;   // 빛 꼬리(10-19 안 B): trail = 꼬리 재질 이름, trailSeconds = 꼬리 길이(초), trailWidth = 입자 크기 대비 폭, trailColor = 꼬리 색
+        public bool local; public float offsetZ;   // local = 입자가 이펙트 뿌리를 따라다님(붙는 이펙트의 지속 고리·점) · offsetZ = 뿌리에서 앞(−z, 카메라 쪽)으로 당긴 거리
         public float rise;   // 위로 오르는 속도(월드 단위/초) — 나선 알갱이
         public float ringRadius;   // Shape.Ring 반지름(0 = 기본 0.45 Unit)
         public bool hasColor2; public Color color2;   // 시작 색을 color·color2 중 무작위로
@@ -697,11 +698,11 @@ public static class SkillVfx
     static LayerSpec Layer(string texture, Color color, float lifetime, float size, int burst, float speed, Shape shape,
                            float rate = 0f, bool ground = false, bool randomRotation = false, float grow = 0f, float orbit = 0f,
                            bool persistent = false, bool alpha = false, string mesh = null, bool feet = false, float spinY = 0f,
-                           float yaw = 0f, bool randomYaw = false, float growFrom = 0f, bool shrinkWidth = false, Vector3? aspect = null, float spinZ = 0f, string trail = null, float trailSeconds = 0.35f, Color? color2 = null, Color? trailColor = null, float trailWidth = 1f, float ringRadius = 0f, float rise = 0f) =>
+                           float yaw = 0f, bool randomYaw = false, float growFrom = 0f, bool shrinkWidth = false, Vector3? aspect = null, float spinZ = 0f, string trail = null, float trailSeconds = 0.35f, Color? color2 = null, Color? trailColor = null, float trailWidth = 1f, float ringRadius = 0f, float rise = 0f, bool local = false, float offsetZ = 0f) =>
         new LayerSpec { texture = texture, color = color, lifetime = lifetime, size = size, burst = burst, speed = speed,
                         shape = shape, rate = rate, ground = ground, randomRotation = randomRotation, grow = grow, orbit = orbit,
                         persistent = persistent, alpha = alpha, mesh = mesh, feet = feet, spinY = spinY, yaw = yaw, randomYaw = randomYaw,
-                        growFrom = growFrom, shrinkWidth = shrinkWidth, aspect = aspect ?? Vector3.one, spinZ = spinZ, trail = trail, trailSeconds = trailSeconds, trailWidth = trailWidth, trailColor = trailColor ?? Color.white, hasColor2 = color2.HasValue, color2 = color2 ?? Color.white, ringRadius = ringRadius, rise = rise };
+                        growFrom = growFrom, shrinkWidth = shrinkWidth, aspect = aspect ?? Vector3.one, spinZ = spinZ, trail = trail, trailSeconds = trailSeconds, trailWidth = trailWidth, trailColor = trailColor ?? Color.white, hasColor2 = color2.HasValue, color2 = color2 ?? Color.white, ringRadius = ringRadius, rise = rise, local = local, offsetZ = offsetZ };
 
     static ParticleSystem Layered(Transform parent, bool loop, string name, params LayerSpec[] layers)
     {
@@ -731,7 +732,7 @@ public static class SkillVfx
             main.startSize = new ParticleSystem.MinMaxCurve(spec.size * 0.85f, spec.size * 1.15f);
             main.startColor = spec.hasColor2 ? new ParticleSystem.MinMaxGradient(spec.color, spec.color2) : new ParticleSystem.MinMaxGradient(spec.color);
             main.startRotation = spec.randomRotation ? new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f) : 0f;
-            main.simulationSpace = spec.orbit > 0f ? ParticleSystemSimulationSpace.Local : ParticleSystemSimulationSpace.World;
+            main.simulationSpace = spec.orbit > 0f || spec.local ? ParticleSystemSimulationSpace.Local : ParticleSystemSimulationSpace.World;
             main.scalingMode = ParticleSystemScalingMode.Shape;
             main.maxParticles = 32;
 
@@ -747,6 +748,13 @@ public static class SkillVfx
                 shape.shapeType = ParticleSystemShapeType.Circle; shape.radius = (spec.ringRadius > 0f ? spec.ringRadius : 0.45f) * Unit; shape.rotation = new Vector3(90f, 0f, 0f); shape.radiusThickness = 0f;
                 // 한 번에 뿌리는 입자를 원 둘레에 같은 간격으로(셋이면 120°씩) — 무작위면 한쪽에 몰린다.
                 if (spec.burst > 1) shape.arcMode = ParticleSystemShapeMultiModeValue.BurstSpread;
+            }
+
+            if (spec.offsetZ != 0f)
+            {
+                shape.enabled = true;
+                shape.shapeType = ParticleSystemShapeType.Sphere; shape.radius = 0.001f;
+                shape.position = new Vector3(0f, 0f, spec.offsetZ);
             }
 
             if (spec.orbit > 0f || spec.rise != 0f)
