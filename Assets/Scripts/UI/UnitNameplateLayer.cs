@@ -144,12 +144,6 @@ public class UnitNameplateLayer : MonoBehaviour
             if (cam == null) return;
         }
 
-        for (int i = 0; i < pool.Count; i++)
-        {
-            if (pool[i].root.gameObject.activeSelf)
-                pool[i].root.gameObject.SetActive(false);
-        }
-
         int used = 0;
         Vector3 camPos = cam.transform.position;
 
@@ -180,14 +174,14 @@ public class UnitNameplateLayer : MonoBehaviour
             float distance = Vector3.Distance(camPos, identity.transform.position);
             if (distance >= maxDistance) continue;
 
-            Vector3 worldPos = identity.transform.position + Vector3.up * (HeadHeight(identity) + headHeightMargin);
+            Vector3 worldPos = identity.transform.position + Vector3.up * (CachedHeadHeight(identity) + headHeightMargin);
             Vector3 screenPos = cam.WorldToScreenPoint(worldPos);
 
             if (screenPos.z <= 0f) continue;
             if (screenPos.x < 0f || screenPos.x > Screen.width || screenPos.y < 0f || screenPos.y > Screen.height) continue;
 
             Label label = GetOrCreateLabel(used);
-            label.root.gameObject.SetActive(true);
+            if (!label.root.gameObject.activeSelf) label.root.gameObject.SetActive(true);   // 이미 켜진 것을 껐다 켜면 캔버스가 매 프레임 더러워진다(10-20)
             label.root.position = new Vector3(screenPos.x, screenPos.y, 0f);
 
             string caption = count > 1 ? $"{data.DisplayName} ×{count}" : data.DisplayName;
@@ -202,6 +196,41 @@ public class UnitNameplateLayer : MonoBehaviour
 
             used++;
         }
+
+        // 이번 프레임에 안 쓴 칸만 끈다(위에서 쓴 칸은 그대로 켜 둔다).
+        for (int i = used; i < pool.Count; i++)
+        {
+            if (pool[i].root.gameObject.activeSelf)
+                pool[i].root.gameObject.SetActive(false);
+        }
+
+        if (Time.unscaledTime >= nextHeightPrune) PruneHeights();
+    }
+
+    // 머리 높이는 렌더러 경계를 훑어야 해서(유닛마다 GetComponentsInChildren) 매 프레임 하면 비싸다 — 유닛별로 0.5초(+흩뿌림)마다만 다시 잰다(10-20 perf).
+    struct HeightEntry { public float height; public float until; }
+    static readonly Dictionary<UnitIdentity, HeightEntry> heightCache = new Dictionary<UnitIdentity, HeightEntry>();
+    static readonly List<Renderer> rendererScratch = new List<Renderer>();
+    static readonly List<UnitIdentity> pruneScratch = new List<UnitIdentity>();
+    static float nextHeightPrune;
+    const float HeightRefreshSeconds = 0.5f;
+
+    static void PruneHeights()
+    {
+        nextHeightPrune = Time.unscaledTime + 5f;
+        pruneScratch.Clear();
+        foreach (UnitIdentity key in heightCache.Keys)
+            if (key == null) pruneScratch.Add(key);   // 파괴된 유닛(Unity null)
+        foreach (UnitIdentity key in pruneScratch) heightCache.Remove(key);
+    }
+
+    static float CachedHeadHeight(UnitIdentity identity)
+    {
+        float now = Time.unscaledTime;
+        if (heightCache.TryGetValue(identity, out HeightEntry entry) && now < entry.until) return entry.height;
+        float h = HeadHeight(identity);
+        heightCache[identity] = new HeightEntry { height = h, until = now + HeightRefreshSeconds + (identity.GetInstanceID() & 7) * 0.03f };
+        return h;
     }
 
     // 🔴 (09-24) **그리는 것(Renderer)을 먼저 본다.** HealthBarLayer·SideBossBarLayer는
@@ -217,7 +246,8 @@ public class UnitNameplateLayer : MonoBehaviour
     {
         Renderer tallest = null;
         float top = float.NegativeInfinity;
-        foreach (Renderer renderer in identity.GetComponentsInChildren<Renderer>())
+        identity.GetComponentsInChildren(rendererScratch);
+        foreach (Renderer renderer in rendererScratch)
         {
             if (!(renderer is MeshRenderer || renderer is SkinnedMeshRenderer)) continue;
             if (!renderer.enabled) continue;
