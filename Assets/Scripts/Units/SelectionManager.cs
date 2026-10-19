@@ -58,55 +58,77 @@ public class SelectionManager : MonoBehaviour
         // 채팅 입력 중엔 클릭·드래그·명령 단축키를 전부 죽인다 — Input System은 텍스트
         // 필드 포커스와 무관하게 Keyboard.current를 그대로 읽어서, 안 막으면 채팅으로
         // "v"를 치는 순간 유닛이 모인다(ChatInputGate.cs 참고, 사장님 지시 2026-09-05).
-        if (ChatInputGate.IsOpen) { targeting = TargetMode.None; return; }
+        if (ChatInputGate.IsOpen) { targeting = TargetMode.None; ClickQueue.Clear(); return; }
 
         HandleCommandKeys();
         HandleControlGroups();
 
-        if (Mouse.current == null || cam == null) return;
+        if (Mouse.current == null || cam == null) { ClickQueue.Clear(); return; }
 
-        if (targeting != TargetMode.None && HandleAttackTargeting()) return;
+        if (targeting != TargetMode.None && HandleAttackTargeting()) { ClickQueue.Clear(); return; }   // 대상 지정 클릭은 선택으로 안 친다 — 같은 프레임 이벤트도 버림
 
-        if (Mouse.current.leftButton.wasPressedThisFrame)
+        // 10-20 「빠르게 클릭하면 안 먹는다」 — 누름·뗌을 프레임당 한 번이 아니라 이벤트마다(ClickQueue) 전부 처리한다. 한 프레임에 클릭이 둘 이상 몰려도 하나도 안 잃는다.
+        if (Mouse.current.leftButton.wasPressedThisFrame) ClickQueue.PolledPresses++;
+        if (ClickQueue.Active)
         {
-            // 하단 HUD 등 uGUI 위에서 누른 클릭은 월드 선택으로 취급하지 않는다.
-            ignoreCurrentPress = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
-            // 상점 칸(보물찾기 탐색 등)의 지점을 찍는 클릭은 선택이 아니다 — 찍은 뒤에도 건물 선택이 남게.
-            // GameHud가 먼저 돌면 대기가 이미 풀렸으므로 「이 프레임에 소비됨」도 같이 본다.
-            if (GameHud.ShopTargetingPending || GameHud.ShopClickConsumedFrame == Time.frameCount)
-                ignoreCurrentPress = true;
-
-            if (!ignoreCurrentPress)
+            while (ClickQueue.TryDequeue(out ClickQueue.Evt evt))
             {
-                dragStart = Mouse.current.position.ReadValue();
-                isDragging = false;
+                if (evt.down) { ClickQueue.HandledPresses++; OnLeftDown(evt.pos); }
+                else OnLeftUp(evt.pos);
             }
-            leftButtonHeld = !ignoreCurrentPress;
+        }
+        else   // 큐를 못 만든 환경 — 옛 폴링(프레임당 누름 한 번)
+        {
+            Vector2 now = Mouse.current.position.ReadValue();
+            if (Mouse.current.leftButton.wasPressedThisFrame) { ClickQueue.HandledPresses++; OnLeftDown(now); }
+            if (Mouse.current.leftButton.wasReleasedThisFrame) OnLeftUp(now);
         }
 
         if (leftButtonHeld && !isDragging)
         {
             Vector2 current = Mouse.current.position.ReadValue();
-            if (Vector2.Distance(dragStart, current) >= dragThreshold)
+            if (Vector2.Distance(dragStart, current) >= DragThresholdPixels)
                 isDragging = true;
         }
+    }
 
-        if (Mouse.current.leftButton.wasReleasedThisFrame)
+    // 화면이 클수록 손 떨림 픽셀도 커진다 — 4px 고정이면 고해상도에서 클릭이 자꾸 「아주 작은 드래그 선택」이 되어 선택이 풀렸다(10-20). 1080 높이 기준 8px, 높이에 비례.
+    float DragThresholdPixels => Mathf.Max(dragThreshold, 8f * Screen.height / 1080f);
+
+    void OnLeftDown(Vector2 pos)
+    {
+        // 하단 HUD 등 uGUI 위에서 누른 클릭은 월드 선택으로 취급하지 않는다.
+        ignoreCurrentPress = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+        // 상점 칸(보물찾기 탐색 등)의 지점을 찍는 클릭은 선택이 아니다 — 찍은 뒤에도 건물 선택이 남게.
+        // GameHud가 먼저 돌면 대기가 이미 풀렸으므로 「이 프레임에 소비됨」도 같이 본다.
+        if (GameHud.ShopTargetingPending || GameHud.ShopClickConsumedFrame == Time.frameCount)
+            ignoreCurrentPress = true;
+
+        if (!ignoreCurrentPress)
         {
-            if (!ignoreCurrentPress)
-            {
-                if (isDragging)
-                    SelectInBox(dragStart, Mouse.current.position.ReadValue());
-                else if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
-                { /* 10-09 상점 풀림 방어: 누른 프레임엔 UI 판정이 낡아(EventSystem 처리 전) 월드 클릭으로 읽혔어도, 뗄 때 커서가 UI 위면 선택을 풀지 않는다 — 단추를 눌렀는데 빈 땅 클릭으로 새어 상점 선택이 풀리던 경로 */ }
-                else
-                    TrySelectAtCursor();
-            }
-
+            dragStart = pos;
             isDragging = false;
-            leftButtonHeld = false;
-            ignoreCurrentPress = false;
         }
+        leftButtonHeld = !ignoreCurrentPress;
+    }
+
+    void OnLeftUp(Vector2 pos)
+    {
+        if (!ignoreCurrentPress && leftButtonHeld)
+        {
+            // 드래그가 아주 작으면(손 떨림) 클릭으로 본다 — 작은 박스 선택은 아무것도 못 골라 선택만 풀렸다.
+            bool tinyDrag = isDragging && Mathf.Max(Mathf.Abs(pos.x - dragStart.x), Mathf.Abs(pos.y - dragStart.y)) < DragThresholdPixels * 1.5f;
+            if (isDragging && !tinyDrag)
+                SelectInBox(dragStart, pos);
+            else if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+            { /* 10-09 상점 풀림 방어: 누른 프레임엔 UI 판정이 낡아(EventSystem 처리 전) 월드 클릭으로 읽혔어도, 뗄 때 커서가 UI 위면 선택을 풀지 않는다 — 단추를 눌렀는데 빈 땅 클릭으로 새어 상점 선택이 풀리던 경로 */ }
+            else
+                TrySelectAt(pos);
+        }
+
+        isDragging = false;
+        leftButtonHeld = false;
+        ignoreCurrentPress = false;
     }
 
     // ── 동맹 보기 전용 선택(10-08): 남의 유닛을 누르면 그 하나만 「보기 전용」으로 고른다 — 초상·정보창·툴팁은 뜨고 명령은 안 나간다.
@@ -293,20 +315,20 @@ public class SelectionManager : MonoBehaviour
             }
     }
 
-    void TrySelectAtCursor()
+    void TrySelectAt(Vector2 clickPos)
     {
         Selectable hitSelectable = null;
-        if (WorldPick.TryHit(cam, Mouse.current.position.ReadValue(), out RaycastHit hit))
+        if (WorldPick.TryHit(cam, clickPos, out RaycastHit hit))
         {
             hit.collider.TryGetComponent(out hitSelectable);
             // 상점 건물에 맞았어도 커서 둘레에 유닛이 보이면 유닛을 고른다(드래그 선택과 같은 「유닛 우선」, 사장님 10-14) — 유닛 콜라이더가 몸보다 가늘어 광선이 비껴 건물에 맞는 경우.
             if (hitSelectable != null && hitSelectable.TryGetComponent(out ILaneShop _))
             {
-                Selectable near = WorldPick.NearestUnitOnScreen(cam, Mouse.current.position.ReadValue(), 48f * Mathf.Max(1f, Screen.height / 1080f));
+                Selectable near = WorldPick.NearestUnitOnScreen(cam, clickPos, 48f * Mathf.Max(1f, Screen.height / 1080f));
                 if (near != null) hitSelectable = near;
             }
             // 위습이 칸마다 같은 자리에 겹쳐 나온다(사장님 10-08) — 맨 위가 남의 것이어도 같은 자리의 「내 것(또는 공유 받은 것)」을 우선 고른다.
-            if (hitSelectable != null && !AllianceShare.CanControlLocal(hitSelectable.gameObject) && WorldPick.TryHitControllable(cam, Mouse.current.position.ReadValue(), hit.distance, out RaycastHit mine))
+            if (hitSelectable != null && !AllianceShare.CanControlLocal(hitSelectable.gameObject) && WorldPick.TryHitControllable(cam, clickPos, hit.distance, out RaycastHit mine))
             {
                 mine.collider.TryGetComponent(out hitSelectable);
                 hit = mine;
@@ -325,7 +347,7 @@ public class SelectionManager : MonoBehaviour
             if (inspect == null)
             {
                 float tolerance = InspectPickTolerancePixels * Mathf.Max(1f, Screen.height / 1080f);
-                EnemyDummy near = WorldPick.TryPickEnemy(cam, Mouse.current.position.ReadValue(), tolerance);
+                EnemyDummy near = WorldPick.TryPickEnemy(cam, clickPos, tolerance);
                 if (near != null) inspect = near.gameObject;
             }
             if (inspect != null) { InspectTarget.Set(inspect); return; }
@@ -350,7 +372,7 @@ public class SelectionManager : MonoBehaviour
             return;
         }
 
-        Vector2 clickScreen = Mouse.current.position.ReadValue();
+        Vector2 clickScreen = clickPos;
         Object type = TypeKey(hitSelectable);
         bool ctrl = Keyboard.current != null && (Keyboard.current.leftCtrlKey.isPressed || Keyboard.current.rightCtrlKey.isPressed
                                                  || Keyboard.current.leftCommandKey.isPressed || Keyboard.current.rightCommandKey.isPressed);
