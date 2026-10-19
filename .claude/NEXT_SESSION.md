@@ -8,7 +8,7 @@
 
 ## 🔴🔴🔴🔴🔴 PM 16 낮 3 — 0.3.28 배포 (10-19 15:0x)
 - 사장님 답: 상점 6채 S2 모델로 바꿈 · 파칭코 2차 이펙트 다시 얹음 · 장식 넣고 배포 · **윈도우만 드라이브에**(맥은 안 올림).
-- **배포**: main=2cbba489c 기준 빌드(맥·윈 오류 0, GameVersion 0.3.28). 드라이브 G.R.D/: GuRandi_Beta_Windows_0.3.28v.zip 올림 · 0.3.26 zip 둘 삭제(철회판) · 0.3.25 zip 둘 남김(되돌림용) · 패치노트/ 15장 교체(1_0.3.28). 맥 zip·앱은 ~/Desktop/구랜디_베타/(GuRandi_최신_맥.app 링크 갱신). 로그 ~/grd/GRD_release_0328/.
+- **배포**: main=2cbba489c 기준 빌드(맥·윈 오류 0, GameVersion 0.3.28). 드라이브 G.R.D/: GuRandi_Beta_Windows_0.3.28v.zip 올림 · 0.3.26 zip 둘 삭제(철회판) · 0.3.25 zip 둘 남김(되돌림용) · 패치노트/ 15장 교체(1_0.3.28). 맥 zip은 ~/Desktop/구랜디_베타/. 🔴 **배포 절차에 추가(사장님 10-19)**: 같은 폴더의 GuRandi_최신_맥.app을 새 빌드로 **실제 복사(ditto)**로 교체 — 심링크 금지(0.3.28 때 ln -sfn이 옛 앱 안에 링크를 만들어 0.3.26이 남아 있었음). 로그 ~/grd/GRD_release_0328/.
 - **0.3.28 내용**: 0.3.25 코드 + 성 테마·문 전환(닫힘·열림 1.0초, 번쩍임 14%)·Elyvilon 음악 + 파칭코 2차 이펙트·확률(14d51aaa0)·판 시작 초기화·리셋 보강(탐침 제외) + 장식 6종(StructureDresser.PlaceOldMapLandmarks, 메뉴 Tools/맵/옛 맵에 S2 장식 얹기·걷기) + 상점 6채 S2 모델(`StructureDresser.UseS2ShopModels` true/false + 표 S2ShopModels, 메뉴 Tools/맵/상점 모양 다시 입히기; 옛 fbx 보관). 비교 페이지 https://claude.ai/artifact/EjJLRPPcYx1D29E76RibCH.
 - 🔴 사장님 답 대기: 상점 새 모델 유지 여부(PM 의견: 옛 것이 더 정교) · 드라이브 「0.3.26 기능 설명/」 폴더(철회된 S2 기능 안내 18장) 지울지 · 흔함 스킨 6 짝.
 - 브랜치: main(2cbba489c+) · s2/parked(S2 전부) · map/s2(보관) · map/s2models(=main으로 ff됨) · w2b · ui/castle(옛 base, 새 수정은 ui/castle2). 메인 폴더 에디터는 map/s2models 체크아웃(=main 내용).
