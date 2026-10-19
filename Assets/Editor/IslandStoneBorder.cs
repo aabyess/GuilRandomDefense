@@ -12,6 +12,7 @@ public static class IslandStoneBorder
 {
     const string RootName = "섬돌테두리";
     const float Inset = 2f;
+    const float GachaInset = 3f;   // 위쪽 선택 위습 구역 띠벽(BuildSelectWispBorder inset 3)과 한 줄로 이어 붙인다
 
     [MenuItem("Tools/맵/섬 돌 테두리 얹기")]
     public static void Apply()
@@ -59,10 +60,11 @@ public static class IslandStoneBorder
     // 섬 한 개의 테두리 — 윗변(skipTop이 0일 때만)·아랫변·좌우 변. skipTop은 위에서 그만큼 내려온 데서 좌우 벽을 시작한다(뽑기섬).
     static int Border(Transform parent, MapLayout.Island island, float u, float skipTop)
     {
-        float left = island.center.x - island.size.x * 0.5f + Inset;
-        float right = island.center.x + island.size.x * 0.5f - Inset;
-        float top = island.center.y + island.size.y * 0.5f - Inset;
-        float bottom = island.center.y - island.size.y * 0.5f + Inset;
+        float inset = skipTop > 0f ? GachaInset : Inset;
+        float left = island.center.x - island.size.x * 0.5f + inset;
+        float right = island.center.x + island.size.x * 0.5f - inset;
+        float top = island.center.y + island.size.y * 0.5f - inset;
+        float bottom = island.center.y - island.size.y * 0.5f + inset;
         float y = MapLayout.IslandTop;
         string n = island.name;
         int count = 0;
@@ -78,7 +80,34 @@ public static class IslandStoneBorder
         if (skipTop <= 0f)
             foreach (Vector2 c in new[] { new Vector2(left, top), new Vector2(right, top) })
             { StructureDresser.PlaceStretched(parent, "선택위습_모서리기둥", $"{n}_모서리기둥", new Vector3(c.x, y, c.y), 0f, Vector3.one * u); count++; }
+        else
+            // 뽑기섬: 위쪽 선택 위습 구역 띠벽과 이어지는 두 자리에 기둥(한 바퀴가 닫힌다)
+            foreach (float x in new[] { left, right })
+            { StructureDresser.PlaceStretched(parent, "선택위습_모서리기둥", $"{n}_이음기둥", new Vector3(x, y, sideTop), 0f, Vector3.one * u); count++; }
+
+        // (b) 기둥 머리 장식 — 부스 기둥의 둥근 머리와 같은 구(돌 질감). 모서리 기둥 높이 1.4m 위에 지름 0.5m.
+        foreach (Transform t in parent)
+            if (t.name.StartsWith(n + "_") && (t.name.EndsWith("모서리기둥") || t.name.EndsWith("이음기둥")))
+            { AddCap(parent, $"{t.name}_머리", t.position + Vector3.up * (1.4f * u), u); count++; }
         return count;
+    }
+
+    static Material capMaterial;
+    static void AddCap(Transform parent, string name, Vector3 at, float u)
+    {
+        if (capMaterial == null)
+        {
+            GameObject pillar = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Art/Structures/선택위습_부스기둥.fbx");
+            Renderer r = pillar != null ? pillar.GetComponentInChildren<Renderer>() : null;
+            if (r != null && r.sharedMaterials.Length > 0) capMaterial = r.sharedMaterials[0];
+        }
+        GameObject cap = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        cap.name = name;
+        cap.transform.SetParent(parent, false);
+        cap.transform.position = at + Vector3.up * (0.22f * u);
+        cap.transform.localScale = Vector3.one * (0.5f * u);
+        Object.DestroyImmediate(cap.GetComponent<Collider>());
+        if (capMaterial != null) cap.GetComponent<MeshRenderer>().sharedMaterial = capMaterial;
     }
 
     static int Row(Transform parent, string name, float x0, float x1, float z, float u)
