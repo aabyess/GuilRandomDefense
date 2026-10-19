@@ -56,6 +56,9 @@ public class PlayerNotificationHud : MonoBehaviour
     {
         public string message;
         public float expiresAt;
+        public string plain;     // 색 태그를 뗀 글(정규식은 줄마다 한 번만 — 10-20 perf)
+        public float width;      // plain의 글자 폭(글자 크기 widthFont일 때)
+        public int widthFont;
     }
 
     // ⚠️ 플레이어별로 큐를 따로 둔다 — 원작 `udg_Player_Group_Number[플레이어]`처럼
@@ -148,6 +151,7 @@ public class PlayerNotificationHud : MonoBehaviour
         }
 
         if (list.Count == 0) return;
+        if (Event.current.type != EventType.Repaint) return;   // 그리기뿐인 OnGUI라 Layout·입력 이벤트에선 안 그린다(프레임당 2~3배 일을 줄인다, 10-20 perf)
 
         // 글자 크기는 1080 기준 18 — IMGUI는 CanvasScaler를 안 타서 작은 창에서 글자가 상대적으로 커진다(1366×768에선 ×0.71 ≈ 19px, 줄 폭 710px).
         float scale = Mathf.Clamp(Screen.height / 1080f, 0.7f, 2f);
@@ -160,8 +164,11 @@ public class PlayerNotificationHud : MonoBehaviour
         for (int i = list.Count - 1; i >= 0 && y > 0f; i--)
         {
             float alpha = Mathf.Clamp01((list[i].expiresAt - now2) / FadeSeconds);
-            string plain = ColorTag.Replace(list[i].message, "");
-            float textWidth = Style.CalcSize(new GUIContent(plain)).x;
+            Entry entry = list[i];
+            if (entry.plain == null) { entry.plain = ColorTag.Replace(entry.message, ""); entry.widthFont = 0; }
+            if (entry.widthFont != Style.fontSize) { entry.width = Style.CalcSize(new GUIContent(entry.plain)).x; entry.widthFont = Style.fontSize; list[i] = entry; }
+            string plain = entry.plain;
+            float textWidth = entry.width;
             float width = Mathf.Min(BoxWidth * scale, textWidth + BandPad * 2f * scale + 6f);
             Rect rect = new Rect(LeftMargin * scale, y, BoxWidth * scale, lineHeight);
             // 줄 뒤 반투명 검정 띠 — 글자 폭만큼(밝은 땅 위에서도 읽히게)
