@@ -70,4 +70,11 @@ public static class PachinkoFireProbe
         return "관전 시험";
     }
     public static string SpecAudio() => PachinkoOverlay.DebugSpecAudio();
+    // 2차 이펙트(10-18): 모양 확인용 느린 재생 · 실제 판에서 재생된 목록
+    public static string FxSlowA() { PachinkoOverlay.DebugPlayFx("text_chance", 8f, 0.6f); PachinkoOverlay.DebugPlayFx("starburst", 8f, 0.6f); return "느린 chance+starburst"; }
+    public static string FxSlowB() { PachinkoOverlay.DebugPlayFx("rainbow", 8f, 0.7f); PachinkoOverlay.DebugPlayFx("text_geki", 8f, 0.6f); return "느린 rainbow+geki"; }
+    public static string FxSlowC() { PachinkoOverlay.DebugPlayFx("coins", 8f, 0.7f); PachinkoOverlay.DebugPlayFx("text_push", 8f, 0.6f); return "느린 coins+push"; }
+    public static string FxSlowD() { PachinkoOverlay.DebugPlayFx("fire", 8f, 0.55f); PachinkoOverlay.DebugPlayFx("shockwave", 8f, 0.7f); return "느린 fire+shockwave"; }
+    public static string FxSlowE() { PachinkoOverlay.DebugPlayFx("slime", 8f, 0.55f); PachinkoOverlay.DebugPlayFx("speedlines", 8f, 1f); PachinkoOverlay.DebugPlayFx("text_kakuhen", 8f, 0.6f); return "느린 slime+speedlines+kakuhen"; }
+    public static string FxLog() => $"이펙트 {PachinkoOverlay.FxPlayed}회: {PachinkoOverlay.FxLog}";
 }
