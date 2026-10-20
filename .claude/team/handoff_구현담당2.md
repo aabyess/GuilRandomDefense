@@ -1,4 +1,27 @@
-# 구현담당2 인수인계 — 2026-10-16 밤 (파칭코 영상형 테마·밤샘 4항목 뒤) ← 이 절이 최신
+# 구현담당2 인수인계 — 2026-10-20 밤샘 마감 (빠른 클릭 반응·ui/perf 검증·FPS A/B 뒤) ← 이 절이 최신
+
+새 세션은 기억이 없다. 이 절 → 아래 옛 절 → `.claude/NEXT_SESSION.md`. 작업 worktree `/Users/sang/GitHub/GuilRandomDefense-w2`(브랜치 w2b = origin/main에 맞춤). 보고는 `SendMessage`로 「[구현담당2 → PM] 제목」. 산출물 `~/grd/GRD_*/`.
+
+## 끝낸 일 (전부 main 병합·0.3.37~0.3.38 배포)
+- **빠른 클릭 반응 1·2차**(w2c → main, 커밋 0369b71c3·5bd44d1fe·fc51de809): `Assets/Scripts/Units/ClickQueue.cs` — InputAction 콜백으로 좌클릭 누름·뗌을 큐에 쌓아 SelectionManager가 프레임마다 전부 처리(옛 wasPressedThisFrame은 한 프레임에 몰린 클릭·누름뗌 동시 도착을 놓침). `ClickQueue.PressedThisFrame`(소비 안 하는 조회)을 GameHud 대상 지정 클릭 6곳·공격 대기에 적용. 드래그 임계 = 8px@1080p 비례 + 작은 드래그는 클릭. UnitMover 우클릭 조회·레이캐스트 프레임당 1회. 시험 인자 `-mpTestClicks 초 간격ms [끊김ms]`(가상 마우스). 처리율 옛 폴링 100/80/55/55% → 큐 100%.
+- **ui/perf 실기 검증**(구현담당4 작업, 에디터): 이름표·체력바·선택 정보칸·미니맵 통과, 사진 `~/grd/GRD_ui_perf/실기_*.png`. 조합 도우미·동맹창은 gameshot 인자가 공백에서 잘려 **못 봄**(구현담당4가 코드로 재확인).
+- **FPS A/B**: `~/grd/GRD_perf_1020/AB_0335_0337.md` — 0.3.35 → 0.3.37 평균 89 → 165, R18~22(보스 R20) 중앙 88 → 166 → 183(0.3.38), R20 끊김 없음. 로그 A35/ab·ab·ab2, 복사 앱 B37.app·C38.app.
+
+## 남은 일
+- GameHud 외의 `wasPressedThisFrame` 좌클릭 폴링은 CreditsSplash(건너뛰기)뿐 — 급하지 않음. 오른쪽 클릭·Keyboard 폴링은 안 바꿨다.
+- 조합 도우미·동맹창 실화면 확인(gameshot `click:`이 공백 든 버튼 이름을 못 누름 → 공백 없는 이름이나 탐침으로).
+- R25~31에서 세 빌드 모두 228~254ms 한 번씩 나오는 프레임 끊김(원인 미조사).
+
+## 함정
+- **빌드 폴더(`../GuilRandomDefense-build`)는 PM이 「빌드 폴더 풀림」이라고 한 뒤에만** 쓰고 git은 손대지 말 것. 앱은 복사해서 쓴다. 메인 폴더 에디터는 PM이 지정한 사람만 — 쓰려면 구현담당1에게 「에디터 넘김」 요청·끝나면 「에디터 반납」.
+- 맥 앱 실행 `-logFile 상대경로`는 **앱이 들어 있는 폴더 기준**(A35/ab2/A.log)에 쓰인다. 측정은 한 번에 하나씩 순서대로(동시 금지) · 에디터 창 최소화 요청.
+- 진단 줄 `[MP] 진단: FPS …, 최악 프레임 …ms`(10초 간격, NetDiagnostics) 평균은 끝 구간 이상치로 부풀어 중앙값을 쓸 것. 시작 직후 2.4초 로드 끊김은 모든 빌드 공통.
+- gameshot `select:Unit_`로 내 유닛 선택 시험 가능(실제 가상 마우스 클릭 경로). 이름에 공백 있는 인자는 쪼개진다.
+- 메인 폴더 `git checkout`은 에디터가 열려 있으면 씬 파일 때문에 확인 창에서 멈출 수 있음(코드만 다르면 괜찮음). 임시 브랜치 tmp/perf2는 지워도 됨.
+- 작업트리 잔여(`Assets/Photon/스크린샷*.png` 등)는 남의 것 — 커밋 금지.
+
+---------- 아래는 10-16 밤 인수인계 ----------
+# 구현담당2 인수인계 — 2026-10-16 밤 (파칭코 영상형 테마·밤샘 4항목 뒤)
 
 새 세션은 기억이 없다. 이 절 → 아래 옛 절 → `.claude/NEXT_SESSION.md`. 작업 장소 worktree `/Users/sang/GitHub/GuilRandomDefense-w2`(w2). 산출물은 전부 `~/grd/GRD_*/`(홈 `~/GRD_*` 아님), 에디터 로그 `~/grd/GRD_w2_editor<N>.log`. push·SampleScene 수정 금지, 병합은 PM(나는 `git merge --ff-only main`).
 
