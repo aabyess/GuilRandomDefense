@@ -1,4 +1,4 @@
-# handoff — 구현담당4 (시작 흐름 성 테마, 10-19)
+# handoff — 구현담당4 (시작 흐름 성 테마 · VFX 스타일 · UI 성능, 10-20 마감) — 이 역할은 더 안 띄움(사장님 10-20)
 
 작업 폴더: worktree `../GuilRandomDefense-ui`, 브랜치 `ui/castle`(main 기준). push·병합은 PM. 산출물·사진: `~/grd/GRD_title_castle/`(README.md·촬영법.md·페이지문구.md·비교_*.png·music/).
 
@@ -25,3 +25,15 @@ cc909ae2e·735b3604b·8d7b9272c 문 전환 개선: `DoorTransition`에 방식 �
 - MenuTheme의 Castle 그림이 없으면 Tavern 그림으로 물러나므로 「성인 줄 알았는데 선술집」이 조용히 나올 수 있다 — 폴더 이름·.meta 확인.
 - Tavern(영상 배경)은 title_loop.webm 첫 장이 늦게 뜬다 — 촬영 [초]를 3으로.
 - 새 .meta GUID는 uuid로 만든다(check_meta.py는 PM이 푸시 전에 돌림).
+
+## 10-20 갱신 (마감) — 이후 나온 일
+- **성 테마 후속**: 문 A(쇠문) 확정·느리게(닫힘 1.0s·열림 1.0s, 로딩은 완전히 닫힌 뒤), 열림 곡선·번쩍임 수정(PM 후4 촬영 통과), 음악 = Elyvilon 「Noonday Feast of the Jolly Friar」(CC BY 4.0, 성 테마만; 파일 `title_castle_noonday_feast.mp3`, 크레딧 CreditsSplash). 0.3.25 기반 main에 cherry-pick 병합됨. 위 「남은 것」 3번(음악)은 끝남.
+- **VFX 스타일**: 사장님이 B(워크3풍) 선택, 스턴도 B. 산출물 `~/grd/GRD_vfx_graph/스타일/`(README·안A/B/C 시안·스턴 비교·tools/gen_B_textures.py) · 텍스처 세트 `~/grd/GRD_vfx_graph/재료_B/`(README에 사용처·블렌드·스턴 B 수치). 구현담당2에게 인계됨 — 텍스처 수정은 `gen_B_textures.py`(/usr/bin/python3)를 고쳐 재생성.
+- **UI 성능(ui/perf, 13커밋, main 병합·0.3.37)**: 이름표·체력바 머리 높이 캐시와 풀 SetActive 제거, GameHud 정보칸 토글·문자열 생략, 미니맵 12→6Hz+LeanRender, 초상 카메라 패스 축소, 조합 도우미·동맹창 재갱신 생략, OnGUI Repaint만 등. 표 `~/grd/GRD_ui_perf/README.md`. ⚠️ 수치는 코드 추정(실측은 구현담당2 A/B). 미니맵 수면이 이상하면 `MinimapCamera.LeanRender=false`.
+- **패치노트 0.3.37 초안**(6b8cd749d) · **아침 보고 재료** `~/grd/GRD_night_report_1020/`(페이지문구.md·사장님_결정목록.md·img/ 34장).
+- 워크트리: `../GuilRandomDefense-ui`(ui/castle), `../GuilRandomDefense-uiperf`(ui/perf), `../GuilRandomDefense-notes`(notes/0337) — 모두 병합 끝, 정리해도 됨.
+
+## 남은 것 (갱신)
+1. 대기실 실화면(방 만들기, Photon) 확인 — 아직 안 봄.
+2. 명령 카드 「액티브 스킬」 칸 문자열은 아직 매 프레임 생성(작음). 다중 선택 시 판매 칸 GetComponent 루프(작음).
+3. UI 성능 실측 수치(0.3.35 vs 0.3.37)는 구현담당2 결과 대기 → 아침 보고 표에 반영.
