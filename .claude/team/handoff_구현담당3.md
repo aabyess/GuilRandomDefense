@@ -1,3 +1,27 @@
+# 구현담당3 인수인계 (2026-10-20 마감 — 세션 교체, 이 역할은 다시 안 띄움)
+
+> 아래 10-06 본문은 그날의 인수인계(함정 목록은 여전히 유효). 이 절이 최신이다.
+
+## 10-18~20 끝낸 것
+- **S2 규칙 9종·맵 목표물·오로성·진화체·에그헤드·모드 토글·S2Anchors·S2Features 스위치(가드 cd57c7b5c)** — 사장님 10-19 방침(구버전 원랜디 따라감)으로 main에서 되돌림. **전부 `s2/parked` 브랜치에 보관**(필요하면 거기서 꺼냄). 상세 표는 그 브랜치의 옛 handoff_구현담당3.md(b71e8049a)에 있음.
+- **S2 영상 리서치**: ~/grd/GRD_s2_map/영상분석_2.md (상점 열 6채 확정 · §F 못 밝힌 구역: 조합 구역 섬 이름·허브 어두운 원·오른쪽 위 4칸·퀘스트 NPC·룸바 배/포네글리프·봉인섬/#0/모래 대륙, 창고 4칸 테두리 근거 없음).
+- **구버전 레인 설계(10-20)**: ~/grd/GRD_oldmap_lane/ — 레인_설계.md(띠별 표 §6)·레인_시안.png·textures/(ambientCG CC0 4종, LICENSE.txt)·frames/(영상 6KOsgr1BLLo 16장). 배치는 영상 2020 기준(웅덩이 모래 남쪽), 구현은 구현담당1.
+- **성능 점검(10-20)**: ~/grd/GRD_perf_1020/보고.md(핫스팟 상위 15·빌드 측정)·표_0.3.34.md. 병합된 커밋: 256b4aedd UnitFacing 캐시 · e4cb89780 SkinClipHider · 48ee8993c SkillVfx.Burst 커서 · 445466607 UpdateSkillCooldown 쿨다운 스킬 캐시(UnitUpgrades.Version) · b5a2e9897 검증 탐침 CooldownEquivProbe(에디터 검증 통과: 일치·Diff 0.081초) · 6db0c7c46 CharacterAnimator 클립 배열 · a79336c88 RegenPercentNow · 0dccefd0d UpdateAuraTick 목록 재사용(perf/1020b, main 병합).
+
+## 남은 일
+1. **보스 라운드·R25~31 끊김 원인 미확인**(프로파일러 필요): 0.3.34 솔로 측정에서 R17(평균 37)·R20 보스(최저 FPS 7, 208ms)·R29~31(R30 보스 최악 399ms)·R36~38(적 11~16마리, 평균 40대). 적별 피격 이펙트 상한(0.12초)·평타 적중음 음소거·텔레메트리 꺼짐은 이미 확인 — 타격당 이펙트로는 설명 안 됨. 에디터 프로파일러(CPU 타임라인) 또는 빌드에 라운드별 Burst·TakeDamage 횟수 로그 한 줄로 확인할 것.
+2. 보고.md 핫스팟 중 **미착수**: #6 UnitCombat 적 탐색(레인별 버킷)·#12 UnitAttacker Tick* 7개 묶기(규칙 시간 정밀도 확인 필요)·#11 SkillVfx.TickAttached 간격화·#13 UnitSphereArt Setup(1회 보장 확인). UI 몫(#14·#15, 구현담당4)은 제외했음.
+3. 성능 측정 한계: 빌드에 autoloop 없음 → `-mpHost -mpAutoStart 1 -mpTestUnits 120 -mpDifficulty Easy`(흔함 120기, 이펙트 수 로그 없음)로 대체. 측정 스크립트 ~/grd/GRD_perf_1020/table.py(로그→라운드별 FPS 표).
+4. (s2/parked와 함께) S2 쪽 미완: 니카 유닛 없음(오로성 퇴치)·이세계 기본값 결정·LK+10 마법저항 미구현.
+
+## 함정 (이번에 추가)
+- 워크트리 `../GRD-wt-g3`(g3/s2-anchors·g3/s2-off)·`../GRD-wt-perf2`(perf/1020b)·`../GRD-wt-handoff`가 남아 있다 — 필요 없으면 `git worktree remove`. main 폴더에서 커밋하지 않으려고 쓴 것.
+- `Tools/ui/csc_check.sh`는 **주 저장소 Library/Bee rsp**를 쓴다 — 에디터가 재컴파일 중이면 CS0006(ref.dll 없음)이 쏟아진다(환경 문제, 잠시 뒤 재시도). `csc_check_editor.sh`는 낡은 dll이라 새 멤버를 못 찾는다(무시).
+- `pkill -f "<패턴>"`은 그 패턴을 담은 자기 셸 명령까지 죽인다 — 패턴을 변수로 쪼개거나 PID로 종료.
+- 빌드 앱(GuRandi_최신_맥.app)은 새 배포가 덮어쓴다 → 측정 전 zip을 따로 풀어 두기.
+
+---
+
 # 구현담당3 인수인계 (2026-10-06 밤, 세션 교체)
 
 규칙·환경은 CLAUDE.md·TEAM_RULES·`.claude/team/구현담당3.md`. 에디터는 여럿이 하나를 같이 쓴다(「씁니다/끝났습니다」). 사장님 확정 답은 모두 아래 설계표·문서에 「✅ 사장님 확정」 절로 적혀 있다.
