@@ -28,10 +28,23 @@
 | **파칭코 그림 재료 전부**(도쿄구울 숫자 v3·로고·틀·UI·이펙트·리제로 보석 숫자) | `~/grd/GRD_pachinko_art/` — `symbols_v3/`(도쿄구울 숫자, 시안 SVG 렌더·불꽃 6프레임·별빛·블러), `symbols_rz/`(리제로 보석 숫자 1~9 + `_s0/_s1` 반짝임 + `_blur` + `_pink` 분홍 리치, 7은 금+「強」), `fx/`(카구네 촉수 4·붓 획 3·빛줄기 2·집중선·시계 문양·나비 4프레임·불똥 8), `logos/`·`ui/`·`machine_frame_1920x1080.png`·`machine_layout.json` | `Tools/pachinko/` : `symbol_v3.py`+`symbol_v3_post.py` · `symbol_rz.py [숫자…] [--pink]`(헤드리스 Chrome SVG) · `fx_art.py [kagune brush streak speed clock butterfly spark]` · `pachinko_art.py`. 구현담당2에게 경로 전달 완료 |
 | **대체 폭발 겉모습 조정**(tots_R 1건 + 17건 적용·11건 예외) | `~/grd/GRD_scenes/tone_28/`(before/after·compare.png·except.csv), auto/에 반영 | `Tools/w3x/scene_tone.py`(tots_R 포함) · `scene_tone_28.py [--apply]`(수명 3초 이상만 0.3배·1.2초) |
 
+## 10-19~20 밤샘 작업 (맵 카피 → 옛 맵 되돌림 → VFX 재료 → 선택 위습 → 최적화)
+| 것 | 위치 | 도구(Tools/…) |
+|---|---|---|
+| S2 맵 모델 47종(꺼냄 26 + 베낌 21) · README 배치표 · 시트 | `~/grd/GRD_s2_models/map/` (`sheet_for_oldmap.png`, `sheet_map_models.png`, `sheet_stock.png`) | `w3x/map_model_list.py` · `blender/gen_s2_stock_decor.py`(IceTile·WhiteDivider 포함) — **map/s2 브랜치 커밋 ace8b464a·b10ef191c·8b1d6481b, 현재 체크아웃엔 de65adf94로 파일 복사본** |
+| 상점 6채 반입용(배율표·밝은 포탈 판) | `~/grd/GRD_s2_models/shop_for_oldmap/` (README 배율표, sheet_shop.png) | 같음 |
+| VFX 재료(플립북 8×8 5종×{4096,2048}·타일 노이즈 3·가로 그라디언트·저폴리 메시 3) | `~/grd/GRD_vfx_graph/재료/{플립북,타일,메시}/` (각 README) | `blender/gen_vfx_flipbook_proc.py`(링·아크) · `gen_vfx_flipbook_flame.py`(불·연기·청백) · `gen_vfx_tiles.py` · `gen_vfx_meshes.py` — 시스템 파이썬 `/usr/bin/python3`(PIL) |
+| 선택 위습 정식 모델 5종 + 전체 시안 + 부스 시안 | `~/grd/GRD_select_wisp/{models,전체_시안.png,부스_시안.png}` | `blender/gen_wisp_models.py` · `gen_wisp_booth_mock.py` |
+| **최적화**: 모델 무게 표(전수 422·상위 30·적 30) | `~/grd/GRD_perf_1020/모델_무게*.csv` | `blender/perf_model_weight.py` |
+| **LOD 후보 32종**(적 28 + 유닛 4) 감량 FBX·Textures≤1024·전후.png·lod.json + `요약.csv`·`시트_전후.png`·README | `~/grd/GRD_perf_1020/lod/<이름>/` | `blender/perf_lod.py`(Decimate) · `perf_lod_post.py`(텍스처 축소·전후 그림). 적 28종 합 73.97만→31.77만면 |
+- LOD 주의: ① 셰이프 키 있는 3종(긁힌_김민준·안흔함_김수빈·안흔함_박준희)은 키를 지움 ② 김민준 후 렌더 머리색 다름(렌더 연결 추정) ③ Blender 재내보내기 → 휴머노이드·클립 연결은 반입 후 확인 ④ **Assets 미반입**(PM이 사장님 확인 뒤).
+- 방침: 사장님이 맵을 25버전(옛 맵)으로 되돌리고 S2는 유닛 스킨·능력치만 가져온다. S2 맵 모델은 「모델링이 좋으니 가져다 쓴다」(상점 6채 교체 등 구현담당1 요청대로).
+- 함정: 메인 폴더 브랜치가 바뀐다(map/s2 ↔ map/selectwisp…) — 도구 파일이 없으면 `git show <브랜치>:경로`로 가져오고 `git commit -- <파일>`로만 커밋. Mantaflow 연기는 알파 0으로 나와 버림(절차 생성). zsh 루프에선 `${=var}`로 분할. Blender Decimate는 셰이프 키 메시에 못 씀.
+
 ## 남은 일·대기 중인 것
 - **구현담당2 재반입 대기 확인**: symbols_rz 전체·fx 나비/카구네·tone_28 17건·tots_R은 구현담당2에게 「교체됨」 알림만 보냄(반입·재검사는 구현담당2 몫). PM이 「이펙트 그림 추가 요청이 곧 갈 수 있다」고 함 → fx_art.py에 항목 추가해 쓰면 된다.
 - 리제로 숫자는 PM 통과(7의 強 조정까지 끝, 최종 배율 0.88). 분홍 7도 분홍(強만 금).
-- PM 지시 대기. 교체목록.csv에 새 줄이 생기면 `skin_swap_pack.py --new` → `swap_refix_all.py <팩>` → `swap_before_after_run.py <로스터>` → 구현담당2에게 반입 목록 + PM 한 줄 보고(컷인이 필요한 초월/불멸/영원은 `cutin_swap_run.py`).
+- PM 지시 대기(구현담당1·2의 모델·재료 요청: 폭포·벽 크기·텍스처 조정, 불꽃 모양 다듬기 등). 교체목록.csv에 새 줄이 생기면 `skin_swap_pack.py --new` → `swap_refix_all.py <팩>` → `swap_before_after_run.py <로스터>` → 구현담당2에게 반입 목록 + PM 한 줄 보고(컷인이 필요한 초월/불멸/영원은 `cutin_swap_run.py`).
 - `vivi_Skill_4_Mana`(영원_문필환) 연출 대본은 이벤트 형태가 달라 못 풀었다(대본 없음 유지).
 - 「BLP 못 찾음」 중 「기타」 187종(룬·UI·지형·모델용 그림)과 선택 원·바닥 얼룩 13종은 절차 재현 안 함(이름만으론 모양 불명).
 - 대표 연출 대본은 S2 j 기준 새 해석(S2 신규 유닛 스킬들)이 필요하면 JASS_S2 모드로 확장(아래 함정 참고).
