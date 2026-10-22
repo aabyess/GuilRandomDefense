@@ -25,6 +25,13 @@ public static class PlayerNotification
         Shown?.Invoke(playerId, message, duration); // MP
     }
 
+    static int stackSalt;
+
+    /// <summary>같은 문구도 올 때마다 줄을 쌓는다(「○○ 획득!」을 둘 얻으면 두 줄). <see cref="Show"/>는 같은 문구를 한 줄로 합친다 —
+    /// 보이지 않는 꼬리 공백을 달리 붙여 합치기를 피한다(10-22 테스터 #3, UnitAcquireNotice와 같은 방식).</summary>
+    public static void ShowStacked(int playerId, string message, float duration = 4f)
+        => Show(playerId, message + new string(' ', stackSalt++ % 7), duration);
+
     /// <summary>「왜 안 되는지」 알림 — <see cref="Show"/>에 실패음(GameSoundId.UiError)을 붙인다(10-06). 소리도 그 사람에게만
     /// (멀티 호스트면 GameSound.RemoteRouted로 그 친구에게). 성공·정보 알림엔 쓰지 말 것.</summary>
     public static void ShowFailure(int playerId, string message, float duration = 4f)
