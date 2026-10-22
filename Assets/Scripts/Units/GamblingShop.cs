@@ -626,7 +626,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
             if (starter != null && unitSpawner != null)
             {
                 unitSpawner.Spawn(starter, ResolveSpawnPosition(starter), owner.OwnerId);
-                PlayerNotification.Show(context.PlayerId, $"<color=#FF0000>{starter.unitName} 획득 !</color>", 10f);
+                PlayerNotification.ShowStacked(context.PlayerId, $"<color=#FF0000>{starter.unitName} 획득 !</color>", 10f);
                 GameSound.PlayFor(context.PlayerId, GameSoundId.Gacha);
             }
             if (option.coinSoundOnSuccess) GameSound.PlayFor(context.PlayerId, GameSoundId.Coin);
@@ -782,7 +782,7 @@ public class GamblingShop : MonoBehaviour, IPagedLaneShop
             ? $"{who} <color=#FF8200>님이 {label} 도박으로</color> <color=#FF0000>{reward.unitName} 획득 !</color>"
             : $"{who} <color=#FF8200>님이 {label} 도박을</color> <color=#FF0000>실패 하셨습니다!</color>";
         foreach (PlayerContext context in PlayerContext.Occupied)
-            PlayerNotification.Show(context.PlayerId, line, 10f);
+            PlayerNotification.ShowStacked(context.PlayerId, line, 10f);   // 같은 유닛을 연달아 뽑아도 뽑은 수만큼 줄이 쌓이게
     }
 
     // scalesWithGamblerNavigation이 꺼진 옵션(고급도박 등)은 기존 그대로
