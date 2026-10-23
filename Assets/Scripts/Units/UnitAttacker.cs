@@ -270,6 +270,17 @@ public class UnitAttacker : MonoBehaviour
         // SkillAttackSpeedBuffMultiplier에 이 배율이 곱해진다(1+원작 raw퍼센트로 변환된 값).
         public float attackSpeedMultiplierAmount = 1f;
 
+        // 2026-10-23 추가(SkillEffect.linearRecovery, 초월 양재모 다한증) — recoverDuration > 0이면 attackSpeedMultiplierAmount에서 1(원래 값)까지 recoverStart부터 이 시간 동안 선형으로 돌아온다.
+        public float recoverStart, recoverDuration;
+        public float CurrentAttackSpeedMultiplier
+        {
+            get
+            {
+                if (recoverDuration <= 0f || attackSpeedMultiplierAmount == 1f) return attackSpeedMultiplierAmount;
+                return Mathf.Lerp(attackSpeedMultiplierAmount, 1f, Mathf.Clamp01((Time.time - recoverStart) / recoverDuration));
+            }
+        }
+
         // 2026-09-30 추가(SkillEffectKind.AttackPowerBuffPercent 시간제) — 0이면 없음. 살아 있는 동안 PercentAttackPowerBonus에 더해진다.
         public float attackPowerPercentAmount;
     }
@@ -321,7 +332,7 @@ public class UnitAttacker : MonoBehaviour
         foreach (ActiveBuff b in activeBuffs)
         {
             string remain = b.hitsRemaining > 0 ? $" · 평타 {b.hitsRemaining}번" : b.expiresAt > 0f ? $" · 남은 {Mathf.Max(0f, b.expiresAt - Time.time):0.#}초" : "";
-            if (b.attackSpeedMultiplierAmount != 1f) Add("공속", "공격속도 증가" + remain, b.attackSpeedMultiplierAmount < 1f);
+            if (b.attackSpeedMultiplierAmount != 1f) Add("공속", "공격속도 증가" + remain, b.CurrentAttackSpeedMultiplier < 1f);
             else if (b.flatAttackPowerAmount != 0f || b.attackPowerPercentAmount != 0f) Add("공↑", "공격력 증가" + remain, b.flatAttackPowerAmount < 0f || b.attackPowerPercentAmount < 0f);
         }
         if (attackSpeedBuffs.Count > 0) Add("공속", "공격속도 증가(도움소)", false);
@@ -467,7 +478,7 @@ public class UnitAttacker : MonoBehaviour
         {
             PruneExpiredBuffs();
             float product = 1f;
-            foreach (ActiveBuff b in activeBuffs) product *= b.attackSpeedMultiplierAmount;
+            foreach (ActiveBuff b in activeBuffs) product *= b.CurrentAttackSpeedMultiplier;
             return product > 0f ? product : 1f;
         }
     }
@@ -475,7 +486,7 @@ public class UnitAttacker : MonoBehaviour
     // AddFlatAttackPowerBuff와 같은 관례. percent는 원작 raw 퍼센트(0.15=15%) — 여기서
     // (1+percent)로 변환해 저장한다(SkillAttackSpeedBuffMultiplier가 곱셈 항등원 1을
     // 기준으로 곱하므로).
-    public void AddAttackSpeedBuffPercent(string id, float percent, float duration, int hitCharges)
+    public void AddAttackSpeedBuffPercent(string id, float percent, float duration, int hitCharges, bool linearRecovery = false)
     {
         if (percent == 0f) return;
         float multiplier = 1f + percent;
@@ -495,9 +506,10 @@ public class UnitAttacker : MonoBehaviour
             {
                 existing.expiresAt = Time.time + duration;
                 existing.attackSpeedMultiplierAmount = multiplier;
+                existing.recoverStart = Time.time; existing.recoverDuration = linearRecovery ? duration : 0f;
                 return;
             }
-            activeBuffs.Add(new ActiveBuff { id = id, expiresAt = Time.time + duration, attackSpeedMultiplierAmount = multiplier });
+            activeBuffs.Add(new ActiveBuff { id = id, expiresAt = Time.time + duration, attackSpeedMultiplierAmount = multiplier, recoverStart = Time.time, recoverDuration = linearRecovery ? duration : 0f });
         }
         else
         {
@@ -2363,7 +2375,36 @@ public class UnitAttacker : MonoBehaviour
         lifeGaugeCounter = Mathf.Min(lifeGaugeCounter + amount, LifeGaugeCap(d));
     }
 
-    float DamagePassiveFactor(EnemyDummy target) => BossDamageFactor(target) * StoryDamageFactor(target) * AllyDebuffDamageFactor() * ArmorShredDamageFactor(target) * RecruitDamageFactor() * VsTargetBuffFactor(target) * GrowthDamageFactor() * (1f + attackDamageStack);
+    // 약해진 적 피해 감소(SkillEffectKind.LowHpTargetDamageReduction, 초월 양재모 다한증) — 맞는 적의 현재체력 정수 퍼센트가 문턱(multiplier) 밑으로 1% 내려갈 때마다 피해 1% 감소, 최대 bonus. 스토리 적은 제외.
+    UnitData lowHpFor;
+    bool lowHpActive;
+    float lowHpThreshold, lowHpCap;
+
+    float LowHpTargetFactor(EnemyDummy target)
+    {
+        UnitData unitData = identity != null ? identity.Data : null;
+        if (unitData == null || target == null) return 1f;
+        if (lowHpFor != unitData)
+        {
+            lowHpFor = unitData;
+            lowHpActive = false;
+            int count = BaseSkillCount(unitData);
+            for (int i = 0; i < count; i++)
+            {
+                SkillData skill = ResolveSkillAt(unitData, i);
+                if (skill == null || skill.levels == null || skill.levels.Count == 0 || skill.levels[0].effects == null) continue;
+                foreach (SkillEffect effect in skill.levels[0].effects)
+                    if (effect != null && effect.kind == SkillEffectKind.LowHpTargetDamageReduction) { lowHpActive = true; lowHpThreshold = effect.multiplier; lowHpCap = effect.bonus; }
+            }
+        }
+        if (!lowHpActive || target.IsStoryHpTarget || target.MaxHp <= 0f) return 1f;
+        int hpPercent = Mathf.FloorToInt(Mathf.Clamp01(target.Hp / target.MaxHp) * 100f + 0.0001f);
+        int stepsBelow = Mathf.FloorToInt(lowHpThreshold * 100f + 0.0001f) - hpPercent;
+        if (stepsBelow <= 0) return 1f;
+        return 1f - Mathf.Min(lowHpCap, stepsBelow * 0.01f);
+    }
+
+    float DamagePassiveFactor(EnemyDummy target) => LowHpTargetFactor(target) * BossDamageFactor(target) * StoryDamageFactor(target) * AllyDebuffDamageFactor() * ArmorShredDamageFactor(target) * RecruitDamageFactor() * VsTargetBuffFactor(target) * GrowthDamageFactor() * (1f + attackDamageStack);
 
     // 만성피로(SelfStunRefillLifeGauge) — 자기 스턴 동안 공격·스킬이 멈추고, 끝나면 체력 게이지가 즉시 가득 찬다.
     public const string SelfStunBuffId = "SELF_STUN";
@@ -3137,7 +3178,7 @@ public class UnitAttacker : MonoBehaviour
             || effect.kind == SkillEffectKind.SplashDamageMultiplier || effect.kind == SkillEffectKind.AllyMoveSpeedDebuff
             || effect.kind == SkillEffectKind.DamagePerAllyDebuff || effect.kind == SkillEffectKind.DamageGrowthOverTime
             || effect.kind == SkillEffectKind.AllySkillDamageBonus || (effect.kind == SkillEffectKind.DispelAllyDebuffs && effect.duration <= 0f)
-            || effect.kind == SkillEffectKind.GoldPlusBonus || effect.kind == SkillEffectKind.StoryDamageMultiplier
+            || effect.kind == SkillEffectKind.GoldPlusBonus || effect.kind == SkillEffectKind.StoryDamageMultiplier || effect.kind == SkillEffectKind.LowHpTargetDamageReduction
             || effect.kind == SkillEffectKind.DamagePerTargetArmorShred || effect.kind == SkillEffectKind.DamagePerRecruit || effect.kind == SkillEffectKind.DamageVsTargetBuff || effect.kind == SkillEffectKind.SkillDamageAfterKill || effect.kind == SkillEffectKind.SlowRewardBonus || effect.kind == SkillEffectKind.SkillTriggerChanceBonus || effect.kind == SkillEffectKind.RevealTreasure || effect.kind == SkillEffectKind.LaneExplosiveAmp) return;
 
         // 장풍 직선(SkillEffect.lineLength 주석) — 시전자에서 범위 중심 쪽으로 뻗는 사다리꼴 안의 적 모두.
@@ -3370,7 +3411,7 @@ public class UnitAttacker : MonoBehaviour
         {
             // 2026-09-07 추가(PM 지시) — ApplyBuff와 같은 자리, multiplier가 원작 raw
             // 퍼센트(0.15=15%)다(buffHitCharges/duration 관례도 ApplyBuff와 동일).
-            allyAttacker.AddAttackSpeedBuffPercent(effect.buffId, effect.multiplier + (effect.castCountBonus > 0f ? effect.castCountBonus * (effect.castCountCap > 0 ? Mathf.Min(currentCastIndex, effect.castCountCap) : currentCastIndex) : 0f), effect.duration, effect.buffHitCharges);
+            allyAttacker.AddAttackSpeedBuffPercent(effect.buffId, effect.multiplier + (effect.castCountBonus > 0f ? effect.castCountBonus * (effect.castCountCap > 0 ? Mathf.Min(currentCastIndex, effect.castCountCap) : currentCastIndex) : 0f), effect.duration, effect.buffHitCharges, effect.linearRecovery);
             return;
         }
 
@@ -3409,8 +3450,22 @@ public class UnitAttacker : MonoBehaviour
         return Random.Range(effect.randMin, effect.randMax);
     }
 
+    // 보스·광폭화·스토리 적 판정(SkillEffect.bossAltEnabled) — 보스 = 라운드/신세계 보스(EnemyData.isBoss), 광폭화 = B06B, 스토리 = 스토리·퀘스트 미니보스·크립(MarkStoryHpTarget).
+    static bool IsBossBerserkOrStory(EnemyDummy e) => e != null && (e.IsBoss || e.IsStoryHpTarget || e.HasBuff(BerserkMob.BuffId));
+
     float ResolveBaseSkillEffectValue(SkillEffect effect, EnemyDummy target, float recentAttackDamage)
     {
+        if (effect.bossAltEnabled && IsBossBerserkOrStory(target))
+        {
+            float altMultiplier = effect.bossAltMultiplier, altBonus = effect.bossAltBonus;
+            switch (effect.basis)
+            {
+                case SkillEffectBasis.TargetMaxHpPercent: return target.MaxHp * altMultiplier + altBonus;
+                case SkillEffectBasis.TargetCurrentHpPercent: return target.Hp * altMultiplier + altBonus;
+                case SkillEffectBasis.TargetMissingHpPercent: return Mathf.Max(0f, target.MaxHp - target.Hp) * altMultiplier + altBonus;
+                default: return altMultiplier + altBonus;   // Flat: 고정값 자체
+            }
+        }
         switch (effect.basis)
         {
             // ⚠️ 2026-09-05 버그 수정(구현담당1 발견, PM 확인): SkillData.cs:126의
