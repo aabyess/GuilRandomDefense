@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: "SkillData_\uc0ac\uc7a5\ub2d8_\ucd08\uc6d4_\uc591\uc7ac\ubaa8_AD_\uc0c1\ud638\ud30c\uc758\ucd5c\uac15\uc790"
   m_EditorClassIdentifier: 
   skillName: "\uc0c1\ud638\ud30c\uc758\ucd5c\uac15\uc790 \u2160"
-  description: "\ud3c9\ud0c0\ub97c \uce60 \ub54c 3% \ud655\ub960\ub85c \ubc1c\ub3d9. \uacf5\uaca9\ud55c \uc801\uc744 \uc911\uc2ec\uc73c\ub85c \ubc18\uacbd 200 \uc548\uc758 \ubaa8\ub4e0 \uc801\uc5d0\uac8c \uadf8 \uc801 \ud604\uc7ac \uccb4\ub825\uc758 25% + 400,000\uc758 \ubb3c\ub9ac \ud53c\ud574\ub97c \uc90d\ub2c8\ub2e4. \ubcf4\uc2a4\u00b7\uad11\ud3ed\ud654\u00b7\uc2a4\ud1a0\ub9ac \uc801\uc5d0\uac8c\ub294 \ub300\uc2e0 \ud604\uc7ac \uccb4\ub825\uc758 5% + 1,200,000\uc758 \ubb3c\ub9ac \ud53c\ud574\ub97c \uc90d\ub2c8\ub2e4. \uc801\ub9c8\ub2e4 \ub9de\ub294 \uc21c\uac04\uc758 \ud604\uc7ac \uccb4\ub825\uc73c\ub85c \ub530\ub85c \uacc4\uc0b0\ud569\ub2c8\ub2e4."
+  description: "\ud3c9\ud0c0\ub97c \uce60 \ub54c 1.5% \ud655\ub960\ub85c \ubc1c\ub3d9. \uacf5\uaca9\ud55c \uc801\uc744 \uc911\uc2ec\uc73c\ub85c \ubc18\uacbd 200 \uc548\uc758 \ubaa8\ub4e0 \uc801\uc5d0\uac8c \uadf8 \uc801 \ud604\uc7ac \uccb4\ub825\uc758 25% \ubb3c\ub9ac \ud53c\ud574. \ubcf4\uc2a4\u00b7\uad11\ud3ed\ud654\u00b7\uc2a4\ud1a0\ub9ac \uc801\uc5d0\uac8c\ub294 \ud604\uc7ac \uccb4\ub825 1% + 120\ub9cc \ubb3c\ub9ac \ud53c\ud574."
   triggerType: 0
   levels:
   - cooldown: 0
-    triggerChance: 0.03
+    triggerChance: 0.015
     range: 200
     hitCountThreshold: 0
     resetTo: 0
@@ -32,7 +32,7 @@ MonoBehaviour:
       damageType: 1
       attackType: 0
       multiplier: 0.25
-      bonus: 400000
+      bonus: 0
       chance: 1
       hitCount: 1
       duration: 0
@@ -91,7 +91,7 @@ MonoBehaviour:
       countKingGrades: 0
       summonBlockWhileAlive: 0
       bossAltEnabled: 1
-      bossAltMultiplier: 0.05
+      bossAltMultiplier: 0.01
       bossAltBonus: 1200000
       linearRecovery: 0
     requiredTargetBuffId: 
