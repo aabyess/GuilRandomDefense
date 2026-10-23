@@ -10,14 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uC591\uC7AC\uBAA8_AD_\uC800\uC9C0\uBD88\uAC00"
+  m_Name: "SkillData_\uc0ac\uc7a5\ub2d8_\ucd08\uc6d4_\uc591\uc7ac\ubaa8_AD_\uc800\uc9c0\ubd88\uac00"
   m_EditorClassIdentifier: 
-  skillName: "\uC800\uC9C0\uBD88\uAC00 \u2014 \uB2E8\uC77C \uC2A4\uD134(\uD3C9\uD0C0
-    20%, 1.5\uCD08)"
-  description: "\uC0AC\uC7A5\uB2D8 10-06 \u300C\uB2E8\uC77C\uC2A4\uD134\u300D. \uD3C9\uD0C0
-    20% \uD655\uB960\uB85C \uB300\uC0C1 \uD55C \uAE30 \uC2A4\uD134 1.5\uCD08. \uC6D0\uC791
-    \uCD08\uC6D4 \uB2E8\uC77C \uC2A4\uD134 27\uAC74(\uD655\uB960 15~40%\xB70.5~5\uCD08)
-    \uC911\uC559\uAC12 \uADFC\uCC98(A0X0 40%\xB71.5\uCD08, A0AG 20%\xB71.0\uCD08)."
+  skillName: "\uc800\uc9c0\ubd88\uac00 \u2160"
+  description: "\ud3c9\ud0c0\ub97c \uce60 \ub54c 20% \ud655\ub960\ub85c \ubc1c\ub3d9. \uacf5\uaca9\ud55c \uc801 \ud55c \ub9c8\ub9ac\uc5d0\uac8c \ubb3c\ub9ac \ud53c\ud574 150,000\uc744 \uc8fc\uace0 2.25\ucd08 \ub3d9\uc548 \uc2a4\ud134\uc2dc\ud0b5\ub2c8\ub2e4."
   triggerType: 0
   levels:
   - cooldown: 0
@@ -30,16 +26,16 @@ MonoBehaviour:
     forbiddenBuffId: 
     selfBuffId: 
     effects:
-    - kind: 1
+    - kind: 0
       basis: 0
       target: 3
       damageType: 1
       attackType: 0
-      multiplier: 0
+      multiplier: 150000
       bonus: 0
       chance: 1
       hitCount: 1
-      duration: 1.5
+      duration: 0
       casterBuffCountFactor: 0
       buffId: 
       randMin: 1
@@ -92,6 +88,80 @@ MonoBehaviour:
       bossBerserkDamageScale: 0
       explosive: 0
       fixedDamage: 0
+      countKingGrades: 0
+      summonBlockWhileAlive: 0
+      bossAltEnabled: 0
+      bossAltMultiplier: 0
+      bossAltBonus: 0
+      linearRecovery: 0
+    - kind: 1
+      basis: 0
+      target: 3
+      damageType: 1
+      attackType: 0
+      multiplier: 0
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 2.25
+      casterBuffCountFactor: 0
+      buffId: 
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+      rewardWisp: {fileID: 0}
+      bossBerserkDamageScale: 0
+      explosive: 0
+      fixedDamage: 0
+      countKingGrades: 0
+      summonBlockWhileAlive: 0
+      bossAltEnabled: 0
+      bossAltMultiplier: 0
+      bossAltBonus: 0
+      linearRecovery: 0
     requiredTargetBuffId: 
     forbiddenTargetBuffId: 
     hitCountFloor: 0

@@ -410,6 +410,11 @@ public enum SkillEffectKind
     // multiplier = 원작 A11S 레벨 수(1레벨 = 계수 +0.05 = 툴팁 「폭발형 5% 증폭」, 3 = 15%, 6 = 30%). 서로 다른 유닛 종류의 값은 합해지고(같은 종류는 한 번), A11S 상한 23까지.
     // 폭발형 피해(SkillEffect.explosive)만 올린다 — 일반 마뎀·평타·범위 피해는 안 오른다. EnemyDummy.PercentDamageTakenMultiplier가 UnitAttacker.LaneExplosiveAmpLevels를 읽는다.
     LaneExplosiveAmp,
+
+    // ⚠️ 맨 뒤에 추가(2026-10-23, 초월 양재모 「다한증」 — 사장님 사양) — 직렬화 순서를 지킨다.
+    // 약해진 적에게 주는 피해 감소 상시 패시브(Self): 이 유닛이 주는 모든 피해(평타·스킬·범위)가, 맞는 적의 현재체력이 multiplier(0.5 = 50%) 밑으로 떨어진 정수 퍼센트 1%마다 1%씩 줄어
+    // 최대 bonus(0.5 = 50%)까지 깎인다(체력 49% → 1% 감소, 0%대 → 50% 감소). 적마다 그 순간 체력으로 따로 계산한다. 스토리 적(IsStoryHpTarget)은 제외.
+    LowHpTargetDamageReduction,
 }
 
 // ⚠️ 2026-09-06 신설(PM 지시, "대상 조건 게이트") — SkillEffect 전용. 원작 조사(리서치담당,
@@ -726,6 +731,15 @@ public class SkillEffect
     // ⚠️ 맨 뒤(2026-10-15, 초월 최상호 「상호파 집결」) — SummonUnit 전용: 소환수 중 하나라도 살아 있으면 새로 소환하지도, 남은 시간을 되돌리지도 않는다
     // (「소환 중엔 다시 소환되지 않음」). 꺼 두면 옛 동작(이미 있으면 남은 시간만 summonLifetime으로 되돌림).
     public bool summonBlockWhileAlive;
+
+    // ⚠️ 맨 뒤(2026-10-23, 초월 양재모 「상호파의최강자」 — 사장님 사양) — Damage 전용: 맞는 적이 보스·광폭화·스토리 적이면 multiplier/bonus를 이 값으로 바꿔 계산한다
+    // (basis는 그대로 — 예: 현재체력 25% + 40만 → 보스는 현재체력 5% + 120만, 현재체력 50% + 10만 → 보스는 0% + 150만). 보스 = EnemyDummy.IsBoss · 광폭화 = B06B · 스토리 = IsStoryHpTarget.
+    public bool bossAltEnabled;
+    public float bossAltMultiplier;
+    public float bossAltBonus;
+
+    // ⚠️ 맨 뒤(2026-10-23, 초월 양재모 「다한증」) — AttackSpeedBuffPercent 전용: 건 순간 multiplier(예 −0.6)에서 duration 동안 선형으로 0(원래 값)까지 돌아온다.
+    public bool linearRecovery;
 }
 
 // 스킬 레벨 하나. 특성강화(UnitTraitData)가 이 레벨을 올린다 — 원작이 `atp1` 표시 이름에

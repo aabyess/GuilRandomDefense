@@ -27,9 +27,12 @@ MonoBehaviour:
   skill: {fileID: 0}
   skills:
   - {fileID: 11400000, guid: b1062987656aa456f983085611629c30, type: 2}
+  - {fileID: 11400000, guid: a01bd29675a641499ebf5ee0fd4c7fcf, type: 2}
   - {fileID: 11400000, guid: 60026b4d352d942a986ed177b3df9e4b, type: 2}
+  - {fileID: 11400000, guid: 0343fc73c80043b1a422545c2dd4ba26, type: 2}
   - {fileID: 11400000, guid: 1984b53f1f2b044d0ad369bef2af132e, type: 2}
   - {fileID: 11400000, guid: 02fb7d191f32d419693a150a4ff5bfa6, type: 2}
+  - {fileID: 11400000, guid: 59d8379c345044d2b3084beddd007163, type: 2}
   trait: {fileID: 11400000, guid: d1283f4e8cf6416b43f31f45fa348b65, type: 2}
   prefab: {fileID: 1488769862913442245, guid: efbfde0e79c9c470aa577ab870b45ae2, type: 3}
   critChance: 0
@@ -60,19 +63,19 @@ MonoBehaviour:
   manaMax: 135
   manaGaugePerMana: 1
   lifeGaugeRegenPerSecond: 0
-  lifeGaugeMax: 50
+  lifeGaugeMax: 100
   manaGaugeStart: 0
   lifeGaugeStart: 0
-  lifeGaugeCustomHitGain: 0
+  lifeGaugeCustomHitGain: 1
   lifeGaugeHitGain: 0
   manaAuraRegenPerSecond: 0
   manaAuraRange: 0
   manaAuraBuffId: 
   manaAuraIncludesSelf: 0
-  lifeAuraRegenPerSecond: 0
-  lifeAuraRange: 0
-  lifeAuraBuffId: 
-  lifeAuraIncludesSelf: 0
+  lifeAuraRegenPerSecond: 2
+  lifeAuraRange: 800
+  lifeAuraBuffId: NURSE_LIFE_AURA
+  lifeAuraIncludesSelf: 1
   attackSplashRadius: 0
   attackCleaveFactor: 0.5
   attackCleaveRadius: 375

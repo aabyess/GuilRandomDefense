@@ -10,39 +10,32 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9457f64cd84d34fd095791a069c0adc6, type: 3}
-  m_Name: "SkillData_\uC0AC\uC7A5\uB2D8_\uCD08\uC6D4_\uC591\uC7AC\uBAA8_AD_\uB2E4\uD55C\uC99D"
+  m_Name: "SkillData_\uc0ac\uc7a5\ub2d8_\ucd08\uc6d4_\uc591\uc7ac\ubaa8_AD_\ub2e4\ud55c\uc99d"
   m_EditorClassIdentifier: 
-  skillName: "\uB2E4\uD55C\uC99D \u2014 \uCCB4\uB825\uC2A4\uD0AC(LIFE \uAC8C\uC774\uC9C0
-    50): \uC801 \uC774\uC18D \uAC10\uC18C + \uC790\uAE30 \uACF5\uC18D \uAC10\uC18C"
-  description: "\uC0AC\uC7A5\uB2D8 10-06 \u300C\uCCB4\uB825\uC2A4\uD0AC(\uC774\uC18D\uAC10\uC18C,
-    \uC790\uC2E0\uACF5\uC18D\uAC10\uC18C)\u300D. LIFE \uAC8C\uC774\uC9C0\uAC00 50\uC5D0
-    \uB2FF\uC73C\uBA74 \uBC94\uC704 405 \uC548 \uC801 \uC774\uB3D9\uC18D\uB3C4 \u221250%
-    3\uCD08 + \uC790\uAE30 \uACF5\uC18D \u221230% 5\uCD08(\uB2E8\uC810). LIFE \uAC8C\uC774\uC9C0
-    \uC784\uACC4\uB294 \uC6D0\uC791 40\xB750\xB785 \uC911\uAC04, \uC774\uAC10 \uBC1C\uB3D9\uD615
-    0.25~0.75\xB72~5\uCD08 \uBC94\uC704, \uC790\uAE30 \uACF5\uC18D \uAC10\uC18C\uB294
-    \uC6D0\uC791 \uADFC\uAC70 \uC5C6\uC74C \u2014 \uC81C\uC548\uAC12."
+  skillName: "\ub2e4\ud55c\uc99d \u2160"
+  description: "\uccb4\ub825 \uac8c\uc774\uc9c0\uac00 100\uc774 \ub418\uba74 \ubc1c\ub3d9\ud558\uace0 \uac8c\uc774\uc9c0\ub294 0\uc73c\ub85c \ub3cc\uc544\uac11\ub2c8\ub2e4. \uc790\uc2e0\uc744 \uc911\uc2ec\uc73c\ub85c \ubc18\uacbd 600 \uc548\uc758 \ubaa8\ub4e0 \uc801\uc5d0\uac8c \ubb3c\ub9ac \ud53c\ud574 1,000,000\uc744 \uc8fc\uace0 \uc774\ub3d9\uc18d\ub3c4\ub97c 60% \uc904\uc785\ub2c8\ub2e4(5\ucd08). \uc790\uc2e0\uc758 \uacf5\uaca9\uc18d\ub3c4\ub3c4 60% \uc904\uc5c8\ub2e4\uac00 5\ucd08\uc5d0 \uac78\uccd0 \uc810\uc810 \uc6d0\ub798\ub300\ub85c \ub3cc\uc544\uc635\ub2c8\ub2e4."
   triggerType: 3
   levels:
   - cooldown: 0
     triggerChance: 1
-    range: 405
-    hitCountThreshold: 50
-    resetTo: 1
+    range: 600
+    hitCountThreshold: 100
+    resetTo: 0
     gaugeKind: 1
     requiredBuffId: 
     forbiddenBuffId: 
     selfBuffId: 
     effects:
-    - kind: 13
+    - kind: 0
       basis: 0
       target: 2
       damageType: 1
       attackType: 0
-      multiplier: 0.5
+      multiplier: 1000000
       bonus: 0
       chance: 1
       hitCount: 1
-      duration: 3
+      duration: 0
       casterBuffCountFactor: 0
       buffId: 
       randMin: 1
@@ -91,18 +84,28 @@ MonoBehaviour:
       castCountCap: 0
       gambleGate: 0
       enhanceScale: 0
-    - kind: 12
+      rewardWisp: {fileID: 0}
+      bossBerserkDamageScale: 0
+      explosive: 0
+      fixedDamage: 0
+      countKingGrades: 0
+      summonBlockWhileAlive: 0
+      bossAltEnabled: 0
+      bossAltMultiplier: 0
+      bossAltBonus: 0
+      linearRecovery: 0
+    - kind: 13
       basis: 0
-      target: 0
+      target: 2
       damageType: 1
       attackType: 0
-      multiplier: -0.3
+      multiplier: 0.4
       bonus: 0
       chance: 1
       hitCount: 1
       duration: 5
       casterBuffCountFactor: 0
-      buffId: NURSE_SWEAT
+      buffId: 
       randMin: 1
       randMax: 1
       buffHitCharges: 0
@@ -149,11 +152,89 @@ MonoBehaviour:
       castCountCap: 0
       gambleGate: 0
       enhanceScale: 0
+      rewardWisp: {fileID: 0}
+      bossBerserkDamageScale: 0
+      explosive: 0
+      fixedDamage: 0
+      countKingGrades: 0
+      summonBlockWhileAlive: 0
+      bossAltEnabled: 0
+      bossAltMultiplier: 0
+      bossAltBonus: 0
+      linearRecovery: 0
+    - kind: 12
+      basis: 0
+      target: 0
+      damageType: 1
+      attackType: 0
+      multiplier: -0.6
+      bonus: 0
+      chance: 1
+      hitCount: 1
+      duration: 5
+      casterBuffCountFactor: 0
+      buffId: YJM_DAHANJEUNG
+      randMin: 1
+      randMax: 1
+      buffHitCharges: 0
+      requiredTargetBuffId: 
+      forbiddenTargetBuffId: 
+      targetCondition: 0
+      targetConditionValue: 0
+      cascadeGroup: 0
+      skipDamageTakenMultiplier: 0
+      triggerDamageAbove: 0
+      heroDuration: 0
+      maxTargets: 0
+      chainDamageStep: 0
+      zoneTickInterval: 0
+      zoneRadius: 0
+      zoneSpacing: 0
+      zoneAtCaster: 0
+      lineLength: 0
+      lineStartRadius: 0
+      lineEndRadius: 0
+      perHighGradeUnitBonus: 0
+      perHighGradeUnitBonusCap: 0
+      summonUnits: []
+      summonLifetime: 20
+      summonFanDegrees: 35
+      summonRadius: 70
+      grantSkill: {fileID: 0}
+      minAllyTier: 5
+      armorIgnoreRatio: 0
+      armorIgnoreRequiresBuff: 
+      talentStunScaled: 0
+      stackPerHit: 0.01
+      stackCap: 1
+      stackResetSeconds: 3
+      attackSpeedScale: 0
+      attackSpeedScaleCap: 0
+      formSelfAttackSpeed: 0
+      killMostLostHp: 0
+      lootItems: []
+      lootAlways: 0
+      hitCountScale: 0
+      hitCountScaleCap: 0
+      castCountBonus: 0
+      castCountCap: 0
+      gambleGate: 0
+      enhanceScale: 0
+      rewardWisp: {fileID: 0}
+      bossBerserkDamageScale: 0
+      explosive: 0
+      fixedDamage: 0
+      countKingGrades: 0
+      summonBlockWhileAlive: 0
+      bossAltEnabled: 0
+      bossAltMultiplier: 0
+      bossAltBonus: 0
+      linearRecovery: 1
     requiredTargetBuffId: 
     forbiddenTargetBuffId: 
     hitCountFloor: 0
     gaugeSpendAmount: 0
-    aoeCenter: 0
+    aoeCenter: 1
     targetArmorBreakAbove: 0
     primaryTargetCondition: 0
     primaryTargetConditionValue: 0

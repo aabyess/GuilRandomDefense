@@ -167,6 +167,7 @@ public static class PlayerFacingText
             case SkillEffectKind.ExtraProjectile: return $"추가 공격 {e.multiplier:0}발";
             case SkillEffectKind.BossDamageMultiplier: return $"보스에게 피해 ×{e.multiplier:0.##}";
             case SkillEffectKind.StoryDamageMultiplier: return $"스토리 적에게 피해 ×{e.multiplier:0.##}";
+            case SkillEffectKind.LowHpTargetDamageReduction: return $"체력 {Pct(e.multiplier)} 밑 적에게 주는 피해 1%당 −1% (최대 −{Pct(e.bonus)})";
             case SkillEffectKind.SplashDamageMultiplier: return $"범위 피해 ×{e.multiplier:0.##}";
             case SkillEffectKind.LaneExplosiveAmp: return $"내 라인 적이 받는 폭발형 피해 +{Pct(e.multiplier * 0.05f)}";
             case SkillEffectKind.SummonUnit: return "소환";
